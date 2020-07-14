@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"errors"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -35,10 +34,14 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"alkira_connector":                    resourceAlkiraConnector()
+			"alkira_connector_aws_vpc":    resourceAlkiraConnectorAwsVpc(),
+			"alkira_connector_azure_vnet": resourceAlkiraConnectorAzureVnet(),
+			"alkira_connector_gcp_vpc":    resourceAlkiraConnectorGcpVpc(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_connector":                    dataSourceAlkiraConnector(),
+			"alkira_connector_aws_vpc":    dataSourceAlkiraConnectorAwsVpc(),
+			"alkira_connector_azure_vnet": dataSourceAlkiraConnectorAzureVnet(),
+			"alkira_connector_gcp_vpc":    dataSourceAlkiraConnectorGcpVpc(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}
