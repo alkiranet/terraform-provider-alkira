@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
 )
 
 // Provider returns a schema.Provider for Alkira.
@@ -34,11 +35,15 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"alkira_tenant_network":       resourceAlkiraTenantNetwork(),
+			"alkira_segment":              resourceAlkiraSegment(),
 			"alkira_connector_aws_vpc":    resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet": resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":    resourceAlkiraConnectorGcpVpc(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"alkira_tenant_network":       dataSourceAlkiraTenantNetwork(),
+			"alkira_segment":              dataSourceAlkiraSegment(),
 			"alkira_connector_aws_vpc":    dataSourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet": dataSourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":    dataSourceAlkiraConnectorGcpVpc(),
@@ -58,31 +63,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 }
 
 func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := Config{
-		Portal:   d.Get("portal").(string),
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-	}
+	alkiraClient := internal.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
 
-	skipVersionValidation := d.Get("skip_version_validation").(bool)
-	if skipVersionValidation {
-		return config.Client()
-	}
-
-	client, err := config.Client()
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func alkiraConfigureWithoutVersionValidation(d *schema.ResourceData) (interface{}, error) {
-	config := Config{
-		Portal:   d.Get("portal").(string),
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-	}
-
-	return config.Client()
+	return alkiraClient, nil
 }
