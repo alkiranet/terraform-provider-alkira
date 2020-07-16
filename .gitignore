@@ -1,2 +1,7 @@
 .idea
 .DS_Store
+.terraform
+terraform-provider-alkira
+terraform.tfstate
+terraform.tfstate.*
+crash.log
