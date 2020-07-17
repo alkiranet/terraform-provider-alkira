@@ -1,7 +1,10 @@
 package alkira
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
 )
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
@@ -12,48 +15,85 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Delete: resourceConnectorAwsVpcDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_1_id": &schema.Schema{
+			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_1_name": &schema.Schema{
+			"vpc_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_1_owner_id": &schema.Schema{
+			"aws_account_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_2_id": &schema.Schema{
+			"aws_region": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_2_name": &schema.Schema{
+			"aws_access_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_2_owner_id": &schema.Schema{
+			"aws_secret_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"cxp": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"group": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"segment": {
+				Type: schema.TypeString,
+				Required: true,
+				Description: "A segment associated with the connector AWS-VPC",
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"segments": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required: true,
-				Description: "A list of segments associated with the connector",
-			},
 		},
 	}
 }
 
-func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
-        return resourceConnectorAwsVpcRead(d, m)
+func resourceConnectorAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*internal.AlkiraClient)
+
+	name      := d.Get("name").(string)
+	accessKey := d.Get("aws_access_key").(string)
+	secretKey := d.Get("aws_secret_key").(string)
+
+	credentialId, statusCode := client.CreateCredentialAwsVpc(name, accessKey, secretKey)
+
+	if statusCode != 201 {
+		return fmt.Errorf("failed to save credential (%d)", statusCode)
+	}
+
+	segments := []string{d.Get("segment").(string)}
+
+	connectorAwsVpc := &internal.ConnectorAwsVpcRequest{
+		CXP:            d.Get("cxp").(string),
+		CredentialId:   credentialId,
+		CustomerName:   client.Username,
+		CustomerRegion: d.Get("aws_region").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+        Segments:       segments,
+        Size:           d.Get("size").(string),
+        VpcId:          d.Get("vpc_id").(string),
+        VpcOwnerId:     d.Get("aws_account_id").(string),
+	}
+
+	client.CreateConnectorAwsVpc(connectorAwsVpc)
+	return resourceConnectorAwsVpcRead(d, meta)
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {

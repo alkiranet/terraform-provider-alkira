@@ -33,6 +33,11 @@ func resourceAlkiraSegment() *schema.Resource {
 				Required:    true,
 				Description: "The CIDR Block of the segment",
 			},
+			"id": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the segment",
+			},
 		},
 	}
 }
@@ -50,6 +55,7 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("id", strconv.Itoa(id))
 	return resourceSegmentRead(d, meta)
 }
 
