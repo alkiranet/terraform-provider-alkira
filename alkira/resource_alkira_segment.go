@@ -39,11 +39,10 @@ func resourceAlkiraSegment() *schema.Resource {
 
 func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*internal.AlkiraClient)
-	id     := client.GetTenantNetworksId()
 	name   := d.Get("name").(string)
 
 	log.Printf("[INFO] Segment Creating")
-	id, statusCode := client.CreateSegment(id, name, d.Get("asn").(string), d.Get("cidr").(string))
+	id, statusCode := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
 	log.Printf("[INFO] Segment ID: %d", id)
 
 	if statusCode != 200 {
@@ -64,12 +63,10 @@ func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client    := meta.(*internal.AlkiraClient)
-	networkId := client.GetTenantNetworksId()
-
 	segmentId := d.Id()
-	log.Printf("[INFO] Deleting Segment %s", segmentId)
 
-	statusCode := client.DeleteSegment(networkId, segmentId)
+	log.Printf("[INFO] Deleting Segment %s", segmentId)
+	statusCode := client.DeleteSegment(segmentId)
 
 	if statusCode != 202 {
 	 	return fmt.Errorf("failed to delete segment %s", segmentId)
