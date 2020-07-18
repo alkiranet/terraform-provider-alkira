@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -69,8 +70,8 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	}
 }
 
-func resourceConnectorAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*internal.AlkiraClient)
 
 	name      := d.Get("name").(string)
 	accessKey := d.Get("aws_access_key").(string)
@@ -106,7 +107,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(strconv.Itoa(id))
 	d.Set("connector_id", strconv.Itoa(id))
-	return resourceConnectorAwsVpcRead(d, meta)
+	return resourceConnectorAwsVpcRead(d, m)
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
@@ -118,5 +119,14 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
-        return nil
+	client := m.(*internal.AlkiraClient)
+
+	log.Printf("[INFO] Deleting Connector (AWS-VPC) %s", d.Id())
+	err := client.DeleteConnectorAwsVpc(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

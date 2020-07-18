@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
 )
@@ -27,11 +30,42 @@ func resourceAlkiraTenantNetwork() *schema.Resource {
 	}
 }
 
-func resourceTenantNetworkCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*internal.AlkiraClient)
 
-	client.ProvisionTenantNetwork()
-	return resourceTenantNetworkRead(d, meta)
+	state, err := client.ProvisionTenantNetwork()
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to provision tenant network: %s", state)
+		return err
+	}
+
+	// Wait for tenant network provisoning to finish
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"SUCCESS"},
+		Pending: []string{"IN_PROGRESS", "PENDING"},
+		Timeout: d.Timeout(schema.TimeoutDelete),
+		Refresh: func() (interface{}, string, error) {
+			state, err := client.GetTenantNetworkState()
+
+			if err != nil {
+				log.Printf("[ERROR] Received error: %#v", err)
+				return state, "ERROR", err
+			}
+
+			log.Printf("[DEBUG] Tenant Network %d status received: %#v", client.TenantNetworkId, state)
+			return state, state, nil
+		},
+	}
+
+	_, err = stateConf.WaitForState()
+
+	if err != nil {
+		log.Printf("[ERROR] Received error: %#v", err)
+	}
+
+	d.SetId(client.TenantNetworkId)
+	return resourceTenantNetworkRead(d, m)
 }
 
 func resourceTenantNetworkRead(d *schema.ResourceData, m interface{}) error {
@@ -43,5 +77,40 @@ func resourceTenantNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {
-        return nil
+	client := m.(*internal.AlkiraClient)
+
+	state, err := client.ProvisionTenantNetwork()
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to deprovision tenant network: %s", state)
+		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"SUCCESS"},
+		Pending: []string{"IN_PROGRESS", "PENDING"},
+		Timeout: d.Timeout(schema.TimeoutDelete),
+		Refresh: func() (interface{}, string, error) {
+			state, err := client.GetTenantNetworkState()
+
+			if err != nil {
+				log.Printf("[ERROR] Received error: %#v", err)
+				return state, "ERROR", err
+			}
+
+			log.Printf("[DEBUG] Tenant Network %d status received: %#v", client.TenantNetworkId, state)
+			return state, state, nil
+		},
+	}
+
+	_, err = stateConf.WaitForState()
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Tenant Network %s deprovisioned", client.TenantNetworkId)
+
+	d.SetId("")
+	return nil
 }
