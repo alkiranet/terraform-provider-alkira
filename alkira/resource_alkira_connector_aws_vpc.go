@@ -1,7 +1,7 @@
 package alkira
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
@@ -39,6 +39,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"credential_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"cxp": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -47,7 +52,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"id": &schema.Schema{
+			"connector_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,12 +76,13 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, meta interface{}) err
 	accessKey := d.Get("aws_access_key").(string)
 	secretKey := d.Get("aws_secret_key").(string)
 
-	credentialId, statusCode := client.CreateCredentialAwsVpc(name, accessKey, secretKey)
+	credentialId, err := client.CreateCredentialAwsVpc(name, accessKey, secretKey)
 
-	if statusCode != 201 {
-		return fmt.Errorf("failed to save credential (%d)", statusCode)
+	if err != nil {
+		return err
 	}
 
+	d.Set("credential_id", credentialId)
 	segments := []string{d.Get("segment").(string)}
 
 	connectorAwsVpc := &internal.ConnectorAwsVpcRequest{
@@ -85,14 +91,21 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, meta interface{}) err
 		CustomerName:   client.Username,
 		CustomerRegion: d.Get("aws_region").(string),
 		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
+		Name:           name,
         Segments:       segments,
         Size:           d.Get("size").(string),
         VpcId:          d.Get("vpc_id").(string),
         VpcOwnerId:     d.Get("aws_account_id").(string),
 	}
 
-	client.CreateConnectorAwsVpc(connectorAwsVpc)
+	id, err := client.CreateConnectorAwsVpc(connectorAwsVpc)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(strconv.Itoa(id))
+	d.Set("connector_id", strconv.Itoa(id))
 	return resourceConnectorAwsVpcRead(d, meta)
 }
 
