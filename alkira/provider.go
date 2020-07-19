@@ -35,18 +35,19 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"alkira_tenant_network":       resourceAlkiraTenantNetwork(),
-			"alkira_segment":              resourceAlkiraSegment(),
 			"alkira_connector_aws_vpc":    resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet": resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":    resourceAlkiraConnectorGcpVpc(),
+			"alkira_credential_aws_vpc":   resourceAlkiraCredentialAwsVpc(),
+			"alkira_segment":              resourceAlkiraSegment(),
+			"alkira_tenant_network":       resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_tenant_network":       dataSourceAlkiraTenantNetwork(),
-			"alkira_segment":              dataSourceAlkiraSegment(),
 			"alkira_connector_aws_vpc":    dataSourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet": dataSourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":    dataSourceAlkiraConnectorGcpVpc(),
+			"alkira_segment":              dataSourceAlkiraSegment(),
+			"alkira_tenant_network":       dataSourceAlkiraTenantNetwork(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}

@@ -32,17 +32,9 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"aws_access_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"aws_secret_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"credential_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 
 			"cxp": &schema.Schema{
@@ -73,26 +65,15 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*internal.AlkiraClient)
 
-	name      := d.Get("name").(string)
-	accessKey := d.Get("aws_access_key").(string)
-	secretKey := d.Get("aws_secret_key").(string)
-
-	credentialId, err := client.CreateCredentialAwsVpc(name, accessKey, secretKey)
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("credential_id", credentialId)
 	segments := []string{d.Get("segment").(string)}
 
 	connectorAwsVpc := &internal.ConnectorAwsVpcRequest{
 		CXP:            d.Get("cxp").(string),
-		CredentialId:   credentialId,
+		CredentialId:   d.Get("credential_id").(string),
 		CustomerName:   client.Username,
 		CustomerRegion: d.Get("aws_region").(string),
 		Group:          d.Get("group").(string),
-		Name:           name,
+		Name:           d.Get("name").(string),
         Segments:       segments,
         Size:           d.Get("size").(string),
         VpcId:          d.Get("vpc_id").(string),
