@@ -9,10 +9,10 @@ import (
 
 func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCredential,
-		Read:   resourceCredentialRead,
-		Update: resourceCredentialUpdate,
-		Delete: resourceCredentialDelete,
+		Create: resourceCredentialAwsVpc,
+		Read:   resourceCredentialAwsVpcRead,
+		Update: resourceCredentialAwsVpcUpdate,
+		Delete: resourceCredentialAwsVpcDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -42,7 +42,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 	}
 }
 
-func resourceCredential(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*internal.AlkiraClient)
 
 	name      := d.Get("name").(string)
@@ -58,18 +58,18 @@ func resourceCredential(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(credentialId)
-	return resourceCredentialRead(d, meta)
+	return resourceCredentialAwsVpcRead(d, meta)
 }
 
-func resourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
         return nil
 }
 
-func resourceCredentialUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceCredentialRead(d, meta)
+func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+        return resourceCredentialAwsVpcRead(d, meta)
 }
 
-func resourceCredentialDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client       := meta.(*internal.AlkiraClient)
 	credentialId := d.Id()
 
