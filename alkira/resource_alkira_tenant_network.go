@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 func resourceAlkiraTenantNetwork() *schema.Resource {
@@ -31,7 +31,7 @@ func resourceAlkiraTenantNetwork() *schema.Resource {
 }
 
 func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*internal.AlkiraClient)
+	client := m.(*alkira.AlkiraClient)
 
 	state, err := client.ProvisionTenantNetwork()
 
@@ -77,7 +77,7 @@ func resourceTenantNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*internal.AlkiraClient)
+	client := m.(*alkira.AlkiraClient)
 
 	state, err := client.ProvisionTenantNetwork()
 

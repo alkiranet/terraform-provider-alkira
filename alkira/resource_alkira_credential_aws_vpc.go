@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 func resourceAlkiraCredentialAwsVpc() *schema.Resource {
@@ -43,7 +43,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 }
 
 func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 
 	name      := d.Get("name").(string)
 	accessKey := d.Get("aws_access_key").(string)
@@ -70,7 +70,7 @@ func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	client       := meta.(*internal.AlkiraClient)
+	client       := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting credential-aws-vpc %s\n", credentialId)

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 func resourceAlkiraSegment() *schema.Resource {
@@ -43,7 +43,7 @@ func resourceAlkiraSegment() *schema.Resource {
 }
 
 func resourceSegment(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	name   := d.Get("name").(string)
 
 	log.Printf("[INFO] Segment Creating")
@@ -68,7 +68,7 @@ func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client    := meta.(*internal.AlkiraClient)
+	client    := meta.(*alkira.AlkiraClient)
 	segmentId := d.Id()
 
 	log.Printf("[INFO] Deleting Segment %s", segmentId)

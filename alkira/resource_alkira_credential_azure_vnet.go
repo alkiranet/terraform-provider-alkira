@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 func resourceAlkiraCredentialAzureVnet() *schema.Resource {
@@ -45,7 +45,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 }
 
 func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Creating credential-azure-vnet")
 	id, err := client.CreateCredentialAzureVnet(
@@ -73,7 +73,7 @@ func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCredentialAzureVnetDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	id     := d.Id()
 
 	log.Printf("[INFO] Deleting credential-azure-vnet %s\n", id)

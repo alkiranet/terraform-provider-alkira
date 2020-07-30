@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 // Provider returns a schema.Provider for Alkira.
@@ -45,9 +45,6 @@ func Provider() terraform.ResourceProvider {
 			"alkira_tenant_network":         resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_connector_aws_vpc":    dataSourceAlkiraConnectorAwsVpc(),
-			"alkira_connector_azure_vnet": dataSourceAlkiraConnectorAzureVnet(),
-			"alkira_connector_gcp_vpc":    dataSourceAlkiraConnectorGcpVpc(),
 			"alkira_segment":              dataSourceAlkiraSegment(),
 			"alkira_tenant_network":       dataSourceAlkiraTenantNetwork(),
 		},
@@ -66,7 +63,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 }
 
 func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	alkiraClient, err := internal.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
+	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
 
 	if err != nil {
 		return nil, nil

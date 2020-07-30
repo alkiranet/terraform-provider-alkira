@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/terraform-provider-alkira/alkira/internal"
+	"github.com/alkiranet/alkira-sdk-go/alkira"
 )
 
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
@@ -85,9 +85,9 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 }
 
 func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 
-	c := internal.CredentialGcpVpc{
+	c := alkira.CredentialGcpVpc{
 		AuthProvider:      d.Get("auth_provider").(string),
 		AuthUri:           d.Get("auth_uri").(string),
 		ClientEmail:       d.Get("client_email").(string),
@@ -120,7 +120,7 @@ func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCredentialGcpVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*internal.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	id     := d.Id()
 
 	log.Printf("[INFO] Deleting credential-gcp-vpc %s\n", id)
