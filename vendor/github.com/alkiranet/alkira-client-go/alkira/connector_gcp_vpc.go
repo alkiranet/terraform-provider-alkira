@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -50,8 +51,8 @@ func (ac *AlkiraClient) CreateConnectorGcpVpc(connector *ConnectorGcpVpcRequest)
 	var result ConnectorGcpVpcResponse
 	json.Unmarshal([]byte(data), &result)
 
-	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create GCP-VPC connector")
+	if response.StatusCode != 200 && response.StatusCode != 201 {
+		return id, fmt.Errorf("Failed to create GCP-VPC connector (%d)", response.StatusCode)
 	}
 
 	id = result.Id
