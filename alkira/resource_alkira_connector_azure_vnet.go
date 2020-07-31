@@ -19,10 +19,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			"azure_region": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "Azure Region",
 			},
 			"azure_vnet_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "Azure Virutal Network Id",
 			},
 			"connector_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -31,23 +33,27 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			"credential_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "The credentials for creating connector",
 			},
 			"cxp": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "The CXP to be used for the connector",
 			},
 			"group": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "A user group that the connector belongs to",
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "The name of the connector",
 			},
 			"segment": {
 				Type: schema.TypeString,
 				Required: true,
-				Description: "A segment associated with the connector AWS-VPC",
+				Description: "A segment associated with the connector",
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
@@ -73,6 +79,7 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
         VnetId:         d.Get("azure_vnet_id").(string),
 	}
 
+	log.Printf("[INFO] Creating Connector (AZURE-VNET)")
 	id, err := client.CreateConnectorAzureVnet(connector)
 
 	if err != nil {

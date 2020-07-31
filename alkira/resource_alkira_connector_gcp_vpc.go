@@ -78,6 +78,7 @@ func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error 
         VpcName:        d.Get("gcp_vpc_name").(string),
 	}
 
+	log.Printf("[INFO] Creating Connector (GCP-VPC)")
 	id, err := client.CreateConnectorGcpVpc(connector)
 
 	if err != nil {
