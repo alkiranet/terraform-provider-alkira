@@ -56,7 +56,7 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	// Using a client to set a timeout. This is alkira service. It
 	// should not take that long
 	var httpClient = &http.Client{
-		Timeout:   time.Second * 4,
+		Timeout:   time.Second * 3,
 		Transport: tr,
 	}
 

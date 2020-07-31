@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type ConnectorAzureVnetRequest struct {
+type ConnectorGcpVpcRequest struct {
 	CXP            string   `json:"cxp"`
 	CredentialId   string   `json:"credentialId"`
 	CustomerRegion string   `json:"customerRegion"`
@@ -17,17 +17,17 @@ type ConnectorAzureVnetRequest struct {
 	Name           string   `json:"name"`
 	Segments       []string `json:"segments"`
 	Size           string   `json:"size"`
-	TenantName     string   `json:"tenantName"`
-	VnetId         string   `json:"vnetId"`
+	VpcId          string   `json:"vpcId"`
+	VpcName        string   `json:"vpcName"`
 }
 
-type ConnectorAzureVnetResponse struct {
+type ConnectorGcpVpcResponse struct {
 	Id int `json:"id"`
 }
 
-// Create a AZURE-VNET connector
-func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRequest) (int, error) {
-	url := ac.URI + "api/v1/tenantnetworks/" + ac.TenantNetworkId + "/azurevnetconnectors"
+// Create a GCP-VPC connector
+func (ac *AlkiraClient) CreateConnectorGcpVpc(connector *ConnectorGcpVpcRequest) (int, error) {
+	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/gcpvpcconnectors"
 	id  := 0
 
 	// Construct the request
@@ -38,7 +38,7 @@ func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRe
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		log.Printf("Error : %s", err)
+		return id, err
 	}
 
 	defer response.Body.Close()
@@ -47,11 +47,11 @@ func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRe
 	log.Println(response.StatusCode)
 	log.Println(string(data))
 
-	var result ConnectorAzureVnetResponse
+	var result ConnectorGcpVpcResponse
 	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create AZURE-VNET connector")
+		return id, errors.New("Failed to create GCP-VPC connector")
 	}
 
 	id = result.Id
@@ -59,9 +59,9 @@ func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRe
 	return id, nil
 }
 
-// Delete a AZURE-VNET connector
-func (ac *AlkiraClient) DeleteConnectorAzureVnet(connectorId string) (error) {
-	url := ac.URI + "api/v1/tenantnetworks/" + ac.TenantNetworkId + "/azurevnetconnectors/" + connectorId
+// Delete a GCP-VPC connector
+func (ac *AlkiraClient) DeleteConnectorGcpVpc(connectorId string) (error) {
+	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/gcpvpcconnectors/" + connectorId
 
 	request, err := http.NewRequest("DELETE", url, nil)
 	request.Header.Set("Content-Type", "application/json")
@@ -78,7 +78,7 @@ func (ac *AlkiraClient) DeleteConnectorAzureVnet(connectorId string) (error) {
 	log.Println(string(data))
 
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete AZURE-VNET connector " + connectorId)
+		return errors.New("Failed to delete GCP-VPC connector" + connectorId)
 	}
 
 	return nil

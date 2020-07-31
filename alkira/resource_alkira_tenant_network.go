@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/alkira-sdk-go/alkira"
+	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
 func resourceAlkiraTenantNetwork() *schema.Resource {

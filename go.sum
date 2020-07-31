@@ -13,8 +13,8 @@ github.com/agext/levenshtein v1.2.1/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412/go.mod h1:WPjqKcmVOxf0XSf3YxCJs6N6AOSrOx3obionmG7T0y0=
-github.com/alkiranet/alkira-sdk-go v0.1.0 h1:jPTVfJBmKfb9tNrJ7S+64Hbs8ZteZiq6Saa8I4CeyJc=
-github.com/alkiranet/alkira-sdk-go v0.1.0/go.mod h1:TG2tDjkE+6IV5TUiwDyYOXN54Bwj3cGPgDoQnbAM0tg=
+github.com/alkiranet/alkira-client-go v0.1.1 h1:1iEqmWlfRL0fFILckRu/QmAeV+VIE5IFCy6Xd7obiyc=
+github.com/alkiranet/alkira-client-go v0.1.1/go.mod h1:qLumIcmcBekw5Sqi2dNl1TNN//d4+AMbiiEDIHWNLqA=
 github.com/apparentlymart/go-cidr v1.0.1 h1:NmIwLZ/KdsjIUlhf+/Np40atNXm/+lZ5txfTJ/SpF+U=
 github.com/apparentlymart/go-cidr v1.0.1/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/apparentlymart/go-dump v0.0.0-20180507223929-23540a00eaa3/go.mod h1:oL81AME2rN47vu18xqj1S1jPIPuN7afo62yKTNn3XMM=
