@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -22,14 +23,26 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			},
 			"aws_access_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The EC2 access key",
+				Optional:    true,
+				Description: "AWS access key",
 
 			},
 			"aws_secret_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The EC2 secret key",
+				Optional:    true,
+				Description: "AWS secret key",
+
+			},
+			"aws_role_arn": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The AWS Role Arn",
+
+			},
+			"aws_external_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The AWS Role External ID",
 
 			},
 			"type": &schema.Schema{
@@ -45,13 +58,26 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	c := alkira.CredentialAwsVpc{
-		Ec2AccessKey: d.Get("aws_access_key").(string),
-		Ec2SecretKey: d.Get("aws_secret_key").(string),
-		Type:         d.Get("type").(string),
+	credentialType := d.Get("type").(string)
+	var c interface{}
+
+	if credentialType == "ACCESS_KEY" {
+		c = alkira.CredentialAwsVpcKey{
+			Ec2AccessKey: d.Get("aws_access_key").(string),
+			Ec2SecretKey: d.Get("aws_secret_key").(string),
+			Type:         d.Get("type").(string),
+		}
+	} else if credentialType == "ROLE" {
+		c = alkira.CredentialAwsVpcRole{
+			Ec2RoleArn:    d.Get("aws_role_arn").(string),
+			Ec2ExternalId: d.Get("aws_external_id").(string),
+			Type:          d.Get("type").(string),
+		}
+	} else {
+		return errors.New("Invalid AWS-VPC Credential Type")
 	}
 
-	log.Printf("[INFO] Createing credential-aws-vpc")
+	log.Printf("[INFO] Createing credential (AWS-VPC) with type %s", credentialType)
 	credentialId, err := client.CreateCredential(d.Get("name").(string), "awsvpc", c)
 
 	if err != nil {

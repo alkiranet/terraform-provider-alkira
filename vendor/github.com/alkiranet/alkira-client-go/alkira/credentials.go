@@ -9,9 +9,15 @@ import (
 	"net/http"
 )
 
-type CredentialAwsVpc struct {
+type CredentialAwsVpcKey struct {
 	Ec2AccessKey    string `json:"ec2AccessKey"`
 	Ec2SecretKey    string `json:"ec2SecretKey"`
+	Type            string `json:"type"`
+}
+
+type CredentialAwsVpcRole struct {
+	Ec2RoleArn      string `json:"ec2RoleArn"`
+	Ec2ExternalId   string `json:"ec2ExternalId"`
 	Type            string `json:"type"`
 }
 

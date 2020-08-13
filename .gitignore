@@ -1,6 +1,7 @@
 .idea
 .DS_Store
 .terraform
+bin
 terraform-provider-alkira
 terraform.tfstate
 terraform.tfstate.*
