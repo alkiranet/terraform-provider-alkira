@@ -45,13 +45,14 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	name      := d.Get("name").(string)
-	accessKey := d.Get("aws_access_key").(string)
-	secretKey := d.Get("aws_secret_key").(string)
-	authType  := d.Get("type").(string)
+	c := alkira.CredentialAwsVpc{
+		Ec2AccessKey: d.Get("aws_access_key").(string),
+		Ec2SecretKey: d.Get("aws_secret_key").(string),
+		Type:         d.Get("type").(string),
+	}
 
 	log.Printf("[INFO] Createing credential-aws-vpc")
-	credentialId, err := client.CreateCredentialAwsVpc(name, accessKey, secretKey, authType)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), "awsvpc", c)
 
 	if err != nil {
 		return err
@@ -73,8 +74,8 @@ func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) er
 	client       := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 
-	log.Printf("[INFO] Deleting credential-aws-vpc %s\n", credentialId)
-	err := client.DeleteCredentialAwsVpc(credentialId)
+	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
+	err := client.DeleteCredential(credentialId, "awsvpc")
 
 	if err != nil {
 		return err

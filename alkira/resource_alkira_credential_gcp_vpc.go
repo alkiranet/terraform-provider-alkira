@@ -100,8 +100,8 @@ func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
 		Type:              d.Get("type").(string),
 	}
 
-	log.Printf("[INFO] Createing credential-gcp-vpc")
-	credentialId, err := client.CreateCredentialGcpVpc(d.Get("name").(string), &c)
+	log.Printf("[INFO] Createing Credential (GCP-VPC)")
+	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c)
 
 	if err != nil {
 		return err
@@ -123,14 +123,14 @@ func resourceCredentialGcpVpcDelete(d *schema.ResourceData, meta interface{}) er
 	client := meta.(*alkira.AlkiraClient)
 	id     := d.Id()
 
-	log.Printf("[INFO] Deleting credential-gcp-vpc %s\n", id)
-	err := client.DeleteCredentialGcpVpc(id)
+	log.Printf("[INFO] Deleting Credential (GCP-VPC %s)\n", id)
+	err := client.DeleteCredential(id, "gcpvpc")
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Deleted credential-gcp-vpc %s\n", id)
+	log.Printf("[INFO] Deleted Credential (GCP-VPC %s)\n", id)
 	d.SetId("")
 	return nil
 }

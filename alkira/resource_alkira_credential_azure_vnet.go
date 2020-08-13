@@ -47,20 +47,21 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Creating credential-azure-vnet")
-	id, err := client.CreateCredentialAzureVnet(
-		d.Get("name").(string),
-		d.Get("application_id").(string),
-		d.Get("secret_key").(string),
-		d.Get("subscription_id").(string),
-		d.Get("tenant_id").(string))
+	c := alkira.CredentialAzureVnet{
+		ApplicationId:  d.Get("application_id").(string),
+		SecretKey:      d.Get("secret_key").(string),
+		SubscriptionId: d.Get("subscription_id").(string),
+		TenantId:       d.Get("tenant_id").(string),
+    }
+
+	log.Printf("[INFO] Creating Credential (AZURE-VNET)")
+	id, err := client.CreateCredential(d.Get("name").(string), "azurevnet", c)
 
 	if err != nil {
 		return err
 	}
 
 	d.SetId(id)
-	log.Printf("[INFO] Created credential-azure-vnet")
 	return resourceCredentialAzureVnetRead(d, meta)
 }
 
@@ -76,14 +77,14 @@ func resourceCredentialAzureVnetDelete(d *schema.ResourceData, meta interface{})
 	client := meta.(*alkira.AlkiraClient)
 	id     := d.Id()
 
-	log.Printf("[INFO] Deleting credential-azure-vnet %s\n", id)
-	err := client.DeleteCredentialAzureVnet(id)
+	log.Printf("[INFO] Deleting Credential (AZURE-VNET %s)\n", id)
+	err := client.DeleteCredential(id, "azurevnet")
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Deleted credential-azure-vnet %s\n", id)
+	log.Printf("[INFO] Deleted Credential (AZURE-VNET %s)\n", id)
 	d.SetId("")
 	return nil
 }
