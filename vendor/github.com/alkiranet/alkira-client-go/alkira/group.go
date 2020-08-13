@@ -8,17 +8,17 @@ import (
 	"net/http"
 )
 
-type Segment struct {
+type Group struct {
 	Id              int         `json:"id"`
 	Name            string      `json:"name"`
 }
 
 
-// Get all segments from the given tenant network
-func (ac *AlkiraClient) GetSegments() ([]byte, int) {
-	segmentEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/segments"
+// Get all groups from the given tenant network
+func (ac *AlkiraClient) GetGroups() ([]byte, int) {
+	groupEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/groups"
 
-	request, err := http.NewRequest("GET", segmentEndpoint, nil)
+	request, err := http.NewRequest("GET", groupEndpoint, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
@@ -30,29 +30,28 @@ func (ac *AlkiraClient) GetSegments() ([]byte, int) {
 	data, _ := ioutil.ReadAll(response.Body)
 
 	//log.Println(response.StatusCode)
-	//log.Println(string(data))
+	log.Println(string(data))
 
 	return data, response.StatusCode
 }
 
-// Create a new Segment
-func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (int, int) {
-	var result Segment
+// Create a new Group
+func (ac *AlkiraClient) CreateGroup(name string) (int, int) {
+	var result Group
 
-	segmentEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/segments"
+	groupEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/groups"
 
 	body, err := json.Marshal(map[string]string{
 		"name":    name,
-		"asn":     asn,
-		"ipBlock": ipBlock,
 	})
 
-	request, err := http.NewRequest("POST", segmentEndpoint, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", groupEndpoint, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
 		log.Printf("Error : %s", err)
+		return 0, 0
 	}
 
 	defer response.Body.Close()
@@ -63,22 +62,23 @@ func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (
 	return result.Id, response.StatusCode
 }
 
-// Delete a segment
-func (ac *AlkiraClient) DeleteSegment(segmentId string) (int) {
-	segmentEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/segments/" + segmentId
+// Delete a group
+func (ac *AlkiraClient) DeleteGroup(id string) (int) {
+	groupEndpoint := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/groups/" + id
 
-	request, err := http.NewRequest("DELETE", segmentEndpoint, nil)
+	request, err := http.NewRequest("DELETE", groupEndpoint, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
 		log.Printf("Error : %s", err)
+		return 0
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
+	//log.Println(response.StatusCode)
 	log.Println(string(data))
 
 	return response.StatusCode

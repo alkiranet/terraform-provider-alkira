@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -36,6 +35,20 @@ type CredentialGcpVpc struct {
 	Type                string `json:"type"`
 }
 
+type CredentialPan struct {
+	LicenseKey          string `json:"licenseKey"`
+	Password            string `json:"password"`
+	Username            string `json:"userName"`
+}
+
+type CredentialPanInstance struct {
+	AuthKey             string `json:"authKey"`
+	AuthCode            string `json:"authCode"`
+	LicenseKey          string `json:"licenseKey"`
+	Password            string `json:"password"`
+	Username            string `json:"userName"`
+}
+
 type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
@@ -45,129 +58,9 @@ type CredentialResponse struct {
 	Id string `json:"id"`
 }
 
-// Create new Credential for AWS-VPC Connector
-func (ac *AlkiraClient) CreateCredentialAwsVpc(name string, accessKey string, secretKey string, authType string) (string, error) {
-	credentialEndpoint := ac.URI + "api/credentials/awsvpc"
-
-	// This body is not the normal JSON format...
-	body, err := json.Marshal(Credentials{
-		Name: name,
-		Credentials: CredentialAwsVpc{
-			Ec2AccessKey: accessKey,
-			Ec2SecretKey: secretKey,
-			Type: authType,
-		},
-	})
-
-	request, err := http.NewRequest("POST", credentialEndpoint, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		log.Printf("Error : %s", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	var result CredentialResponse
-
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 200 {
-		return result.Id, errors.New("Failed to save credential")
-	}
-
-	return result.Id, nil
-}
-
-// Delete Credential for AWS-VPC Connector
-func (ac *AlkiraClient) DeleteCredentialAwsVpc(id string) (error) {
-	credentialEndpoint := ac.URI + "api/credentials/awsvpc/" + id
-
-	request, err := http.NewRequest("DELETE", credentialEndpoint, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("Failed to delete credential-aws-vpc (%v)", response.StatusCode)
-	}
-
-	return nil
-}
-
-
-// Create new Credential for AZURE-VNET Connector
-func (ac *AlkiraClient) CreateCredentialAzureVnet(name string, applicationId string, secretKey string, subscriptionId string, tenantId string) (string, error) {
-	credentialEndpoint := ac.URI + "api/credentials/azurevnet"
-	credentialId := ""
-
-	// This body is not the normal JSON format...
-	body, err := json.Marshal(Credentials{
-		Name: name,
-		Credentials: CredentialAzureVnet{
-			ApplicationId:  applicationId,
-			SecretKey:      secretKey,
-			SubscriptionId: subscriptionId,
-			TenantId:       tenantId,
-		},
-	})
-
-	request, err := http.NewRequest("POST", credentialEndpoint, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return credentialId, err
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	var result CredentialResponse
-
-	json.Unmarshal([]byte(data), &result)
-
-	credentialId = result.Id
-
-	if response.StatusCode != 200 {
-		return credentialId, errors.New("Failed to save credential")
-	}
-
-	return credentialId, nil
-}
-
-
-// Delete Credential for AZURE-VNET Connector
-func (ac *AlkiraClient) DeleteCredentialAzureVnet(id string) (error) {
-	credentialEndpoint := ac.URI + "api/credentials/azurevnet/" + id
-
-	request, err := http.NewRequest("DELETE", credentialEndpoint, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("Failed to delete credential-azure-vnet (%v)", response.StatusCode)
-	}
-
-	return nil
-}
-
-// Create new Credential for GCP-VPC Connector
-func (ac *AlkiraClient) CreateCredentialGcpVpc(name string, credential *CredentialGcpVpc) (string, error) {
-	credentialEndpoint := ac.URI + "api/credentials/gcpvpc"
+// Create new Credential
+func (ac *AlkiraClient) CreateCredential(name string, credentialType string, credential interface{}) (string, error) {
+	credentialEndpoint := ac.URI + "api/credentials/" + credentialType
 	credentialId := ""
 
 	// This body is not the normal JSON format...
@@ -200,9 +93,10 @@ func (ac *AlkiraClient) CreateCredentialGcpVpc(name string, credential *Credenti
 	return credentialId, nil
 }
 
-// Delete Credential for AZURE-VNET Connector
-func (ac *AlkiraClient) DeleteCredentialGcpVpc(id string) (error) {
-	credentialEndpoint := ac.URI + "api/credentials/gcpvpc/" + id
+
+// Delete Credential
+func (ac *AlkiraClient) DeleteCredential(id string, credentialType string) (error) {
+	credentialEndpoint := ac.URI + "api/credentials/" + credentialType + "/" + id
 
 	request, err := http.NewRequest("DELETE", credentialEndpoint, nil)
 	request.Header.Set("Content-Type", "application/json")
@@ -215,7 +109,7 @@ func (ac *AlkiraClient) DeleteCredentialGcpVpc(id string) (error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		return fmt.Errorf("Failed to delete credential-gcp-vpc (%v)", response.StatusCode)
+		return fmt.Errorf("Failed to delete credential %s (%v)", credentialType, response.StatusCode)
 	}
 
 	return nil
