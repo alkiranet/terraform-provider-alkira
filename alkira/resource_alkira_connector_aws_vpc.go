@@ -48,10 +48,9 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"segments": {
-				Type:     schema.TypeList,
+			"segment": {
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
@@ -64,7 +63,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connectorAwsVpc := &alkira.ConnectorAwsVpcRequest{
 		CXP:            d.Get("cxp").(string),

@@ -36,10 +36,9 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"segments": {
+			"segment": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
 				Type: schema.TypeString,
@@ -52,7 +51,7 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorInternet{
 		CXP:         d.Get("cxp").(string),

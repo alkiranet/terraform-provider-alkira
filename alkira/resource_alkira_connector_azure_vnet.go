@@ -50,10 +50,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required: true,
 				Description: "The name of the connector",
 			},
-			"segments": {
-				Type:     schema.TypeList,
+			"segment": {
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
@@ -66,7 +65,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorAzureVnetRequest{
 		CXP:            d.Get("cxp").(string),

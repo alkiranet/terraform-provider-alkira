@@ -24,7 +24,6 @@ type PolicyRuleMatchCondition struct {
 	DstPortList           []string `json:"dstPortList"`
 	ApplicationList       []string `json:"applicationList"`
 	ApplicationFamilyList []string `json:"applicationFamilyList"`
-	InternetApplicationId int      `json:"internetApplicationId"`
 }
 
 type PolicyRuleAction struct {

@@ -53,10 +53,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				},
 				Optional: true,
 			},
-			"segments": {
-				Type:     schema.TypeList,
+			"segment": {
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"sites": &schema.Schema{
 				Type: schema.TypeSet,
@@ -96,7 +95,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 	sites    := expandIPSecSites(d.Get("sites").(*schema.Set))
 
 	connector := &alkira.ConnectorIPSecRequest{

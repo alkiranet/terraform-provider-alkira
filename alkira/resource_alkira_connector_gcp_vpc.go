@@ -48,10 +48,9 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"segments": {
-				Type:     schema.TypeList,
+			"segment": {
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
 				Type:     schema.TypeString,
@@ -64,7 +63,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorGcpVpc{
 		CXP:            d.Get("cxp").(string),
