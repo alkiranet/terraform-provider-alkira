@@ -16,50 +16,45 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 		Delete: resourceInternetApplicationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"connector_id": &schema.Schema{
+			"connector_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "ID of the connector",
 			},
-			"connector_type": &schema.Schema{
+			"connector_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Type of the connector",
 			},
-			"fqdn_prefix": &schema.Schema{
+			"fqdn_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "FQDN Prefix",
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "Group",
 			},
-			"name": &schema.Schema{
+			"internet_application_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Name of the internet application",
 			},
-			"private_ip": &schema.Schema{
+			"private_ip": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Private IP",
 			},
-			"private_port": &schema.Schema{
+			"private_port": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Private Port",
 			},
 			"segment": {
-				Type: schema.TypeString,
-				Required: true,
-				Description: "Name of the segment",
-			},
-			"size": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Size",
+			},
+			"size": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -87,6 +82,8 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("internet_application_id", id)
+
 	return resourceInternetApplicationRead(d, m)
 }
 
@@ -102,7 +99,7 @@ func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) er
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Internet Application %s", d.Id())
-	err := client.DeleteInternetApplication(d.Id())
+	err := client.DeleteInternetApplication(d.Get("internet_application_id").(int))
 
 	if err != nil {
 		return err

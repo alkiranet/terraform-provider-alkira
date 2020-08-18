@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -17,26 +16,21 @@ func resourceAlkiraSegment() *schema.Resource {
 		Delete: resourceSegmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the segment",
 			},
-			"asn": &schema.Schema{
+			"asn": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The ASN of the segement",
-
 			},
-			"cidr": &schema.Schema{
+			"cidr": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The CIDR Block of the segment",
 			},
-			"segment_id": &schema.Schema{
-				Type:        schema.TypeString,
+			"segment_id": {
+				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "The ID of the segment",
 			},
 		},
 	}
@@ -47,15 +41,16 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 	name   := d.Get("name").(string)
 
 	log.Printf("[INFO] Segment Creating")
-	id, statusCode := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
+	id, err := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
 	log.Printf("[INFO] Segment ID: %d", id)
 
-	if statusCode != 200 {
-		fmt.Printf("ERROR: failed to create segment")
+	if err != nil {
+		return err
 	}
 
 	d.SetId(strconv.Itoa(id))
-	d.Set("segment_id", strconv.Itoa(id))
+	d.Set("segment_id", id)
+
 	return resourceSegmentRead(d, meta)
 }
 
@@ -69,13 +64,13 @@ func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client    := meta.(*alkira.AlkiraClient)
-	segmentId := d.Id()
+	segmentId := d.Get("segment_id").(int)
 
-	log.Printf("[INFO] Deleting Segment %s", segmentId)
-	statusCode := client.DeleteSegment(segmentId)
+	log.Printf("[INFO] Deleting Segment %d", segmentId)
+	err := client.DeleteSegment(segmentId)
 
-	if statusCode != 202 {
-	 	return fmt.Errorf("failed to delete segment %s", segmentId)
+	if err != nil {
+	 	return err
 	}
 
 	return nil

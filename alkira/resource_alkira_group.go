@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -17,10 +16,13 @@ func resourceAlkiraGroup() *schema.Resource {
 		Delete: resourceGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of the group",
+			"group_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -31,14 +33,16 @@ func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 	name   := d.Get("name").(string)
 
 	log.Printf("[INFO] Group Creating")
-	id, statusCode := client.CreateGroup(name)
+	id, err := client.CreateGroup(name)
 	log.Printf("[INFO] Group ID: %d", id)
 
-	if statusCode != 200 {
-		fmt.Printf("ERROR: failed to create group")
+	if err != nil {
+		return err
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("group_id", id)
+
 	return resourceGroupRead(d, meta)
 }
 
@@ -52,13 +56,13 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client    := meta.(*alkira.AlkiraClient)
-	groupId := d.Id()
+	groupId   := d.Get("group_id").(int)
 
-	log.Printf("[INFO] Deleting Group %s", groupId)
-	statusCode := client.DeleteGroup(groupId)
+	log.Printf("[INFO] Deleting Group %d", groupId)
+	err := client.DeleteGroup(groupId)
 
-	if statusCode != 202 {
-	 	return fmt.Errorf("failed to delete group %s", groupId)
+	if err != nil {
+	 	return err
 	}
 
 	return nil
