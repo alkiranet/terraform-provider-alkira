@@ -49,6 +49,10 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"internet_application_id": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -98,6 +102,7 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 			SrcIp:                 d.Get("src_ip").(string),
 			DstIp:                 d.Get("dst_ip").(string),
 			Dscp:                  d.Get("dscp").(string),
+			InternetApplicationId: d.Get("internet_application_id").(int),
 			Protocol:              d.Get("protocol").(string),
 			SrcPortList:           srcPortList,
 			DstPortList:           dstPortList,
