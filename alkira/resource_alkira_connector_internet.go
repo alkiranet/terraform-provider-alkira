@@ -37,7 +37,7 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 				Required: true,
 			},
 			"segment": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"size": {
