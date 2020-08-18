@@ -3,9 +3,8 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -26,31 +25,28 @@ type ConnectorAzureVnetResponse struct {
 
 // Create a AZURE-VNET connector
 func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/azurevnetconnectors"
-	id  := 0
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreateConnectorAzureVnet: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	var result ConnectorAzureVnetResponse
 	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create AZURE-VNET connector")
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	id = result.Id
@@ -58,26 +54,45 @@ func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnetRe
 	return id, nil
 }
 
-// Delete a AZURE-VNET connector
-func (ac *AlkiraClient) DeleteConnectorAzureVnet(connectorId string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/azurevnetconnectors/" + connectorId
+// Get one AZURE-VNET connector by Id
+func (ac *AlkiraClient) GetConnectorAzureVnet(id int) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors/%d", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("GetConnectorAzureVnet: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
+	if response.StatusCode != 200 {
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return nil
+}
+
+// Delete one AZURE-VNET connector by Id
+func (ac *AlkiraClient) DeleteConnectorAzureVnet(id int) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+
+	request, err := http.NewRequest("DELETE", uri, nil)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("DeleteConnectorAzureVnet: request failed: %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete AZURE-VNET connector " + connectorId)
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil

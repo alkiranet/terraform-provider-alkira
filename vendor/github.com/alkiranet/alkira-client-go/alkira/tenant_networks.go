@@ -2,10 +2,8 @@ package alkira
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -17,96 +15,118 @@ type TenantNetworkState struct {
 	State string `json:"state"`
 }
 
-// Get the tenant networks of the current tenant
-func (ac *AlkiraClient) GetTenantNetworks() {
-	url := ac.URI + "tenantnetworks"
+// GetTenantNetworks get the tenant networks of the current tenant
+func (ac *AlkiraClient) GetTenantNetworks() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks", ac.URI)
 
-	request, err := http.NewRequest("GET", url, nil)
+	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		fmt.Printf("Error : %s", err)
+		return "", fmt.Errorf("GetTenantNetworks: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
-	return
-}
-
-// Get the tenant networks of the current tenant
-func (ac *AlkiraClient) GetTenantNetworksId() (int) {
-	var result []TenantNetworkId
-
-	url := ac.URI + "tenantnetworks"
-
-	request, err := http.NewRequest("GET", url, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		fmt.Printf("Error : %s", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	//log.Println(response.StatusCode)
-	//log.Println(string(data))
-
-	json.Unmarshal([]byte(data), &result)
-
-	return result[0].Id
-}
-
-// Get the tenant network state
-func (ac *AlkiraClient) GetTenantNetworkState() (string, error) {
-	url := ac.URI + "tenantnetworks/" + ac.TenantNetworkId
-
-	request, err := http.NewRequest("GET", url, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return "", err
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	var result TenantNetworkState
-	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 200 {
-		return result.State, errors.New("Failed to get tenant network")
+		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
-	return result.State, nil
+	return string(data), nil
 }
 
-func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
-	url := ac.URI + "tenantnetworks/" + ac.TenantNetworkId + "/provision"
+// GetTenantNetworkId get the tenant network Id of the current tenant
+func (ac *AlkiraClient) GetTenantNetworkId() (int, error) {
 
-	request, err := http.NewRequest("POST", url, nil)
+	uri := fmt.Sprintf("%s/tenantnetworks", ac.URI)
+	id := 0
+
+	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", err
+		return id, fmt.Errorf("GetTenantNetworkId: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
+	if response.StatusCode != 200 {
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	var result []TenantNetworkId
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return id, fmt.Errorf("GetTenantNetworkId: parse failed: %v", err)
+	}
+
+	id = result[0].Id
+	return result[0].Id, nil
+}
+
+// GetTenantNetworkState get the tenant network state
+func (ac *AlkiraClient) GetTenantNetworkState() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s", ac.URI, ac.TenantNetworkId)
+	state := ""
+
+	request, err := http.NewRequest("GET", uri, nil)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return state, fmt.Errorf("GetTenantNetworkState: request failed: %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return state, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
 	var result TenantNetworkState
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return state, fmt.Errorf("GetTenantNetworkState: parse failed: %v", err)
+	}
+
+	state = result.State
+	return state, nil
+}
+
+// ProvisionTenantNetwork provisioning the current tenant network
+func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/provision", ac.URI, ac.TenantNetworkId)
+	state := ""
+
+	request, err := http.NewRequest("POST", uri, nil)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return state, fmt.Errorf("ProvisionTenantNetwork: request failed: %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return result.State, errors.New("Failed to provision tenant network")
+		return state, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
+
+	var result TenantNetworkState
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return state, fmt.Errorf("ProvisionTenantNetwork: parse failed: %v", err)
+	}
+
+	state = result.State
 	return result.State, nil
 }

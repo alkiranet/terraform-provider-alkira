@@ -3,50 +3,49 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
-type ConnectorInetRequest struct {
-	CXP            string   `json:"cxp"`
-	Group          string   `json:"group"`
-	Name           string   `json:"name"`
-	Segments       []string `json:"segments"`
+type ConnectorInternet struct {
+	CXP         string   `json:"cxp"`
+	Description string   `json:"description"`
+	Group       string   `json:"group"`
+	Id          int      `json:"id"`
+	Name        string   `json:"name"`
+	Segments    []string `json:"segments"`
+	Size        string   `json:"size"`
 }
 
-type ConnectorInetResponse struct {
-	Id              int         `json:"id"`
-}
-
-// Create a INET connector
-func (ac *AlkiraClient) CreateConnectorInet(connector *ConnectorInetRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/internetconnectors"
-	id  := 0
+// Create an internet connector
+func (ac *AlkiraClient) CreateConnectorInternet(connector *ConnectorInternet) (int, error) {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internetconnectors", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreateConnectorInternet: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
-	var result ConnectorInetResponse
-	json.Unmarshal([]byte(data), &result)
-
 	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create INET connector")
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	var result ConnectorInternet
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return id, fmt.Errorf("CreateConnectorInternet: parse failed: %v", err)
 	}
 
 	id = result.Id
@@ -54,26 +53,52 @@ func (ac *AlkiraClient) CreateConnectorInet(connector *ConnectorInetRequest) (in
 	return id, nil
 }
 
-// Delete an INET connector
-func (ac *AlkiraClient) DeleteConnectorInet(connectorId string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/internetconnectors/" + connectorId
+// Get an internet connector by id
+func (ac *AlkiraClient) GetConnectorInternet(id int) (ConnectorInternet, error) {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internetconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+	var result ConnectorInternet
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return result, fmt.Errorf("GetConnectorInternet: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
+	if response.StatusCode != 200 {
+		return result, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return result, fmt.Errorf("GetConnectorInternet: parse failed: %v", err)
+	}
+
+	return result, nil
+}
+
+// Delete an internet connector
+func (ac *AlkiraClient) DeleteConnectorInet(id int) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internetconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+
+	request, err := http.NewRequest("DELETE", uri, nil)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("DeleteConnectorInternet: request failed: %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete INET connector " + connectorId)
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil

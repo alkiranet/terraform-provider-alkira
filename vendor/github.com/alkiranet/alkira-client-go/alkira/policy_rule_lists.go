@@ -3,21 +3,20 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
 type PolicyRuleListRequest struct {
-	Description    string               `json:"description"`
-	Name           string               `json:"name"`
-	Rules          []PolicyRuleListRule `json:"rules"`
+	Description string               `json:"description"`
+	Name        string               `json:"name"`
+	Rules       []PolicyRuleListRule `json:"rules"`
 }
 
 type PolicyRuleListRule struct {
-	Priority    int   `json:"priority"`
-	RuleId      int   `json:"ruleId"`
+	Priority int `json:"priority"`
+	RuleId   int `json:"ruleId"`
 }
 
 type policyRuleListResponse struct {
@@ -26,31 +25,28 @@ type policyRuleListResponse struct {
 
 // Create a policy rule
 func (ac *AlkiraClient) CreatePolicyRuleList(p *PolicyRuleListRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/policy/rulelists"
-	id  := 0
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreatePolicyRuleList: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	var result policyResponse
 	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create policy rule list")
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	id = result.Id
@@ -58,25 +54,23 @@ func (ac *AlkiraClient) CreatePolicyRuleList(p *PolicyRuleListRequest) (int, err
 }
 
 // Delete a policy rule list
-func (ac *AlkiraClient) DeletePolicyRuleList(id string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/policy/rulelists/" + id
+func (ac *AlkiraClient) DeletePolicyRuleList(id int) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists/%d", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("DELETE", uri, nil)
+
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("DeletePolicyRuleList: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
-	if response.StatusCode != 200 {
-		return errors.New("Failed to delete policy rule list" + id)
+	if response.StatusCode != 200 && response.StatusCode != 202 {
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil

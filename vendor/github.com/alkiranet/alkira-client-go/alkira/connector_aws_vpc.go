@@ -3,9 +3,8 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -23,36 +22,37 @@ type ConnectorAwsVpcRequest struct {
 }
 
 type ConnectorAwsVpcResponse struct {
-	Id              int         `json:"id"`
+	Id int `json:"id"`
 }
 
 // Create a AWS-VPC connector
 func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/awsvpcconnectors"
-	id  := 0
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreateConnectorAwsVpc: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
+	if response.StatusCode != 201 {
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
 
 	var result ConnectorAwsVpcResponse
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal([]byte(data), &result)
 
-	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create AWS-VPC connector")
+	if err != nil {
+		return id, fmt.Errorf("CreateConnectorAwsVpc: request failed: %v", err)
 	}
 
 	id = result.Id
@@ -60,26 +60,23 @@ func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest)
 	return id, nil
 }
 
-// Delete a AWS-VPC connector
-func (ac *AlkiraClient) DeleteConnectorAwsVpc(connectorId string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/awsvpcconnectors/" + connectorId
+// Delete an AWS-VPC connector
+func (ac *AlkiraClient) DeleteConnectorAwsVpc(id int) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%d", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("DeleteConnectorAwsVpc: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete AWS-VPC connector " + connectorId)
+		return fmt.Errorf("DeleteConnectorAwsVpc: (%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil

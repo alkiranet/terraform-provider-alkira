@@ -3,9 +3,8 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -24,40 +23,36 @@ type ConnectorIPSecResponse struct {
 }
 
 type ConnectorIPSecSite struct {
-	Name           string      `json:"name"`
-	CustomerGwAsn  string      `json:"customerGwAsn"`
-	CustomerGwIp   string      `json:"customerGwIp"`
-    PresharedKeys  []string    `json:"presharedKeys"`
+	Name          string   `json:"name"`
+	CustomerGwAsn string   `json:"customerGwAsn"`
+	CustomerGwIp  string   `json:"customerGwIp"`
+	PresharedKeys []string `json:"presharedKeys"`
 }
 
-// Create a IPSEC connector
+// Create an IPSEC connector
 func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/ipsecconnectors"
-	id  := 0
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	log.Println(string(body))
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreateConnectorIpSec: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	var result ConnectorIPSecResponse
 	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create IPSEC connector")
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	id = result.Id
@@ -65,26 +60,23 @@ func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (
 	return id, nil
 }
 
-// Delete a IPSEC connector
-func (ac *AlkiraClient) DeleteConnectorIPSec(connectorId string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/ipsecconnectors/" + connectorId
+// Delete an IPSEC connector by Id
+func (ac *AlkiraClient) DeleteConnectorIPSec(id int) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%d", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("DeleteConnectorIpSec: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete IPSEC connector " + connectorId)
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil

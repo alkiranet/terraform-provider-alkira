@@ -3,9 +3,8 @@ package alkira
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -33,64 +32,64 @@ type ServicePanInstance struct {
 }
 
 type ServicePanResponse struct {
-	Id              int         `json:"id"`
+	Id int `json:"id"`
 }
 
-// Create service PAN
+// CreateServicePan create service PAN
 func (ac *AlkiraClient) CreateServicePan(service *ServicePanRequest) (int, error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/panfwservices"
-	id  := 0
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices", ac.URI, ac.TenantNetworkId)
+	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(service)
 
-	log.Println(bytes.NewBuffer(body))
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return id, fmt.Errorf("CreateServicePan: marshal failed: %v", err)
+	}
+
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return id, err
+		return id, fmt.Errorf("CreateServicePan: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
+	if response.StatusCode != 201 {
+		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
 
 	var result ServicePanResponse
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal([]byte(data), &result)
 
-	if response.StatusCode != 201 {
-		return id, errors.New("Failed to create service PAN")
+	if err != nil {
+		return id, fmt.Errorf("CreateServicePan: parse failed: %v", err)
 	}
 
 	id = result.Id
-
 	return id, nil
 }
 
-// Delete a Service PAN
-func (ac *AlkiraClient) DeleteServicePan(id string) (error) {
-	url := ac.URI + "v1/tenantnetworks/" + ac.TenantNetworkId + "/panfwservices/" + id
+// DeleteServicePan delete a Service PAN
+func (ac *AlkiraClient) DeleteServicePan(id int) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%d", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", url, nil)
+	request, err := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("DeleteServicePan: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	log.Println(response.StatusCode)
-	log.Println(string(data))
-
 	if response.StatusCode != 200 {
-		return errors.New("Failed to delete PAN service " + id)
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
 	return nil
