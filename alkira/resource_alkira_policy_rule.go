@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -17,50 +16,66 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 		Delete: resourcePolicyRuleDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"application_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"application_family_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the policy rule",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of the policy rule",
 
 			},
-			"src_ip": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"src_ip": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"dst_ip": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"dst_ip": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"dscp": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"dscp": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"protocol": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"protocol": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"src_port_list": &schema.Schema{
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required:    true,
+			"src_port_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 			},
-			"dst_port_list": &schema.Schema{
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required:    true,
+			"dst_port_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 			},
-			"action": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"rule_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"rule_action": {
+				Type:     schema.TypeString,
+				Optional: true,
+			    Default:  "ALLOW",
+			},
+			"rule_action_service_type_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 		},
 	}
@@ -69,22 +84,29 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	srcPortList := expandStringFromList(d.Get("src_port_list").([]interface{}))
-	dstPortList := expandStringFromList(d.Get("dst_port_list").([]interface{}))
+	srcPortList := convertTypeListToStringList(d.Get("src_port_list").([]interface{}))
+	dstPortList := convertTypeListToStringList(d.Get("dst_port_list").([]interface{}))
+
+	applicationList       := convertTypeListToStringList(d.Get("application_list").([]interface{}))
+	applicationFamilyList := convertTypeListToStringList(d.Get("application_family_list").([]interface{}))
+	serviceTypeList       := convertTypeListToStringList(d.Get("rule_action_service_type_list").([]interface{}))
 
 	rule   := &alkira.PolicyRuleRequest{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		MatchCondition: alkira.PolicyRuleMatchCondition{
-			SrcIp:       d.Get("src_ip").(string),
-			DstIp:       d.Get("dst_ip").(string),
-			Dscp:        d.Get("dscp").(string),
-			Protocol:    d.Get("protocol").(string),
-			SrcPortList: srcPortList,
-			DstPortList: dstPortList,
+			SrcIp:                 d.Get("src_ip").(string),
+			DstIp:                 d.Get("dst_ip").(string),
+			Dscp:                  d.Get("dscp").(string),
+			Protocol:              d.Get("protocol").(string),
+			SrcPortList:           srcPortList,
+			DstPortList:           dstPortList,
+			ApplicationList:       applicationList,
+			ApplicationFamilyList: applicationFamilyList,
 		},
 		RuleAction: alkira.PolicyRuleAction{
-			Action: d.Get("action").(string),
+			Action:          d.Get("rule_action").(string),
+			ServiceTypeList: serviceTypeList,
 		},
 	}
 
@@ -93,9 +115,12 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to create policy rule")
+		return err
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("rule_id", id)
+
 	return resourcePolicyRuleRead(d, meta)
 }
 
@@ -109,13 +134,13 @@ func resourcePolicyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	client    := meta.(*alkira.AlkiraClient)
-	PolicyRuleId := d.Id()
+	PolicyRuleId := d.Get("rule_id").(int)
 
 	log.Printf("[INFO] Deleting PolicyRule %s", PolicyRuleId)
 	err := client.DeletePolicyRule(PolicyRuleId)
 
 	if err != nil {
-	 	return fmt.Errorf("failed to delete PolicyRule %s", PolicyRuleId)
+	 	return err
 	}
 
 	return nil

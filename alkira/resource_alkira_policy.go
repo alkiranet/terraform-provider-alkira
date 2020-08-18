@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -17,47 +16,40 @@ func resourceAlkiraPolicy() *schema.Resource {
 		Delete: resourcePolicyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"description": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of the policy",
-
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"enabled": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The ASN of the segement",
-
+			"enabled": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"from_groups": &schema.Schema{
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required:    true,
+			"from_groups": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 			},
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of the policy",
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"rule_list_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"policy_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
-			"segment_ids": &schema.Schema{
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required:    true,
+			"rule_list_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"to_groups": &schema.Schema{
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required:    true,
+			"segment_ids": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
+			},
+			"to_groups": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 			},
 		},
 	}
@@ -66,9 +58,9 @@ func resourceAlkiraPolicy() *schema.Resource {
 func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	segmentIds := expandStringFromList(d.Get("segment_ids").([]interface{}))
-	fromGroups := expandStringFromList(d.Get("from_groups").([]interface{}))
-	toGroups   := expandStringFromList(d.Get("to_groups").([]interface{}))
+	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	fromGroups := convertTypeListToStringList(d.Get("from_groups").([]interface{}))
+	toGroups   := convertTypeListToStringList(d.Get("to_groups").([]interface{}))
 
 	policy := &alkira.PolicyRequest{
 		Description: d.Get("description").(string),
@@ -86,9 +78,12 @@ func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if id == 0 || err != nil {
 		log.Printf("[ERROR] Failed to create policy")
+		return err
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("policy_id", id)
+
 	return resourcePolicyRead(d, meta)
 }
 
@@ -102,13 +97,13 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client    := meta.(*alkira.AlkiraClient)
-	policyId  := d.Id()
+	policyId  := d.Get("policy_id").(int)
 
 	log.Printf("[INFO] Deleting Policy %s", policyId)
 	err := client.DeletePolicy(policyId)
 
 	if err != nil {
-	 	return fmt.Errorf("failed to delete policy %s", policyId)
+	 	return err
 	}
 
 	return nil
