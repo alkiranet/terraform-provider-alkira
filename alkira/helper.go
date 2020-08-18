@@ -13,9 +13,9 @@ type panZone struct {
 	Groups  interface{}
 }
 
-func expandStringFromList(in []interface{}) []string {
+func convertTypeListToStringList(in []interface{}) []string {
     if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] invalid input")
+		log.Printf("[DEBUG] empty input")
         return nil
     }
 

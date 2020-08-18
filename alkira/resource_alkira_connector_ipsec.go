@@ -16,20 +16,21 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 		Delete: resourceConnectorIPSecDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cxp": &schema.Schema{
+			"connector_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"cxp": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "The CXP to be used for the connector",
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "A user group that the connector belongs to",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "The name of the connector",
 			},
 			"segment_options": {
 				Type: schema.TypeSet,
@@ -53,9 +54,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"segments": {
-				Type: schema.TypeString,
+				Type:     schema.TypeList,
 				Required: true,
-				Description: "A segment associated with the connector",
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"sites": &schema.Schema{
 				Type: schema.TypeSet,
@@ -95,8 +96,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segments").(string)}
-	sites := expandIPSecSites(d.Get("sites").(*schema.Set))
+	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	sites    := expandIPSecSites(d.Get("sites").(*schema.Set))
 
 	connector := &alkira.ConnectorIPSecRequest{
 		CXP:            d.Get("cxp").(string),
@@ -116,6 +117,8 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(strconv.Itoa(id))
+	d.Set("connector_id", id)
+
 	return resourceConnectorIPSecRead(d, m)
 }
 
@@ -131,7 +134,7 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (IPSec) %s", d.Id())
-	err := client.DeleteConnectorIPSec(d.Id())
+	err := client.DeleteConnectorIPSec(d.Get("connector_id").(int))
 
 	if err != nil {
 		return err

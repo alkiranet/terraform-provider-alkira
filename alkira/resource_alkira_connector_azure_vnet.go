@@ -27,7 +27,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "Azure Virutal Network Id",
 			},
 			"connector_id": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"credential_id": &schema.Schema{
@@ -50,10 +50,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required: true,
 				Description: "The name of the connector",
 			},
-			"segment": {
-				Type: schema.TypeString,
+			"segments": {
+				Type:     schema.TypeList,
 				Required: true,
-				Description: "A segment associated with the connector",
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
@@ -66,7 +66,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segment").(string)}
+	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
 
 	connector := &alkira.ConnectorAzureVnetRequest{
 		CXP:            d.Get("cxp").(string),
@@ -87,7 +87,7 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
 	}
 
 	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", strconv.Itoa(id))
+	d.Set("connector_id", id)
 
 	return resourceConnectorAzureVnetRead(d, m)
 }
@@ -104,7 +104,7 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (AZURE-VNET) %s", d.Id())
-	err := client.DeleteConnectorAzureVnet(d.Id())
+	err := client.DeleteConnectorAzureVnet(d.Get("connector_id").(int))
 
 	if err != nil {
 		return err

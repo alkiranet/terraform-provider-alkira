@@ -36,7 +36,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"cxp": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -46,13 +45,13 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional: true,
 			},
 			"connector_id": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"segment": {
-				Type: schema.TypeString,
+			"segments": {
+				Type:     schema.TypeList,
 				Required: true,
-				Description: "A segment associated with the connector AWS-VPC",
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": &schema.Schema{
 				Type:     schema.TypeString,
@@ -65,7 +64,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segment").(string)}
+	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
 
 	connectorAwsVpc := &alkira.ConnectorAwsVpcRequest{
 		CXP:            d.Get("cxp").(string),
@@ -87,7 +86,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 	}
 
 	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", strconv.Itoa(id))
+	d.Set("connector_id", id)
 	return resourceConnectorAwsVpcRead(d, m)
 }
 
@@ -103,7 +102,7 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (AWS-VPC) %s", d.Id())
-	err := client.DeleteConnectorAwsVpc(d.Id())
+	err := client.DeleteConnectorAwsVpc(d.Get("connector_id").(int))
 
 	if err != nil {
 		return err
