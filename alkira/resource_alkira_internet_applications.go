@@ -28,9 +28,9 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"group": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"group_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"internet_application_id": {
 				Type:     schema.TypeInt,
@@ -67,7 +67,6 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 		ConnectorId:    d.Get("connector_id").(string),
 		ConnectorType:  d.Get("connector_type").(string),
 		FqdnPrefix:     d.Get("fqdn_prefix").(string),
-		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
         PrivateIp:      d.Get("private_ip").(string),
         PrivatePort:    d.Get("private_port").(string),
@@ -83,6 +82,9 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 
 	d.SetId(strconv.Itoa(id))
 	d.Set("internet_application_id", id)
+	d.Set("group_id", getInternetApplicationGroup(client))
+
+	log.Printf("[INFO] Internet Application Group Id %d", d.Get("group_id").(int))
 
 	return resourceInternetApplicationRead(d, m)
 }

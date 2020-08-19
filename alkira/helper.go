@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -11,6 +12,27 @@ type panZone struct {
 	Segment string
 	Zone    string
 	Groups  interface{}
+}
+
+
+func getInternetApplicationGroup(client *alkira.AlkiraClient) (int) {
+	groups, err := client.GetGroups()
+
+	if err != nil {
+		log.Printf("[ERROR] failed to get groups")
+		return 0
+	}
+
+	var result []alkira.Group
+	json.Unmarshal([]byte(groups), &result)
+
+	for _, group := range result {
+		if group.Name == "ALK-INB-INT-GROUP" {
+			return group.Id
+		}
+	}
+
+	return 0
 }
 
 func convertTypeListToStringList(in []interface{}) []string {
