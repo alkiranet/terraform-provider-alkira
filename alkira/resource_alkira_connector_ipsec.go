@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
@@ -41,8 +41,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Required: true,
 						},
 						"disable_internet_exit": {
-							Type:      schema.TypeString,
-							Optional:  true,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"disable_advertise_on_prem_routes": {
@@ -62,15 +62,15 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Required: true,
 						},
 						"customer_gateway_asn": {
-							Type: schema.TypeString,
-							Optional:  true,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"customer_gateway_ip": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"preshared_keys": {
@@ -96,16 +96,16 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	segments := []string{d.Get("segment").(string)}
-	sites    := expandIPSecSites(d.Get("sites").(*schema.Set))
+	sites := expandIPSecSites(d.Get("sites").(*schema.Set))
 
 	connector := &alkira.ConnectorIPSecRequest{
-		CXP:            d.Get("cxp").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-//		SegmentOptions: d.Get("segment_options").(*schema.Set).List(),
-        Segments:       segments,
-		Sites:          sites,
-        Size:           d.Get("size").(string),
+		CXP:   d.Get("cxp").(string),
+		Group: d.Get("group").(string),
+		Name:  d.Get("name").(string),
+		//		SegmentOptions: d.Get("segment_options").(*schema.Set).List(),
+		Segments: segments,
+		Sites:    sites,
+		Size:     d.Get("size").(string),
 	}
 
 	log.Printf("[INFO] Creating Connector (IPSec) %s", d.Id())
@@ -122,11 +122,11 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceConnectorIPSecRead(d, m)
+	return resourceConnectorIPSecRead(d, m)
 }
 
 func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {

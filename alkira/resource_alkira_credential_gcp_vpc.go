@@ -3,8 +3,8 @@ package alkira
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
@@ -24,61 +24,51 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Authentication Provider",
-
 			},
 			"auth_uri": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Authentication URI",
-
 			},
 			"client_email": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Client email",
-
 			},
 			"client_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Client ID",
-
 			},
 			"client_x509_cert_url": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Client X509 Cert URL",
-
 			},
 			"private_key_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Private Key ID",
-
 			},
 			"private_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Private Key",
-
 			},
 			"project_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID",
-
 			},
 			"token_uri": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Token URI",
-
 			},
 			"type": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Type",
-
 			},
 		},
 	}
@@ -112,16 +102,16 @@ func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCredentialGcpVpcRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceCredentialGcpVpcRead(d, meta)
+	return resourceCredentialGcpVpcRead(d, meta)
 }
 
 func resourceCredentialGcpVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	id     := d.Id()
+	id := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (GCP-VPC %s)\n", id)
 	err := client.DeleteCredential(id, "gcpvpc")

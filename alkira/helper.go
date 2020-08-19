@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type panZone struct {
@@ -14,8 +14,7 @@ type panZone struct {
 	Groups  interface{}
 }
 
-
-func getInternetApplicationGroup(client *alkira.AlkiraClient) (int) {
+func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 	groups, err := client.GetGroups()
 
 	if err != nil {
@@ -36,10 +35,10 @@ func getInternetApplicationGroup(client *alkira.AlkiraClient) (int) {
 }
 
 func convertTypeListToStringList(in []interface{}) []string {
-    if in == nil || len(in) == 0 {
+	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty input")
-        return nil
-    }
+		return nil
+	}
 
 	strList := make([]string, len(in))
 
@@ -51,27 +50,27 @@ func convertTypeListToStringList(in []interface{}) []string {
 }
 
 func expandPanSegmentOptions(in *schema.Set) map[string]interface{} {
-    if in == nil || in.Len() == 0 {
+	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid SegmentOptions input")
-        return nil
-    }
+		return nil
+	}
 
 	zoneMap := make([]panZone, in.Len())
 
-    for i, option := range in.List() {
-        r := panZone{}
+	for i, option := range in.List() {
+		r := panZone{}
 		cfg := option.(map[string]interface{})
-        if v, ok := cfg["segment_name"].(string); ok {
+		if v, ok := cfg["segment_name"].(string); ok {
 			r.Segment = v
-        }
+		}
 		if v, ok := cfg["zone_name"].(string); ok {
 			r.Zone = v
-        }
+		}
 
 		r.Groups = cfg["groups"]
 
 		zoneMap[i] = r
-    }
+	}
 
 	segmentOptions := make(map[string]interface{})
 
@@ -85,93 +84,91 @@ func expandPanSegmentOptions(in *schema.Set) map[string]interface{} {
 			}
 		}
 
-		zonesToGroups  := make(map[string]interface{})
+		zonesToGroups := make(map[string]interface{})
 		zonesToGroups["zonesToGroups"] = zone
 
 		segmentOptions[x.Segment] = zonesToGroups
 	}
 
-    return segmentOptions
+	return segmentOptions
 }
 
 func expandPanInstances(in *schema.Set) []alkira.ServicePanInstance {
-    if in == nil || in.Len() == 0 {
+	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid IPSec site input")
-        return nil
-    }
+		return nil
+	}
 
-    instances := make([]alkira.ServicePanInstance, in.Len())
-    for i, instance := range in.List() {
-        r := alkira.ServicePanInstance{}
+	instances := make([]alkira.ServicePanInstance, in.Len())
+	for i, instance := range in.List() {
+		r := alkira.ServicePanInstance{}
 		instanceCfg := instance.(map[string]interface{})
-        if v, ok := instanceCfg["name"].(string); ok {
+		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
-        }
-        if v, ok := instanceCfg["credential_id"].(string); ok {
-            r.CredentialId = v
-        }
-        instances[i] = r
-    }
+		}
+		if v, ok := instanceCfg["credential_id"].(string); ok {
+			r.CredentialId = v
+		}
+		instances[i] = r
+	}
 
-    return instances
+	return instances
 }
 
 func expandIPSecSites(in *schema.Set) []alkira.ConnectorIPSecSite {
-    if in == nil || in.Len() == 0 {
+	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid IPSec site input")
-        return nil
-    }
+		return nil
+	}
 
-    sites := make([]alkira.ConnectorIPSecSite, in.Len())
-    for i, site := range in.List() {
-        r := alkira.ConnectorIPSecSite{}
+	sites := make([]alkira.ConnectorIPSecSite, in.Len())
+	for i, site := range in.List() {
+		r := alkira.ConnectorIPSecSite{}
 		siteCfg := site.(map[string]interface{})
-        if v, ok := siteCfg["name"].(string); ok {
+		if v, ok := siteCfg["name"].(string); ok {
 			r.Name = v
-        }
-        if v, ok := siteCfg["customer_gateway_asn"].(string); ok {
-            r.CustomerGwAsn = v
-        }
-        if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
-            r.CustomerGwIp = v
-        }
-        if v, ok := siteCfg["preshared_keys"].([]string); ok {
+		}
+		if v, ok := siteCfg["customer_gateway_asn"].(string); ok {
+			r.CustomerGwAsn = v
+		}
+		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
+			r.CustomerGwIp = v
+		}
+		if v, ok := siteCfg["preshared_keys"].([]string); ok {
 			if len(v) != 0 {
 				r.PresharedKeys = v
 			} else {
 				r.PresharedKeys[0] = "[],[]"
 			}
-        }
+		}
 
-        sites[i] = r
-    }
+		sites[i] = r
+	}
 
-    return sites
+	return sites
 }
-
 
 func expandPolicyRuleListRules(in *schema.Set) []alkira.PolicyRuleListRule {
-    if in == nil || in.Len() == 0 {
+	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid policy rule")
-        return nil
-    }
+		return nil
+	}
 
-    rules := make([]alkira.PolicyRuleListRule, in.Len())
-    for i, rule := range in.List() {
-        r := alkira.PolicyRuleListRule{}
+	rules := make([]alkira.PolicyRuleListRule, in.Len())
+	for i, rule := range in.List() {
+		r := alkira.PolicyRuleListRule{}
 		ruleCfg := rule.(map[string]interface{})
-        if v, ok := ruleCfg["priority"].(int); ok {
+		if v, ok := ruleCfg["priority"].(int); ok {
 			r.Priority = v
-        }
-        if v, ok := ruleCfg["rule_id"].(int); ok {
-            r.RuleId = v
-        }
-        rules[i] = r
-    }
+		}
+		if v, ok := ruleCfg["rule_id"].(int); ok {
+			r.RuleId = v
+		}
+		rules[i] = r
+	}
 
-    return rules
+	return rules
 }
-
 
 // func expandIPSecSegmentOptions(in *schema.Set) []map[string]interface{} {
 //     if in == nil || in.Len() == 0 {

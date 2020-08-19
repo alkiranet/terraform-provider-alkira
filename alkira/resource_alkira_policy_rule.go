@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraPolicyRule() *schema.Resource {
@@ -35,7 +35,6 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of the policy rule",
-
 			},
 			"src_ip": {
 				Type:     schema.TypeString,
@@ -74,7 +73,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 			"rule_action": {
 				Type:     schema.TypeString,
 				Optional: true,
-			    Default:  "ALLOW",
+				Default:  "ALLOW",
 			},
 			"rule_action_service_type_list": {
 				Type:     schema.TypeList,
@@ -91,11 +90,11 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 	srcPortList := convertTypeListToStringList(d.Get("src_port_list").([]interface{}))
 	dstPortList := convertTypeListToStringList(d.Get("dst_port_list").([]interface{}))
 
-	applicationList       := convertTypeListToStringList(d.Get("application_list").([]interface{}))
+	applicationList := convertTypeListToStringList(d.Get("application_list").([]interface{}))
 	applicationFamilyList := convertTypeListToStringList(d.Get("application_family_list").([]interface{}))
-	serviceTypeList       := convertTypeListToStringList(d.Get("rule_action_service_type_list").([]interface{}))
+	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_type_list").([]interface{}))
 
-	rule   := &alkira.PolicyRuleRequest{
+	rule := &alkira.PolicyRuleRequest{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		MatchCondition: alkira.PolicyRuleMatchCondition{
@@ -129,22 +128,22 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRuleRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourcePolicyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourcePolicyRuleRead(d, meta)
+	return resourcePolicyRuleRead(d, meta)
 }
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	client    := meta.(*alkira.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	PolicyRuleId := d.Get("rule_id").(int)
 
 	log.Printf("[INFO] Deleting PolicyRule %s", PolicyRuleId)
 	err := client.DeletePolicyRule(PolicyRuleId)
 
 	if err != nil {
-	 	return err
+		return err
 	}
 
 	return nil

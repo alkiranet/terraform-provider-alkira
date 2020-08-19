@@ -3,8 +3,8 @@ package alkira
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraCredentialPan() *schema.Resource {
@@ -24,19 +24,16 @@ func resourceAlkiraCredentialPan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PAN license key",
-
 			},
 			"password": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PAN password",
-
 			},
 			"username": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PAN username",
-
 			},
 		},
 	}
@@ -63,15 +60,15 @@ func resourceCredentialPan(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCredentialPanRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceCredentialPanUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceCredentialPanRead(d, meta)
+	return resourceCredentialPanRead(d, meta)
 }
 
 func resourceCredentialPanDelete(d *schema.ResourceData, meta interface{}) error {
-	client       := meta.(*alkira.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (PAN %s)\n", credentialId)

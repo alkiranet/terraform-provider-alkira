@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraServicePan() *schema.Resource {
@@ -17,49 +17,49 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"credential_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "A user group that the connector belongs to",
 			},
 			"cxp": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The CXP to be used for the connector",
 			},
 			"group": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "A user group that the connector belongs to",
 			},
 			"instance": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Resource{
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:      schema.TypeString,
-							Required:  true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"credential_id": {
-							Type:      schema.TypeString,
-							Required:  true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
 				Required: true,
 			},
 			"license_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "PAN license type",
 			},
 			"panorama_enabled": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "PAN license type",
 			},
 			"management_segment": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The management segment",
 			},
 			"max_instance_count": &schema.Schema{
@@ -73,26 +73,26 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Default:  1,
 			},
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The name of the PAN service",
 			},
 			"zones_to_groups": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Resource{
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_name": {
-							Type:      schema.TypeString,
-							Required:  true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"zone_name": {
-							Type:      schema.TypeString,
-							Required:  true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"groups": {
-							Type:      schema.TypeList,
-							Required:  true,
-							Elem:      &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -126,25 +126,25 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	instances      := expandPanInstances(d.Get("instance").(*schema.Set))
-	segments       := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	instances := expandPanInstances(d.Get("instance").(*schema.Set))
+	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
 
 	service := &alkira.ServicePanRequest{
-		CXP:              d.Get("cxp").(string),
-		CredentialId:     d.Get("credential_id").(string),
-		Instances:        instances,
-		LicenseType:      d.Get("license_type").(string),
-		MaxInstanceCount: d.Get("max_instance_count").(int),
-		MinInstanceCount: d.Get("min_instance_count").(int),
-		ManagementSegment:d.Get("management_segment").(string),
-		Name:             d.Get("name").(string),
-		PanoramaEnabled:  d.Get("panorama_enabled").(string),
-		SegmentOptions:   segmentOptions,
-        Segments:         segments,
-        Size:             d.Get("size").(string),
-        Type:             d.Get("type").(string),
-        Version:          d.Get("version").(string),
+		CXP:               d.Get("cxp").(string),
+		CredentialId:      d.Get("credential_id").(string),
+		Instances:         instances,
+		LicenseType:       d.Get("license_type").(string),
+		MaxInstanceCount:  d.Get("max_instance_count").(int),
+		MinInstanceCount:  d.Get("min_instance_count").(int),
+		ManagementSegment: d.Get("management_segment").(string),
+		Name:              d.Get("name").(string),
+		PanoramaEnabled:   d.Get("panorama_enabled").(string),
+		SegmentOptions:    segmentOptions,
+		Segments:          segments,
+		Size:              d.Get("size").(string),
+		Type:              d.Get("type").(string),
+		Version:           d.Get("version").(string),
 	}
 
 	log.Printf("[INFO] Creating Service (PAN) %s", d.Id())
@@ -161,11 +161,11 @@ func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceServicePanRead(d, m)
+	return resourceServicePanRead(d, m)
 }
 
 func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {

@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraSegment() *schema.Resource {
@@ -17,20 +17,20 @@ func resourceAlkiraSegment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"asn": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"cidr": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"segment_id": {
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -38,7 +38,7 @@ func resourceAlkiraSegment() *schema.Resource {
 
 func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	name   := d.Get("name").(string)
+	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Segment Creating")
 	id, err := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
@@ -55,22 +55,22 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceSegmentRead(d, meta)
+	return resourceSegmentRead(d, meta)
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client    := meta.(*alkira.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	segmentId := d.Get("segment_id").(int)
 
 	log.Printf("[INFO] Deleting Segment %d", segmentId)
 	err := client.DeleteSegment(segmentId)
 
 	if err != nil {
-	 	return err
+		return err
 	}
 
 	return nil

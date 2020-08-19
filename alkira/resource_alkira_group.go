@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraGroup() *schema.Resource {
@@ -30,7 +30,7 @@ func resourceAlkiraGroup() *schema.Resource {
 
 func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	name   := d.Get("name").(string)
+	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Group Creating")
 	id, err := client.CreateGroup(name)
@@ -47,22 +47,22 @@ func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	client    := meta.(*alkira.AlkiraClient)
-	groupId   := d.Get("group_id").(int)
+	client := meta.(*alkira.AlkiraClient)
+	groupId := d.Get("group_id").(int)
 
 	log.Printf("[INFO] Deleting Group %d", groupId)
 	err := client.DeleteGroup(groupId)
 
 	if err != nil {
-	 	return err
+		return err
 	}
 
 	return nil

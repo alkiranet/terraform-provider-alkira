@@ -3,9 +3,9 @@ package alkira
 import (
 	"os"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
 // Provider returns a schema.Provider for Alkira.
@@ -55,8 +55,8 @@ func Provider() terraform.ResourceProvider {
 			"alkira_tenant_network":          resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_segment":              dataSourceAlkiraSegment(),
-			"alkira_tenant_network":       dataSourceAlkiraTenantNetwork(),
+			"alkira_segment":        dataSourceAlkiraSegment(),
+			"alkira_tenant_network": dataSourceAlkiraTenantNetwork(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}

@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraConnectorGcpVpc() *schema.Resource {
@@ -71,10 +71,10 @@ func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error 
 		CustomerRegion: d.Get("gcp_region").(string),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
-        Segments:       segments,
-        Size:           d.Get("size").(string),
-        VpcId:          d.Get("gcp_vpc_id").(string),
-        VpcName:        d.Get("gcp_vpc_name").(string),
+		Segments:       segments,
+		Size:           d.Get("size").(string),
+		VpcId:          d.Get("gcp_vpc_id").(string),
+		VpcName:        d.Get("gcp_vpc_name").(string),
 	}
 
 	log.Printf("[INFO] Creating Connector (GCP-VPC)")
@@ -91,11 +91,11 @@ func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceConnectorGcpVpcUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceConnectorGcpVpcRead(d, m)
+	return resourceConnectorGcpVpcRead(d, m)
 }
 
 func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error {

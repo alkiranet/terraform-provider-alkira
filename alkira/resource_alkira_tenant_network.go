@@ -3,9 +3,9 @@ package alkira
 import (
 	"log"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
 func resourceAlkiraTenantNetwork() *schema.Resource {
@@ -21,12 +21,12 @@ func resourceAlkiraTenantNetwork() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"services":   &schema.Schema{
+			"services": &schema.Schema{
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"segments":   &schema.Schema{
+			"segments": &schema.Schema{
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -74,11 +74,11 @@ func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceTenantNetworkRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceTenantNetworkUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceTenantNetworkRead(d, m)
+	return resourceTenantNetworkRead(d, m)
 }
 
 func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {

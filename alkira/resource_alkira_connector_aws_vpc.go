@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
@@ -72,10 +72,10 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 		CustomerRegion: d.Get("aws_region").(string),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
-        Segments:       segments,
-        Size:           d.Get("size").(string),
-        VpcId:          d.Get("vpc_id").(string),
-        VpcOwnerId:     d.Get("aws_account_id").(string),
+		Segments:       segments,
+		Size:           d.Get("size").(string),
+		VpcId:          d.Get("vpc_id").(string),
+		VpcOwnerId:     d.Get("aws_account_id").(string),
 	}
 
 	id, err := client.CreateConnectorAwsVpc(connectorAwsVpc)
@@ -90,11 +90,11 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceConnectorAwsVpcRead(d, m)
+	return resourceConnectorAwsVpcRead(d, m)
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraCredentialAwsVpc() *schema.Resource {
@@ -25,31 +25,26 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS access key",
-
 			},
 			"aws_secret_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS secret key",
-
 			},
 			"aws_role_arn": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The AWS Role Arn",
-
 			},
 			"aws_external_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The AWS Role External ID",
-
 			},
 			"type": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The Type of AWS-VPC credential",
-
 			},
 		},
 	}
@@ -89,15 +84,15 @@ func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCredentialAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourceCredentialAwsVpcRead(d, meta)
+	return resourceCredentialAwsVpcRead(d, meta)
 }
 
 func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	client       := meta.(*alkira.AlkiraClient)
+	client := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)

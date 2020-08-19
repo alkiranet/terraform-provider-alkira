@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraPolicy() *schema.Resource {
@@ -60,7 +60,7 @@ func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
 	fromGroups := convertTypeListToStringList(d.Get("from_groups").([]interface{}))
-	toGroups   := convertTypeListToStringList(d.Get("to_groups").([]interface{}))
+	toGroups := convertTypeListToStringList(d.Get("to_groups").([]interface{}))
 
 	policy := &alkira.PolicyRequest{
 		Description: d.Get("description").(string),
@@ -88,22 +88,22 @@ func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-        return nil
+	return nil
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-        return resourcePolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client    := meta.(*alkira.AlkiraClient)
-	policyId  := d.Get("policy_id").(int)
+	client := meta.(*alkira.AlkiraClient)
+	policyId := d.Get("policy_id").(int)
 
 	log.Printf("[INFO] Deleting Policy %s", policyId)
 	err := client.DeletePolicy(policyId)
 
 	if err != nil {
-	 	return err
+		return err
 	}
 
 	return nil

@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraInternetApplication() *schema.Resource {
@@ -64,14 +64,14 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 	client := m.(*alkira.AlkiraClient)
 
 	connector := &alkira.InternetApplicationRequest{
-		ConnectorId:    d.Get("connector_id").(string),
-		ConnectorType:  d.Get("connector_type").(string),
-		FqdnPrefix:     d.Get("fqdn_prefix").(string),
-		Name:           d.Get("name").(string),
-        PrivateIp:      d.Get("private_ip").(string),
-        PrivatePort:    d.Get("private_port").(string),
-        SegmentName:    d.Get("segment").(string),
-        Size:           d.Get("size").(string),
+		ConnectorId:   d.Get("connector_id").(string),
+		ConnectorType: d.Get("connector_type").(string),
+		FqdnPrefix:    d.Get("fqdn_prefix").(string),
+		Name:          d.Get("name").(string),
+		PrivateIp:     d.Get("private_ip").(string),
+		PrivatePort:   d.Get("private_port").(string),
+		SegmentName:   d.Get("segment").(string),
+		Size:          d.Get("size").(string),
 	}
 
 	id, err := client.CreateInternetApplication(connector)
@@ -90,11 +90,11 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceInternetApplicationUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceInternetApplicationRead(d, m)
+	return resourceInternetApplicationRead(d, m)
 }
 
 func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) error {

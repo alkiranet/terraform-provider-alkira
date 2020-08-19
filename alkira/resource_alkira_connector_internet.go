@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAlkiraConnectorInet() *schema.Resource {
@@ -41,7 +41,7 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 				Required: true,
 			},
 			"size": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
@@ -58,7 +58,7 @@ func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
 		Description: d.Get("description").(string),
 		Group:       d.Get("group").(string),
 		Name:        d.Get("name").(string),
-        Segments:    segments,
+		Segments:    segments,
 		Size:        d.Get("size").(string),
 	}
 
@@ -74,11 +74,11 @@ func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorInetRead(d *schema.ResourceData, m interface{}) error {
-        return nil
+	return nil
 }
 
 func resourceConnectorInetUpdate(d *schema.ResourceData, m interface{}) error {
-        return resourceConnectorInetRead(d, m)
+	return resourceConnectorInetRead(d, m)
 }
 
 func resourceConnectorInetDelete(d *schema.ResourceData, m interface{}) error {
