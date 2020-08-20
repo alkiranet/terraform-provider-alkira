@@ -1,4 +1,4 @@
-# Terraform Provider for Alkira (private preview)
+# Terraform Provider for Alkira
 
 * Website: http://www.alkira.com
 
@@ -12,8 +12,12 @@ actively worked on.
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
+-	[Terraform 0.12.29](https://releases.hashicorp.com/terraform/0.12.29/) 0.12.x
 -	[Go](https://golang.org/doc/install) 1.14.x (to build the provider plugin)
+
+**NOTES:** Please don't use the latest Terraform 0.13 yet. The latest
+release has some backward compatiblity break changes. We are waiting
+for it to be more stablized.
 
 
 ## Getting Started
@@ -24,6 +28,6 @@ provider binary from the release page.
 Since the provider is still private, please copy the
 `terraform-provider-alkira` binary to `~/.terraform.d/plugins`.
 
-Now, you could hover to the example directory to explore some
+Now, you could hover to the `/example` directory to explore some
 examples and start playing with the provider.
 
