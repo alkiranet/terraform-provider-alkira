@@ -29,12 +29,10 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the policy rule",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The description of the policy rule",
 			},
 			"src_ip": {
 				Type:     schema.TypeString,
