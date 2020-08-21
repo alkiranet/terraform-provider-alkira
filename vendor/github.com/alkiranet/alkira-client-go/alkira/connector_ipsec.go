@@ -9,7 +9,7 @@ import (
 )
 
 type ConnectorIPSecRequest struct {
-	BillingTags    []string    `json:"billingTags"`
+	BillingTags    []int       `json:"billingTags"`
 	CXP            string      `json:"cxp"`
 	Group          string      `json:"group"`
 	Name           string      `json:"name"`

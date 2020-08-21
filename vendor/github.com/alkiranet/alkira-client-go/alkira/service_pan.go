@@ -10,7 +10,7 @@ import (
 )
 
 type ServicePanRequest struct {
-	BillingTags         []string             `json:"billingTags"`
+	BillingTags         []int                `json:"billingTags"`
 	CXP                 string               `json:"cxp"`
 	CredentialId        string               `json:"credentialId"`
 	Instances           []ServicePanInstance `json:"instances"`

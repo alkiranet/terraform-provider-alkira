@@ -9,7 +9,7 @@ import (
 )
 
 type InternetApplicationRequest struct {
-	BillingTags   []string `json:"billingTags"`
+	BillingTags   []int    `json:"billingTags"`
 	ConnectorId   string   `json:"connectorId"`
 	ConnectorType string   `json:"connectorType"`
 	FqdnPrefix    string   `json:"fqdnPrefix"`

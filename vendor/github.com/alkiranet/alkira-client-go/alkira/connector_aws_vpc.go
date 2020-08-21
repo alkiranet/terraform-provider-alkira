@@ -9,7 +9,7 @@ import (
 )
 
 type ConnectorAwsVpcRequest struct {
-	BillingTags    []string `json:"billingTags"`
+	BillingTags    []int    `json:"billingTags"`
 	CXP            string   `json:"cxp"`
 	CredentialId   string   `json:"credentialId"`
 	CustomerName   string   `json:"customerName"`
