@@ -19,7 +19,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			"billing_tags": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"connector_id": {
 				Type:     schema.TypeInt,
@@ -68,8 +68,8 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
-	segments    := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorGcpVpc{
 		BillingTags:    billingTags,

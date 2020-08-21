@@ -8,18 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceAlkiraConnectorInet() *schema.Resource {
+func resourceAlkiraConnectorInternet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConnectorInetCreate,
-		Read:   resourceConnectorInetRead,
-		Update: resourceConnectorInetUpdate,
-		Delete: resourceConnectorInetDelete,
+		Create: resourceConnectorInternetCreate,
+		Read:   resourceConnectorInternetRead,
+		Update: resourceConnectorInternetUpdate,
+		Delete: resourceConnectorInternetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"billing_tags": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"connector_id": {
 				Type:     schema.TypeInt,
@@ -53,11 +53,11 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 	}
 }
 
-func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
-	segments    := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorInternet{
 		BillingTags: billingTags,
@@ -77,18 +77,18 @@ func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(strconv.Itoa(id))
 	d.Set("connector_id", id)
-	return resourceConnectorInetRead(d, m)
+	return resourceConnectorInternetRead(d, m)
 }
 
-func resourceConnectorInetRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceConnectorInetUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceConnectorInetRead(d, m)
+func resourceConnectorInternetUpdate(d *schema.ResourceData, m interface{}) error {
+	return resourceConnectorInternetRead(d, m)
 }
 
-func resourceConnectorInetDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (INET) %s", d.Id())

@@ -39,7 +39,7 @@ func Provider() terraform.ResourceProvider {
 			"alkira_connector_aws_vpc":       resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":    resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":       resourceAlkiraConnectorGcpVpc(),
-			"alkira_connector_inet":          resourceAlkiraConnectorInet(),
+			"alkira_connector_internet":      resourceAlkiraConnectorInternet(),
 			"alkira_connector_ipsec":         resourceAlkiraConnectorIPSec(),
 			"alkira_credential_aws_vpc":      resourceAlkiraCredentialAwsVpc(),
 			"alkira_credential_azure_vnet":   resourceAlkiraCredentialAzureVnet(),

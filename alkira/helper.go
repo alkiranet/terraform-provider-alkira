@@ -34,6 +34,21 @@ func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 	return 0
 }
 
+func convertTypeListToIntList(in []interface{}) []int {
+	if in == nil || len(in) == 0 {
+		log.Printf("[DEBUG] empty input")
+		return nil
+	}
+
+	intList := make([]int, len(in))
+
+	for i, value := range in {
+		intList[i] = value.(int)
+	}
+
+	return intList
+}
+
 func convertTypeListToStringList(in []interface{}) []string {
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty input")

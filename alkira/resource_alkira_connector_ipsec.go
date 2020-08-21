@@ -19,7 +19,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			"billing_tags": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"connector_id": {
 				Type:     schema.TypeInt,
@@ -100,9 +100,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
-	segments    := []string{d.Get("segment").(string)}
-	sites       := expandIPSecSites(d.Get("sites").(*schema.Set))
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
+	sites := expandIPSecSites(d.Get("sites").(*schema.Set))
 
 	connector := &alkira.ConnectorIPSecRequest{
 		BillingTags: billingTags,
@@ -110,9 +110,9 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 		Group:       d.Get("group").(string),
 		Name:        d.Get("name").(string),
 		//		SegmentOptions: d.Get("segment_options").(*schema.Set).List(),
-		Segments:    segments,
-		Sites:       sites,
-		Size:        d.Get("size").(string),
+		Segments: segments,
+		Sites:    sites,
+		Size:     d.Get("size").(string),
 	}
 
 	log.Printf("[INFO] Creating Connector (IPSec) %s", d.Id())

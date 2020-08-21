@@ -27,12 +27,12 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"src_ip": {
 				Type:     schema.TypeString,

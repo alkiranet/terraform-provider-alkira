@@ -19,19 +19,19 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"billing_tags": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
-			"credential_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+			"credential_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"cxp": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"cxp": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"group": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+			"group": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"instance": {
 				Type: schema.TypeSet,
@@ -49,29 +49,29 @@ func resourceAlkiraServicePan() *schema.Resource {
 				},
 				Required: true,
 			},
-			"license_type": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
+			"license_type": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"panorama_enabled": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"panorama_device_group": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"panorama_ip_address": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"panorama_template": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"management_segment": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"max_instance_count": {
 				Type:     schema.TypeInt,
@@ -84,9 +84,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Default:  1,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of the PAN service",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"zones_to_groups": {
 				Type: schema.TypeSet,
@@ -137,9 +136,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags    := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
-	instances      := expandPanInstances(d.Get("instance").(*schema.Set))
-	segments       := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	instances := expandPanInstances(d.Get("instance").(*schema.Set))
+	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
 
 	service := &alkira.ServicePanRequest{

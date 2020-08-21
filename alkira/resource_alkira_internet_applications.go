@@ -16,6 +16,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 		Delete: resourceInternetApplicationDelete,
 
 		Schema: map[string]*schema.Schema{
+			"billing_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+			},
 			"connector_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -63,7 +68,10 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+
 	connector := &alkira.InternetApplicationRequest{
+		BillingTags:   billingTags,
 		ConnectorId:   d.Get("connector_id").(string),
 		ConnectorType: d.Get("connector_type").(string),
 		FqdnPrefix:    d.Get("fqdn_prefix").(string),
