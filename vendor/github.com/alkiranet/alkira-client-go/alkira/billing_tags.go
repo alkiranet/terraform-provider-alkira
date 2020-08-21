@@ -8,21 +8,21 @@ import (
 	"net/http"
 )
 
-type Group struct {
+type Billingtag struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-// GetGroups get all groups from the given tenant network
-func (ac *AlkiraClient) GetGroups() (string, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
+// GetBillingTags get all billing tags from the given tenant network
+func (ac *AlkiraClient) GetBillingTags() (string, error) {
+	uri := fmt.Sprintf("%s/tags", ac.URI)
 
 	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("GetGroups: request failed, %v", err)
+		return "", fmt.Errorf("GetBillingTags: request failed, %v", err)
 	}
 
 	defer response.Body.Close()
@@ -35,9 +35,9 @@ func (ac *AlkiraClient) GetGroups() (string, error) {
 	return string(data), nil
 }
 
-// CreateGroup create a new Group
-func (ac *AlkiraClient) CreateGroup(name string) (int, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
+// CreateBillingTag create a new billing tag
+func (ac *AlkiraClient) CreateBillingTag(name string) (int, error) {
+	uri := fmt.Sprintf("%s/tags", ac.URI)
 
 	body, err := json.Marshal(map[string]string{
 		"name": name,
@@ -48,13 +48,13 @@ func (ac *AlkiraClient) CreateGroup(name string) (int, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return 0, fmt.Errorf("CreateGroup: request failed, %v", err)
+		return 0, fmt.Errorf("CreateBillingTag: request failed, %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	var result Group
+	var result Billingtag
 	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 201 {
@@ -64,65 +64,38 @@ func (ac *AlkiraClient) CreateGroup(name string) (int, error) {
 	return result.Id, nil
 }
 
-// GetGroup get a group by its Id
-func (ac *AlkiraClient) GetGroupById(id int) (Group, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
-	var group Group
+// GetBillingTag get single billing tag by Id
+func (ac *AlkiraClient) GetBillingTag(id int) (string, error) {
+	uri := fmt.Sprintf("%s/tags/%d", ac.URI, id)
 
 	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return group, fmt.Errorf("GetGroup: request failed, %v", err)
+		return "", fmt.Errorf("GetBillingTag: request failed, %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 {
-		return group, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
-	return group, nil
+	return string(data), nil
 }
 
-// GetGroupByName get the group by its name
-func (ac *AlkiraClient) GetGroupByName(name string) (Group, error) {
-	var group Group
-
-	if len(name) == 0 {
-		return group, fmt.Errorf("Invalid group name input")
-	}
-
-	groups, err := ac.GetGroups()
-
-	if err != nil {
-		return group, err
-	}
-
-	var result []Group
-	json.Unmarshal([]byte(groups), &result)
-
-	for _, g := range result {
-		if g.Name == name {
-			return g, nil
-		}
-	}
-
-	return group, fmt.Errorf("failed to find the group by %s", name)
-}
-
-// DeleteGroup delete a group
-func (ac *AlkiraClient) DeleteGroup(id int) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
+// DeleteBillingTag delete a billing tag by Id
+func (ac *AlkiraClient) DeleteBillingTag(id int) error {
+	uri := fmt.Sprintf("%s/tags/%d", ac.URI, id)
 
 	request, err := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("DeleteGroup: request failed, %v", err)
+		return fmt.Errorf("DeleteBillingTag: request faile, %v", err)
 	}
 
 	defer response.Body.Close()

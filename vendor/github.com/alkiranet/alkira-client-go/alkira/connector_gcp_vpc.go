@@ -9,6 +9,7 @@ import (
 )
 
 type ConnectorGcpVpc struct {
+	BillingTags    []string `json:"billingTags"`
 	CXP            string   `json:"cxp"`
 	CredentialId   string   `json:"credentialId"`
 	CustomerRegion string   `json:"customerRegion"`

@@ -9,15 +9,16 @@ import (
 )
 
 type InternetApplicationRequest struct {
-	ConnectorId   string `json:"connectorId"`
-	ConnectorType string `json:"connectorType"`
-	FqdnPrefix    string `json:"fqdnPrefix"`
-	Group         string `json:"group"`
-	Name          string `json:"name"`
-	PrivateIp     string `json:"privateIp"`
-	PrivatePort   string `json:"privatePort"`
-	SegmentName   string `json:"segmentName"`
-	Size          string `json:"size"`
+	BillingTags   []string `json:"billingTags"`
+	ConnectorId   string   `json:"connectorId"`
+	ConnectorType string   `json:"connectorType"`
+	FqdnPrefix    string   `json:"fqdnPrefix"`
+	Group         string   `json:"group"`
+	Name          string   `json:"name"`
+	PrivateIp     string   `json:"privateIp"`
+	PrivatePort   string   `json:"privatePort"`
+	SegmentName   string   `json:"segmentName"`
+	Size          string   `json:"size"`
 }
 
 type InternetApplicationResponse struct {

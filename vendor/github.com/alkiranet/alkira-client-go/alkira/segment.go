@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
 type Segment struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Asn     int    `json:"asn"`
+	Id      int    `json:"id"`
+	IpBlock string `json:"ipBlock"`
+	Name    string `json:"name"`
 }
 
 // Get all segments from the given tenant network
@@ -36,29 +37,37 @@ func (ac *AlkiraClient) GetSegments() (string, error) {
 	return string(data), nil
 }
 
-// Get single segment from the given tenant network by segment Id
-func (ac *AlkiraClient) GetSegment(id int) (string, error) {
+// GetSegment get single segment by Id
+func (ac *AlkiraClient) GetSegmentById(id int) (Segment, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%d", ac.URI, ac.TenantNetworkId, id)
+
+	var segment Segment
 
 	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to get segment %d: %v", id, err)
+		return segment, fmt.Errorf("failed to get segment %d: %v", id, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 {
-		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+		return segment, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
-	return string(data), nil
+	err = json.Unmarshal([]byte(data), &segment)
+
+	if err != nil {
+		return segment, fmt.Errorf("GetSegmentById: parse failed: %v", err)
+	}
+
+	return segment, nil
 }
 
-// Create a new Segment
+// CreateSegment create a new Segment
 func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (int, error) {
 
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments", ac.URI, ac.TenantNetworkId)
@@ -74,8 +83,7 @@ func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		log.Printf("Error : %s", err)
-		return 0, fmt.Errorf("failed to create segment: %v", err)
+		return 0, fmt.Errorf("CreateSegment: request failed, %v", err)
 	}
 
 	defer response.Body.Close()
@@ -91,7 +99,7 @@ func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (
 	return result.Id, nil
 }
 
-// Delete a segment by given segment Id
+// DeleteSegment delete a segment by given segment Id
 func (ac *AlkiraClient) DeleteSegment(id int) error {
 
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%d", ac.URI, ac.TenantNetworkId, id)
@@ -101,7 +109,7 @@ func (ac *AlkiraClient) DeleteSegment(id int) error {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("failed to delete segment: %v", err)
+		return fmt.Errorf("DeleteSegment: request failed, %v", err)
 	}
 
 	defer response.Body.Close()

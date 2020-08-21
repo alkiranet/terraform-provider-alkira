@@ -9,6 +9,7 @@ import (
 )
 
 type ConnectorInternet struct {
+	BillingTags []string `json:"billingTags"`
 	CXP         string   `json:"cxp"`
 	Description string   `json:"description"`
 	Group       string   `json:"group"`

@@ -5,25 +5,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
 type ServicePanRequest struct {
-	CXP               string               `json:"cxp"`
-	CredentialId      string               `json:"credentialId"`
-	Instances         []ServicePanInstance `json:"instances"`
-	LicenseType       string               `json:"licenseType"`
-	ManagementSegment string               `json:"managementSegment"`
-	MaxInstanceCount  int                  `json:"maxInstanceCount"`
-	MinInstanceCount  int                  `json:"minInstanceCount"`
-	Name              string               `json:"name"`
-	PanoramaEnabled   string               `json:"panoramaEnabled"`
-	PanoramaTemplate  string               `json:"panoramaTemplate"`
-	Segments          []string             `json:"segments"`
-	SegmentOptions    interface{}          `json:"segmentOptions"`
-	Size              string               `json:"size"`
-	Type              string               `json:"type"`
-	Version           string               `json:"version"`
+	BillingTags         []string             `json:"billingTags"`
+	CXP                 string               `json:"cxp"`
+	CredentialId        string               `json:"credentialId"`
+	Instances           []ServicePanInstance `json:"instances"`
+	LicenseType         string               `json:"licenseType"`
+	ManagementSegment   string               `json:"managementSegment"`
+	MaxInstanceCount    int                  `json:"maxInstanceCount"`
+	MinInstanceCount    int                  `json:"minInstanceCount"`
+	Name                string               `json:"name"`
+	PanoramaEnabled     string               `json:"panoramaEnabled"`
+	PanoramaDeviceGroup string               `json:"panoramaDeviceGroup"`
+	PanoramaIpAddress   string               `json:"panoramaIPAddress"`
+	PanoramaTemplate    string               `json:"panoramaTemplate"`
+	Segments            []string             `json:"segments"`
+	SegmentOptions      interface{}          `json:"segmentOptions"`
+	Size                string               `json:"size"`
+	Type                string               `json:"type"`
+	Version             string               `json:"version"`
 }
 
 type ServicePanInstance struct {
@@ -47,6 +51,7 @@ func (ac *AlkiraClient) CreateServicePan(service *ServicePanRequest) (int, error
 		return id, fmt.Errorf("CreateServicePan: marshal failed: %v", err)
 	}
 
+	log.Println(string(body))
 	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
