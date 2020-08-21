@@ -16,43 +16,48 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Delete: resourceConnectorAwsVpcDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"aws_account_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id": &schema.Schema{
+			"aws_region": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"aws_account_id": &schema.Schema{
+			"billing_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"credential_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"aws_region": &schema.Schema{
+			"connector_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"cxp": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"credential_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"cxp": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"group": &schema.Schema{
+			"group":{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"connector_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"segment": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"size": &schema.Schema{
+			"size": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,9 +68,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
+	segments    := []string{d.Get("segment").(string)}
 
 	connectorAwsVpc := &alkira.ConnectorAwsVpcRequest{
+		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerName:   client.Username,

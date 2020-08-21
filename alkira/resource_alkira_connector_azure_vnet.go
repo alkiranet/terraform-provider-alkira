@@ -26,6 +26,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 				Description: "Azure Virutal Network Id",
 			},
+			"billing_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"connector_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -65,9 +70,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
+	segments    := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorAzureVnetRequest{
+		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerRegion: d.Get("azure_region").(string),

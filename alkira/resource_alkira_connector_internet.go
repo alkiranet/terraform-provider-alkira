@@ -16,6 +16,11 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 		Delete: resourceConnectorInetDelete,
 
 		Schema: map[string]*schema.Schema{
+			"billing_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"connector_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -51,9 +56,11 @@ func resourceAlkiraConnectorInet() *schema.Resource {
 func resourceConnectorInetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	segments := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
+	segments    := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorInternet{
+		BillingTags: billingTags,
 		CXP:         d.Get("cxp").(string),
 		Description: d.Get("description").(string),
 		Group:       d.Get("group").(string),

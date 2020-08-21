@@ -35,6 +35,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"alkira_billing_tag":             resourceAlkiraBillingTag(),
 			"alkira_connector_aws_vpc":       resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":    resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_gcp_vpc":       resourceAlkiraConnectorGcpVpc(),

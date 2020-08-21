@@ -16,20 +16,22 @@ func resourceAlkiraServicePan() *schema.Resource {
 		Delete: resourceServicePanDelete,
 
 		Schema: map[string]*schema.Schema{
+			"billing_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"credential_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A user group that the connector belongs to",
 			},
 			"cxp": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The CXP to be used for the connector",
 			},
 			"group": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A user group that the connector belongs to",
 			},
 			"instance": {
 				Type: schema.TypeSet,
@@ -50,29 +52,38 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"license_type": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN license type",
 			},
-			"panorama_enabled": &schema.Schema{
+			"panorama_enabled": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN license type",
 			},
-			"management_segment": &schema.Schema{
+			"panorama_device_group": {
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"panorama_ip_address": {
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"panorama_template": {
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"management_segment": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The management segment",
 			},
-			"max_instance_count": &schema.Schema{
+			"max_instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
 			},
-			"min_instance_count": &schema.Schema{
+			"min_instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the PAN service",
@@ -103,19 +114,19 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"service_id": &schema.Schema{
+			"service_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -126,25 +137,30 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	instances := expandPanInstances(d.Get("instance").(*schema.Set))
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	billingTags    := convertTypeListToStringList(d.Get("billing_tags").([]interface{}))
+	instances      := expandPanInstances(d.Get("instance").(*schema.Set))
+	segments       := convertTypeListToStringList(d.Get("segments").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
 
 	service := &alkira.ServicePanRequest{
-		CXP:               d.Get("cxp").(string),
-		CredentialId:      d.Get("credential_id").(string),
-		Instances:         instances,
-		LicenseType:       d.Get("license_type").(string),
-		MaxInstanceCount:  d.Get("max_instance_count").(int),
-		MinInstanceCount:  d.Get("min_instance_count").(int),
-		ManagementSegment: d.Get("management_segment").(string),
-		Name:              d.Get("name").(string),
-		PanoramaEnabled:   d.Get("panorama_enabled").(string),
-		SegmentOptions:    segmentOptions,
-		Segments:          segments,
-		Size:              d.Get("size").(string),
-		Type:              d.Get("type").(string),
-		Version:           d.Get("version").(string),
+		BillingTags:         billingTags,
+		CXP:                 d.Get("cxp").(string),
+		CredentialId:        d.Get("credential_id").(string),
+		Instances:           instances,
+		LicenseType:         d.Get("license_type").(string),
+		MaxInstanceCount:    d.Get("max_instance_count").(int),
+		MinInstanceCount:    d.Get("min_instance_count").(int),
+		ManagementSegment:   d.Get("management_segment").(string),
+		Name:                d.Get("name").(string),
+		PanoramaEnabled:     d.Get("panorama_enabled").(string),
+		PanoramaDeviceGroup: d.Get("panorama_device_group").(string),
+		PanoramaIpAddress:   d.Get("panorama_ip_address").(string),
+		PanoramaTemplate:    d.Get("panorama_template").(string),
+		SegmentOptions:      segmentOptions,
+		Segments:            segments,
+		Size:                d.Get("size").(string),
+		Type:                d.Get("type").(string),
+		Version:             d.Get("version").(string),
 	}
 
 	log.Printf("[INFO] Creating Service (PAN) %s", d.Id())
