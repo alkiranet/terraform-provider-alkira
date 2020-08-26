@@ -78,7 +78,7 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
 
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return alkiraClient, nil
