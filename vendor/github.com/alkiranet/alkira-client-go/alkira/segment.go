@@ -24,7 +24,7 @@ func (ac *AlkiraClient) GetSegments() (string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to get segments: %v", err)
+		return "", fmt.Errorf("GetSegments: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
@@ -48,7 +48,7 @@ func (ac *AlkiraClient) GetSegmentById(id int) (Segment, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return segment, fmt.Errorf("failed to get segment %d: %v", id, err)
+		return segment, fmt.Errorf("GetSegmentById: request failed: %v", err)
 	}
 
 	defer response.Body.Close()
