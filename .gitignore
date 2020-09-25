@@ -1,8 +1,9 @@
-.idea
 .DS_Store
+.idea
 .terraform
 bin
+crash.log
+releases
 terraform-provider-alkira
 terraform.tfstate
 terraform.tfstate.*
-crash.log
