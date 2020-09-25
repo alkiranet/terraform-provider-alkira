@@ -115,7 +115,7 @@ func (ac *AlkiraClient) DeleteSegment(id int) error {
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode != 202 && response.StatusCode != 204 {
+	if response.StatusCode != 200 {
 		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
