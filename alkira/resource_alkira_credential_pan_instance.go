@@ -87,7 +87,7 @@ func resourceCredentialPanInstanceDelete(d *schema.ResourceData, meta interface{
 	err := client.DeleteCredential(credentialId, "paninstance")
 
 	if err != nil {
-		return err
+		log.Printf("[INFO] Credential (PAN Instance %s) was already deleted\n", credentialId)
 	}
 
 	return nil
