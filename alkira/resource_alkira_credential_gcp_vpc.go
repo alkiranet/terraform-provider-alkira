@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
