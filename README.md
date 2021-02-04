@@ -9,8 +9,15 @@ internally by Alkira engineering team.
 Currently, the provider is still in early development phase and being
 actively worked on.
 
+## Getting Started
 
-## Requirements
+To start using the provider, you will need Terraform 0.12.x.
+
+Now, you could hover to the `/example` directory to explore some
+examples and start playing with the provider.
+
+
+## Development Requirements
 
 -	[Terraform 0.12.29](https://releases.hashicorp.com/terraform/0.12.29/) 0.12.x
 -	[Go](https://golang.org/doc/install) 1.14.x (to build the provider plugin)
@@ -20,14 +27,4 @@ release has some backward compatiblity break changes. We are waiting
 for it to be more stablized.
 
 
-## Getting Started
-
-To start using the provider, you will need Terraform 0.12.x and the
-provider binary from the release page.
-
-Since the provider is still private, please copy the
-`terraform-provider-alkira` binary to `~/.terraform.d/plugins`.
-
-Now, you could hover to the `/example` directory to explore some
-examples and start playing with the provider.
 
