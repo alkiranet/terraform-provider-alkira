@@ -10,7 +10,7 @@ cloud.google.com/go/internal/version
 cloud.google.com/go/storage
 # github.com/agext/levenshtein v1.2.2
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v0.4.1
+# github.com/alkiranet/alkira-client-go v0.4.2
 ## explicit
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-cidr v1.0.1
@@ -230,8 +230,6 @@ github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim

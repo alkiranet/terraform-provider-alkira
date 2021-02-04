@@ -9,8 +9,9 @@ import (
 )
 
 type Group struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 // GetGroups get all groups from the given tenant network
@@ -36,11 +37,12 @@ func (ac *AlkiraClient) GetGroups() (string, error) {
 }
 
 // CreateGroup create a new Group
-func (ac *AlkiraClient) CreateGroup(name string) (int, error) {
+func (ac *AlkiraClient) CreateGroup(name string, description string) (int, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
 	body, err := json.Marshal(map[string]string{
 		"name": name,
+		"description": description,
 	})
 
 	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
@@ -127,6 +129,36 @@ func (ac *AlkiraClient) DeleteGroup(id int) error {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return nil
+}
+
+// UpdateGroup update a group by its id
+func (ac *AlkiraClient) UpdateGroup(id int, name string, description string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
+
+	body, err := json.Marshal(map[string]string{
+		"name": name,
+		"description": description,
+	})
+
+	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("UpdateGroup: request failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	var result Group
+	json.Unmarshal([]byte(data), &result)
 
 	if response.StatusCode != 200 {
 		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))

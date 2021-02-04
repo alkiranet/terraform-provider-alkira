@@ -24,17 +24,19 @@ func resourceAlkiraGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Group Creating")
-	id, err := client.CreateGroup(name)
-	log.Printf("[INFO] Group ID: %d", id)
+	id, err := client.CreateGroup(d.Get("name").(string), d.Get("description").(string))
 
 	if err != nil {
 		return err
@@ -51,7 +53,16 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceGroupRead(d, meta)
+	client := meta.(*alkira.AlkiraClient)
+
+	log.Printf("[INFO] Group Updating")
+	err := client.UpdateGroup(d.Get("group_id").(int), d.Get("name").(string), d.Get("description").(string))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {

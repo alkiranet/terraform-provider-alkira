@@ -121,3 +121,32 @@ func (ac *AlkiraClient) DeleteSegment(id int) error {
 
 	return nil
 }
+
+// UpdateSegment update a segment by segment Id
+func (ac *AlkiraClient) UpdateSegment(id int, name string, asn string, ipBlock string) error {
+
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%d", ac.URI, ac.TenantNetworkId, id)
+
+	body, err := json.Marshal(map[string]string{
+		"name":    name,
+		"asn":     asn,
+		"ipBlock": ipBlock,
+	})
+
+	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("UpdateSegment: request failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return nil
+}

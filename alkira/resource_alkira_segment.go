@@ -59,7 +59,17 @@ func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceSegmentRead(d, meta)
+	client := meta.(*alkira.AlkiraClient)
+	segmentId := d.Get("segment_id").(int)
+
+	log.Printf("[INFO] Updateing Segment %d", segmentId)
+	err := client.UpdateSegment(segmentId, d.Get("name").(string), d.Get("asn").(string), d.Get("cidr").(string))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
