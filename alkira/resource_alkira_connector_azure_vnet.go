@@ -44,7 +44,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"cxp":           {
-				Description: "The CXP to be used for the connector.",
+				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
