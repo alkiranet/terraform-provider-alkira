@@ -19,7 +19,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"azure_region":  {
-				Description: "Region of Azure VNET.",
+				Description: "Azure Region where VNET resides.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
