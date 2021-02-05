@@ -3,12 +3,15 @@
 page_title: "alkira_segment Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  This resource manages segments.
+  A Segment is a section of a network isolated from one anotherto make it possible to more effectively control who has accessto what. Segmentation also allows for segregation of resourcesbetween segments for security and isolation purposes.
 ---
 
 # alkira_segment (Resource)
 
+This resource manages segments.
 
+A Segment is a section of a network isolated from one anotherto make it possible to more effectively control who has accessto what. Segmentation also allows for segregation of resourcesbetween segments for security and isolation purposes.
 
 
 
@@ -17,9 +20,9 @@ description: |-
 
 ### Required
 
-- **asn** (String)
-- **cidr** (String)
-- **name** (String)
+- **asn** (String) The BGP ASN for the segment.
+- **cidr** (String) The CIDR block.
+- **name** (String) The name of the segment.
 
 ### Optional
 

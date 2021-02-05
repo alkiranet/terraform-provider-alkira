@@ -10,6 +10,7 @@ import (
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage AWS Cloud Connector.",
 		Create: resourceConnectorAwsVpcCreate,
 		Read:   resourceConnectorAwsVpcRead,
 		Update: resourceConnectorAwsVpcUpdate,
@@ -17,49 +18,59 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"aws_account_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description:  "AWS Account ID.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"aws_region": {
-				Type:     schema.TypeString,
-				Required: true,
+			"aws_region":     {
+				Description:  "AWS Region where VPC resides.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"billing_tags": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
+			"billing_tags":   {
+				Description:  "Tags for billing.",
+				Type:         schema.TypeList,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeInt},
 			},
-			"credential_id": {
-				Type:     schema.TypeString,
-				Required: true,
+			"credential_id":  {
+				Description:  "ID of credential managed by Credential Manager.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+			"connector_id":   {
+				Type:         schema.TypeInt,
+				Computed:     true,
 			},
-			"cxp": {
-				Type:     schema.TypeString,
-				Required: true,
+			"cxp":            {
+				Description:  "The CXP where the connector should be provisioned.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"group": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"group":          {
+				Description:  "The group of the connector.",
+				Type:         schema.TypeString,
+				Optional:     true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"name":           {
+				Description:  "The name of the connector.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"segment": {
-				Type:     schema.TypeString,
-				Required: true,
+			"segment":        {
+				Description:  "The segment of the connector.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"size": {
-				Type:     schema.TypeString,
-				Required: true,
+			"size":           {
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+			"vpc_id":         {
+				Description:  "The ID of the VPC the connnector connects to.",
+				Type:         schema.TypeString,
+				Required:     true,
 			},
 		},
 	}
