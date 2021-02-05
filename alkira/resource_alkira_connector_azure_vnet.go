@@ -39,7 +39,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Computed:    true,
 			},
 			"credential_id": {
-				Description: "The Credential to access Azure.",
+				Description: "ID of credential managed by Credential Manager.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
