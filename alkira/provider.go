@@ -12,24 +12,22 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"portal": {
+				Description: "The URL for Alkira Custom Portal.",
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_PORTAL"),
 			},
 			"username": {
+				Description: "Your Tenant Username.",
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_USERNAME"),
 			},
 			"password": {
+				Description: "Your Tenant Password.",
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
-			},
-			"skip_version_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 

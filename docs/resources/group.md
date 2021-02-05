@@ -3,12 +3,15 @@
 page_title: "alkira_group Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  Manage groups
+  Groups can contain one or many connectors across different segments. This grouping of connectors can be for policy enforcement purposes or for monitoring purposes within the network. It allows for easier policy assignment by assigning policies to the entire group at the same time instead of having to assign them individually.
 ---
 
 # alkira_group (Resource)
 
+Manage groups
 
+Groups can contain one or many connectors across different segments. This grouping of connectors can be for policy enforcement purposes or for monitoring purposes within the network. It allows for easier policy assignment by assigning policies to the entire group at the same time instead of having to assign them individually.
 
 
 
@@ -17,7 +20,8 @@ description: |-
 
 ### Required
 
-- **name** (String)
+- **description** (String) The description of the group.
+- **name** (String) The name of the group.
 
 ### Optional
 

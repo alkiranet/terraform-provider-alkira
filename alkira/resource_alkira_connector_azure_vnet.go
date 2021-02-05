@@ -10,58 +10,63 @@ import (
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage Azure Cloud Connector.",
+
 		Create: resourceConnectorAzureVnetCreate,
 		Read:   resourceConnectorAzureVnetRead,
 		Update: resourceConnectorAzureVnetUpdate,
 		Delete: resourceConnectorAzureVnetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"azure_region": &schema.Schema{
+			"azure_region":  {
+				Description: "Region of Azure VNET.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Azure Region",
 			},
-			"azure_vnet_id": &schema.Schema{
+			"azure_vnet_id": {
+				Description: "Azure Virutal Network Id.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Azure Virutal Network Id",
 			},
-			"billing_tags": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
+			"billing_tags":  {
+				Description: "Tag for billing.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"connector_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
+			"connector_id":  {
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
-			"credential_id": &schema.Schema{
+			"credential_id": {
+				Description: "The Credential to access Azure.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The credentials for creating connector",
 			},
-			"cxp": &schema.Schema{
+			"cxp":           {
+				Description: "The CXP to be used for the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The CXP to be used for the connector",
 			},
-			"group": &schema.Schema{
+			"group":         {
+				Description: "The group that the connector belongs to.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A user group that the connector belongs to",
 			},
-			"name": &schema.Schema{
+			"name":          {
+				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the connector",
 			},
-			"segment": {
-				Type:     schema.TypeString,
-				Required: true,
+			"segment":       {
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"size": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"size":          {
+				Description: "The segment of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 		},
 	}
