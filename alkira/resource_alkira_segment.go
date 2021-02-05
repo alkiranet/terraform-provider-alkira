@@ -10,6 +10,12 @@ import (
 
 func resourceAlkiraSegment() *schema.Resource {
 	return &schema.Resource{
+		Description: "This resource manages segments.\n\n" +
+			"A Segment is a section of a network isolated from one another" +
+			"to make it possible to more effectively control who has access" +
+			"to what. Segmentation also allows for segregation of resources" +
+			"between segments for security and isolation purposes.",
+
 		Create: resourceSegment,
 		Read:   resourceSegmentRead,
 		Update: resourceSegmentUpdate,
@@ -17,14 +23,17 @@ func resourceAlkiraSegment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
+				Description: "The name of the segment.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"asn": {
+				Description: "The BGP ASN for the segment.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"cidr": {
+				Description: "The CIDR block.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
