@@ -29,7 +29,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tags":  {
-				Description: "Tag for billing.",
+				Description: "Tags for billing.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
