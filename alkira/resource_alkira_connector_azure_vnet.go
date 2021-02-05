@@ -49,7 +49,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"group":         {
-				Description: "The group that the connector belongs to.",
+				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
