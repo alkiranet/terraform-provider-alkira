@@ -58,18 +58,18 @@ resource "alkira_connector_azure_vnet" "connector_vnet1" {
 
 ### Required
 
-- **azure_region** (String) Region of Azure VNET.
-- **azure_vnet_id** (String) Azure Virutal Network Id.
-- **credential_id** (String) The Credential to access Azure.
-- **cxp** (String) The CXP to be used for the connector.
+- **azure_region** (String) Azure Region where VNET resides.
+- **azure_vnet_id** (String) Azure Virtual Network Id.
+- **credential_id** (String) ID of credential managed by Credential Manager.
+- **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
-- **size** (String) The segment of the connector.
+- **segment** (String) The segment of the connector.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
 
 ### Optional
 
-- **billing_tags** (List of Number) Tag for billing.
-- **group** (String) The group that the connector belongs to.
+- **billing_tags** (List of Number) Tags for billing.
+- **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 
 ### Read-Only
