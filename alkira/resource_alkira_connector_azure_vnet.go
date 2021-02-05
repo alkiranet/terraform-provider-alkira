@@ -24,7 +24,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"azure_vnet_id": {
-				Description: "Azure Virutal Network Id.",
+				Description: "Azure Virtual Network Id.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
