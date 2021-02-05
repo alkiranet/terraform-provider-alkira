@@ -59,12 +59,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"segment":       {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Description: "The segment of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"size":          {
-				Description: "The segment of the connector.",
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
