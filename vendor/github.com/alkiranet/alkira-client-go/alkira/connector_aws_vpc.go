@@ -10,25 +10,54 @@ import (
 	"net/http"
 )
 
+// Structs for "VPC Routing" options
+type InputPrefixes struct {
+	Id    string `json:"id,omitempty"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ExportOptions struct {
+	Mode     string          `json:"routeExportMode,omitempty"`
+	Prefixes []InputPrefixes `json:"userInputPrefixes,omitempty"`
+}
+
+type RouteTables struct {
+	Id            string `json:"id"`
+	PrefixListIds []int  `json:"prefixListIds"`
+	Mode          string `json:"routeImportMode"`
+}
+
+type ImportOptions struct {
+	RouteTables []RouteTables `json:"routeTables,omitempty"`
+}
+
+type ConnectorAwsVpcRouting struct {
+	Export interface{} `json:"exportToCXPOptions"`
+	Import interface{} `json:"importFromCXPOptions"`
+}
+
+// AWS-VPC connector
 type ConnectorAwsVpcRequest struct {
-	BillingTags    []int    `json:"billingTags"`
-	CXP            string   `json:"cxp"`
-	CredentialId   string   `json:"credentialId"`
-	CustomerName   string   `json:"customerName"`
-	CustomerRegion string   `json:"customerRegion"`
-	Group          string   `json:"group"`
-	Name           string   `json:"name"`
-	Segments       []string `json:"segments"`
-	Size           string   `json:"size"`
-	VpcId          string   `json:"vpcId"`
-	VpcOwnerId     string   `json:"vpcOwnerId"`
+	BillingTags    []int       `json:"billingTags"`
+	CXP            string      `json:"cxp"`
+	CredentialId   string      `json:"credentialId"`
+	CustomerName   string      `json:"customerName"`
+	CustomerRegion string      `json:"customerRegion"`
+	Group          string      `json:"group"`
+	Name           string      `json:"name"`
+	Segments       []string    `json:"segments"`
+	Size           string      `json:"size"`
+	VpcId          string      `json:"vpcId"`
+	VpcOwnerId     string      `json:"vpcOwnerId"`
+	VpcRouting     interface{} `json:"vpcRouting"`
 }
 
 type ConnectorAwsVpcResponse struct {
 	Id int `json:"id"`
 }
 
-// Create a AWS-VPC connector
+// CreateConnectorAwsVPC Create an AWS-VPC connector
 func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest) (int, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
 	id := 0
@@ -63,7 +92,7 @@ func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest)
 	return id, nil
 }
 
-// Delete an AWS-VPC connector
+// DeleteConnectorAwsVpc Delete an AWS-VPC connector
 func (ac *AlkiraClient) DeleteConnectorAwsVpc(id int) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%d", ac.URI, ac.TenantNetworkId, id)
 
