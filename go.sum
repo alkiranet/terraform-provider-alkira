@@ -45,6 +45,8 @@ github.com/alkiranet/alkira-client-go v0.4.1 h1:fUXg3ZjjtqFTmZDpeorM9KUbyrXKDTfK
 github.com/alkiranet/alkira-client-go v0.4.1/go.mod h1:qLumIcmcBekw5Sqi2dNl1TNN//d4+AMbiiEDIHWNLqA=
 github.com/alkiranet/alkira-client-go v0.4.2 h1:cw7lbAwFqiu/OT6KwS1UGNqkqreSBwKhmeGz+QltLh8=
 github.com/alkiranet/alkira-client-go v0.4.2/go.mod h1:qLumIcmcBekw5Sqi2dNl1TNN//d4+AMbiiEDIHWNLqA=
+github.com/alkiranet/alkira-client-go v0.5.0 h1:O8d/0X5L+oLes2jxap9NNNc1T/U8FgkdteWQvkvph+Y=
+github.com/alkiranet/alkira-client-go v0.5.0/go.mod h1:qLumIcmcBekw5Sqi2dNl1TNN//d4+AMbiiEDIHWNLqA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-cidr v1.0.1 h1:NmIwLZ/KdsjIUlhf+/Np40atNXm/+lZ5txfTJ/SpF+U=
