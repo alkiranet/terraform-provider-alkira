@@ -1,3 +1,5 @@
+// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (

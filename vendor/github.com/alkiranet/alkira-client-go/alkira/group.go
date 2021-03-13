@@ -1,3 +1,4 @@
+// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
 package alkira
 
 import (
@@ -41,7 +42,7 @@ func (ac *AlkiraClient) CreateGroup(name string, description string) (int, error
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
 	body, err := json.Marshal(map[string]string{
-		"name": name,
+		"name":        name,
 		"description": description,
 	})
 
@@ -142,7 +143,7 @@ func (ac *AlkiraClient) UpdateGroup(id int, name string, description string) err
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(map[string]string{
-		"name": name,
+		"name":        name,
 		"description": description,
 	})
 
