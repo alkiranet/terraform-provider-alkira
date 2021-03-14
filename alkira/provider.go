@@ -54,9 +54,10 @@ func Provider() *schema.Provider {
 			"alkira_tenant_network":          resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_group":          dataSourceAlkiraGroup(),
-			"alkira_segment":        dataSourceAlkiraSegment(),
-			"alkira_tenant_network": dataSourceAlkiraTenantNetwork(),
+			"alkira_group":                   dataSourceAlkiraGroup(),
+			"alkira_policy_prefix_list":      dataSourceAlkiraPolicyPrefixList(),
+			"alkira_segment":                 dataSourceAlkiraSegment(),
+			"alkira_tenant_network":          dataSourceAlkiraTenantNetwork(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}
