@@ -9,16 +9,21 @@ import (
 
 func dataSourceAlkiraGroup() *schema.Resource {
 	return &schema.Resource{
+		Description: "Use this data source to get information on an existing group.",
+
 		Read: dataSourceAlkiraGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"group_id": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the group.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"group_id": {
+				Description: "The ID of the group.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Optional:    true,
 			},
 		},
 	}
