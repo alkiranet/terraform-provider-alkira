@@ -77,14 +77,27 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "The CIDR of the VPC the connnector connects to.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				ConflictsWith: []string{"vpc_subnets"},
+				ConflictsWith: []string{"vpc_subnet"},
 			},
-			"vpc_subnets": {
-				Description: "The subnets of the VPC the connnector connects to.",
-				Type:        schema.TypeList,
+			"vpc_subnet": {
+				Description: "The subnet of the VPC the connnector connects to.",
+				Type:        schema.TypeSet,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_cidr"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "The Id of the subnet.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cidr": {
+							Description: "The CIDR of the subnet.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
 			},
 			"vpc_route_table": {
 				Description: "VPC route table",
@@ -102,7 +115,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
-
 						"options": {
 							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:        schema.TypeString,
@@ -125,7 +137,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 
 	segments := []string{d.Get("segment").(string)}
 
-	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").(string), d.Get("vpc_subnets").([]interface{}))
+	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").(string), d.Get("vpc_subnet").(*schema.Set))
 
 	if err != nil {
 		return err

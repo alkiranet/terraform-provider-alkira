@@ -212,7 +212,7 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 }
 
 // generateUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
-func generateUserInputPrefixes(cidr string, subnets []interface{}) ([]alkira.InputPrefixes, error) {
+func generateUserInputPrefixes(cidr string, subnets *schema.Set) ([]alkira.InputPrefixes, error) {
 
 	if cidr == "" && subnets == nil {
 		return nil, fmt.Errorf("ERROR: either \"vpc_subnets\" or \"vpc_cidr\" must be specified.")
@@ -231,10 +231,22 @@ func generateUserInputPrefixes(cidr string, subnets []interface{}) ([]alkira.Inp
 
 	// Processing VPC subnets
 	log.Printf("[DEBUG] Processing VPC Subnets")
-	prefixes := make([]alkira.InputPrefixes, len(subnets))
-	for i, subnet := range subnets {
+	if subnets == nil || subnets.Len() == 0 {
+		log.Printf("[DEBUG] Empty VPC Subnets")
+		return nil, fmt.Errorf("ERROR: Invalid VPC Subnets.")
+	}
+
+	prefixes := make([]alkira.InputPrefixes, subnets.Len())
+	for i, subnet := range subnets.List() {
 		r := alkira.InputPrefixes{}
-		r.Id = subnet.(string)
+		t := subnet.(map[string]interface{})
+		if v, ok := t["id"].(string); ok {
+			r.Id = v
+		}
+		if v, ok := t["cidr"].(string); ok {
+			r.Value = v
+		}
+
 		r.Type = "SUBNET"
 		prefixes[i] = r
 	}
