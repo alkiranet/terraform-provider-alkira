@@ -11,76 +11,133 @@ import (
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage AWS Cloud Connector.",
-		Create: resourceConnectorAwsVpcCreate,
-		Read:   resourceConnectorAwsVpcRead,
-		Update: resourceConnectorAwsVpcUpdate,
-		Delete: resourceConnectorAwsVpcDelete,
+		Create:      resourceConnectorAwsVpcCreate,
+		Read:        resourceConnectorAwsVpcRead,
+		Update:      resourceConnectorAwsVpcUpdate,
+		Delete:      resourceConnectorAwsVpcDelete,
 
 		Schema: map[string]*schema.Schema{
 			"aws_account_id": {
-				Description:  "AWS Account ID.",
-				Type:         schema.TypeString,
-				Required:     true,
+				Description: "AWS Account ID.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"aws_region":     {
-				Description:  "AWS Region where VPC resides.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"aws_region": {
+				Description: "AWS Region where VPC resides.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"billing_tags":   {
-				Description:  "Tags for billing.",
-				Type:         schema.TypeList,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeInt},
+			"billing_tags": {
+				Description: "Tags for billing.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"credential_id":  {
-				Description:  "ID of credential managed by Credential Manager.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"credential_id": {
+				Description: "ID of credential managed by Credential Manager.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"connector_id":   {
-				Type:         schema.TypeInt,
-				Computed:     true,
+			"connector_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
-			"cxp":            {
-				Description:  "The CXP where the connector should be provisioned.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"cxp": {
+				Description: "The CXP where the connector should be provisioned.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"group":          {
-				Description:  "The group of the connector.",
-				Type:         schema.TypeString,
-				Optional:     true,
+			"group": {
+				Description: "The group of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
-			"name":           {
-				Description:  "The name of the connector.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"name": {
+				Description: "The name of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"segment":        {
-				Description:  "The segment of the connector.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"segment": {
+				Description: "The segment of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"size":           {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"size": {
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE` or `4LARGE`.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"vpc_id":         {
-				Description:  "The ID of the VPC the connnector connects to.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"vpc_id": {
+				Description: "The ID of the VPC the connnector connects to.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"vpc_cidr": {
+				Description: "The CIDR of the VPC the connnector connects to.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"vpc_subnets": {
+				Description: "The subnets of the VPC the connnector connects to.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"vpc_route_table": {
+				Description: "VPC route table",
+				Type:        schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "The Id of the route table",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"prefix_list_ids": {
+							Description: "Prefix List Ids",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+
+						"options": {
+							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+				Optional: true,
 			},
 		},
 	}
 }
 
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
+
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+
 	segments := []string{d.Get("segment").(string)}
+
+	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").(string), d.Get("vpc_subnets").([]interface{}))
+
+	if err != nil {
+		return err
+	}
+
+	exportOptions := alkira.ExportOptions{
+			Mode:     "USER_INPUT_PREFIXES",
+			Prefixes: inputPrefixes,
+	}
+
+	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))
+
+	vpcRouting := alkira.ConnectorAwsVpcRouting{
+		Export: exportOptions,
+		Import: alkira.ImportOptions{routeTables},
+	}
 
 	connectorAwsVpc := &alkira.ConnectorAwsVpcRequest{
 		BillingTags:    billingTags,
@@ -94,6 +151,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 		Size:           d.Get("size").(string),
 		VpcId:          d.Get("vpc_id").(string),
 		VpcOwnerId:     d.Get("aws_account_id").(string),
+		VpcRouting:     vpcRouting,
 	}
 
 	id, err := client.CreateConnectorAwsVpc(connectorAwsVpc)

@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -185,35 +186,62 @@ func expandPolicyRuleListRules(in *schema.Set) []alkira.PolicyRuleListRule {
 	return rules
 }
 
-// func expandIPSecSegmentOptions(in *schema.Set) []map[string]interface{} {
-//     if in == nil || in.Len() == 0 {
-// 		log.Printf("[DEBUG] invalid IPSec segmentOption input")
-//         return nil
-//     }
+// expandAwsVpcRouteTables expand AWS-VPC route tables
+func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
+	if in == nil || in.Len() == 0 {
+		log.Printf("[DEBUG] Empty VPC route table input")
+		return []alkira.RouteTables{}
+	}
 
-//     sites := make([]alkira.ConnectorIPSecSite, in.Len())
-//     for i, site := range in.List() {
-//         r := alkira.ConnectorIPSecSite{}
-// 		siteCfg := site.(map[string]interface{})
-//         if v, ok := siteCfg["name"].(string); ok {
-// 			r.Name = v
-//         }
-//         if v, ok := siteCfg["customer_gateway_asn"].(string); ok {
-//             r.CustomerGwAsn = v
-//         }
-//         if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
-//             r.CustomerGwIp = v
-//         }
-//         if v, ok := siteCfg["preshared_keys"].([]string); ok {
-// 			if len(v) != 0 {
-// 				r.PresharedKeys = v
-// 			} else {
-// 				r.PresharedKeys[0] = "[],[]"
-// 			}
-//         }
+	tables := make([]alkira.RouteTables, in.Len())
+	for i, table := range in.List() {
+		r := alkira.RouteTables{}
+		t := table.(map[string]interface{})
+		if v, ok := t["id"].(string); ok {
+			r.Id = v
+		}
+		if v, ok := t["options"].(string); ok {
+			r.Mode = v
+		}
 
-//         sites[i] = r
-//     }
+		r.PrefixListIds = convertTypeListToIntList(t["prefix_list_ids"].([]interface{}))
+		tables[i] = r
+	}
 
-//     return sites
-// }
+	return tables
+}
+
+// generateUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
+func generateUserInputPrefixes(cidr string, subnets []interface{}) ([]alkira.InputPrefixes, error) {
+
+	if cidr == "" && subnets == nil {
+		return nil, fmt.Errorf("ERROR: either vpc_subnets and vpc_cidr should be specified.")
+	}
+
+	if cidr != "" && len(subnets) > 0 {
+		return nil, fmt.Errorf("ERROR: vpc_subnets and vpc_cidr can't be specified at the same time.")
+	}
+
+	// Processing VPC CIDR
+	if cidr != "" {
+		log.Printf("[DEBUG] Processing VPC CIDR")
+		inputPrefix := alkira.InputPrefixes{
+			Id:    "",
+			Type:  "CIDR",
+			Value: cidr,
+		}
+		return []alkira.InputPrefixes{inputPrefix}, nil
+	}
+
+	// Processing VPC subnets
+	log.Printf("[DEBUG] Processing VPC Subnets")
+	prefixes := make([]alkira.InputPrefixes, len(subnets))
+	for i, subnet := range subnets {
+		r := alkira.InputPrefixes{}
+		r.Id = subnet.(string)
+		r.Type = "SUBNET"
+		prefixes[i] = r
+	}
+
+	return prefixes, nil
+}
