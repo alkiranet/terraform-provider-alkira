@@ -77,12 +77,14 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "The CIDR of the VPC the connnector connects to.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ConflictsWith: []string{"vpc_subnets"},
 			},
 			"vpc_subnets": {
 				Description: "The subnets of the VPC the connnector connects to.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_cidr"},
 			},
 			"vpc_route_table": {
 				Description: "VPC route table",

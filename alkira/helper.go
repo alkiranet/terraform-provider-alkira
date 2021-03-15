@@ -215,11 +215,7 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 func generateUserInputPrefixes(cidr string, subnets []interface{}) ([]alkira.InputPrefixes, error) {
 
 	if cidr == "" && subnets == nil {
-		return nil, fmt.Errorf("ERROR: either vpc_subnets or vpc_cidr must be specified.")
-	}
-
-	if cidr != "" && len(subnets) > 0 {
-		return nil, fmt.Errorf("ERROR: vpc_subnets and vpc_cidr can't be specified at the same time.")
+		return nil, fmt.Errorf("ERROR: either \"vpc_subnets\" or \"vpc_cidr\" must be specified.")
 	}
 
 	// Processing VPC CIDR
