@@ -3,12 +3,12 @@
 page_title: "alkira_group Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  Use this data source to get information on an existing group.
 ---
 
 # alkira_group (Data Source)
 
-
+Use this data source to get information on an existing group.
 
 
 
@@ -17,11 +17,11 @@ description: |-
 
 ### Required
 
-- **group_id** (Number)
-- **name** (String)
+- **name** (String) The name of the group.
 
 ### Optional
 
+- **group_id** (Number) The ID of the group.
 - **id** (String) The ID of this resource.
 
 
