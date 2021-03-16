@@ -24,18 +24,18 @@ func resourceAlkiraSegment() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the segment.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"asn": {
 				Description: "The BGP ASN for the segment.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"cidr": {
 				Description: "The CIDR block.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"segment_id": {
 				Type:     schema.TypeInt,

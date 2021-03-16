@@ -28,13 +28,13 @@ func resourceAlkiraGroup() *schema.Resource {
 			},
 			"name": {
 				Description: "The name of the group.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"description": {
 				Description: "The description of the group.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 		},
 	}

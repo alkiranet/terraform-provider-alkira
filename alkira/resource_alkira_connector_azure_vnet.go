@@ -18,7 +18,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 		Delete: resourceConnectorAzureVnetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"azure_region":  {
+			"azure_region": {
 				Description: "Azure Region where VNET resides.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -28,42 +28,42 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tags":  {
+			"billing_tags": {
 				Description: "Tags for billing.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"connector_id":  {
-				Type:        schema.TypeInt,
-				Computed:    true,
+			"connector_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"credential_id": {
 				Description: "ID of credential managed by Credential Manager.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"cxp":           {
+			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"group":         {
+			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"name":          {
+			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment":       {
+			"segment": {
 				Description: "The segment of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"size":          {
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:        schema.TypeString,
 				Required:    true,

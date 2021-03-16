@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
@@ -74,15 +74,15 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"vpc_cidr": {
-				Description: "The CIDR of the VPC the connnector connects to.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description:   "The CIDR of the VPC the connnector connects to.",
+				Type:          schema.TypeString,
+				Optional:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 			},
 			"vpc_subnet": {
-				Description: "The subnet of the VPC the connnector connects to.",
-				Type:        schema.TypeSet,
-				Optional:    true,
+				Description:   "The subnet of the VPC the connnector connects to.",
+				Type:          schema.TypeSet,
+				Optional:      true,
 				ConflictsWith: []string{"vpc_cidr"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -116,9 +116,9 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"options": {
-							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description:  "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "OVERRIDE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 					},
@@ -144,8 +144,8 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 	}
 
 	exportOptions := alkira.ExportOptions{
-			Mode:     "USER_INPUT_PREFIXES",
-			Prefixes: inputPrefixes,
+		Mode:     "USER_INPUT_PREFIXES",
+		Prefixes: inputPrefixes,
 	}
 
 	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))

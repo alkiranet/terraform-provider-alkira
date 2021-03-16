@@ -9,9 +9,9 @@ import (
 
 func dataSourceAlkiraPolicyPrefixList() *schema.Resource {
 	return &schema.Resource{
-        Description: "Use this data source to get an existing policy prefix list.",
+		Description: "Use this data source to get an existing policy prefix list.",
 
-        Read: dataSourceAlkiraPolicyPrefixListRead,
+		Read: dataSourceAlkiraPolicyPrefixListRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
