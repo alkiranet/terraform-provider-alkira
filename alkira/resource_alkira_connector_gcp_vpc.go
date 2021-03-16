@@ -18,60 +18,60 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Delete: resourceConnectorGcpVpcDelete,
 
 		Schema: map[string]*schema.Schema{
-			"billing_tags":   {
-				Description:  "Tags for billing.",
-				Type:         schema.TypeList,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeInt},
+			"billing_tags": {
+				Description: "Tags for billing.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"connector_id":   {
-				Type:         schema.TypeInt,
-				Computed:     true,
+			"connector_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
-			"credential_id":  {
-				Description:  "ID of credential managed by Credential Manager.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"credential_id": {
+				Description: "ID of credential managed by Credential Manager.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"cxp":            {
-				Description:  "The CXP where the connector should be provisioned.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"cxp": {
+				Description: "The CXP where the connector should be provisioned.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"gcp_region":     {
-				Description:  "GCP region where VPC resides.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"gcp_region": {
+				Description: "GCP region where VPC resides.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"gcp_vpc_id":     {
-				Description:  "GCP VPC ID.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"gcp_vpc_id": {
+				Description: "GCP VPC ID.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"gcp_vpc_name":   {
-				Description:  "GCP VPC name.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"gcp_vpc_name": {
+				Description: "GCP VPC name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"group":          {
-				Description:  "The group of the connector.",
-				Type:         schema.TypeString,
-				Optional:     true,
+			"group": {
+				Description: "The group of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
-			"name":           {
-				Description:  "The name of the connector.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"name": {
+				Description: "The name of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"segment":        {
-				Description:  "The segment of the connector.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"segment": {
+				Description: "The segment of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"size":           {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
+			"size": {
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 		},
 	}
