@@ -29,7 +29,7 @@ type RouteTables struct {
 }
 
 type ImportOptions struct {
-	RouteTables []RouteTables `json:"routeTables,omitempty"`
+	RouteTables []RouteTables `json:"routeTables"`
 }
 
 type ConnectorAwsVpcRouting struct {

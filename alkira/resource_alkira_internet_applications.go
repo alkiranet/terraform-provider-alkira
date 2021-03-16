@@ -82,7 +82,7 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 		Size:          d.Get("size").(string),
 	}
 
-	id, err := client.CreateInternetApplication(connector)
+	id, groupId, err := client.CreateInternetApplication(connector)
 
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 
 	d.SetId(strconv.Itoa(id))
 	d.Set("internet_application_id", id)
-	d.Set("group_id", getInternetApplicationGroup(client))
+	d.Set("group_id", groupId)
 
 	log.Printf("[INFO] Internet Application Group Id %d", d.Get("group_id").(int))
 
