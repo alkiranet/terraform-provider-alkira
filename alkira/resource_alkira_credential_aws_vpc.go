@@ -10,6 +10,17 @@ import (
 
 func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage AWS credential for authentication.\n\n" +
+			"The following methods are supported:\n\n" +
+			" - Static credentials\n" +
+			" - Environment variables\n\n" +
+			"*** Static Credentials:\n\n" +
+			"Static credentials can be provided by adding an `aws_access_key`" +
+			"and `aws_secret_key` in-line in the AWS provider block.\n\n" +
+			"*** Environment Variables:\n\n" +
+			"You can provide your credentials via the `AWS_ACCESS_KEY_ID` and" +
+			"`AWS_SECRET_ACCESS_KEY`, environment variables, representing your" +
+			"AWS Access Key and AWS Secret Key, respectively.",
 		Create: resourceCredentialAwsVpc,
 		Read:   resourceCredentialAwsVpcRead,
 		Update: resourceCredentialAwsVpcUpdate,
@@ -24,21 +35,33 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"aws_access_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+                    "AWS_ACCESS_KEY_ID",
+					nil),
 				Description: "AWS access key",
 			},
 			"aws_secret_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+                    "AWS_SECRET_ACCESS_KEY",
+					nil),
 				Description: "AWS secret key",
 			},
 			"aws_role_arn": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+                    "AWS_ROLE_ARN",
+					nil),
 				Description: "The AWS Role Arn",
 			},
 			"aws_external_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+                    "AWS_ROLE_EXTERNAL_ID",
+					nil),
 				Description: "The AWS Role External ID",
 			},
 			"type": &schema.Schema{

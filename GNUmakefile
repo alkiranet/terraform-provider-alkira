@@ -13,6 +13,7 @@ release:
 	tar cvzf $(RELEASE_DIR)/terraform-provider-alkira-$(VERSION)-linux-amd64.tar.gz -C $(RELEASE_BIN)/linux-amd64 terraform-provider-alkira_$(VERSION)
 	tar cvzf $(RELEASE_DIR)/terraform-provider-alkira-$(VERSION)-darwin-amd64.tar.gz -C $(RELEASE_BIN)/darwin-amd64 terraform-provider-alkira_$(VERSION)
 	zip $(RELEASE_DIR)/terraform-provider-alkira-$(VERSION)-windows-amd64.zip -j $(RELEASE_BIN)/windows-amd64/terraform-provider-alkira_$(VERSION)
-
+doc:
+	tfplugindocs generate
 superclean:
 	git clean -x -d -f
