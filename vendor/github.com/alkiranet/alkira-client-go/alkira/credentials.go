@@ -1,3 +1,5 @@
+// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
@@ -63,7 +65,14 @@ type CredentialResponse struct {
 	Id string `json:"id"`
 }
 
-// Create new Credential
+type CredentialResponseDetail struct {
+	Id      string `json:"credentialId"`
+	Type    string `json:"credentialType"`
+	Name    string `json:"name"`
+	SubType string `json:"subType"`
+}
+
+// CreateCredential Create new Credential
 func (ac *AlkiraClient) CreateCredential(name string, credentialType string, credential interface{}) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, credentialType)
 	id := ""
@@ -98,7 +107,7 @@ func (ac *AlkiraClient) CreateCredential(name string, credentialType string, cre
 	return id, nil
 }
 
-// Delete Credential by its Id
+// DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, credentialType string) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, credentialType, id)
 
@@ -119,4 +128,52 @@ func (ac *AlkiraClient) DeleteCredential(id string, credentialType string) error
 	}
 
 	return nil
+}
+
+// GetCredentials get all credentials
+func (ac *AlkiraClient) GetCredentials() (string, error) {
+	uri := fmt.Sprintf("%s/api/credentials/", ac.URI)
+
+	request, err := http.NewRequest("GET", uri, nil)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return "", fmt.Errorf("GetCredentials: request failed: %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return "", fmt.Errorf("GetCredentials: (%d) %s", response.StatusCode, string(data))
+	}
+
+	return string(data), nil
+}
+
+// GetCredentialByName get the credential by its name
+func (ac *AlkiraClient) GetCredentialByName(name string) (CredentialResponseDetail, error) {
+	var credential CredentialResponseDetail
+
+	if len(name) == 0 {
+		return credential, fmt.Errorf("Invalid credential name input")
+	}
+
+	credentials, err := ac.GetCredentials()
+
+	if err != nil {
+		return credential, err
+	}
+
+	var result []CredentialResponseDetail
+	json.Unmarshal([]byte(credentials), &result)
+
+	for _, g := range result {
+		if g.Name == name {
+			return g, nil
+		}
+	}
+
+	return credential, fmt.Errorf("Failed to find the credential by %s", name)
 }

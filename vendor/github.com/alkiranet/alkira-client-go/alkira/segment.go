@@ -69,6 +69,32 @@ func (ac *AlkiraClient) GetSegmentById(id int) (Segment, error) {
 	return segment, nil
 }
 
+// GetSegmentByName get the segment by its name
+func (ac *AlkiraClient) GetSegmentByName(name string) (Segment, error) {
+	var segment Segment
+
+	if len(name) == 0 {
+		return segment, fmt.Errorf("Invalid segment name input")
+	}
+
+	segments, err := ac.GetSegments()
+
+	if err != nil {
+		return segment, err
+	}
+
+	var result []Segment
+	json.Unmarshal([]byte(segments), &result)
+
+	for _, g := range result {
+		if g.Name == name {
+			return g, nil
+		}
+	}
+
+	return segment, fmt.Errorf("failed to find the segment by %s", name)
+}
+
 // CreateSegment create a new Segment
 func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (int, error) {
 
