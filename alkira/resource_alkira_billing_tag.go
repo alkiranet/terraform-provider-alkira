@@ -63,8 +63,6 @@ func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return nil
-
 	return resourceBillingTagRead(d, meta)
 }
 

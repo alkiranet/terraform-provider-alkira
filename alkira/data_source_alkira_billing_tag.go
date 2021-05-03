@@ -19,12 +19,6 @@ func dataSourceAlkiraBillingTag() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tag_id": {
-				Description: "The ID of the billing tag.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Optional:    true,
-			},
 		},
 	}
 }
@@ -39,7 +33,6 @@ func dataSourceAlkiraBillingTagRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(strconv.Itoa(billingTag.Id))
-	d.Set("billing_tag_id", billingTag.Id)
 
 	return nil
 }

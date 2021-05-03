@@ -27,7 +27,6 @@ data "alkira_billing_tag" "tag1" {
 
 ### Optional
 
-- **billing_tag_id** (Number) The ID of the billing tag.
 - **id** (String) The ID of this resource.
 
 
