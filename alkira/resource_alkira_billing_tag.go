@@ -10,19 +10,22 @@ import (
 
 func resourceAlkiraBillingTag() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage Billing Tag.",
 		Create: resourceBillingTag,
 		Read:   resourceBillingTagRead,
 		Update: resourceBillingTagUpdate,
 		Delete: resourceBillingTagDelete,
 
 		Schema: map[string]*schema.Schema{
-			"tag_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "Billing Tag Name.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"tag_id": {
+				Description: "Billing Tag ID.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 		},
 	}
@@ -51,6 +54,15 @@ func resourceBillingTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	log.Printf("[INFO] Billing Tag Updating")
+	err := client.UpdateBillingTag(d.Get("tag_id").(int), d.Get("name").(string))
+
+	if err != nil {
+		return err
+	}
+
 	return resourceBillingTagRead(d, meta)
 }
 
