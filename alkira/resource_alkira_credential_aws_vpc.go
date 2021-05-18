@@ -33,34 +33,34 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Description: "The name of the credential",
 			},
 			"aws_access_key": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 				DefaultFunc: schema.EnvDefaultFunc(
-                    "AWS_ACCESS_KEY_ID",
+					"AWS_ACCESS_KEY_ID",
 					nil),
 				Description: "AWS access key",
 			},
 			"aws_secret_key": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 				DefaultFunc: schema.EnvDefaultFunc(
-                    "AWS_SECRET_ACCESS_KEY",
+					"AWS_SECRET_ACCESS_KEY",
 					nil),
 				Description: "AWS secret key",
 			},
 			"aws_role_arn": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 				DefaultFunc: schema.EnvDefaultFunc(
-                    "AWS_ROLE_ARN",
+					"AWS_ROLE_ARN",
 					nil),
 				Description: "The AWS Role Arn",
 			},
 			"aws_external_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 				DefaultFunc: schema.EnvDefaultFunc(
-                    "AWS_ROLE_EXTERNAL_ID",
+					"AWS_ROLE_EXTERNAL_ID",
 					nil),
 				Description: "The AWS Role External ID",
 			},

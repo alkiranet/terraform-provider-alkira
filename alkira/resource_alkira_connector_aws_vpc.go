@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,10 +37,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "ID of credential managed by Credential Manager.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -176,8 +171,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", id)
+	d.SetId(id)
 	return resourceConnectorAwsVpcRead(d, m)
 }
 
@@ -193,7 +187,7 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (AWS-VPC) %s", d.Id())
-	err := client.DeleteConnectorAwsVpc(d.Get("connector_id").(int))
+	err := client.DeleteConnectorAwsVpc(d.Id())
 
 	if err != nil {
 		return err
