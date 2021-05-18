@@ -1,84 +1,141 @@
+// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 )
 
+type ConnectorIPSecSiteAdvanced struct {
+	DPDDelay                int      `json:"dPDDelay,omitempty"`
+	DPDTimeout              int      `json:"dPDTimeout,omitempty"`
+	EspDHGroupNumbers       []string `json:"espDHGroupNumbers,omitempty"`
+	EspEncryptionAlgorithms []string `json:"espEncryptionAlgorithms,omitempty"`
+	EspIntegrityAlgorithms  []string `json:"espIntegrityAlgorithms,omitempty"`
+	EspLifeTime             int      `json:"espLifeTime,omitempty"`
+	EspRandomTime           int      `json:"espRandomTime,omitempty"`
+	EspRekeyTime            int      `json:"espRekeyTime,omitempty"`
+	IkeDHGroupNumbers       []string `json:"ikeDHGroupNumbers,omitempty"`
+	IkeEncryptionAlgorithms []string `json:"ikeEncryptionAlgorithms,omitempty"`
+	IkeIntegrityAlgorithms  []string `json:"ikeIntegrityAlgorithms,omitempty"`
+	IkeOverTime             int      `json:"ikeOverTime,omitempty"`
+	IkeRandomTime           int      `json:"ikeRandomTime,omitempty"`
+	IkeRekeyTime            int      `json:"ikeRekeyTime,omitempty"`
+	IkeVersion              string   `json:"ikeVersion,omitempty"`
+	LocalAuthType           string   `json:"localAuthType,omitempty"`
+	LocalAuthValue          string   `json:"localAuthValue,omitempty"`
+	RemoteAuthType          string   `json:"remoteAuthType,omitempty"`
+	RemoteAuthValue         string   `json:"remoteAuthValue,omitempty"`
+	ReplayWindowSize        int      `json:"replayWindowSize,omitempty"`
+}
+
+type ConnectorIPSecSite struct {
+	Name          string                      `json:"name"`
+	BillingTags   []int                       `json:"billingTags,omitempty"`
+	CustomerGwAsn string                      `json:"customerGwAsn"`
+	CustomerGwIp  string                      `json:"customerGwIp"`
+	PresharedKeys []string                    `json:"presharedKeys"`
+	Advanced      *ConnectorIPSecSiteAdvanced `json:"advanced,omitempty"`
+}
+
+type ConnectorIPSecPolicyOptions struct {
+	BranchTSPrefixListIds []int `json:"branchTSPrefixListIds"`
+	CxpTSPrefixListIds    []int `json:"cxpTSPrefixListIds"`
+}
+
+//
+// From the current version of API, the routing option is enforced and
+// you have to set it.
+//
+// routingOptions: {
+//   staticRouting: {}
+//   dynamicRouting: {}
+// }
+//
+type ConnectorIPSecStaticRouting struct {
+	PrefixListId int `json:"prefixListId"`
+}
+
+type ConnectorIPSecDynamicRouting struct {
+	CustomerGwAsn string `json:"customerGwAsn"`
+}
+
+type ConnectorIPSecRoutingOptions struct {
+	DynamicRouting *ConnectorIPSecDynamicRouting `json:"dynamicRouting"`
+	StaticRouting  *ConnectorIPSecStaticRouting  `json:"staticRouting"`
+}
+
+// SegmentOptions block is dynamic and so can't be put into a
+// structure. It needs to be marshalled from
+// map[string]ConnectorIPSecSegmentOptions
+type ConnectorIPSecSegmentOptions struct {
+	AdvertiseOnPremRoutes *bool `json:"advertiseOnPremRoutes,omitempty"`
+	DisableInternetExit   *bool `json:"disableInternetExit,omitempty"`
+}
+
 type ConnectorIPSecRequest struct {
-	BillingTags    []int       `json:"billingTags"`
-	CXP            string      `json:"cxp"`
-	Group          string      `json:"group"`
-	Name           string      `json:"name"`
-	SegmentOptions interface{} `json:"segmentOptions"`
-	Segments       []string    `json:"segments"`
-	Sites          interface{} `json:"sites"`
-	Size           string      `json:"size"`
+	BillingTags    []int                         `json:"billingTags"`
+	CXP            string                        `json:"cxp"`
+	Group          string                        `json:"group"`
+	Name           string                        `json:"name"`
+	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
+	RoutingOptions *ConnectorIPSecRoutingOptions `json:"routingOptions"`
+	SegmentOptions interface{}                   `json:"segmentOptions"`
+	Segments       []string                      `json:"segments"` // Only one segment is supported for now
+	Sites          []*ConnectorIPSecSite         `json:"sites,omitempty"`
+	Size           string                        `json:"size"`
+	VpnMode        string                        `json:"vpnMode"`
 }
 
 type ConnectorIPSecResponse struct {
 	Id int `json:"id"`
 }
 
-type ConnectorIPSecSite struct {
-	Name          string   `json:"name"`
-	CustomerGwAsn string   `json:"customerGwAsn"`
-	CustomerGwIp  string   `json:"customerGwIp"`
-	PresharedKeys []string `json:"presharedKeys"`
-}
-
-// Create an IPSEC connector
-func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (int, error) {
+// CreateConnectorIPSec create an IPSEC connector
+func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
 	if err != nil {
-		return id, fmt.Errorf("CreateConnectorIpSec: request failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorIPSec: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	data, err := ac.create(uri, body)
+
+	if err != nil {
+		return "", err
+	}
 
 	var result ConnectorIPSecResponse
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	id = result.Id
-
-	return id, nil
-}
-
-// Delete an IPSEC connector by Id
-func (ac *AlkiraClient) DeleteConnectorIPSec(id int) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%d", ac.URI, ac.TenantNetworkId, id)
-
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return fmt.Errorf("DeleteConnectorIpSec: request failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to unmarshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	return strconv.Itoa(result.Id), nil
+}
 
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+// DeleteConnectorIPSec delete an IPSEC connector by Id
+func (ac *AlkiraClient) DeleteConnectorIPSec(id string) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	return ac.delete(uri)
+}
+
+// UpdateConnectorIPSec update an IPSEC connector by Id
+func (ac *AlkiraClient) UpdateConnectorIPSec(id int, connector *ConnectorIPSecRequest) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+
+	body, err := json.Marshal(connector)
+
+	if err != nil {
+		return fmt.Errorf("UpdateConnectorIPSec: failed to marshal request: %v", err)
 	}
 
-	return nil
+	return ac.update(uri, body)
 }

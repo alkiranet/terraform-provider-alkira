@@ -3,11 +3,9 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 )
 
 // Structs for "VPC Routing" options
@@ -57,59 +55,36 @@ type ConnectorAwsVpcResponse struct {
 	Id int `json:"id"`
 }
 
-// CreateConnectorAwsVPC Create an AWS-VPC connector
-func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest) (int, error) {
+// CreateConnectorAwsVPC create an AWS-VPC connector
+func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(connector)
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
 	if err != nil {
-		return id, fmt.Errorf("CreateConnectorAwsVpc: request failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	data, err := ac.create(uri, body)
 
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", err
 	}
 
 	var result ConnectorAwsVpcResponse
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateConnectorAwsVpc: request failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to unmarshal: %v", err)
 	}
 
-	id = result.Id
-
-	return id, nil
+	return strconv.Itoa(result.Id), nil
 }
 
-// DeleteConnectorAwsVpc Delete an AWS-VPC connector
-func (ac *AlkiraClient) DeleteConnectorAwsVpc(id int) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+// DeleteConnectorAwsVpc delete an AWS-VPC connector
+func (ac *AlkiraClient) DeleteConnectorAwsVpc(id string) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return fmt.Errorf("DeleteConnectorAwsVpc: request failed: %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("DeleteConnectorAwsVpc: (%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+	return ac.delete(uri)
 }
