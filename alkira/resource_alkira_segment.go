@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,10 +36,6 @@ func resourceAlkiraSegment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -57,8 +52,7 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("segment_id", id)
+	d.SetId(id)
 
 	return resourceSegmentRead(d, meta)
 }
@@ -69,28 +63,18 @@ func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	segmentId := d.Get("segment_id").(int)
 
-	log.Printf("[INFO] Updateing Segment %d", segmentId)
-	err := client.UpdateSegment(segmentId, d.Get("name").(string), d.Get("asn").(string), d.Get("cidr").(string))
+	log.Printf("[INFO] Updateing Segment %s", d.Id())
+	err := client.UpdateSegment(d.Id(), d.Get("name").(string), d.Get("asn").(string), d.Get("cidr").(string))
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	segmentId := d.Get("segment_id").(int)
 
-	log.Printf("[INFO] Deleting Segment %d", segmentId)
-	err := client.DeleteSegment(segmentId)
+	log.Printf("[INFO] Deleting Segment %s", d.Id())
+	err := client.DeleteSegment(d.Id())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

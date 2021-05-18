@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,10 +21,6 @@ func resourceAlkiraGroup() *schema.Resource {
 		Delete: resourceGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"group_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"name": {
 				Description: "The name of the group.",
 				Type:        schema.TypeString,
@@ -50,8 +45,7 @@ func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("group_id", id)
+	d.SetId(id)
 
 	return resourceGroupRead(d, meta)
 }
@@ -64,7 +58,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Group Updating")
-	err := client.UpdateGroup(d.Get("group_id").(int), d.Get("name").(string), d.Get("description").(string))
+	err := client.UpdateGroup(d.Id(), d.Get("name").(string), d.Get("description").(string))
 
 	if err != nil {
 		return err
@@ -75,10 +69,9 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	groupId := d.Get("group_id").(int)
 
-	log.Printf("[INFO] Deleting Group %d", groupId)
-	err := client.DeleteGroup(groupId)
+	log.Printf("[INFO] Deleting Group %d", d.Id())
+	err := client.DeleteGroup(d.Id())
 
 	if err != nil {
 		return err
