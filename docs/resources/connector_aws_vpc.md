@@ -78,10 +78,6 @@ resource "alkira_connector_aws_vpc" "connector-vpc1" {
 - **vpc_route_table** (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
 - **vpc_subnet** (Block Set) The subnet of the VPC the connnector connects to. (see [below for nested schema](#nestedblock--vpc_subnet))
 
-### Read-Only
-
-- **connector_id** (Number)
-
 <a id="nestedblock--vpc_route_table"></a>
 ### Nested Schema for `vpc_route_table`
 

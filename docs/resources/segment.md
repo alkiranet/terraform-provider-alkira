@@ -28,8 +28,4 @@ A Segment is a section of a network isolated from one anotherto make it possible
 
 - **id** (String) The ID of this resource.
 
-### Read-Only
-
-- **segment_id** (Number)
-
 
