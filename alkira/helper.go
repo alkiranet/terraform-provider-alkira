@@ -131,39 +131,6 @@ func expandPanInstances(in *schema.Set) []alkira.ServicePanInstance {
 	return instances
 }
 
-func expandIPSecSites(in *schema.Set) []alkira.ConnectorIPSecSite {
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid IPSec site input")
-		return nil
-	}
-
-	sites := make([]alkira.ConnectorIPSecSite, in.Len())
-	for i, site := range in.List() {
-		r := alkira.ConnectorIPSecSite{}
-		siteCfg := site.(map[string]interface{})
-		if v, ok := siteCfg["name"].(string); ok {
-			r.Name = v
-		}
-		if v, ok := siteCfg["customer_gateway_asn"].(string); ok {
-			r.CustomerGwAsn = v
-		}
-		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
-			r.CustomerGwIp = v
-		}
-		if v, ok := siteCfg["preshared_keys"].([]string); ok {
-			if len(v) != 0 {
-				r.PresharedKeys = v
-			} else {
-				r.PresharedKeys[0] = "[],[]"
-			}
-		}
-
-		sites[i] = r
-	}
-
-	return sites
-}
-
 func expandPolicyRuleListRules(in *schema.Set) []alkira.PolicyRuleListRule {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid policy rule")

@@ -26,11 +26,6 @@ func resourceAlkiraBillingTag() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"tag_id": {
-				Description: "Billing Tag ID.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-			},
 		},
 	}
 }
@@ -47,7 +42,6 @@ func resourceBillingTag(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(id)
-	d.Set("tag_id", id)
 
 	return resourceBillingTagRead(d, meta)
 }
@@ -60,7 +54,7 @@ func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Billing Tag Updating")
-	err := client.UpdateBillingTag(d.Get("tag_id").(string), d.Get("name").(string), d.Get("description").(string))
+	err := client.UpdateBillingTag(d.Id(), d.Get("name").(string), d.Get("description").(string))
 
 	if err != nil {
 		return err
@@ -71,14 +65,9 @@ func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBillingTagDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Get("tag_id").(string)
 
-	log.Printf("[INFO] Deleting Billing Tag %d", id)
-	err := client.DeleteBillingTag(id)
+	log.Printf("[INFO] Deleting Billing Tag %s", d.Id())
+	err := client.DeleteBillingTag(d.Id())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

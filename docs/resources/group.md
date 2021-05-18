@@ -27,8 +27,4 @@ Groups can contain one or many connectors across different segments. This groupi
 
 - **id** (String) The ID of this resource.
 
-### Read-Only
-
-- **group_id** (Number)
-
 
