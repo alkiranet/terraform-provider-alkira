@@ -18,10 +18,13 @@ Manage Billing Tag.
 #
 resource "alkira_billing_tag" "tag1" {
   name           = "tag1"
+  description    = "tag1"
 }
 
 resource "alkira_billing_tag" "tag2" {
   name           = "tag2"
+  description    = "tag2"
+
 }
 
 #
@@ -49,10 +52,7 @@ resource "alkira_connector_aws_vpc" "connector-aws-vpc1" {
 
 ### Optional
 
+- **description** (String) Billing Tag Description.
 - **id** (String) The ID of this resource.
-
-### Read-Only
-
-- **tag_id** (Number) Billing Tag ID.
 
 
