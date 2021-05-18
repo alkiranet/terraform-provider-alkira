@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -11,16 +10,21 @@ import (
 func resourceAlkiraBillingTag() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Billing Tag.",
-		Create: resourceBillingTag,
-		Read:   resourceBillingTagRead,
-		Update: resourceBillingTagUpdate,
-		Delete: resourceBillingTagDelete,
+		Create:      resourceBillingTag,
+		Read:        resourceBillingTagRead,
+		Update:      resourceBillingTagUpdate,
+		Delete:      resourceBillingTagDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "Billing Tag Name.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"description": {
+				Description: "Billing Tag Description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"tag_id": {
 				Description: "Billing Tag ID.",
@@ -33,17 +37,16 @@ func resourceAlkiraBillingTag() *schema.Resource {
 
 func resourceBillingTag(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Billing Tag Creating")
-	id, err := client.CreateBillingTag(name)
+	id, err := client.CreateBillingTag(d.Get("name").(string), d.Get("description").(string))
 	log.Printf("[INFO] Billing Tag ID: %d", id)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
+	d.SetId(id)
 	d.Set("tag_id", id)
 
 	return resourceBillingTagRead(d, meta)
@@ -57,7 +60,7 @@ func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Billing Tag Updating")
-	err := client.UpdateBillingTag(d.Get("tag_id").(int), d.Get("name").(string))
+	err := client.UpdateBillingTag(d.Get("tag_id").(string), d.Get("name").(string), d.Get("description").(string))
 
 	if err != nil {
 		return err
@@ -68,7 +71,7 @@ func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBillingTagDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Get("tag_id").(int)
+	id := d.Get("tag_id").(string)
 
 	log.Printf("[INFO] Deleting Billing Tag %d", id)
 	err := client.DeleteBillingTag(id)
