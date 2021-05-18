@@ -1,12 +1,11 @@
 // Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 )
 
 type Group struct {
@@ -19,26 +18,12 @@ type Group struct {
 func (ac *AlkiraClient) GetGroups() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return "", fmt.Errorf("GetGroups: request failed, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return string(data), nil
+	data, err := ac.get(uri)
+	return string(data), err
 }
 
 // CreateGroup create a new Group
-func (ac *AlkiraClient) CreateGroup(name string, description string) (int, error) {
+func (ac *AlkiraClient) CreateGroup(name string, description string) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
 	body, err := json.Marshal(map[string]string{
@@ -46,45 +31,41 @@ func (ac *AlkiraClient) CreateGroup(name string, description string) (int, error
 		"description": description,
 	})
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	if err != nil {
+		return "", fmt.Errorf("CreateGroup: failed to marshal: %v", err)
+	}
+
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return 0, fmt.Errorf("CreateGroup: request failed, %v", err)
+		return "", err
 	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
 
 	var result Group
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal([]byte(data), &result)
 
-	if response.StatusCode != 201 {
-		return 0, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", fmt.Errorf("CreateGroup: failed to unmarshal: %v", err)
 	}
 
-	return result.Id, nil
+	return strconv.Itoa(result.Id), nil
 }
 
 // GetGroup get a group by its Id
-func (ac *AlkiraClient) GetGroupById(id int) (Group, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) GetGroupById(id string) (Group, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
 	var group Group
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.get(uri)
 
 	if err != nil {
-		return group, fmt.Errorf("GetGroup: request failed, %v", err)
+		return group, err
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	err = json.Unmarshal([]byte(data), &group)
 
-	if response.StatusCode != 200 {
-		return group, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return group, fmt.Errorf("GetGroup: failed to unmarshal: %v", err)
 	}
 
 	return group, nil
@@ -117,53 +98,23 @@ func (ac *AlkiraClient) GetGroupByName(name string) (Group, error) {
 }
 
 // DeleteGroup delete a group
-func (ac *AlkiraClient) DeleteGroup(id int) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
-
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return fmt.Errorf("DeleteGroup: request failed, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+func (ac *AlkiraClient) DeleteGroup(id string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
+	return ac.delete(uri)
 }
 
 // UpdateGroup update a group by its id
-func (ac *AlkiraClient) UpdateGroup(id int, name string, description string) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) UpdateGroup(id string, name string, description string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(map[string]string{
 		"name":        name,
 		"description": description,
 	})
 
-	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
 	if err != nil {
-		return fmt.Errorf("UpdateGroup: request failed, %v", err)
+		return fmt.Errorf("UpdateGroup: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	var result Group
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+	return ac.update(uri, body)
 }

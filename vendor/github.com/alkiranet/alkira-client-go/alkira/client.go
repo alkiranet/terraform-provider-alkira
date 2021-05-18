@@ -28,18 +28,18 @@ type Session struct {
 }
 
 func (s *Session) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	//log.Printf("The URL is : %s\n", u.String())
-	//log.Printf("The cookie being set is : %s\n", cookies)
+	logf("DEBUG", "SetCookies URL : %s\n", u.String())
+	logf("DEBUG", "SetCookies: %s\n", cookies)
 	s.jar[u.Host] = cookies
 }
 
 func (s *Session) Cookies(u *url.URL) []*http.Cookie {
-	//log.Printf("The URL is : %s\n", u.String())
-	//log.Printf("Cookie being returned is : %s\n", s.jar[u.Host])
+	logf("DEBUG", "Cookie URL is : %s\n", u.String())
+	logf("DEBUG", "Cookie being returned is : %s\n", s.jar[u.Host])
 	return s.jar[u.Host]
 }
 
-// New API client creates a new API client
+// NewAlkiraClient creates a new API client
 func NewAlkiraClient(url string, username string, password string) (*AlkiraClient, error) {
 
 	// Construct the complete URI based on the given endpoint
@@ -138,4 +138,115 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	client := &AlkiraClient{URI: apiUrl, Username: username, Password: password, TenantNetworkId: strconv.Itoa(tenantNetworkId), Client: httpClient}
 
 	return client, nil
+}
+
+// get retrieve a resource by sending a GET request
+func (ac *AlkiraClient) get(uri string) ([]byte, error) {
+	request, err := http.NewRequest("GET", uri, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("request(GET) failed: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return nil, fmt.Errorf("request(GET) failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return data, nil
+}
+
+// create send a POST request to create resource
+func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
+	logf("DEBUG", "request(POST): %s\n", string(body))
+
+	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
+
+	if err != nil {
+		return nil, fmt.Errorf("request(POST) failed: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return nil, fmt.Errorf("request(POST) failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 201 {
+		return nil, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return data, nil
+}
+
+// delete send a DELETE request to delete a resource
+func (ac *AlkiraClient) delete(uri string) error {
+	logf("DEBUG", "request(DELETE) uri: %s\n", uri)
+
+	request, err := http.NewRequest("DELETE", uri, nil)
+
+	if err != nil {
+		return fmt.Errorf("request(DELETE) failed: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("request(DELETE) failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		if response.StatusCode == 404 {
+			logf("INFO", "resource was already deleted.\n")
+			return nil
+		}
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return nil
+}
+
+// update send a PUT request to update a resource
+func (ac *AlkiraClient) update(uri string, body []byte) error {
+	logf("DEBUG", "request(PUT): %s\n", string(body))
+
+	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
+
+	if err != nil {
+		return fmt.Errorf("request(PUT) failed: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return fmt.Errorf("request(PUT): failed, %v", err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	}
+
+	return nil
 }

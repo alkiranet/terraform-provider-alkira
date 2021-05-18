@@ -3,94 +3,91 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 )
 
 type BillingTag struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// CreateBillingTag create a new billing tag
+func (ac *AlkiraClient) CreateBillingTag(name string, description string) (string, error) {
+	uri := fmt.Sprintf("%s/tags", ac.URI)
+
+	body, err := json.Marshal(map[string]string{
+		"name":        name,
+		"description": description,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("CreateBillingTag: failed to marshal: %v", err)
+	}
+
+	data, err := ac.create(uri, body)
+
+	if err != nil {
+		return "", err
+	}
+
+	var result BillingTag
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return "", fmt.Errorf("CreateBillingTag: failed to unmarshal: %v", err)
+	}
+
+	return strconv.Itoa(result.Id), nil
+}
+
+// DeleteBillingTag delete a billing tag by Id
+func (ac *AlkiraClient) DeleteBillingTag(id string) error {
+	uri := fmt.Sprintf("%s/tags/%s", ac.URI, id)
+	return ac.delete(uri)
+}
+
+// UpdateBillingTag update a billing tag by Id
+func (ac *AlkiraClient) UpdateBillingTag(id string, name string, description string) error {
+	uri := fmt.Sprintf("%s/tags/%s", ac.URI, id)
+
+	body, err := json.Marshal(map[string]string{
+		"name":        name,
+		"description": description,
+	})
+
+	if err != nil {
+		return fmt.Errorf("UpdateBillingTag: failed to marshal: %v", err)
+	}
+
+	return ac.update(uri, body)
 }
 
 // GetBillingTags get all billing tags from the given tenant network
 func (ac *AlkiraClient) GetBillingTags() (string, error) {
 	uri := fmt.Sprintf("%s/tags", ac.URI)
-
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return "", fmt.Errorf("GetBillingTags: request failed, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return string(data), nil
-}
-
-// CreateBillingTag create a new billing tag
-func (ac *AlkiraClient) CreateBillingTag(name string) (int, error) {
-	uri := fmt.Sprintf("%s/tags", ac.URI)
-
-	body, err := json.Marshal(map[string]string{
-		"name": name,
-	})
-
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return 0, fmt.Errorf("CreateBillingTag: request failed, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	var result BillingTag
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 201 {
-		return 0, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return result.Id, nil
+	data, err := ac.get(uri)
+	return string(data), err
 }
 
 // GetBillingTag get a single billing tag by Id
-func (ac *AlkiraClient) GetBillingTagById(id int) (BillingTag, error) {
-	uri := fmt.Sprintf("%s/tags/%d", ac.URI, id)
+func (ac *AlkiraClient) GetBillingTagById(id string) (BillingTag, error) {
+	uri := fmt.Sprintf("%s/tags/%s", ac.URI, id)
 
 	var billingTag BillingTag
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.get(uri)
 
 	if err != nil {
-		return billingTag, fmt.Errorf("GetBillingTag: request failed, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return billingTag, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+		return billingTag, err
 	}
 
 	err = json.Unmarshal([]byte(data), &billingTag)
 
 	if err != nil {
-		return billingTag, fmt.Errorf("GetBillingTagById: parse failed: %v", err)
+		return billingTag, fmt.Errorf("GetBillingTagById: failed to unmarshal: %v", err)
 	}
 
 	return billingTag, nil
@@ -120,52 +117,4 @@ func (ac *AlkiraClient) GetBillingTagByName(name string) (BillingTag, error) {
 	}
 
 	return billingTag, fmt.Errorf("failed to find the billingTag by %s", name)
-}
-
-// DeleteBillingTag delete a billing tag by Id
-func (ac *AlkiraClient) DeleteBillingTag(id int) error {
-	uri := fmt.Sprintf("%s/tags/%d", ac.URI, id)
-
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return fmt.Errorf("DeleteBillingTag: request faile, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
-}
-
-// UpdateBillingTag update a billing tag by Id
-func (ac *AlkiraClient) UpdateBillingTag(id int, name string) error {
-	uri := fmt.Sprintf("%s/tags/%d", ac.URI, id)
-
-	body, err := json.Marshal(map[string]string{
-		"name": name,
-	})
-
-	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return fmt.Errorf("UpdateBillingTag: request faile, %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
 }
