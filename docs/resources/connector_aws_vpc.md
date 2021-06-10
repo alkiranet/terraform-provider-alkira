@@ -14,20 +14,27 @@ Manage AWS Cloud Connector.
 
 ```terraform
 #
-# Create a segment
+# This is minimal example to show how to create an aws-vpc connector.
 #
+# One segment and credential are needed for a connector and you could
+# also adjust routing preferences by specifying `vpc_cidr` or
+# `vpc_subnet` or `vpc_route_tables`.
+#
+
+# Create a segment
 resource "alkira_segment" "segment1" {
   name = "seg1"
   asn  = "65513"
   cidr = "10.16.1.0/24"
 }
 
+# Create a group
+resource "alkira_group" "group1" {
+  name        = "group1"
+  description = "test group"
+}
 
-#
-# Create the credential to store the access to the AWS account that
-# VPCs belongs two. In this example, both VPCs belong to this AWS
-# account.
-#
+# Create credential
 resource "alkira_credential_aws_vpc" "account1" {
   name           = "customer-aws-1"
   aws_access_key = "your_aws_acccess_key"
@@ -35,13 +42,12 @@ resource "alkira_credential_aws_vpc" "account1" {
   type           = "ACCESS_KEY"
 }
 
-
 #
-# Create AWS-VPC connector for the first VPC and attach it with
-# segment 1
+# EXAMPLE 1
 #
-resource "alkira_connector_aws_vpc" "connector-vpc1" {
-  name           = "customer-vpc1"
+# Create one connector for a VPC and attach it with segment1
+resource "alkira_connector_aws_vpc" "connector1" {
+  name           = "vpc1"
   vpc_id         = "your_vpc_id"
 
   aws_account_id = "your_aws_account_id"
@@ -49,9 +55,51 @@ resource "alkira_connector_aws_vpc" "connector-vpc1" {
 
   credential_id  = alkira_credential_aws_vpc.account1.id
   cxp            = "US-WEST"
-  group          = "test"
+  group          = alkira_group.group1.name
   segment        = alkira_segment.segment1.name
   size           = "SMALL"
+}
+
+#
+# EXAMPLE 2
+#
+# Create a VPC and create a aws-vpc connector to connect to it.
+#
+resource "aws_vpc" "vpc2" {
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "vpc2"
+  }
+}
+
+resource "aws_subnet" "vpc2_subnet1" {
+  vpc_id     = aws_vpc.vpc2.id
+  cidr_block = "10.2.0.0/24"
+}
+
+# Create another connector and adjust the routing to use the default
+# route. There could be multiple vpc_route_table sections for
+# additional route tables.
+resource "alkira_connector_aws_vpc" "connector2" {
+  name           = "vpc2"
+
+  aws_account_id = local.aws_account_id
+  aws_region     = local.aws_region
+  cxp            = local.cxp
+
+  vpc_id         = aws_vpc.vpc2.id
+  vpc_cidr       = [aws_vpc.vpc2.cidr_block]
+
+  credential_id  = alkira_credential_aws_vpc.account1.id
+  group          = alkira_group.group1.name
+  segment        = alkira_segment.segment1.name
+  size           = "SMALL"
+
+  vpc_route_table {
+    id              = aws_vpc.vpc2.default_route_table_id
+    options         = "ADVERTISE_DEFAULT_ROUTE"
+  }
 }
 ```
 
@@ -65,18 +113,18 @@ resource "alkira_connector_aws_vpc" "connector-vpc1" {
 - **credential_id** (String) ID of credential managed by Credential Manager.
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment** (String) The segment of the connector.
+- **segment** (String) The segment of the connector belongs to. Currently, only `1` segment is allowed.
 - **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE` or `4LARGE`.
-- **vpc_id** (String) The ID of the VPC the connnector connects to.
+- **vpc_id** (String) The ID of the target VPC.
 
 ### Optional
 
 - **billing_tags** (List of Number) Tags for billing.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-- **vpc_cidr** (String) The CIDR of the VPC the connnector connects to.
+- **vpc_cidr** (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
 - **vpc_route_table** (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
-- **vpc_subnet** (Block Set) The subnet of the VPC the connnector connects to. (see [below for nested schema](#nestedblock--vpc_subnet))
+- **vpc_subnet** (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
 
 <a id="nestedblock--vpc_route_table"></a>
 ### Nested Schema for `vpc_route_table`
