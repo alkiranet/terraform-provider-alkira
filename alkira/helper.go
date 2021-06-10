@@ -179,21 +179,23 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 }
 
 // generateUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
-func generateUserInputPrefixes(cidr string, subnets *schema.Set) ([]alkira.InputPrefixes, error) {
+func generateUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.InputPrefixes, error) {
 
-	if cidr == "" && subnets == nil {
+	if cidr == nil && subnets == nil {
 		return nil, fmt.Errorf("ERROR: either \"vpc_subnets\" or \"vpc_cidr\" must be specified.")
 	}
 
-	// Processing VPC CIDR
-	if cidr != "" {
-		log.Printf("[DEBUG] Processing VPC CIDR")
-		inputPrefix := alkira.InputPrefixes{
-			Id:    "",
-			Type:  "CIDR",
-			Value: cidr,
+	// Processing "vpc_cidr"
+	if cidr != nil {
+		log.Printf("[DEBUG] Processing vpc_cidr")
+		cidrList := make([]alkira.InputPrefixes, len(cidr))
+
+		for i, value := range cidr {
+			cidrList[i].Value = value.(string)
+			cidrList[i].Type = "CIDR"
 		}
-		return []alkira.InputPrefixes{inputPrefix}, nil
+
+		return cidrList, nil
 	}
 
 	// Processing VPC subnets
