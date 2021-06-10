@@ -54,7 +54,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"segment": {
-				Description: "The segment of the connector.",
+				Description: "The segment of the connector belongs to. Currently, only `1` segment is allowed.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -64,19 +64,19 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"vpc_id": {
-				Description: "The ID of the VPC the connnector connects to.",
+				Description: "The ID of the target VPC.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"vpc_cidr": {
-				Description:   "The CIDR of the VPC the connnector connects to.",
+				Description:   "The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_subnet": {
-				Description:   "The subnet of the VPC the connnector connects to.",
+				Description:   "The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_cidr"},
