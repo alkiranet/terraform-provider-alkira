@@ -70,9 +70,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			},
 			"vpc_cidr": {
 				Description:   "The CIDR of the VPC the connnector connects to.",
-				Type:          schema.TypeString,
+				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_subnet"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_subnet": {
 				Description:   "The subnet of the VPC the connnector connects to.",
@@ -132,7 +133,7 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 
 	segments := []string{d.Get("segment").(string)}
 
-	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").(string), d.Get("vpc_subnet").(*schema.Set))
+	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
 
 	if err != nil {
 		return err
