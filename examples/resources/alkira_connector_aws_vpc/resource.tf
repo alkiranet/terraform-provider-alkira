@@ -1,18 +1,25 @@
 #
-# Create a segment
+# This is minimal example to show how to create an aws-vpc connector.
 #
+# One segment and credential are needed for a connector and you could
+# also adjust routing preferences by specifying `vpc_cidr` or
+# `vpc_subnet` or `vpc_route_tables`.
+#
+
+# Create a segment
 resource "alkira_segment" "segment1" {
   name = "seg1"
   asn  = "65513"
   cidr = "10.16.1.0/24"
 }
 
+# Create a group
+resource "alkira_group" "group1" {
+  name        = "group1"
+  description = "test group"
+}
 
-#
-# Create the credential to store the access to the AWS account that
-# VPCs belongs two. In this example, both VPCs belong to this AWS
-# account.
-#
+# Create credential
 resource "alkira_credential_aws_vpc" "account1" {
   name           = "customer-aws-1"
   aws_access_key = "your_aws_acccess_key"
@@ -20,13 +27,12 @@ resource "alkira_credential_aws_vpc" "account1" {
   type           = "ACCESS_KEY"
 }
 
-
 #
-# Create AWS-VPC connector for the first VPC and attach it with
-# segment 1
+# EXAMPLE 1
 #
-resource "alkira_connector_aws_vpc" "connector-vpc1" {
-  name           = "customer-vpc1"
+# Create one connector for a VPC and attach it with segment1
+resource "alkira_connector_aws_vpc" "connector1" {
+  name           = "vpc1"
   vpc_id         = "your_vpc_id"
 
   aws_account_id = "your_aws_account_id"
@@ -34,7 +40,48 @@ resource "alkira_connector_aws_vpc" "connector-vpc1" {
 
   credential_id  = alkira_credential_aws_vpc.account1.id
   cxp            = "US-WEST"
-  group          = "test"
+  group          = alkira_group.group1.name
   segment        = alkira_segment.segment1.name
   size           = "SMALL"
+}
+
+#
+# EXAMPLE 2
+#
+# Create a VPC and create a aws-vpc connector to connect to it.
+#
+resource "aws_vpc" "vpc2" {
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "vpc2"
+  }
+}
+
+resource "aws_subnet" "vpc2_subnet1" {
+  vpc_id     = aws_vpc.vpc2.id
+  cidr_block = "10.2.0.0/24"
+}
+
+# Create another connector and adjust the routing to use the default
+# route.
+resource "alkira_connector_aws_vpc" "connector2" {
+  name           = "vpc2"
+
+  aws_account_id = local.aws_account_id
+  aws_region     = local.aws_region
+  cxp            = local.cxp
+
+  vpc_id         = aws_vpc.vpc2.id
+  vpc_cidr       = aws_vpc.vpc2.cidr_block
+
+  credential_id  = alkira_credential_aws_vpc.account1.id
+  group          = alkira_group.group1.name
+  segment        = alkira_segment.segment1.name
+  size           = "SMALL"
+
+  vpc_route_table {
+    id              = aws_vpc.vpc2.default_route_table_id
+    options         = "ADVERTISE_DEFAULT_ROUTE"
+  }
 }
