@@ -79,7 +79,8 @@ resource "aws_subnet" "vpc2_subnet1" {
 }
 
 # Create another connector and adjust the routing to use the default
-# route.
+# route. There could be multiple vpc_route_table sections for
+# additional route tables.
 resource "alkira_connector_aws_vpc" "connector2" {
   name           = "vpc2"
 
@@ -88,7 +89,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
   cxp            = local.cxp
 
   vpc_id         = aws_vpc.vpc2.id
-  vpc_cidr       = aws_vpc.vpc2.cidr_block
+  vpc_cidr       = [aws_vpc.vpc2.cidr_block]
 
   credential_id  = alkira_credential_aws_vpc.account1.id
   group          = alkira_group.group1.name
