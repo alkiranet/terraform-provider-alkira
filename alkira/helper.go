@@ -37,7 +37,7 @@ func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 
 func convertTypeListToIntList(in []interface{}) []int {
 	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] empty input")
+		log.Printf("[DEBUG] empty TypeList to convert to IntList")
 		return nil
 	}
 
@@ -52,7 +52,7 @@ func convertTypeListToIntList(in []interface{}) []int {
 
 func convertTypeListToStringList(in []interface{}) []string {
 	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] empty input")
+		log.Printf("[DEBUG] empty TypeList to convert to StringList")
 		return nil
 	}
 
@@ -181,13 +181,13 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 // generateUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
 func generateUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.InputPrefixes, error) {
 
-	if cidr == nil && subnets == nil {
-		return nil, fmt.Errorf("ERROR: either \"vpc_subnets\" or \"vpc_cidr\" must be specified.")
+	if len(cidr) == 0 && subnets == nil {
+		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified.")
 	}
 
 	// Processing "vpc_cidr"
-	if cidr != nil {
-		log.Printf("[DEBUG] Processing vpc_cidr")
+	if len(cidr) > 0 {
+		log.Printf("[DEBUG] Processing vpc_cidr", cidr)
 		cidrList := make([]alkira.InputPrefixes, len(cidr))
 
 		for i, value := range cidr {
@@ -199,10 +199,10 @@ func generateUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkir
 	}
 
 	// Processing VPC subnets
-	log.Printf("[DEBUG] Processing VPC Subnets")
+	log.Printf("[DEBUG] Processing vpc_subnet")
 	if subnets == nil || subnets.Len() == 0 {
-		log.Printf("[DEBUG] Empty VPC Subnets")
-		return nil, fmt.Errorf("ERROR: Invalid VPC Subnets.")
+		log.Printf("[DEBUG] Empty vpc_subnet")
+		return nil, fmt.Errorf("ERROR: Invalid vpc_subnet.")
 	}
 
 	prefixes := make([]alkira.InputPrefixes, subnets.Len())
