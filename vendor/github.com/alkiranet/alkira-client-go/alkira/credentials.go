@@ -56,6 +56,11 @@ type CredentialPanInstance struct {
 	Username   string `json:"userName"`
 }
 
+type CredentialCiscoSdwan struct {
+	Password string `json:"password"`
+	Username string `json:"userName"`
+}
+
 type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
@@ -72,7 +77,7 @@ type CredentialResponseDetail struct {
 	SubType string `json:"subType"`
 }
 
-// CreateCredential Create new Credential
+// CreateCredential create new credential
 func (ac *AlkiraClient) CreateCredential(name string, credentialType string, credential interface{}) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, credentialType)
 	id := ""
