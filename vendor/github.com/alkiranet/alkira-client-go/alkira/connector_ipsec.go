@@ -90,7 +90,18 @@ type ConnectorIPSecRequest struct {
 }
 
 type ConnectorIPSecResponse struct {
-	Id int `json:"id"`
+	Id             int                           `json:"id"`
+	BillingTags    []int                         `json:"billingTags"`
+	CXP            string                        `json:"cxp"`
+	Group          string                        `json:"group"`
+	Name           string                        `json:"name"`
+	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
+	RoutingOptions *ConnectorIPSecRoutingOptions `json:"routingOptions"`
+	SegmentOptions interface{}                   `json:"segmentOptions"`
+	Segments       []string                      `json:"segments"` // Only one segment is supported for now
+	Sites          []*ConnectorIPSecSite         `json:"sites,omitempty"`
+	Size           string                        `json:"size"`
+	VpnMode        string                        `json:"vpnMode"`
 }
 
 // CreateConnectorIPSec create an IPSEC connector
@@ -128,8 +139,8 @@ func (ac *AlkiraClient) DeleteConnectorIPSec(id string) error {
 }
 
 // UpdateConnectorIPSec update an IPSEC connector by Id
-func (ac *AlkiraClient) UpdateConnectorIPSec(id int, connector *ConnectorIPSecRequest) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) UpdateConnectorIPSec(id string, connector *ConnectorIPSecRequest) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(connector)
 
@@ -138,4 +149,25 @@ func (ac *AlkiraClient) UpdateConnectorIPSec(id int, connector *ConnectorIPSecRe
 	}
 
 	return ac.update(uri, body)
+}
+
+// GetConnectorIPSec get an IPSEC connector by Id
+func (ac *AlkiraClient) GetConnectorIPSec(id string) (*ConnectorIPSecResponse, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	var connector ConnectorIPSecResponse
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(data), &connector)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetConnectorIPSec: failed to unmarshal: %v", err)
+	}
+
+	return &connector, nil
 }

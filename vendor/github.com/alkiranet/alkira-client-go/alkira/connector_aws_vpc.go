@@ -88,3 +88,17 @@ func (ac *AlkiraClient) DeleteConnectorAwsVpc(id string) error {
 
 	return ac.delete(uri)
 }
+
+// UpdateConnectorAwsVPC update an AWS-VPC connector
+func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAwsVpcRequest) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	// Construct the request
+	body, err := json.Marshal(connector)
+
+	if err != nil {
+		return fmt.Errorf("UpdateConnectorAwsVpc: failed to marshal: %v", err)
+	}
+
+	return ac.update(uri, body)
+}
