@@ -276,7 +276,59 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorIPSecRequest(d, m)
 
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Creating Connector (IPSec)")
+	id, err := client.CreateConnectorIPSec(connector)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(id)
+
+	return resourceConnectorIPSecRead(d, m)
+}
+
+func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
+	return nil
+}
+
+func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := generateConnectorIPSecRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updating Connector (IPSec) %s", d.Id())
+	err = client.UpdateConnectorIPSec(d.Id(), connector)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceConnectorIPSecRead(d, m)
+}
+
+func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+	id := d.Id()
+
+	log.Printf("[INFO] Deleting Connector (IPSec) %s", id)
+	err := client.DeleteConnectorIPSec(id)
+
+	return err
+}
+
+// generateConnectorIPSecRequest generate request for connector-ipsec
+func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSecRequest, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
 
@@ -285,7 +337,7 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
 
 	if optErr != nil {
-		return optErr
+		return nil, optErr
 	}
 
 	// Base on the vpn_mode, switch what options to use
@@ -301,7 +353,7 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
 
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	case "POLICY_BASED":
@@ -309,7 +361,7 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 			policyOptions, err = expandConnectorIPSecPolicyOptions(d.Get("policy_options").(*schema.Set))
 
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -328,36 +380,5 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 		VpnMode:        vpnMode,
 	}
 
-	log.Printf("[INFO] Creating Connector (IPSec) %s", d.Id())
-	id, err := client.CreateConnectorIPSec(connector)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(id)
-
-	return resourceConnectorIPSecRead(d, m)
-}
-
-func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
-	return nil
-}
-
-func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceConnectorIPSecRead(d, m)
-}
-
-func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	id := d.Id()
-
-	log.Printf("[INFO] Deleting Connector (IPSec) %s", id)
-	err := client.DeleteConnectorIPSec(id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return connector, nil
 }

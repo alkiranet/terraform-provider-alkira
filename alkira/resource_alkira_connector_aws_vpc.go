@@ -126,47 +126,15 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 }
 
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-
-	segments := []string{d.Get("segment").(string)}
-
-	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
+	connector, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	exportOptions := alkira.ExportOptions{
-		Mode:     "USER_INPUT_PREFIXES",
-		Prefixes: inputPrefixes,
-	}
-
-	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))
-
-	vpcRouting := alkira.ConnectorAwsVpcRouting{
-		Export: exportOptions,
-		Import: alkira.ImportOptions{routeTables},
-	}
-
-	connectorAwsVpc := &alkira.ConnectorAwsVpcRequest{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		CustomerName:   client.Username,
-		CustomerRegion: d.Get("aws_region").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		Segments:       segments,
-		Size:           d.Get("size").(string),
-		VpcId:          d.Get("vpc_id").(string),
-		VpcOwnerId:     d.Get("aws_account_id").(string),
-		VpcRouting:     vpcRouting,
-	}
-
-	id, err := client.CreateConnectorAwsVpc(connectorAwsVpc)
+	id, err := client.CreateConnectorAwsVpc(connector)
 
 	if err != nil {
 		return err
@@ -181,7 +149,18 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceConnectorAwsVpcRead(d, m)
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := generateConnectorAwsVpcRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updateing Connector (AWS-VPC) %s", d.Id())
+	err = client.UpdateConnectorAwsVpc(d.Id(), connector)
+
+	return err
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
@@ -195,4 +174,45 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 	}
 
 	return nil
+}
+
+// generateConnectorAwsVpcRequest generate request for connector-aws-vpc
+func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpcRequest, error) {
+	client := m.(*alkira.AlkiraClient)
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
+	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
+
+	if err != nil {
+		return nil, err
+	}
+
+	exportOptions := alkira.ExportOptions{
+		Mode:     "USER_INPUT_PREFIXES",
+		Prefixes: inputPrefixes,
+	}
+
+	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))
+
+	vpcRouting := alkira.ConnectorAwsVpcRouting{
+		Export: exportOptions,
+		Import: alkira.ImportOptions{routeTables},
+	}
+
+	request := &alkira.ConnectorAwsVpcRequest{
+		BillingTags:    billingTags,
+		CXP:            d.Get("cxp").(string),
+		CredentialId:   d.Get("credential_id").(string),
+		CustomerName:   client.Username,
+		CustomerRegion: d.Get("aws_region").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		Segments:       segments,
+		Size:           d.Get("size").(string),
+		VpcId:          d.Get("vpc_id").(string),
+		VpcOwnerId:     d.Get("aws_account_id").(string),
+		VpcRouting:     vpcRouting,
+	}
+
+	return request, nil
 }

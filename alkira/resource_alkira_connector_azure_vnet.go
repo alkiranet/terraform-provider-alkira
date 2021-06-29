@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,10 +32,6 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
-			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"credential_id": {
 				Description: "ID of credential managed by Credential Manager.",
@@ -74,11 +69,61 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorAzureVnetRequest(d, m)
 
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Creating Connector (AZURE-VNET)")
+	id, err := client.CreateConnectorAzureVnet(connector)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(id)
+
+	return resourceConnectorAzureVnetRead(d, m)
+}
+
+func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
+	return nil
+}
+
+func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorAzureVnetRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updating Connector (AZURE-VNET) %s", d.Id())
+	err = client.UpdateConnectorAzureVnet(d.Id(), connector)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceConnectorAzureVnetRead(d, m)
+}
+
+func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	log.Printf("[INFO] Deleting Connector (AZURE-VNET) %s", d.Id())
+	err := client.DeleteConnectorAzureVnet(d.Id())
+
+	return err
+}
+
+// generateConnectorAzureVnetRequest generate request for connector-azure-vnet
+func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnetRequest, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
 
-	connector := &alkira.ConnectorAzureVnetRequest{
+	request := &alkira.ConnectorAzureVnetRequest{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
@@ -90,36 +135,5 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
 		VnetId:         d.Get("azure_vnet_id").(string),
 	}
 
-	log.Printf("[INFO] Creating Connector (AZURE-VNET)")
-	id, err := client.CreateConnectorAzureVnet(connector)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", id)
-
-	return resourceConnectorAzureVnetRead(d, m)
-}
-
-func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
-	return nil
-}
-
-func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceConnectorAzureVnetRead(d, m)
-}
-
-func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-
-	log.Printf("[INFO] Deleting Connector (AZURE-VNET) %s", d.Id())
-	err := client.DeleteConnectorAzureVnet(d.Get("connector_id").(int))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return request, nil
 }
