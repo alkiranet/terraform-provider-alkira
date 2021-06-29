@@ -11,15 +11,15 @@ description: |-
 Manage AWS Cloud Connector.
 
 Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
-purpose. If `vpc_cidr` is provided, it will select all associcated
-subnets of VPC. Otherwise, you could select certain subnets by
-specifying `vpc_subet`.
+purpose. If `vpc_cidr` is provided, it will automatically select all associated
+subnets of the given VPC. Otherwise, you could select certain subnets by
+specifying `vpc_subnet`.
 
 `vpc_route_tables` could be used to adjust the routing options against
-the specified route tables. If `OVERRIDE_DEFAULT_ROUTE` is specified,
-the existing default route will be overrided and the traffic will be
-routed to Alkira CXP. If `ADVERTISE_CUSTOM_PREFIX` is specified, you
-could specify a list of prefixes for which traffic must be routed to
+the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is specified,
+the existing default route will be overwritten and the traffic will be
+routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` is specified, you
+need to provide a list of prefixes for which traffic must be routed to
 Alkira CXP.
 
 ## Limitations
@@ -163,5 +163,4 @@ Optional:
 
 - **cidr** (String) The CIDR of the subnet.
 - **id** (String) The Id of the subnet.
-
 
