@@ -29,7 +29,7 @@ There are several limitations of AWS connector so far:
 * Changing an existing connector to a new AWS VPC is not supported at
 this point. You need to create a new connector for a new AWS VPC.
 
-* Updating an existing connector may need to re-provision to make the
+* Updating an existing connector might require the tenant network to be re-provisioned to make the
   change effective, e.g. changing the segment the connector is
   associated.
 
@@ -163,4 +163,3 @@ Optional:
 
 - **cidr** (String) The CIDR of the subnet.
 - **id** (String) The Id of the subnet.
-
