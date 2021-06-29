@@ -328,7 +328,7 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 		VpnMode:        vpnMode,
 	}
 
-	log.Printf("[INFO] Creating Connector (IPSec) %s", d.Id())
+	log.Printf("[INFO] Creating Connector (IPSec)")
 	id, err := client.CreateConnectorIPSec(connector)
 
 	if err != nil {
@@ -345,6 +345,66 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
+
+	// For now, IPSec connector only support single segment
+	segments := []string{d.Get("segment").(string)}
+	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
+
+	if optErr != nil {
+		return optErr
+	}
+
+	// Base on the vpn_mode, switch what options to use
+	vpnMode := d.Get("vpn_mode").(string)
+
+	var policyOptions *alkira.ConnectorIPSecPolicyOptions
+	var routingOptions *alkira.ConnectorIPSecRoutingOptions
+	var err error
+
+	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
+	case "ROUTE_BASED":
+		{
+			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
+
+			if err != nil {
+				return err
+			}
+		}
+	case "POLICY_BASED":
+		{
+			policyOptions, err = expandConnectorIPSecPolicyOptions(d.Get("policy_options").(*schema.Set))
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	connector := &alkira.ConnectorIPSecRequest{
+		BillingTags:    billingTags,
+		CXP:            d.Get("cxp").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		PolicyOptions:  policyOptions,
+		RoutingOptions: routingOptions,
+		SegmentOptions: segmentOptions,
+		Segments:       segments,
+		Sites:          sites,
+		Size:           d.Get("size").(string),
+		VpnMode:        vpnMode,
+	}
+
+	log.Printf("[INFO] Updating Connector (IPSec) %s", d.Id())
+	err = client.UpdateConnectorIPSec(d.Id(), connector)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceConnectorIPSecRead(d, m)
 }
 
@@ -355,9 +415,5 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Deleting Connector (IPSec) %s", id)
 	err := client.DeleteConnectorIPSec(id)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

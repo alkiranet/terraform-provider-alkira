@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,10 +32,6 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
-			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"credential_id": {
 				Description: "ID of credential managed by Credential Manager.",
@@ -97,8 +92,7 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", id)
+	d.SetId(id)
 
 	return resourceConnectorAzureVnetRead(d, m)
 }
@@ -108,6 +102,30 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
+
+	connector := &alkira.ConnectorAzureVnetRequest{
+		BillingTags:    billingTags,
+		CXP:            d.Get("cxp").(string),
+		CredentialId:   d.Get("credential_id").(string),
+		CustomerRegion: d.Get("azure_region").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		Segments:       segments,
+		Size:           d.Get("size").(string),
+		VnetId:         d.Get("azure_vnet_id").(string),
+	}
+
+	log.Printf("[INFO] Updating Connector (AZURE-VNET) %s", d.Id())
+	err := client.UpdateConnectorAzureVnet(d.Id(), connector)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
@@ -115,11 +133,7 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (AZURE-VNET) %s", d.Id())
-	err := client.DeleteConnectorAzureVnet(d.Get("connector_id").(int))
+	err := client.DeleteConnectorAzureVnet(d.Id())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
