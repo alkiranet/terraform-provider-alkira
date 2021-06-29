@@ -276,56 +276,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorIPSecRequest(d, m)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
-
-	// For now, IPSec connector only support single segment
-	segments := []string{d.Get("segment").(string)}
-	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
-
-	if optErr != nil {
-		return optErr
-	}
-
-	// Base on the vpn_mode, switch what options to use
-	vpnMode := d.Get("vpn_mode").(string)
-
-	var policyOptions *alkira.ConnectorIPSecPolicyOptions
-	var routingOptions *alkira.ConnectorIPSecRoutingOptions
-	var err error
-
-	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
-	case "ROUTE_BASED":
-		{
-			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
-
-			if err != nil {
-				return err
-			}
-		}
-	case "POLICY_BASED":
-		{
-			policyOptions, err = expandConnectorIPSecPolicyOptions(d.Get("policy_options").(*schema.Set))
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	connector := &alkira.ConnectorIPSecRequest{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		PolicyOptions:  policyOptions,
-		RoutingOptions: routingOptions,
-		SegmentOptions: segmentOptions,
-		Segments:       segments,
-		Sites:          sites,
-		Size:           d.Get("size").(string),
-		VpnMode:        vpnMode,
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Creating Connector (IPSec)")
@@ -347,55 +301,10 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
+	connector, err := generateConnectorIPSecRequest(d, m)
 
-	// For now, IPSec connector only support single segment
-	segments := []string{d.Get("segment").(string)}
-	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
-
-	if optErr != nil {
-		return optErr
-	}
-
-	// Base on the vpn_mode, switch what options to use
-	vpnMode := d.Get("vpn_mode").(string)
-
-	var policyOptions *alkira.ConnectorIPSecPolicyOptions
-	var routingOptions *alkira.ConnectorIPSecRoutingOptions
-	var err error
-
-	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
-	case "ROUTE_BASED":
-		{
-			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
-
-			if err != nil {
-				return err
-			}
-		}
-	case "POLICY_BASED":
-		{
-			policyOptions, err = expandConnectorIPSecPolicyOptions(d.Get("policy_options").(*schema.Set))
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	connector := &alkira.ConnectorIPSecRequest{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		PolicyOptions:  policyOptions,
-		RoutingOptions: routingOptions,
-		SegmentOptions: segmentOptions,
-		Segments:       segments,
-		Sites:          sites,
-		Size:           d.Get("size").(string),
-		VpnMode:        vpnMode,
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Updating Connector (IPSec) %s", d.Id())
@@ -416,4 +325,60 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 	err := client.DeleteConnectorIPSec(id)
 
 	return err
+}
+
+// generateConnectorIPSecRequest generate request for connector-ipsec
+func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSecRequest, error) {
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
+
+	// For now, IPSec connector only support single segment
+	segments := []string{d.Get("segment").(string)}
+	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
+
+	if optErr != nil {
+		return nil, optErr
+	}
+
+	// Base on the vpn_mode, switch what options to use
+	vpnMode := d.Get("vpn_mode").(string)
+
+	var policyOptions *alkira.ConnectorIPSecPolicyOptions
+	var routingOptions *alkira.ConnectorIPSecRoutingOptions
+	var err error
+
+	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
+	case "ROUTE_BASED":
+		{
+			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	case "POLICY_BASED":
+		{
+			policyOptions, err = expandConnectorIPSecPolicyOptions(d.Get("policy_options").(*schema.Set))
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	connector := &alkira.ConnectorIPSecRequest{
+		BillingTags:    billingTags,
+		CXP:            d.Get("cxp").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		PolicyOptions:  policyOptions,
+		RoutingOptions: routingOptions,
+		SegmentOptions: segmentOptions,
+		Segments:       segments,
+		Sites:          sites,
+		Size:           d.Get("size").(string),
+		VpnMode:        vpnMode,
+	}
+
+	return connector, nil
 }

@@ -69,20 +69,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorAzureVnetRequest(d, m)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
-
-	connector := &alkira.ConnectorAzureVnetRequest{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		CustomerRegion: d.Get("azure_region").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		Segments:       segments,
-		Size:           d.Get("size").(string),
-		VnetId:         d.Get("azure_vnet_id").(string),
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Creating Connector (AZURE-VNET)")
@@ -103,24 +93,14 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 
 func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorAzureVnetRequest(d, m)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
-
-	connector := &alkira.ConnectorAzureVnetRequest{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		CustomerRegion: d.Get("azure_region").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		Segments:       segments,
-		Size:           d.Get("size").(string),
-		VnetId:         d.Get("azure_vnet_id").(string),
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Updating Connector (AZURE-VNET) %s", d.Id())
-	err := client.UpdateConnectorAzureVnet(d.Id(), connector)
+	err = client.UpdateConnectorAzureVnet(d.Id(), connector)
 
 	if err != nil {
 		return err
@@ -136,4 +116,24 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 	err := client.DeleteConnectorAzureVnet(d.Id())
 
 	return err
+}
+
+// generateConnectorAzureVnetRequest generate request for connector-azure-vnet
+func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnetRequest, error) {
+	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
+
+	request := &alkira.ConnectorAzureVnetRequest{
+		BillingTags:    billingTags,
+		CXP:            d.Get("cxp").(string),
+		CredentialId:   d.Get("credential_id").(string),
+		CustomerRegion: d.Get("azure_region").(string),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		Segments:       segments,
+		Size:           d.Get("size").(string),
+		VnetId:         d.Get("azure_vnet_id").(string),
+	}
+
+	return request, nil
 }
