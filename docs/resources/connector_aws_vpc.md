@@ -13,19 +13,18 @@ Manage AWS Cloud Connector.
 Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
 purpose. If `vpc_cidr` is provided, it will select all associcated
 subnets of VPC. Otherwise, you could select certain subnets by
-specifying `vpc_subet` selected users can select subnets of their own
-choice.
+specifying `vpc_subet`.
 
 `vpc_route_tables` could be used to adjust the routing options against
 the specified route tables. If `OVERRIDE_DEFAULT_ROUTE` is specified,
-the existing default route will be overrided and route the traffic to
-Alkira CXP. If `ADVERTISE_CUSTOM_PREFIX` is specified, you could
-specify a list of prefixes for which traffic must be routed to Alkira
-CXP.
+the existing default route will be overrided and the traffic will be
+routed to Alkira CXP. If `ADVERTISE_CUSTOM_PREFIX` is specified, you
+could specify a list of prefixes for which traffic must be routed to
+Alkira CXP.
 
 ## Limitations
 
-There are several limitations of AWS connector:
+There are several limitations of AWS connector so far:
 
 * Changing an existing connector to a new AWS VPC is not supported at
 this point. You need to create a new connector for a new AWS VPC.
@@ -39,9 +38,9 @@ this point. You need to create a new connector for a new AWS VPC.
 
 This is a minimal example to show how to create an AWS connector.
 
-One segment and credential are needed for a connector and you could
-also adjust routing preferences by specifying `vpc_cidr` or
-`vpc_subnet` or `vpc_route_tables`.
+One `alkira_segment` and `alkira_credential_aws_vpc` are required for
+an AWS connector and you could also adjust routing preferences by
+specifying `vpc_cidr` or `vpc_subnet` or `vpc_route_tables`.
 
 ```terraform
 # Create a segment
