@@ -59,9 +59,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE` or `4LARGE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE"}, false),
 			},
 			"vpc_id": {
 				Description: "The ID of the target VPC.",

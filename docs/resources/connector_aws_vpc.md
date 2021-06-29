@@ -10,17 +10,39 @@ description: |-
 
 Manage AWS Cloud Connector.
 
+Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
+purpose. If `vpc_cidr` is provided, it will automatically select all associated
+subnets of the given VPC. Otherwise, you could select certain subnets by
+specifying `vpc_subnet`.
+
+`vpc_route_tables` could be used to adjust the routing options against
+the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is specified,
+the existing default route will be overwritten and the traffic will be
+routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` is specified, you
+need to provide a list of prefixes for which traffic must be routed to
+Alkira CXP.
+
+## Limitations
+
+There are several limitations of AWS connector so far:
+
+* Changing an existing connector to a new AWS VPC is not supported at
+this point. You need to create a new connector for a new AWS VPC.
+
+* Updating an existing connector might require the tenant network to be re-provisioned to make the
+  change effective, e.g. changing the segment the connector is
+  associated.
+
+
 ## Example Usage
 
-```terraform
-#
-# This is minimal example to show how to create an aws-vpc connector.
-#
-# One segment and credential are needed for a connector and you could
-# also adjust routing preferences by specifying `vpc_cidr` or
-# `vpc_subnet` or `vpc_route_tables`.
-#
+This is a minimal example to show how to create an AWS connector.
 
+One `alkira_segment` and `alkira_credential_aws_vpc` are required for
+an AWS connector and you could also adjust routing preferences by
+specifying `vpc_cidr` or `vpc_subnet` or `vpc_route_tables`.
+
+```terraform
 # Create a segment
 resource "alkira_segment" "segment1" {
   name = "seg1"
@@ -41,11 +63,11 @@ resource "alkira_credential_aws_vpc" "account1" {
   aws_secret_key = "your_secret_key"
   type           = "ACCESS_KEY"
 }
+```
 
-#
-# EXAMPLE 1
-#
-# Create one connector for a VPC and attach it with segment1
+To create one connector for a VPC and attach it with `segment1`:
+
+```terraform
 resource "alkira_connector_aws_vpc" "connector1" {
   name           = "vpc1"
   vpc_id         = "your_vpc_id"
@@ -59,12 +81,13 @@ resource "alkira_connector_aws_vpc" "connector1" {
   segment        = alkira_segment.segment1.name
   size           = "SMALL"
 }
+```
 
-#
-# EXAMPLE 2
-#
-# Create a VPC and create a aws-vpc connector to connect to it.
-#
+To create another connector and adjust the routing to use the default
+route. There could be multiple `vpc_route_table` sections for
+additional route tables.
+
+```terraform
 resource "aws_vpc" "vpc2" {
   cidr_block = "10.2.0.0/16"
 
@@ -78,9 +101,6 @@ resource "aws_subnet" "vpc2_subnet1" {
   cidr_block = "10.2.0.0/24"
 }
 
-# Create another connector and adjust the routing to use the default
-# route. There could be multiple vpc_route_table sections for
-# additional route tables.
 resource "alkira_connector_aws_vpc" "connector2" {
   name           = "vpc2"
 
@@ -114,7 +134,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
 - **segment** (String) The segment of the connector belongs to. Currently, only `1` segment is allowed.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE` or `4LARGE`.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE` or `2LARGE`.
 - **vpc_id** (String) The ID of the target VPC.
 
 ### Optional
@@ -143,5 +163,3 @@ Optional:
 
 - **cidr** (String) The CIDR of the subnet.
 - **id** (String) The Id of the subnet.
-
-
