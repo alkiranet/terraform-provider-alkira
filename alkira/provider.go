@@ -78,6 +78,7 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
 
 	if err != nil {
+		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")
 		return nil, err
 	}
 
