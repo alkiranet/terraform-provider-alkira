@@ -11,16 +11,16 @@ description: |-
 Manage AWS Cloud Connector.
 
 Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
-purpose. If `vpc_cidr` is provided, it will automatically select all associated
-subnets of the given VPC. Otherwise, you could select certain subnets by
-specifying `vpc_subnet`.
+purpose. If `vpc_cidr` is provided, it will automatically select all
+associated subnets of the given VPC. Otherwise, you could select
+certain subnets by specifying `vpc_subnet`.
 
 `vpc_route_tables` could be used to adjust the routing options against
-the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is specified,
-the existing default route will be overwritten and the traffic will be
-routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` is specified, you
-need to provide a list of prefixes for which traffic must be routed to
-Alkira CXP.
+the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
+specified, the existing default route will be overwritten and the
+traffic will be routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX`
+is specified, you need to provide a list of prefixes for which traffic
+must be routed to Alkira CXP.
 
 ## Limitations
 
@@ -29,9 +29,9 @@ There are several limitations of AWS connector so far:
 * Changing an existing connector to a new AWS VPC is not supported at
 this point. You need to create a new connector for a new AWS VPC.
 
-* Updating an existing connector might require the tenant network to be re-provisioned to make the
-  change effective, e.g. changing the segment the connector is
-  associated.
+* Updating an existing connector might require the tenant network to
+  be re-provisioned to make the change effective, e.g. changing the
+  segment the connector is associated.
 
 
 ## Example Usage
@@ -65,12 +65,14 @@ resource "alkira_credential_aws_vpc" "account1" {
 }
 ```
 
-To create one connector for a VPC and attach it with `segment1`:
+To create a connector for an AWS VPC and attach it with `segment1`:
 
 ```terraform
 resource "alkira_connector_aws_vpc" "connector1" {
   name           = "vpc1"
+
   vpc_id         = "your_vpc_id"
+  vpc_cidr       = [aws_vpc.vpc2.cidr_block]
 
   aws_account_id = "your_aws_account_id"
   aws_region     = "us-east-1"
@@ -88,19 +90,6 @@ route. There could be multiple `vpc_route_table` sections for
 additional route tables.
 
 ```terraform
-resource "aws_vpc" "vpc2" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "vpc2"
-  }
-}
-
-resource "aws_subnet" "vpc2_subnet1" {
-  vpc_id     = aws_vpc.vpc2.id
-  cidr_block = "10.2.0.0/24"
-}
-
 resource "alkira_connector_aws_vpc" "connector2" {
   name           = "vpc2"
 
