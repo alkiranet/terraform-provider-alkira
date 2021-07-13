@@ -13,7 +13,7 @@ Minor bug fix release.
 
 * Fix the issues that `vpc_subnet` was specified but ignored.
 
-* Update documentation of the connector with more details and limiations.
+* Update documentation of the connector with more details and limitations.
 
 
 ### resource `alkira_connector_azure_vnet`
