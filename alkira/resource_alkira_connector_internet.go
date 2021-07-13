@@ -6,48 +6,58 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorInternet() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage Internet Exit.\n\n" +
+			"An internet exit is an exit from the CXP to the" +
+			"internet and allows and allows the traffic from" +
+			"the various Users & Sites or Cloud Connectors to" +
+			"flow towards the Internet.",
 		Create: resourceConnectorInternetCreate,
 		Read:   resourceConnectorInternetRead,
 		Update: resourceConnectorInternetUpdate,
 		Delete: resourceConnectorInternetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"billing_tags": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+			"billing_tag_ids": {
+				Description: "The list of billing tag Ids.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"cxp": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The CXP where the connector should be provisioned.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"group": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The group of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"segment": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The segment of the connector belongs to. Currently, only `1` segment is allowed.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"size": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, or `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 		},
 	}
