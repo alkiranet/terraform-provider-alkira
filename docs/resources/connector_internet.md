@@ -4,14 +4,14 @@ page_title: "alkira_connector_internet Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Manage Internet Exit.
-  An internet exit is an exit from the CXP to theinternet and allows and allows the traffic fromthe various Users & Sites or Cloud Connectors toflow towards the Internet.
+  An internet exit is an exit from the CXP to theinternet and allows the traffic fromthe various Users & Sites or Cloud Connectors toflow towards the Internet.
 ---
 
 # alkira_connector_internet (Resource)
 
 Manage Internet Exit.
 
-An internet exit is an exit from the CXP to theinternet and allows and allows the traffic fromthe various Users & Sites or Cloud Connectors toflow towards the Internet.
+An internet exit is an exit from the CXP to theinternet and allows the traffic fromthe various Users & Sites or Cloud Connectors toflow towards the Internet.
 
 ## Example Usage
 
@@ -21,6 +21,7 @@ resource "alkira_connector_inet" "test1" {
   cxp            = "US-WEST"
   group          = "group1"
   segment        = "seg1"
+  size           = "SMALL"
 }
 ```
 
