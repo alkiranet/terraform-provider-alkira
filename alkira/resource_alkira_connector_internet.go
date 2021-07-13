@@ -66,7 +66,7 @@ func resourceAlkiraConnectorInternet() *schema.Resource {
 func resourceConnectorInternetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
 
 	connector := &alkira.ConnectorInternet{
