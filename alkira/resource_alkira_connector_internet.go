@@ -13,7 +13,7 @@ func resourceAlkiraConnectorInternet() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Internet Exit.\n\n" +
 			"An internet exit is an exit from the CXP to the" +
-			"internet and allows and allows the traffic from" +
+			"internet and allows the traffic from" +
 			"the various Users & Sites or Cloud Connectors to" +
 			"flow towards the Internet.",
 		Create: resourceConnectorInternetCreate,
