@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"log"
 	"os"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
