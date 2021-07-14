@@ -72,8 +72,4 @@ resource "alkira_connector_azure_vnet" "connector_vnet1" {
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 
-### Read-Only
-
-- **connector_id** (Number)
-
 
