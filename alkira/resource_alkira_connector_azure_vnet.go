@@ -5,6 +5,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
@@ -62,6 +63,27 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"routing": {
+				Description: "Routing Configurations.",
+				Type:        schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix_list_ids": {
+							Description: "Prefix List Ids.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"options": {
+							Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+						},
+					},
+				},
+				Optional: true,
 			},
 		},
 	}
@@ -122,6 +144,7 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnetRequest, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
+	routing := expandVnetRouting(d.Get("routing").(*schema.Set))
 
 	request := &alkira.ConnectorAzureVnetRequest{
 		BillingTags:    billingTags,
@@ -133,7 +156,35 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Segments:       segments,
 		Size:           d.Get("size").(string),
 		VnetId:         d.Get("azure_vnet_id").(string),
+		VnetRouting:    routing,
 	}
 
 	return request, nil
+}
+
+// expandVnetRouting expand AZURE VNET routing options
+func expandVnetRouting(in *schema.Set) *alkira.ConnectorVnetRouting {
+	if in == nil || in.Len() == 0 {
+		log.Printf("[DEBUG] Empty routing input.")
+		return nil
+	}
+
+	if in.Len() > 1 {
+		log.Printf("[ERROR] Only one routing section is allowed.")
+		return nil
+	}
+
+	routing := alkira.ConnectorVnetImportOptions{}
+
+	for _, r := range in.List() {
+		t := r.(map[string]interface{})
+
+		if v, ok := t["options"].(string); ok {
+			routing.RouteImportMode = v
+		}
+
+		routing.PrefixListIds = convertTypeListToIntList(t["prefix_list_ids"].([]interface{}))
+	}
+
+	return &alkira.ConnectorVnetRouting{routing}
 }
