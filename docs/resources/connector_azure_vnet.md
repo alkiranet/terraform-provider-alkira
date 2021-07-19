@@ -10,46 +10,47 @@ description: |-
 
 Manage Azure Cloud Connector.
 
+This connector requires at least two other resources `alkira_segment`
+and `alkira_credential_azure_vnet` to work. Optionally, it works with
+`alkira_group`, `alkira_billing_tags` and several other resources.
+
 ## Example Usage
 
+The following examples assumes that `alkira_segment` and
+`alkira_credential_azure_vnet` are already created.
+
+A simple connector could be created like this:
+
 ```terraform
-#
-# Create segments assuming this is the completely empty tenant network
-#
-resource "alkira_segment" "segment1" {
-  name = "seg1"
-  asn  = "65513"
-  cidr = "10.16.1.0/24"
-}
-
-
-#
-# Create the credential to store the access to the AWS account that
-# VPCs belongs two. In this example, both VPCs belong to this AWS
-# account.
-#
-resource "alkira_credential_azure_vnet" "customer_azure" {
-  name            = "customer-azure"
-  application_id  = ""
-  secret_key      = ""
-  subscription_id = ""
-  tenant_id       = ""
-}
-
-
-#
-# Create AZURE-VNET connector for the first VNET and attach it with
-# segment 1
-#
-resource "alkira_connector_azure_vnet" "connector_vnet1" {
-  name           = "customer-vnet1"
+resource "alkira_connector_azure_vnet" "test1" {
+  name           = "test1"
   azure_region   = "westus2"
-  azure_vnet_id  = "/subscriptions/XXXX/resourceGroups/Test/providers/Microsoft.Network/virtualNetworks/customer-vnet1"
-  credential_id  = alkira_credential_azure_vnet.customer_azure.id
+  azure_vnet_id  = "/subscriptions/XXXX/resourceGroups/Test/providers/Microsoft.Network/virtualNetworks/test1"
+  credential_id  = alkira_credential_azure_vnet.test1.id
   cxp            = "US-WEST"
   group          = "test"
   segment        = alkira_segment.segment1.name
   size           = "SMALL"
+}
+```
+
+Additionally, you could adjust routing by using `routing_options` and
+`routing_prefix_list_ids` along with resource
+`alkira_policy_prefix_list`:
+
+```terraform
+resource "alkira_connector_azure_vnet" "test2" {
+  name           = "test2"
+  azure_region   = "westus2"
+  azure_vnet_id  = "/subscriptions/XXXX/resourceGroups/Test/providers/Microsoft.Network/virtualNetworks/test-vnet2"
+  credential_id  = alkira_credential_azure_vnet.yours.id
+  cxp            = "US-WEST"
+  group          = "test"
+  segment        = alkira_segment.segment1.name
+  size           = "SMALL"
+
+  routing_options         = "ADVERTISE_CUSTOM_PREFIX"
+  routing_prefix_list_ids = [alkira_policy_prefix_list.test.id]
 }
 ```
 
@@ -71,5 +72,7 @@ resource "alkira_connector_azure_vnet" "connector_vnet1" {
 - **billing_tags** (List of Number) Tags for billing.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
+- **routing_options** (String) Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
+- **routing_prefix_list_ids** (List of Number) Prefix List Ids.
 
 
