@@ -5,10 +5,19 @@ description: |-
     Release notes for v0.6.3
 ---
 
-This release fixes the following problems.
+This patch release fixes the following problems.
 
 * Support `HTTP_PROXY` or `HTTPS_PROXY` for initializing provider.
+
+### resource `credentials_*`
+
 * Fix update functionality for all credential resources.
+
+
+### resource `alkira_connector_azure`
+
+Add variable `routing_options` and `routing_prefix_list_ids` for
+specifying routing options for VNET.
 
 
 ### resource `alkira_service_pan`
