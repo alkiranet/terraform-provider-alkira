@@ -5,6 +5,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
@@ -52,6 +53,19 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"routing_options": {
+				Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "ADVERTISE_DEFAULT_ROUTE",
+				ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+			},
+			"routing_prefix_list_ids": {
+				Description: "Prefix List Ids.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"segment": {
 				Description: "The segment of the connector.",
@@ -122,6 +136,7 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnetRequest, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
+	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
 
 	request := &alkira.ConnectorAzureVnetRequest{
 		BillingTags:    billingTags,
@@ -133,7 +148,19 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Segments:       segments,
 		Size:           d.Get("size").(string),
 		VnetId:         d.Get("azure_vnet_id").(string),
+		VnetRouting:    routing,
 	}
 
 	return request, nil
+}
+
+// constructVnetRouting expand AZURE VNET routing options
+func constructVnetRouting(option string, prefixList []interface{}) *alkira.ConnectorVnetRouting {
+
+	routing := alkira.ConnectorVnetImportOptions{}
+
+	routing.RouteImportMode = option
+	routing.PrefixListIds = convertTypeListToIntList(prefixList)
+
+	return &alkira.ConnectorVnetRouting{routing}
 }
