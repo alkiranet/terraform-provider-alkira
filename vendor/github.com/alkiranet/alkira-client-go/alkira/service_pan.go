@@ -3,31 +3,31 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
+	"strconv"
 )
 
-type ServicePanRequest struct {
-	BillingTags         []int                `json:"billingTags"`
+type ServicePan struct {
+	BillingTagIds       []int                `json:"billingTags"`
 	CXP                 string               `json:"cxp"`
 	CredentialId        string               `json:"credentialId"`
-	Instances           []ServicePanInstance `json:"instances"`
+	Id                  int                  `json:"id,omitempty"`
+	Instances           []ServicePanInstance `json:"instances,omitempty"`
 	LicenseType         string               `json:"licenseType"`
-	ManagementSegment   string               `json:"managementSegment"`
+	ManagementSegmentId int                  `json:"managementSegment"`
 	MaxInstanceCount    int                  `json:"maxInstanceCount"`
 	MinInstanceCount    int                  `json:"minInstanceCount"`
 	Name                string               `json:"name"`
-	PanoramaEnabled     string               `json:"panoramaEnabled"`
+	PanoramaEnabled     bool                 `json:"panoramaEnabled"`
 	PanoramaDeviceGroup string               `json:"panoramaDeviceGroup"`
 	PanoramaIpAddress   string               `json:"panoramaIPAddress"`
 	PanoramaTemplate    string               `json:"panoramaTemplate"`
-	Segments            []string             `json:"segments"`
-	SegmentOptions      interface{}          `json:"segmentOptions"`
+	PanWarmBootEnabled  bool                 `json:"panWarmBootEnabled,omitempty"`
+	SegmentIds          []int                `json:"segments"`
+	SegmentOptions      interface{}          `json:"segmentOptions,omitempty"`
 	Size                string               `json:"size"`
+	TunnelProtocol      string               `json:"tunnelProtocol,omitempty"`
 	Type                string               `json:"type"`
 	Version             string               `json:"version"`
 }
@@ -37,67 +37,70 @@ type ServicePanInstance struct {
 	Name         string `json:"name"`
 }
 
-type ServicePanResponse struct {
-	Id int `json:"id"`
-}
-
 // CreateServicePan create service PAN
-func (ac *AlkiraClient) CreateServicePan(service *ServicePanRequest) (int, error) {
+func (ac *AlkiraClient) CreateServicePan(service *ServicePan) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(service)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateServicePan: marshal failed: %v", err)
+		return "", fmt.Errorf("CreateServicePan: marshal failed: %v", err)
 	}
 
-	log.Println(string(body))
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateServicePan: request failed: %v", err)
+		return "", err
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	var result ServicePanResponse
+	var result ServicePan
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateServicePan: parse failed: %v", err)
+		return "", fmt.Errorf("CreateServicePan: failed to unmarshal: %v", err)
 	}
 
-	id = result.Id
-	return id, nil
+	return strconv.Itoa(result.Id), nil
 }
 
-// DeleteServicePan delete a Service PAN
-func (ac *AlkiraClient) DeleteServicePan(id int) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%d", ac.URI, ac.TenantNetworkId, id)
+// DeleteServicePan delete a Service PAN by Id
+func (ac *AlkiraClient) DeleteServicePan(id string) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	return ac.delete(uri)
+}
+
+// UpdateServicePan Update a Service PAN by Id
+func (ac *AlkiraClient) UpdateServicePan(id string, service *ServicePan) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
+
+	body, err := json.Marshal(service)
 
 	if err != nil {
-		return fmt.Errorf("DeleteServicePan: request failed: %v", err)
+		return fmt.Errorf("UpdateServicePan: failed to marshal request: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	return ac.update(uri, body)
+}
 
-	if response.StatusCode != 200 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+// GetServicePanById get an service-pan by Id
+func (ac *AlkiraClient) GetServicePanById(id string) (*ServicePan, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
+
+	var service ServicePan
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	err = json.Unmarshal([]byte(data), &service)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetServicePan: failed to unmarshal: %v", err)
+	}
+
+	return &service, nil
 }

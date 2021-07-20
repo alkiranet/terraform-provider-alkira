@@ -76,6 +76,54 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
+	c, err := generateCredentialAwsVpc(d)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := client.CreateCredential(d.Get("name").(string), "awsvpc", c)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(id)
+	return resourceCredentialAwsVpcRead(d, meta)
+}
+
+func resourceCredentialAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
+	return nil
+}
+
+func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c, err := generateCredentialAwsVpc(d)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updating credential (AWS-VPC) %s", d.Id())
+	err = client.UpdateCredential(d.Id(), d.Get("name").(string), "awsvpc", c)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceCredentialAwsVpcRead(d, meta)
+}
+
+func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+	credentialId := d.Id()
+
+	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
+	return client.DeleteCredential(credentialId, "awsvpc")
+}
+
+func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {
 	credentialType := d.Get("type").(string)
 	var c interface{}
 
@@ -92,38 +140,9 @@ func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 			Type:          d.Get("type").(string),
 		}
 	} else {
-		return errors.New("Invalid AWS-VPC Credential Type")
+		return nil, errors.New("Invalid AWS-VPC Credential Type")
 	}
 
-	log.Printf("[INFO] Createing credential (AWS-VPC) with type %s", credentialType)
-	credentialId, err := client.CreateCredential(d.Get("name").(string), "awsvpc", c)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(credentialId)
-	return resourceCredentialAwsVpcRead(d, meta)
-}
-
-func resourceCredentialAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
-func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceCredentialAwsVpcRead(d, meta)
-}
-
-func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-	credentialId := d.Id()
-
-	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, "awsvpc")
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Creating credential (AWS-VPC) with type %s", credentialType)
+	return c, nil
 }

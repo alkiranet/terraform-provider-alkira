@@ -2,132 +2,161 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraServicePan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServicePanCreate,
-		Read:   resourceServicePanRead,
-		Update: resourceServicePanUpdate,
-		Delete: resourceServicePanDelete,
+		Description: "Manage PAN firewall.",
+		Create:      resourceServicePanCreate,
+		Read:        resourceServicePanRead,
+		Update:      resourceServicePanUpdate,
+		Delete:      resourceServicePanDelete,
 
 		Schema: map[string]*schema.Schema{
-			"billing_tags": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
+			"billing_tag_ids": {
+				Description: "A list of billing tag ids to associate with the service.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "ID of PAN credential managed by credential resource.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"cxp": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The CXP where the service should be provisioned.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"group": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The group of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"instance": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "The name of the PAN instance.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 						"credential_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "ID of PAN instance credential managed by credential resource.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 					},
 				},
 				Required: true,
 			},
 			"license_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description:  "PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
 			"panorama_enabled": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "Enable Panorama or not.",
+				Type:        schema.TypeBool,
+				Required:    true,
 			},
 			"panorama_device_group": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Panorama device group.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"panorama_ip_address": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Panorama IP address.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"panorama_template": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Panorama Template.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
-			"management_segment": {
-				Type:     schema.TypeString,
-				Required: true,
+			"management_segment_id": {
+				Description: "Management Segment Id.",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"max_instance_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
+				Description: "Max number of Panorama instances for auto scale.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     1,
 			},
 			"min_instance_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
+				Description: "Minimal number of Panorama instances for auto scale.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     1,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "Name of the PAN service.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"segment_ids": {
+				Description: "The list of segment Ids the service belongs to.",
+				Type:        schema.TypeList,
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
+			"size": {
+				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+			},
+			"tunnel_protocol": {
+				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "IPSEC",
+				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+			},
+			"type": {
+				Description: "The type of the PAN firewall.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"version": {
+				Description: "The version of the PAN firewall.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"zones_to_groups": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "The name of the segment.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 						"zone_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "The name of the zone.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 						"groups": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "The name of the group.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 				Optional: true,
-			},
-			"segments": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"service_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"size": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"version": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 		},
 	}
@@ -136,27 +165,27 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	instances := expandPanInstances(d.Get("instance").(*schema.Set))
-	segments := convertTypeListToStringList(d.Get("segments").([]interface{}))
+	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
 
-	service := &alkira.ServicePanRequest{
-		BillingTags:         billingTags,
+	service := &alkira.ServicePan{
+		BillingTagIds:       billingTagIds,
 		CXP:                 d.Get("cxp").(string),
 		CredentialId:        d.Get("credential_id").(string),
 		Instances:           instances,
 		LicenseType:         d.Get("license_type").(string),
 		MaxInstanceCount:    d.Get("max_instance_count").(int),
 		MinInstanceCount:    d.Get("min_instance_count").(int),
-		ManagementSegment:   d.Get("management_segment").(string),
+		ManagementSegmentId: d.Get("management_segment_id").(int),
 		Name:                d.Get("name").(string),
-		PanoramaEnabled:     d.Get("panorama_enabled").(string),
+		PanoramaEnabled:     d.Get("panorama_enabled").(bool),
 		PanoramaDeviceGroup: d.Get("panorama_device_group").(string),
 		PanoramaIpAddress:   d.Get("panorama_ip_address").(string),
 		PanoramaTemplate:    d.Get("panorama_template").(string),
 		SegmentOptions:      segmentOptions,
-		Segments:            segments,
+		SegmentIds:          segmentIds,
 		Size:                d.Get("size").(string),
 		Type:                d.Get("type").(string),
 		Version:             d.Get("version").(string),
@@ -169,9 +198,7 @@ func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("service_id", id)
-
+	d.SetId(id)
 	return resourceServicePanRead(d, m)
 }
 
@@ -187,11 +214,5 @@ func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Service (PAN) %s", d.Id())
-	err := client.DeleteServicePan(d.Get("service_id").(int))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return client.DeleteServicePan(d.Id())
 }

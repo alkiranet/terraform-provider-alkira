@@ -48,7 +48,7 @@ func resourceCredentialPan(d *schema.ResourceData, meta interface{}) error {
 		Username:   d.Get("username").(string),
 	}
 
-	log.Printf("[INFO] Createing Credential (PAN)")
+	log.Printf("[INFO] Creating Credential (PAN)")
 	credentialId, err := client.CreateCredential(d.Get("name").(string), "pan", c)
 
 	if err != nil {
@@ -64,6 +64,21 @@ func resourceCredentialPanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCredentialPanUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c := alkira.CredentialPan{
+		LicenseKey: d.Get("license_key").(string),
+		Password:   d.Get("password").(string),
+		Username:   d.Get("username").(string),
+	}
+
+	log.Printf("[INFO] Updating Credential (PAN)")
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "pan", c)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialPanRead(d, meta)
 }
 
