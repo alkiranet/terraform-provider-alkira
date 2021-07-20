@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,14 +78,13 @@ func resourceConnectorInternetCreate(d *schema.ResourceData, m interface{}) erro
 		Size:        d.Get("size").(string),
 	}
 
-	id, err := client.CreateConnectorInternet(connector)
+	id, err := client.CreateConnectorInternetExit(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", id)
+	d.SetId(id)
 	return resourceConnectorInternetRead(d, m)
 }
 
@@ -101,12 +99,6 @@ func resourceConnectorInternetUpdate(d *schema.ResourceData, m interface{}) erro
 func resourceConnectorInternetDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Connector (INET) %s", d.Id())
-	err := client.DeleteConnectorInet(d.Get("connector_id").(int))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Deleting Connector (internet-exit) %s", d.Id())
+	return client.DeleteConnectorInternetExit(d.Id())
 }

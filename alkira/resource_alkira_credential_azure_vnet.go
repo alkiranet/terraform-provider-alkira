@@ -70,6 +70,22 @@ func resourceCredentialAzureVnetRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c := alkira.CredentialAzureVnet{
+		ApplicationId:  d.Get("application_id").(string),
+		SecretKey:      d.Get("secret_key").(string),
+		SubscriptionId: d.Get("subscription_id").(string),
+		TenantId:       d.Get("tenant_id").(string),
+	}
+
+	log.Printf("[INFO] Updating Credential (AZURE-VNET)")
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "azurevnet", c)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialAzureVnetRead(d, meta)
 }
 
