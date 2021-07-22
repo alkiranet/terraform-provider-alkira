@@ -68,7 +68,8 @@ func expandConnectorIPSecSegmentOptions(in *schema.Set) (interface{}, error) {
 		}
 
 		if v, ok := segmentOptionsInput["disable_advertise_on_prem_routes"].(bool); ok {
-			segmentOption.AdvertiseOnPremRoutes = &v
+			t := !v
+			segmentOption.AdvertiseOnPremRoutes = &t
 		}
 
 		segmentOptions[segmentName] = segmentOption
