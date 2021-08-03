@@ -47,8 +47,8 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment": {
-				Description: "The segment of the connector belongs to. Currently, only `1` segment is allowed.",
+			"segment_id": {
+				Description: "The segment Id of the connector belongs to. Currently, only `1` segment is allowed.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -94,7 +94,7 @@ func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
-	log.Printf("[INFO] Updateing Connector (INTERNET) %s", d.Id())
+	log.Printf("[INFO] Updating Connector (INTERNET-EXIT) %s", d.Id())
 	err = client.UpdateConnectorInternetExit(d.Id(), connector)
 
 	return err
@@ -103,14 +103,20 @@ func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) 
 func resourceConnectorInternetExitDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Connector (internet-exit) %s", d.Id())
+	log.Printf("[INFO] Deleting Connector (INTERNET-EXIT) %s", d.Id())
 	return client.DeleteConnectorInternetExit(d.Id())
 }
 
 // generateConnectorInternetRequest generate request for connector-internet
 func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorInternet, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
+	segment, err := client.GetSegmentById(d.Get("segment_id").(string))
+
+	if err != nil {
+		return nil, err
+	}
 
 	request := &alkira.ConnectorInternet{
 		BillingTags: billingTags,
@@ -118,7 +124,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		Description: d.Get("description").(string),
 		Group:       d.Get("group").(string),
 		Name:        d.Get("name").(string),
-		Segments:    segments,
+		Segments:    []string{segment.Name},
 		Size:        d.Get("size").(string),
 	}
 
