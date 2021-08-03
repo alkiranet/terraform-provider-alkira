@@ -8,17 +8,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraConnectorInternet() *schema.Resource {
+func resourceAlkiraConnectorInternetExit() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Internet Exit.\n\n" +
 			"An internet exit is an exit from the CXP to the" +
 			"internet and allows the traffic from" +
 			"the various Users & Sites or Cloud Connectors to" +
 			"flow towards the Internet.",
-		Create: resourceConnectorInternetCreate,
-		Read:   resourceConnectorInternetRead,
-		Update: resourceConnectorInternetUpdate,
-		Delete: resourceConnectorInternetDelete,
+		Create: resourceConnectorInternetExitCreate,
+		Read:   resourceConnectorInternetExitRead,
+		Update: resourceConnectorInternetExitUpdate,
+		Delete: resourceConnectorInternetExitDelete,
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
@@ -62,20 +62,13 @@ func resourceAlkiraConnectorInternet() *schema.Resource {
 	}
 }
 
-func resourceConnectorInternetCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetExitCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
+	connector, err := generateConnectorInternetRequest(d, m)
 
-	connector := &alkira.ConnectorInternet{
-		BillingTags: billingTags,
-		CXP:         d.Get("cxp").(string),
-		Description: d.Get("description").(string),
-		Group:       d.Get("group").(string),
-		Name:        d.Get("name").(string),
-		Segments:    segments,
-		Size:        d.Get("size").(string),
+	if err != nil {
+		return err
 	}
 
 	id, err := client.CreateConnectorInternetExit(connector)
@@ -85,20 +78,49 @@ func resourceConnectorInternetCreate(d *schema.ResourceData, m interface{}) erro
 	}
 
 	d.SetId(id)
-	return resourceConnectorInternetRead(d, m)
+	return resourceConnectorInternetExitRead(d, m)
 }
 
-func resourceConnectorInternetRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceConnectorInternetUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceConnectorInternetRead(d, m)
+func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := generateConnectorInternetRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updateing Connector (INTERNET) %s", d.Id())
+	err = client.UpdateConnectorInternetExit(d.Id(), connector)
+
+	return err
 }
 
-func resourceConnectorInternetDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorInternetExitDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (internet-exit) %s", d.Id())
 	return client.DeleteConnectorInternetExit(d.Id())
+}
+
+// generateConnectorInternetRequest generate request for connector-internet
+func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorInternet, error) {
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	segments := []string{d.Get("segment").(string)}
+
+	request := &alkira.ConnectorInternet{
+		BillingTags: billingTags,
+		CXP:         d.Get("cxp").(string),
+		Description: d.Get("description").(string),
+		Group:       d.Get("group").(string),
+		Name:        d.Get("name").(string),
+		Segments:    segments,
+		Size:        d.Get("size").(string),
+	}
+
+	return request, nil
 }
