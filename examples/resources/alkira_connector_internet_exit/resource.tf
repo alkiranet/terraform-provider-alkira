@@ -1,4 +1,4 @@
-resource "alkira_connector_inet" "test1" {
+resource "alkira_connector_internet_exit" "test1" {
   name           = "test1"
   cxp            = "US-WEST"
   group          = "group1"
