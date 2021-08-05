@@ -74,6 +74,20 @@ func resourceCredentialCiscoSdwanRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceCredentialCiscoSdwanUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c := alkira.CredentialCiscoSdwan{
+		Password: d.Get("password").(string),
+		Username: d.Get("username").(string),
+	}
+
+	log.Printf("[INFO] Updating Credential (ciscosdwan)")
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "ciscosdwan", c)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialCiscoSdwanRead(d, meta)
 }
 
@@ -83,9 +97,5 @@ func resourceCredentialCiscoSdwanDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Deleting credential (Cisco SD-WAN %s)\n", d.Id())
 	err := client.DeleteCredential(d.Id(), "ciscosdwan")
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
