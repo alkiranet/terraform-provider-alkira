@@ -10,6 +10,14 @@ description: |-
 
 Manage IPSec Connector.
 
+
+## VPN Mode
+
+`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's
+defined as `ROUTE_BASED`, `routing_options` block is required. When
+it's defined as `POLICY_BASED`, `policy_options` block is required.
+
+
 ## Example Usage
 
 ```terraform
