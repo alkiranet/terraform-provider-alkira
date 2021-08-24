@@ -35,9 +35,8 @@ description: |-
 Required:
 
 - **priority** (Number)
+- **rule_id** (Number)
 
 Optional:
-
-- **rule_id** (Number)
 
 
