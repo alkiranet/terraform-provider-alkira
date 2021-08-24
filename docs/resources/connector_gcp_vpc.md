@@ -24,8 +24,8 @@ resource "alkira_segment" "segment1" {
 
 
 #
-# Create the credential to store the access to the AWS account that
-# VPCs belongs two. In this example, both VPCs belong to this AWS
+# Create the credential to store the access to the GCP account that
+# VPCs belongs two. In this example, both VPCs belong to this GCP
 # account.
 #
 resource "alkira_credential_gcp_vpc" "terraform_gcp_account" {
