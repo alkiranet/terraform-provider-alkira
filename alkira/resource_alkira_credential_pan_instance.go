@@ -76,6 +76,23 @@ func resourceCredentialPanInstanceRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c := alkira.CredentialPanInstance{
+		AuthKey:    d.Get("auth_key").(string),
+		AuthCode:   d.Get("auth_code").(string),
+		LicenseKey: d.Get("license_key").(string),
+		Password:   d.Get("password").(string),
+		Username:   d.Get("username").(string),
+	}
+
+	log.Printf("[INFO] Updating Credential (PAN Instance)")
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "paninstance", c)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialPanInstanceRead(d, meta)
 }
 

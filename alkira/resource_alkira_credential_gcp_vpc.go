@@ -106,6 +106,28 @@ func resourceCredentialGcpVpcRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	c := alkira.CredentialGcpVpc{
+		AuthProvider:      d.Get("auth_provider").(string),
+		AuthUri:           d.Get("auth_uri").(string),
+		ClientEmail:       d.Get("client_email").(string),
+		ClientId:          d.Get("client_id").(string),
+		ClientX509CertUrl: d.Get("client_x509_cert_url").(string),
+		PrivateKey:        d.Get("private_key").(string),
+		PrivateKeyId:      d.Get("private_key_id").(string),
+		ProjectId:         d.Get("project_id").(string),
+		TokenUri:          d.Get("token_uri").(string),
+		Type:              d.Get("type").(string),
+	}
+
+	log.Printf("[INFO] Updating Credential (GCP-VPC)")
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "gcpvpc", c)
+
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialGcpVpcRead(d, meta)
 }
 

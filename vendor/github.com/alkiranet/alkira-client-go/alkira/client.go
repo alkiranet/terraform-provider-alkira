@@ -52,6 +52,7 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 
 	// Login to the portal
 	tr := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
@@ -186,7 +187,7 @@ func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode != 201 {
+	if response.StatusCode != 201 && response.StatusCode != 200 {
 		return nil, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 

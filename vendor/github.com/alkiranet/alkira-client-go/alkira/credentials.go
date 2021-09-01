@@ -3,12 +3,13 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
+
+type CredentialArubaEdgeConnect struct {
+	AccountKey string `json:"accountKey"`
+}
 
 type CredentialAwsVpcKey struct {
 	Ec2AccessKey string `json:"ec2AccessKey"`
@@ -29,6 +30,23 @@ type CredentialAzureVnet struct {
 	TenantId       string `json:"tenantId"`
 }
 
+type CredentialCheckPointFwService struct {
+	AdminPassword string `json:"adminPassword"`
+}
+
+type CredentialCheckPointFwServiceInstance struct {
+	SicKey string `json:"sicKey"`
+}
+
+type CredentialCheckPointFwManagementServer struct {
+	Password string `json:"password"`
+}
+
+type CredentialCiscoSdwan struct {
+	Password string `json:"password"`
+	Username string `json:"userName"`
+}
+
 type CredentialGcpVpc struct {
 	AuthProvider      string `json:"auth_provider_x509_cert_url"`
 	AuthUri           string `json:"auth_uri"`
@@ -40,6 +58,17 @@ type CredentialGcpVpc struct {
 	ProjectId         string `json:"project_id"`
 	TokenUri          string `json:"token_uri"`
 	Type              string `json:"type"`
+}
+
+type CredentialKeyPair struct {
+	PrivateKey string `json:"privateKey"`
+	PublicKey  string `json:"publicKey"`
+	Type       string `json:"type"`
+}
+
+type CredentialLdap struct {
+	BindPassword   string `json:"bindPassword"`
+	TlsCertificate string `json:"tlsCertificate"`
 }
 
 type CredentialPan struct {
@@ -54,11 +83,6 @@ type CredentialPanInstance struct {
 	LicenseKey string `json:"licenseKey"`
 	Password   string `json:"password"`
 	Username   string `json:"userName"`
-}
-
-type CredentialCiscoSdwan struct {
-	Password string `json:"password"`
-	Username string `json:"userName"`
 }
 
 type Credentials struct {
@@ -80,7 +104,6 @@ type CredentialResponseDetail struct {
 // CreateCredential create new credential
 func (ac *AlkiraClient) CreateCredential(name string, credentialType string, credential interface{}) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, credentialType)
-	id := ""
 
 	// This body is not the normal JSON format...
 	body, err := json.Marshal(Credentials{
@@ -88,73 +111,76 @@ func (ac *AlkiraClient) CreateCredential(name string, credentialType string, cre
 		Credentials: credential,
 	})
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	if err != nil {
+		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
+	}
+
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateCredential: request failed: %v", err)
+		return "", err
 	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
 
 	var result CredentialResponse
-
 	json.Unmarshal([]byte(data), &result)
 
-	id = result.Id
-
-	if response.StatusCode != 200 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return id, nil
+	return result.Id, nil
 }
 
 // DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, credentialType string) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, credentialType, id)
+	return ac.delete(uri)
+}
 
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
+// UpdateCredential update a given credential by its Id
+func (ac *AlkiraClient) UpdateCredential(id string, name string, credentialType string, credential interface{}) error {
+	if credentialType == "keypair" || credentialType == "aruba-edge-connector-instances" {
+		return fmt.Errorf("UpdateCredential: not supported for the credential type")
+	}
 
-	response, err := ac.Client.Do(request)
+	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, credentialType, id)
+
+	// This body is not the normal JSON format...
+	body, err := json.Marshal(Credentials{
+		Name:        name,
+		Credentials: credential,
+	})
 
 	if err != nil {
-		return fmt.Errorf("DeleteCredential: request failed: %v", err)
+		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("DeleteCredential: (%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+	return ac.update(uri, body)
 }
 
 // GetCredentials get all credentials
 func (ac *AlkiraClient) GetCredentials() (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/", ac.URI)
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
+// GetCredentialById get one credential by its Id
+func (ac *AlkiraClient) GetCredentialById(id string) (CredentialResponseDetail, error) {
+	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, id)
+
+	var credential CredentialResponseDetail
+
+	data, err := ac.get(uri)
 
 	if err != nil {
-		return "", fmt.Errorf("GetCredentials: request failed: %v", err)
+		return credential, err
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	err = json.Unmarshal([]byte(data), &credential)
 
-	if response.StatusCode != 200 {
-		return "", fmt.Errorf("GetCredentials: (%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal: %v", err)
 	}
 
-	return string(data), nil
+	return credential, nil
 }
 
 // GetCredentialByName get the credential by its name

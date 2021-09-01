@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"log"
 	"os"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -37,7 +38,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_azure_vnet":    resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_cisco_sdwan":   resourceAlkiraConnectorCiscoSdwan(),
 			"alkira_connector_gcp_vpc":       resourceAlkiraConnectorGcpVpc(),
-			"alkira_connector_internet":      resourceAlkiraConnectorInternet(),
+			"alkira_connector_internet_exit": resourceAlkiraConnectorInternetExit(),
 			"alkira_connector_ipsec":         resourceAlkiraConnectorIPSec(),
 			"alkira_credential_aws_vpc":      resourceAlkiraCredentialAwsVpc(),
 			"alkira_credential_azure_vnet":   resourceAlkiraCredentialAzureVnet(),
@@ -80,6 +81,7 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
 
 	if err != nil {
+		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")
 		return nil, err
 	}
 
