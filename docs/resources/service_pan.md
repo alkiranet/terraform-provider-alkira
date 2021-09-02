@@ -50,6 +50,7 @@ resource "alkira_service_pan" "test1" {
 - **instance** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - **license_type** (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - **management_segment_id** (Number) Management Segment Id.
+- **max_instance_count** (Number) Max number of Panorama instances for auto scale. Default value is `1`.
 - **name** (String) Name of the PAN service.
 - **panorama_enabled** (Boolean) Enable Panorama or not.
 - **segment_ids** (List of Number) The list of segment Ids the service belongs to.
@@ -63,8 +64,7 @@ resource "alkira_service_pan" "test1" {
 - **credential_id** (String) ID of PAN credential managed by credential resource.
 - **group** (String) The group of the service.
 - **id** (String) The ID of this resource.
-- **max_instance_count** (Number) Max number of Panorama instances for auto scale.
-- **min_instance_count** (Number) Minimal number of Panorama instances for auto scale.
+- **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
 - **panorama_ip_address** (String) Panorama IP address.
 - **panorama_template** (String) Panorama Template.
