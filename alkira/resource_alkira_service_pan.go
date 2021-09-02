@@ -34,11 +34,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"group": {
-				Description: "The group of the service.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
 			"instance": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{

@@ -62,7 +62,6 @@ resource "alkira_service_pan" "test1" {
 
 - **billing_tag_ids** (List of Number) A list of billing tag ids to associate with the service.
 - **credential_id** (String) ID of PAN credential managed by credential resource.
-- **group** (String) The group of the service.
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
