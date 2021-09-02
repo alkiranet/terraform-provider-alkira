@@ -46,6 +46,7 @@ resource "alkira_service_pan" "test1" {
 
 ### Required
 
+- **credential_id** (String) ID of PAN credential managed by credential resource.
 - **cxp** (String) The CXP where the service should be provisioned.
 - **instance** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - **license_type** (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
@@ -61,7 +62,6 @@ resource "alkira_service_pan" "test1" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) A list of billing tag ids to associate with the service.
-- **credential_id** (String) ID of PAN credential managed by credential resource.
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.

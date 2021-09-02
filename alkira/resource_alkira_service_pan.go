@@ -27,7 +27,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"credential_id": {
 				Description: "ID of PAN credential managed by credential resource.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
