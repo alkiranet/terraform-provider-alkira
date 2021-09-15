@@ -22,7 +22,7 @@ type ConnectorInternet struct {
 	BillingTags         []int                `json:"billingTags"`
 	CXP                 string               `json:"cxp"`
 	Description         string               `json:"description"`
-	Group               string               `json:"group"`
+	Group               string               `json:"group,omitempty"`
 	Id                  int                  `json:"id"`
 	Name                string               `json:"name"`
 	NumOfPublicIPs      int                  `json:"numOfPublicIPs,omitempty"`

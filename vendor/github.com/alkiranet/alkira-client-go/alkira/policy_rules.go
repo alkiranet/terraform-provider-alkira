@@ -3,29 +3,29 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
-type PolicyRuleRequest struct {
+type PolicyRule struct {
 	Description    string                   `json:"description"`
+	Id             json.Number              `json:"id,omitempty"`
 	MatchCondition PolicyRuleMatchCondition `json:"matchCondition"`
 	Name           string                   `json:"name"`
 	RuleAction     PolicyRuleAction         `json:"ruleAction"`
 }
 
 type PolicyRuleMatchCondition struct {
-	SrcIp                 string   `json:"srcIp"`
-	DstIp                 string   `json:"dstIp"`
-	Dscp                  string   `json:"dscp"`
-	Protocol              string   `json:"protocol"`
-	SrcPortList           []string `json:"srcPortList"`
-	DstPortList           []string `json:"dstPortList"`
-	ApplicationList       []string `json:"applicationList"`
 	ApplicationFamilyList []string `json:"applicationFamilyList"`
+	ApplicationList       []string `json:"applicationList"`
+	Dscp                  string   `json:"dscp"`
+	DstIp                 string   `json:"dstIp"`
+	DstPortList           []string `json:"dstPortList,omitempty"`
+	DstPrefixListId       int      `json:"dstPrefixListId,omitempty"`
+	Protocol              string   `json:"protocol"`
+	SrcIp                 string   `json:"srcIp"`
+	SrcPortList           []string `json:"srcPortList,omitempty"`
+	SrcPrefixListId       int      `json:"srcPrefixListId,omitempty"`
 }
 
 type PolicyRuleAction struct {
@@ -33,58 +33,69 @@ type PolicyRuleAction struct {
 	ServiceTypeList []string `json:"serviceTypeList"`
 }
 
-type policyRuleResponse struct {
-	Id int `json:"id"`
-}
-
-// Create a policy rule
-func (ac *AlkiraClient) CreatePolicyRule(p *PolicyRuleRequest) (int, error) {
+// CreatePolicyRule create a policy rule
+func (ac *AlkiraClient) CreatePolicyRule(p *PolicyRule) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return id, fmt.Errorf("CreatePolicyRule: request failed: %v", err)
+		return "", fmt.Errorf("CreatePolicyRule: request failed: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	var result PolicyRule
+	err = json.Unmarshal([]byte(data), &result)
 
-	var result policyResponse
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", fmt.Errorf("CreatePolicyRule: request failed: %v", err)
 	}
 
-	id = result.Id
-	return id, nil
+	return string(result.Id), nil
 }
 
-// Delete a policy rule
-func (ac *AlkiraClient) DeletePolicyRule(id int) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%d", ac.URI, ac.TenantNetworkId, id)
+// DeletePolicyRule delete a policy rule
+func (ac *AlkiraClient) DeletePolicyRule(id string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
+	return ac.delete(uri)
+}
 
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+// UpdatePolicyRule update a policy rule list
+func (ac *AlkiraClient) UpdatePolicyRule(id string, p *PolicyRule) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
+
+	// Construct the request
+	body, err := json.Marshal(p)
 
 	if err != nil {
-		return fmt.Errorf("DeletePolicyRule: request failed: %v", err)
+		return fmt.Errorf("UpdatePolicyRule: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	return ac.update(uri, body)
+}
 
-	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+// GetPolicyRule get a policy rule list
+func (ac *AlkiraClient) GetPolicyRule(id string) (*PolicyRule, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	var result PolicyRule
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetPolicyRule: failed to unmarshal: %v", err)
+	}
+
+	return &result, nil
 }

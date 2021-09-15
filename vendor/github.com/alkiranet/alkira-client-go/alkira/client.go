@@ -15,6 +15,9 @@ import (
 	"time"
 )
 
+// Client timeout
+const timeout = 60
+
 type AlkiraClient struct {
 	Username        string
 	Password        string
@@ -52,14 +55,14 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 
 	// Login to the portal
 	tr := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
+		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
 	// Using a client to set a timeout. This is alkira service. It
 	// should not take that long
 	var httpClient = &http.Client{
-		Timeout:   time.Second * 30,
+		Timeout:   time.Second * timeout,
 		Transport: tr,
 	}
 
@@ -214,7 +217,7 @@ func (ac *AlkiraClient) delete(uri string) error {
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
 			logf("INFO", "resource was already deleted.\n")
 			return nil

@@ -5,7 +5,6 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 type ConnectorIPSecSiteAdvanced struct {
@@ -32,12 +31,13 @@ type ConnectorIPSecSiteAdvanced struct {
 }
 
 type ConnectorIPSecSite struct {
-	Name          string                      `json:"name"`
-	BillingTags   []int                       `json:"billingTags,omitempty"`
-	CustomerGwAsn string                      `json:"customerGwAsn"`
-	CustomerGwIp  string                      `json:"customerGwIp"`
-	PresharedKeys []string                    `json:"presharedKeys"`
-	Advanced      *ConnectorIPSecSiteAdvanced `json:"advanced,omitempty"`
+	Name                   string                      `json:"name"`
+	BillingTags            []int                       `json:"billingTags,omitempty"`
+	CustomerGwAsn          string                      `json:"customerGwAsn"`
+	CustomerGwIp           string                      `json:"customerGwIp"`
+	PresharedKeys          []string                    `json:"presharedKeys"`
+	EnableTunnelRedundancy bool                        `json:"enableTunnelRedundancy,omitempty"`
+	Advanced               *ConnectorIPSecSiteAdvanced `json:"advanced,omitempty"`
 }
 
 type ConnectorIPSecPolicyOptions struct {
@@ -55,11 +55,13 @@ type ConnectorIPSecPolicyOptions struct {
 // }
 //
 type ConnectorIPSecStaticRouting struct {
-	PrefixListId int `json:"prefixListId"`
+	Availability string `json:availability"`
+	PrefixListId int    `json:"prefixListId"`
 }
 
 type ConnectorIPSecDynamicRouting struct {
-	CustomerGwAsn string `json:"customerGwAsn"`
+	BgpAuthKeyAlkira string `json:"bgpAuthKeyAlkira"`
+	CustomerGwAsn    string `json:"customerGwAsn"`
 }
 
 type ConnectorIPSecRoutingOptions struct {
@@ -75,25 +77,11 @@ type ConnectorIPSecSegmentOptions struct {
 	DisableInternetExit   *bool `json:"disableInternetExit,omitempty"`
 }
 
-type ConnectorIPSecRequest struct {
+type ConnectorIPSec struct {
 	BillingTags    []int                         `json:"billingTags"`
 	CXP            string                        `json:"cxp"`
 	Group          string                        `json:"group"`
-	Name           string                        `json:"name"`
-	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
-	RoutingOptions *ConnectorIPSecRoutingOptions `json:"routingOptions"`
-	SegmentOptions interface{}                   `json:"segmentOptions"`
-	Segments       []string                      `json:"segments"` // Only one segment is supported for now
-	Sites          []*ConnectorIPSecSite         `json:"sites,omitempty"`
-	Size           string                        `json:"size"`
-	VpnMode        string                        `json:"vpnMode"`
-}
-
-type ConnectorIPSecResponse struct {
-	Id             int                           `json:"id"`
-	BillingTags    []int                         `json:"billingTags"`
-	CXP            string                        `json:"cxp"`
-	Group          string                        `json:"group"`
+	Id             json.Number                   `json:"id,omitempty"`
 	Name           string                        `json:"name"`
 	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
 	RoutingOptions *ConnectorIPSecRoutingOptions `json:"routingOptions"`
@@ -105,7 +93,7 @@ type ConnectorIPSecResponse struct {
 }
 
 // CreateConnectorIPSec create an IPSEC connector
-func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (string, error) {
+func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSec) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
 
 	// Construct the request
@@ -121,14 +109,14 @@ func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSecRequest) (
 		return "", err
 	}
 
-	var result ConnectorIPSecResponse
+	var result ConnectorIPSec
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to unmarshal: %v", err)
 	}
 
-	return strconv.Itoa(result.Id), nil
+	return string(result.Id), nil
 }
 
 // DeleteConnectorIPSec delete an IPSEC connector by Id
@@ -139,7 +127,7 @@ func (ac *AlkiraClient) DeleteConnectorIPSec(id string) error {
 }
 
 // UpdateConnectorIPSec update an IPSEC connector by Id
-func (ac *AlkiraClient) UpdateConnectorIPSec(id string, connector *ConnectorIPSecRequest) error {
+func (ac *AlkiraClient) UpdateConnectorIPSec(id string, connector *ConnectorIPSec) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(connector)
@@ -152,10 +140,10 @@ func (ac *AlkiraClient) UpdateConnectorIPSec(id string, connector *ConnectorIPSe
 }
 
 // GetConnectorIPSec get an IPSEC connector by Id
-func (ac *AlkiraClient) GetConnectorIPSec(id string) (*ConnectorIPSecResponse, error) {
+func (ac *AlkiraClient) GetConnectorIPSec(id string) (*ConnectorIPSec, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	var connector ConnectorIPSecResponse
+	var connector ConnectorIPSec
 
 	data, err := ac.get(uri)
 

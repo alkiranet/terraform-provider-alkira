@@ -3,109 +3,99 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
-type ConnectorGcpVpc struct {
-	BillingTags    []int    `json:"billingTags"`
-	CXP            string   `json:"cxp"`
-	CredentialId   string   `json:"credentialId"`
-	CustomerRegion string   `json:"customerRegion"`
-	Group          string   `json:"group"`
-	Id             int      `json:"id"`
-	Name           string   `json:"name"`
-	Segments       []string `json:"segments"`
-	Size           string   `json:"size"`
-	VpcId          string   `json:"vpcId"`
-	VpcName        string   `json:"vpcName"`
+type ConnectorGcpVpcImportOptions struct {
+	RouteImportMode string `json:"routeImportMode"`
+	PrefixListIds   []int  `json:"prefixListIds,omitempty"`
 }
 
-// Create a GCP-VPC connector
-func (ac *AlkiraClient) CreateConnectorGcpVpc(connector *ConnectorGcpVpc) (int, error) {
+type ConnectorGcpVpcRouting struct {
+	ImportOptions ConnectorGcpVpcImportOptions `json:"importFromCXPOptions"`
+}
+
+type ConnectorGcpVpc struct {
+	BillingTags    []int                   `json:"billingTags"`
+	CXP            string                  `json:"cxp"`
+	CredentialId   string                  `json:"credentialId"`
+	CustomerRegion string                  `json:"customerRegion"`
+	GcpRouting     *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
+	Group          string                  `json:"group"`
+	Id             json.Number             `json:"id,omitempty"`
+	Name           string                  `json:"name"`
+	Segments       []string                `json:"segments"`
+	SecondaryCXPs  []string                `json:"secondaryCXPs,omitempty"`
+	Size           string                  `json:"size"`
+	VpcId          string                  `json:"vpcId"`
+	VpcName        string                  `json:"vpcName"`
+}
+
+// CreateConnectorGcpVpc create a GCP-VPC connector
+func (ac *AlkiraClient) CreateConnectorGcpVpc(c *ConnectorGcpVpc) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
-	body, err := json.Marshal(connector)
-
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	body, err := json.Marshal(c)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateConnectorGcpVpc: request failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorGcpVpc: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	data, err := ac.create(uri, body)
 
-	if response.StatusCode != 200 && response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", err
 	}
 
 	var result ConnectorGcpVpc
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return id, fmt.Errorf("CreateConnectorGcpVpc: parse failed: %v", err)
+		return "", fmt.Errorf("CreateConnectorGcpVpc: parse failed: %v", err)
 	}
 
-	id = result.Id
-
-	return id, nil
+	return string(result.Id), nil
 }
 
-// Get a GCP-VPC connector
-func (ac *AlkiraClient) GetConnectorGcpVpc(id int) (ConnectorGcpVpc, error) {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%d", ac.URI, ac.TenantNetworkId, id)
-	var result ConnectorGcpVpc
+// DeleteConnectorGcpVpc delete a GCP-VPC connector by Id
+func (ac *AlkiraClient) DeleteConnectorGcpVpc(id string) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	return ac.delete(uri)
+}
+
+// UpdateConnectorGcpVpc update an GCP-VPC connector
+func (ac *AlkiraClient) UpdateConnectorGcpVpc(id string, c *ConnectorGcpVpc) error {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	// Construct the request
+	body, err := json.Marshal(c)
 
 	if err != nil {
-		return result, fmt.Errorf("GetConnectorGcpVpc: request failed: %v", err)
+		return fmt.Errorf("UpdateConnectorGcpVpc: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	return ac.update(uri, body)
+}
 
-	if response.StatusCode != 200 {
-		return result, fmt.Errorf("GetConnectorGcpVpc: (%d) %s", response.StatusCode, string(data))
+// GetConnectorGcpVpc get a GCP-VPC connector by Id
+func (ac *AlkiraClient) GetConnectorGcpVpc(id string) (*ConnectorGcpVpc, error) {
+	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
 	}
 
+	var result ConnectorGcpVpc
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return result, fmt.Errorf("GetConnectorGcpVpc: parse failed: %v", err)
+		return nil, fmt.Errorf("GetConnectorGcpVpc: failed to unmarshal: %v", err)
 	}
 
-	return result, nil
-}
-
-// Delete a GCP-VPC connector
-func (ac *AlkiraClient) DeleteConnectorGcpVpc(id int) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%d", ac.URI, ac.TenantNetworkId, id)
-
-	request, err := http.NewRequest("DELETE", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return fmt.Errorf("DeleteConnectorGcpVpc: request failed: %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("DeleteConnectorGcpVpc: (%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+	return &result, nil
 }

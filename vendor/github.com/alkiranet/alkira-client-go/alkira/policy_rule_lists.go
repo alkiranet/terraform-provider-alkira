@@ -3,15 +3,13 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
-type PolicyRuleListRequest struct {
+type PolicyRuleList struct {
 	Description string               `json:"description"`
+	Id          json.Number          `json:"id,omitempty"`
 	Name        string               `json:"name"`
 	Rules       []PolicyRuleListRule `json:"rules"`
 }
@@ -21,59 +19,70 @@ type PolicyRuleListRule struct {
 	RuleId   int `json:"ruleId"`
 }
 
-type policyRuleListResponse struct {
-	Id int `json:"id"`
-}
-
-// Create a policy rule
-func (ac *AlkiraClient) CreatePolicyRuleList(p *PolicyRuleListRequest) (int, error) {
+// CreatePolicyRuleList create a policy rule list
+func (ac *AlkiraClient) CreatePolicyRuleList(p *PolicyRuleList) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return id, fmt.Errorf("CreatePolicyRuleList: request failed: %v", err)
+		return "", fmt.Errorf("CreatePolicyRuleList: request failed: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	var result PolicyRuleList
+	err = json.Unmarshal([]byte(data), &result)
 
-	var result policyResponse
-	json.Unmarshal([]byte(data), &result)
-
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", fmt.Errorf("CreatePolicyRuleList: request failed: %v", err)
 	}
 
-	id = result.Id
-	return id, nil
+	return string(result.Id), nil
 }
 
-// Delete a policy rule list
-func (ac *AlkiraClient) DeletePolicyRuleList(id int) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists/%d", ac.URI, ac.TenantNetworkId, id)
+// DeletePolicyRuleList delete a policy rule list
+func (ac *AlkiraClient) DeletePolicyRuleList(id string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists/%s", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", uri, nil)
+	return ac.delete(uri)
+}
 
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+// UpdatePolicyRuleList update a policy rule list
+func (ac *AlkiraClient) UpdatePolicyRuleList(id string, p *PolicyRuleList) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists/%s", ac.URI, ac.TenantNetworkId, id)
+
+	// Construct the request
+	body, err := json.Marshal(p)
 
 	if err != nil {
-		return fmt.Errorf("DeletePolicyRuleList: request failed: %v", err)
+		return fmt.Errorf("UpdatePolicyRuleList: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
+	return ac.update(uri, body)
+}
 
-	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+// GetPolicyRuleList get a policy rule list
+func (ac *AlkiraClient) GetPolicyRuleList(id string) (*PolicyRuleList, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rulelists/%s", ac.URI, ac.TenantNetworkId, id)
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	var result PolicyRuleList
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetPolicyRuleList: failed to unmarshal: %v", err)
+	}
+
+	return &result, nil
 }
