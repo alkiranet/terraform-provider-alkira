@@ -3,16 +3,14 @@
 package alkira
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 )
 
 type PolicyPrefixList struct {
 	Description string   `json:"description"`
-	Id          int      `json:"id"`
+	Id          int      `json:"id,omitempty"`
 	Name        string   `json:"name"`
 	Prefixes    []string `json:"prefixes"`
 }
@@ -21,22 +19,8 @@ type PolicyPrefixList struct {
 func (ac *AlkiraClient) GetPolicyPrefixLists() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists", ac.URI, ac.TenantNetworkId)
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
-
-	if err != nil {
-		return "", fmt.Errorf("GetPolicyPrefixLists: request failed: %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return "", fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return string(data), nil
+	data, err := ac.get(uri)
+	return string(data), err
 }
 
 // GetPolicyPrefixListById get single prefix list by Id
@@ -45,25 +29,16 @@ func (ac *AlkiraClient) GetPolicyPrefixListById(id int) (PolicyPrefixList, error
 
 	var prefixList PolicyPrefixList
 
-	request, err := http.NewRequest("GET", uri, nil)
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.get(uri)
 
 	if err != nil {
-		return prefixList, fmt.Errorf("GetPolicyPrefixListById: request failed: %v", err)
-	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		return prefixList, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+		return prefixList, err
 	}
 
 	err = json.Unmarshal([]byte(data), &prefixList)
 
 	if err != nil {
-		return prefixList, fmt.Errorf("GetPolicyPrefixListById: parse failed: %v", err)
+		return prefixList, fmt.Errorf("GetPolicyPrefixListById: failed to unmarshal: %v", err)
 	}
 
 	return prefixList, nil
@@ -96,54 +71,45 @@ func (ac *AlkiraClient) GetPolicyPrefixListByName(name string) (PolicyPrefixList
 }
 
 // CreatePolicyPrefixList create a policy prefix
-func (ac *AlkiraClient) CreatePolicyPrefixList(p *PolicyPrefixList) (int, error) {
+func (ac *AlkiraClient) CreatePolicyPrefixList(p *PolicyPrefixList) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists", ac.URI, ac.TenantNetworkId)
-	id := 0
 
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+	data, err := ac.create(uri, body)
 
 	if err != nil {
-		return id, fmt.Errorf("CreatePolicyPrefixList: request failed: %v", err)
+		return "", err
 	}
-
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
 
 	var result PolicyPrefixList
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal([]byte(data), &result)
 
-	if response.StatusCode != 201 {
-		return id, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+	if err != nil {
+		return "", fmt.Errorf("CreatePolicyPrefixList: failed to unmarshal: %v", err)
 	}
 
-	id = result.Id
-	return id, nil
+	return strconv.Itoa(result.Id), nil
 }
 
 // DeletePolicyPrefixList delete a policy prefix list
-func (ac *AlkiraClient) DeletePolicyPrefixList(id int) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) DeletePolicyPrefixList(id string) error {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists/%s", ac.URI, ac.TenantNetworkId, id)
 
-	request, err := http.NewRequest("DELETE", uri, nil)
+	return ac.delete(uri)
+}
 
-	request.Header.Set("Content-Type", "application/json")
-	response, err := ac.Client.Do(request)
+// UpdatePolicyPrefixList update a PolicyPrefixList by id
+func (ac *AlkiraClient) UpdatePolicyPrefixList(id string, p *PolicyPrefixList) error {
+
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/PolicyPrefixLists/%s", ac.URI, ac.TenantNetworkId, id)
+
+	body, err := json.Marshal(p)
 
 	if err != nil {
-		return fmt.Errorf("DeletePolicyPrefixList: request failed: %v", err)
+		return fmt.Errorf("UpdatePolicyPrefixList: failed to marshal: %v", err)
 	}
 
-	defer response.Body.Close()
-	data, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
-	}
-
-	return nil
+	return ac.update(uri, body)
 }

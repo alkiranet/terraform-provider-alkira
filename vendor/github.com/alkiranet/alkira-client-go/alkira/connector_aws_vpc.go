@@ -5,7 +5,6 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 // Structs for "VPC Routing" options
@@ -36,13 +35,14 @@ type ConnectorAwsVpcRouting struct {
 }
 
 // AWS-VPC connector
-type ConnectorAwsVpcRequest struct {
+type ConnectorAwsVpc struct {
 	BillingTags    []int       `json:"billingTags"`
 	CXP            string      `json:"cxp"`
 	CredentialId   string      `json:"credentialId"`
 	CustomerName   string      `json:"customerName"`
 	CustomerRegion string      `json:"customerRegion"`
 	Group          string      `json:"group"`
+	Id             json.Number `json:"id,omitempty"`
 	Name           string      `json:"name"`
 	Segments       []string    `json:"segments"`
 	Size           string      `json:"size"`
@@ -51,12 +51,8 @@ type ConnectorAwsVpcRequest struct {
 	VpcRouting     interface{} `json:"vpcRouting"`
 }
 
-type ConnectorAwsVpcResponse struct {
-	Id int `json:"id"`
-}
-
 // CreateConnectorAwsVPC create an AWS-VPC connector
-func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest) (string, error) {
+func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpc) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
 
 	// Construct the request
@@ -72,14 +68,14 @@ func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpcRequest)
 		return "", err
 	}
 
-	var result ConnectorAwsVpcResponse
+	var result ConnectorAwsVpc
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to unmarshal: %v", err)
 	}
 
-	return strconv.Itoa(result.Id), nil
+	return string(result.Id), nil
 }
 
 // DeleteConnectorAwsVpc delete an AWS-VPC connector
@@ -90,7 +86,7 @@ func (ac *AlkiraClient) DeleteConnectorAwsVpc(id string) error {
 }
 
 // UpdateConnectorAwsVPC update an AWS-VPC connector
-func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAwsVpcRequest) error {
+func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAwsVpc) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
 	// Construct the request
@@ -101,4 +97,24 @@ func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAws
 	}
 
 	return ac.update(uri, body)
+}
+
+// GetConnectorAwsVpc get one AWS-VPC connector by Id
+func (ac *AlkiraClient) GetConnectorAwsVpc(id string) (*ConnectorAwsVpc, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result ConnectorAwsVpc
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetConnectorAwsVpc: failed to unmarshal: %v", err)
+	}
+
+	return &result, nil
 }
