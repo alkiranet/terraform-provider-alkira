@@ -89,7 +89,6 @@ Required:
 Optional:
 
 - **advanced** (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
-- **customer_gateway_asn** (String) The ASN of the customer gateway.
 - **preshared_keys** (List of String) An array of presharedKeys, one per tunnel.
 
 <a id="nestedblock--endpoint--advanced"></a>

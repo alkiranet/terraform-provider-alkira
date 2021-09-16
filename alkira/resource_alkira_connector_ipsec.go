@@ -43,11 +43,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"customer_gateway_asn": {
-							Description: "The ASN of the customer gateway.",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
 						"customer_gateway_ip": {
 							Description: "The IP address of the customer gateway.",
 							Type:        schema.TypeString,

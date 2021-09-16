@@ -25,9 +25,6 @@ func expandConnectorIPSecEndpoint(in *schema.Set) []*alkira.ConnectorIPSecSite {
 		if v, ok := siteCfg["name"].(string); ok {
 			r.Name = v
 		}
-		if v, ok := siteCfg["customer_gateway_asn"].(string); ok {
-			r.CustomerGwAsn = v
-		}
 		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
 			r.CustomerGwIp = v
 		}
