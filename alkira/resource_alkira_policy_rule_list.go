@@ -78,6 +78,17 @@ func resourcePolicyRuleListRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourcePolicyRuleListUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	ruleList, err := generatePolicyRuleListRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updateing Policy Rule List %s", d.Id())
+	err = client.UpdatePolicyRuleList(d.Id(), ruleList)
+
 	return resourcePolicyRuleListRead(d, meta)
 }
 
@@ -93,4 +104,16 @@ func resourcePolicyRuleListDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+func generatePolicyRuleListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRuleList, error) {
+
+	rules := expandPolicyRuleListRules(d.Get("rules").(*schema.Set))
+	request := &alkira.PolicyRuleListRequest{
+		Description: d.Get("description").(string),
+		Name:        d.Get("name").(string),
+		Rules:       rules,
+	}
+
+	return request, nil
 }
