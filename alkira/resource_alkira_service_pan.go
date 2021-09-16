@@ -59,9 +59,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
 			"panorama_enabled": {
-				Description: "Enable Panorama or not.",
+				Description: "Enable Panorama or not. Default value is `false`.",
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
 			},
 			"panorama_device_group": {
 				Description: "Panorama device group.",

@@ -53,7 +53,6 @@ resource "alkira_service_pan" "test1" {
 - **management_segment_id** (Number) Management Segment Id.
 - **max_instance_count** (Number) Max number of Panorama instances for auto scale. Default value is `1`.
 - **name** (String) Name of the PAN service.
-- **panorama_enabled** (Boolean) Enable Panorama or not.
 - **segment_ids** (List of Number) The list of segment Ids the service belongs to.
 - **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - **type** (String) The type of the PAN firewall.
@@ -65,6 +64,7 @@ resource "alkira_service_pan" "test1" {
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
+- **panorama_enabled** (Boolean) Enable Panorama or not. Default value is `false`.
 - **panorama_ip_address** (String) Panorama IP address.
 - **panorama_template** (String) Panorama Template.
 - **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
