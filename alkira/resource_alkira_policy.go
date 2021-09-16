@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,22 +32,18 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"rule_list_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"segment_ids": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"to_groups": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 		},
@@ -58,32 +53,29 @@ func resourceAlkiraPolicy() *schema.Resource {
 func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	fromGroups := convertTypeListToStringList(d.Get("from_groups").([]interface{}))
-	toGroups := convertTypeListToStringList(d.Get("to_groups").([]interface{}))
+	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
+	fromGroups := convertTypeListToIntList(d.Get("from_groups").([]interface{}))
+	toGroups := convertTypeListToIntList(d.Get("to_groups").([]interface{}))
 
-	policy := &alkira.PolicyRequest{
+	policy := &alkira.Policy{
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(string),
 		FromGroups:  fromGroups,
 		Name:        d.Get("name").(string),
-		RuleListId:  d.Get("rule_list_id").(string),
+		RuleListId:  d.Get("rule_list_id").(int),
 		SegmentIds:  segmentIds,
 		ToGroups:    toGroups,
 	}
 
 	log.Printf("[INFO] Policy Creating")
 	id, err := client.CreatePolicy(policy)
-	log.Printf("[INFO] Policy ID: %d", id)
 
-	if id == 0 || err != nil {
+	if err != nil {
 		log.Printf("[ERROR] Failed to create policy")
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("policy_id", id)
-
+	d.SetId(id)
 	return resourcePolicyRead(d, meta)
 }
 
@@ -97,14 +89,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	policyId := d.Get("policy_id").(int)
 
-	log.Printf("[INFO] Deleting Policy %s", policyId)
-	err := client.DeletePolicy(policyId)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Deleting Policy %s", d.Id())
+	return client.DeletePolicy(d.Id())
 }
