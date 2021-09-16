@@ -133,12 +133,12 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 }
 
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
-func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnetRequest, error) {
+func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
 	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
 
-	request := &alkira.ConnectorAzureVnetRequest{
+	request := &alkira.ConnectorAzureVnet{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),

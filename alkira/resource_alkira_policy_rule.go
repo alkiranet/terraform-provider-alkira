@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -64,10 +63,6 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
 			},
-			"rule_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"rule_action": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -92,7 +87,7 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 	applicationFamilyList := convertTypeListToStringList(d.Get("application_family_list").([]interface{}))
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_type_list").([]interface{}))
 
-	rule := &alkira.PolicyRuleRequest{
+	rule := &alkira.PolicyRule{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		MatchCondition: alkira.PolicyRuleMatchCondition{
@@ -119,9 +114,7 @@ func resourcePolicyRule(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("rule_id", id)
-
+	d.SetId(id)
 	return resourcePolicyRuleRead(d, meta)
 }
 
@@ -135,14 +128,7 @@ func resourcePolicyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	PolicyRuleId := d.Get("rule_id").(int)
 
-	log.Printf("[INFO] Deleting PolicyRule %s", PolicyRuleId)
-	err := client.DeletePolicyRule(PolicyRuleId)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Deleting PolicyRule %s", d.Id())
+	return client.DeletePolicyRule(d.Id())
 }

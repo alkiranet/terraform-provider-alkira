@@ -328,7 +328,7 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 // generateConnectorIPSecRequest generate request for connector-ipsec
-func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSecRequest, error) {
+func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSec, error) {
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
 
@@ -366,7 +366,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		}
 	}
 
-	connector := &alkira.ConnectorIPSecRequest{
+	connector := &alkira.ConnectorIPSec{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		Group:          d.Get("group").(string),

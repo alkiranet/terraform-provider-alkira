@@ -182,7 +182,6 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 	return connector, nil
 }
 
-
 // expandCiscoSdwanVrfMappings expand Cisco SD-WAN VRF segment mapping
 func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMapping {
 	if in == nil || in.Len() == 0 {
@@ -191,7 +190,7 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 	}
 
 	mappings := make([]alkira.CiscoSdwanEdgeVrfMapping, in.Len())
-	for i,  mapping := range in.List() {
+	for i, mapping := range in.List() {
 		r := alkira.CiscoSdwanEdgeVrfMapping{}
 		t := mapping.(map[string]interface{})
 
@@ -223,7 +222,7 @@ func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in *schema.Set) []alkira.Ci
 
 	mappings := make([]alkira.CiscoSdwanEdgeInfo, in.Len())
 
-	for i,  mapping := range in.List() {
+	for i, mapping := range in.List() {
 		r := alkira.CiscoSdwanEdgeInfo{}
 		t := mapping.(map[string]interface{})
 
