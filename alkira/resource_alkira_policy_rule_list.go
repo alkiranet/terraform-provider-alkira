@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,10 +22,6 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"rule_list_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"rules": {
 				Type: schema.TypeSet,
@@ -52,7 +47,7 @@ func resourcePolicyRuleList(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	rules := expandPolicyRuleListRules(d.Get("rules").(*schema.Set))
-	ruleList := &alkira.PolicyRuleListRequest{
+	ruleList := &alkira.PolicyRuleList{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		Rules:       rules,
@@ -60,16 +55,13 @@ func resourcePolicyRuleList(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Policy Rule List Creating")
 	id, err := client.CreatePolicyRuleList(ruleList)
-	log.Printf("[INFO] PolicyRuleList ID: %d", id)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to create rule list")
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("rule_list_id", id)
-
+	d.SetId(id)
 	return resourcePolicyRuleListRead(d, meta)
 }
 
@@ -83,14 +75,7 @@ func resourcePolicyRuleListUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func resourcePolicyRuleListDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Get("rule_list_id").(int)
 
-	log.Printf("[INFO] Deleting Policy Rule List %d", id)
-	err := client.DeletePolicyRuleList(id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Deleting Policy Rule List %s", d.Id())
+	return client.DeletePolicyRuleList(d.Id())
 }

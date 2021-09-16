@@ -178,7 +178,7 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
-func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpcRequest, error) {
+func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 	client := m.(*alkira.AlkiraClient)
 	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
 	segments := []string{d.Get("segment").(string)}
@@ -200,7 +200,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Import: alkira.ImportOptions{routeTables},
 	}
 
-	request := &alkira.ConnectorAwsVpcRequest{
+	request := &alkira.ConnectorAwsVpc{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),

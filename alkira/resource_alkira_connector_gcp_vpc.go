@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,10 +22,6 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
-			},
-			"connector_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"credential_id": {
 				Description: "ID of credential managed by Credential Manager.",
@@ -103,9 +98,7 @@ func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("connector_id", id)
-
+	d.SetId(id)
 	return resourceConnectorGcpVpcRead(d, m)
 }
 
@@ -121,11 +114,7 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Connector (GCP-VPC) %s", d.Id())
-	err := client.DeleteConnectorGcpVpc(d.Get("connector_id").(int))
+	err := client.DeleteConnectorGcpVpc(d.Id())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

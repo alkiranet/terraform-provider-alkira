@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,10 +22,6 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"prefix_list_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"prefixes": {
 				Type:     schema.TypeList,
@@ -50,16 +45,13 @@ func resourcePolicyPrefixList(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Policy prefix list Creating")
 	id, err := client.CreatePolicyPrefixList(list)
-	log.Printf("[INFO] Policy prefix list id: %d", id)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to create prefix list")
 		return err
 	}
 
-	d.SetId(strconv.Itoa(id))
-	d.Set("prefix_list_id", id)
-
+	d.SetId(id)
 	return resourcePolicyPrefixListRead(d, meta)
 }
 
@@ -73,14 +65,7 @@ func resourcePolicyPrefixListUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourcePolicyPrefixListDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Get("prefix_list_id").(int)
 
-	log.Printf("[INFO] Deleting policy prefix list %d", id)
-	err := client.DeletePolicyPrefixList(id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Printf("[INFO] Deleting policy prefix list %s", d.Id())
+	return client.DeletePolicyPrefixList(d.Id())
 }
