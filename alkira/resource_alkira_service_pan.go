@@ -146,7 +146,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 						"groups": {
 							Description: "The name of the group.",
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
