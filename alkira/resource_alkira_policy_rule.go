@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,12 +54,12 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:      true,
 			},
 			"src_prefix_list_id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				ConflictsWith: []string{"src_ip"},
 				Optional: true,
 			},
 			"dst_prefix_list_id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				ConflictsWith: []string{"dst_ip"},
 				Optional: true,
 			},
@@ -178,9 +177,6 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 	srcPortList := convertTypeListToStringList(d.Get("src_ports").([]interface{}))
 	dstPortList := convertTypeListToStringList(d.Get("dst_ports").([]interface{}))
 
-	srcPrefixListId, _ := strconv.Atoi(d.Get("src_prefix_list_id").(string))
-	dstPrefixListId, _ := strconv.Atoi(d.Get("dst_prefix_list_id").(string))
-
 	applicationList := convertTypeListToStringList(d.Get("application_ids").([]interface{}))
 	applicationFamilyList := convertTypeListToStringList(d.Get("application_family_ids").([]interface{}))
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
@@ -195,8 +191,8 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 			Protocol:              d.Get("protocol").(string),
 			SrcPortList:           srcPortList,
 			DstPortList:           dstPortList,
-			SrcPrefixListId:       srcPrefixListId,
-			DstPrefixListId:       dstPrefixListId,
+			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
+			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
 			ApplicationList:       applicationList,
 			ApplicationFamilyList: applicationFamilyList,
 		},
