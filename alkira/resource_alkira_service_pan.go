@@ -84,10 +84,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"max_instance_count": {
-				Description: "Max number of Panorama instances for auto scale. Default value is `1`.",
+				Description: "Max number of Panorama instances for auto scale.",
 				Type:        schema.TypeInt,
 				Required:    true,
-				Default:     1,
 			},
 			"min_instance_count": {
 				Description: "Minimal number of Panorama instances for auto scale. Default value is `0`.",
