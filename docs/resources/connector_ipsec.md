@@ -138,6 +138,7 @@ Required:
 
 Optional:
 
+- **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.
 - **customer_gateway_asn** (String) The customer gateway ASN to use for dynamic route propagation.
 - **prefix_list_id** (Number) The id of prefix list to use for static route propagation.
 
