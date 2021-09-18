@@ -209,6 +209,12 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"availability": {
+							Description: "The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.",
+							Type:        schema.TypeString,
+							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
+							Optional:    true,
+						},
 						"prefix_list_id": {
 							Description: "The id of prefix list to use for static route propagation.",
 							Type:        schema.TypeInt,
