@@ -31,6 +31,7 @@ type PolicyRuleMatchCondition struct {
 type PolicyRuleAction struct {
 	Action          string   `json:"action"`
 	ServiceTypeList []string `json:"serviceTypeList"`
+	ServiceList     []int    `json:"serviceList"`
 }
 
 // CreatePolicyRule create a policy rule

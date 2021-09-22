@@ -9,7 +9,7 @@ import (
 
 type Policy struct {
 	Description string      `json:"description"`
-	Enabled     string      `json:"enabled"`
+	Enabled     bool        `json:"enabled"`
 	FromGroups  []int       `json:"fromGroups"`
 	Id          json.Number `json:"id,omitempty"`
 	Name        string      `json:"name"`
