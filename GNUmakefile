@@ -4,6 +4,7 @@ RELEASE_DIR := releases/$(VERSION)
 RELEASE_BIN := releases/$(VERSION)/bin
 
 build:
+	go fmt alkira/*
 	go build -o bin/terraform-provider-alkira
 
 release:
