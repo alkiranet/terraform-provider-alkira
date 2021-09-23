@@ -159,6 +159,76 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
+	request, err := generateServicePanRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Creating service-pan %s", d.Id())
+	id, err := client.CreateServicePan(request)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(id)
+	return resourceServicePanRead(d, m)
+}
+
+func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	pan, err := client.GetServicePanById(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", pan.BillingTagIds)
+	d.Set("cxp", pan.CXP)
+	d.Set("credential_id", pan.CredentialId)
+	d.Set("license_type", pan.LicenseType)
+	d.Set("max_instance_count", pan.MaxInstanceCount)
+	d.Set("min_instance_count", pan.MinInstanceCount)
+	d.Set("management_segment_id", pan.ManagementSegmentId)
+	d.Set("name", pan.Name)
+	d.Set("panorama_enabled", pan.PanoramaEnabled)
+	d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
+	d.Set("panorama_ip_address", pan.PanoramaIpAddress)
+	d.Set("panorama_template", pan.PanoramaTemplate)
+	d.Set("segment_ids", pan.SegmentIds)
+	d.Set("size", pan.Size)
+	d.Set("type", pan.Type)
+	d.Set("version", pan.Version)
+
+	return nil
+}
+
+func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	request, err := generateServicePanRequest(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updateing service-pan %s", d.Id())
+	err = client.UpdateServicePan(d.Id(), request)
+
+	return err
+}
+
+func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	log.Printf("[INFO] Deleting service-pan %s", d.Id())
+	return client.DeleteServicePan(d.Id())
+}
+
+func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
+
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	instances := expandPanInstances(d.Get("instance").(*schema.Set))
 	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
@@ -185,28 +255,5 @@ func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 		Version:             d.Get("version").(string),
 	}
 
-	log.Printf("[INFO] Creating Service (PAN) %s", d.Id())
-	id, err := client.CreateServicePan(service)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(id)
-	return resourceServicePanRead(d, m)
-}
-
-func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
-	return nil
-}
-
-func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceServicePanRead(d, m)
-}
-
-func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-
-	log.Printf("[INFO] Deleting Service (PAN) %s", d.Id())
-	return client.DeleteServicePan(d.Id())
+	return service, nil
 }
