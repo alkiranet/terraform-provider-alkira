@@ -20,12 +20,12 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Optional: true,
 			},
 			"enabled": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Required: true,
 			},
 			"from_groups": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"name": {
@@ -33,7 +33,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Required: true,
 			},
 			"rule_list_id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"segment_ids": {
@@ -50,25 +50,18 @@ func resourceAlkiraPolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourcePolicy(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
-	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
-	fromGroups := convertTypeListToIntList(d.Get("from_groups").([]interface{}))
-	toGroups := convertTypeListToIntList(d.Get("to_groups").([]interface{}))
+	request, err := generatePolicyRequest(d, m)
 
-	policy := &alkira.Policy{
-		Description: d.Get("description").(string),
-		Enabled:     d.Get("enabled").(string),
-		FromGroups:  fromGroups,
-		Name:        d.Get("name").(string),
-		RuleListId:  d.Get("rule_list_id").(int),
-		SegmentIds:  segmentIds,
-		ToGroups:    toGroups,
+	if err != nil {
+		log.Printf("[ERROR] Failed to generate policy")
+		return err
 	}
 
-	log.Printf("[INFO] Policy Creating")
-	id, err := client.CreatePolicy(policy)
+	log.Printf("[INFO] Creating Policy")
+	id, err := client.CreatePolicy(request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to create policy")
@@ -76,20 +69,73 @@ func resourcePolicy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(id)
-	return resourcePolicyRead(d, meta)
+	return resourcePolicyRead(d, m)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	policy, err := client.GetPolicy(d.Id())
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to read policy %s", d.Id())
+		return err
+	}
+
+	d.Set("description", policy.Description)
+	d.Set("enabled", policy.Enabled)
+	d.Set("name", policy.Name)
+	d.Set("rule_list_id", policy.RuleListId)
+	d.Set("segment_ids", policy.SegmentIds)
+	d.Set("from_groups", policy.FromGroups)
+	d.Set("to_groups", policy.ToGroups)
+
 	return nil
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourcePolicyRead(d, meta)
+func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	request, err := generatePolicyRequest(d, m)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to generate policy")
+		return err
+	}
+
+	log.Printf("[INFO] Updating Policy")
+	err = client.UpdatePolicy(d.Id(), request)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to update policy")
+		return err
+	}
+
+	return resourcePolicyRead(d, m)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Policy %s", d.Id())
 	return client.DeletePolicy(d.Id())
+}
+
+func generatePolicyRequest(d *schema.ResourceData, m interface{}) (*alkira.Policy, error) {
+
+	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
+	fromGroups := convertTypeListToIntList(d.Get("from_groups").([]interface{}))
+	toGroups := convertTypeListToIntList(d.Get("to_groups").([]interface{}))
+
+	policy := &alkira.Policy{
+		Description: d.Get("description").(string),
+		Enabled:     d.Get("enabled").(bool),
+		FromGroups:  fromGroups,
+		Name:        d.Get("name").(string),
+		RuleListId:  d.Get("rule_list_id").(int),
+		SegmentIds:  segmentIds,
+		ToGroups:    toGroups,
+	}
+
+	return policy, nil
 }
