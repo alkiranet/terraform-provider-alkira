@@ -81,12 +81,12 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 						},
 						"segment_id": {
 							Description: "Segment Id.",
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"vrf_id": {
 							Description: "VRF Id.",
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 						},
 					},
