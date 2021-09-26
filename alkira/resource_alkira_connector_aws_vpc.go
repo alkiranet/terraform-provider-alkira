@@ -166,12 +166,12 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("aws_account_id", connector.VpcOwnerId)
 
 	if len(connector.Segments) > 0 {
-		segmentId, err := client.GetSegmentByName(connector.Segments[0])
+		segment, err := client.GetSegmentByName(connector.Segments[0])
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segmentId)
+		d.Set("segment_id", segment.Id)
 	}
 
 	return nil
