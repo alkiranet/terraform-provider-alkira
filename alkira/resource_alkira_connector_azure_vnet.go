@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +29,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tags": {
+			"billing_tag_ids": {
 				Description: "Tags for billing.",
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -67,15 +68,16 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"segment": {
-				Description: "The segment of the connector.",
-				Type:        schema.TypeString,
+			"segment_id": {
+				Description: "The Id of the segment assoicated with the connector.",
+				Type:        schema.TypeInt,
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 		},
 	}
@@ -89,7 +91,6 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	log.Printf("[INFO] Creating Connector (AZURE-VNET)")
 	id, err := client.CreateConnectorAzureVnet(connector)
 
 	if err != nil {
@@ -97,11 +98,36 @@ func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) err
 	}
 
 	d.SetId(id)
-
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorAzureVnet(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.CXP)
+	d.Set("credential_id", connector.CredentialId)
+	d.Set("azure_region", connector.CustomerRegion)
+	d.Set("group", connector.Group)
+	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("azure_vnet_id", connector.VnetId)
+
+	if len(connector.Segments) > 0 {
+		segment, err := client.GetSegmentByName(connector.Segments[0])
+
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segment.Id)
+	}
+
 	return nil
 }
 
@@ -113,7 +139,6 @@ func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	log.Printf("[INFO] Updating Connector (AZURE-VNET) %s", d.Id())
 	err = client.UpdateConnectorAzureVnet(d.Id(), connector)
 
 	if err != nil {
@@ -126,7 +151,6 @@ func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) err
 func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Connector (AZURE-VNET) %s", d.Id())
 	err := client.DeleteConnectorAzureVnet(d.Id())
 
 	return err
@@ -134,9 +158,17 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
+	client := m.(*alkira.AlkiraClient)
+
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
+
+	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		return nil, err
+	}
 
 	request := &alkira.ConnectorAzureVnet{
 		BillingTags:    billingTags,
@@ -145,7 +177,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		CustomerRegion: d.Get("azure_region").(string),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
-		Segments:       segments,
+		Segments:       []string{segment.Name},
 		Size:           d.Get("size").(string),
 		VnetId:         d.Get("azure_vnet_id").(string),
 		VnetRouting:    routing,
