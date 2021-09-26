@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,7 +28,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tags": {
+			"billing_tag_ids": {
 				Description: "Tags for billing.",
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -53,9 +54,9 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment": {
+			"segment_id": {
 				Description: "The segment of the connector belongs to. Currently, only `1` segment is allowed.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Required:    true,
 			},
 			"size": {
@@ -146,6 +147,33 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorAwsVpc(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.CXP)
+	d.Set("credential_id", connector.CredentialId)
+	d.Set("aws_region", connector.CustomerRegion)
+	d.Set("group", connector.Group)
+	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("vpc_id", connector.VpcId)
+	d.Set("aws_account_id", connector.VpcOwnerId)
+
+	if len(connector.Segments) > 0 {
+		segmentId, err := client.GetSegmentByName(connector.Segments[0])
+
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segmentId)
+	}
+
 	return nil
 }
 
@@ -158,7 +186,6 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	log.Printf("[INFO] Updateing Connector (AWS-VPC) %s", d.Id())
 	err = client.UpdateConnectorAwsVpc(d.Id(), connector)
 
 	return err
@@ -167,7 +194,6 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Connector (AWS-VPC) %s", d.Id())
 	err := client.DeleteConnectorAwsVpc(d.Id())
 
 	if err != nil {
@@ -180,8 +206,15 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 	client := m.(*alkira.AlkiraClient)
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
-	segments := []string{d.Get("segment").(string)}
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+
+	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		return nil, err
+	}
+
 	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
 
 	if err != nil {
@@ -208,7 +241,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		CustomerRegion: d.Get("aws_region").(string),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
-		Segments:       segments,
+		Segments:       []string{segment.Name},
 		Size:           d.Get("size").(string),
 		VpcId:          d.Get("vpc_id").(string),
 		VpcOwnerId:     d.Get("aws_account_id").(string),
