@@ -19,11 +19,11 @@ type PolicyRuleMatchCondition struct {
 	ApplicationFamilyList []string `json:"applicationFamilyList"`
 	ApplicationList       []string `json:"applicationList"`
 	Dscp                  string   `json:"dscp"`
-	DstIp                 string   `json:"dstIp"`
+	DstIp                 string   `json:"dstIp,omitempty"`
 	DstPortList           []string `json:"dstPortList,omitempty"`
 	DstPrefixListId       int      `json:"dstPrefixListId,omitempty"`
 	Protocol              string   `json:"protocol"`
-	SrcIp                 string   `json:"srcIp"`
+	SrcIp                 string   `json:"srcIp,omitempty"`
 	SrcPortList           []string `json:"srcPortList,omitempty"`
 	SrcPrefixListId       int      `json:"srcPrefixListId,omitempty"`
 }
