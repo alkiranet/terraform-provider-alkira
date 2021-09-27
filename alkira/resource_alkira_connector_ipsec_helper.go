@@ -141,6 +141,12 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required.")
 				}
 
+				bgp, ok := routingOptionsInput["bgp_auth_key"].(string)
+
+				if ok {
+					dynamicOption.BgpAuthKeyAlkira = bgp
+				}
+
 				routingOptions = alkira.ConnectorIPSecRoutingOptions{
 					DynamicRouting: &dynamicOption,
 				}
