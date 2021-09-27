@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,7 +23,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tags": {
+			"billing_tag_ids": {
 				Description: "A list of Billing Tag by Id associated with the connector.",
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -254,9 +255,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				},
 				Optional: true,
 			},
-			"segment": {
-				Description: "The name of the segment associated with the connector.",
-				Type:        schema.TypeString,
+			"segment_id": {
+				Description: "The Id of the segment associated with the connector.",
+				Type:        schema.TypeInt,
 				Required:    true,
 			},
 			"size": &schema.Schema{
@@ -283,7 +284,6 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Creating Connector (IPSec)")
 	id, err := client.CreateConnectorIPSec(connector)
 
 	if err != nil {
@@ -296,19 +296,43 @@ func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorIPSec(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.CXP)
+	d.Set("group", connector.Group)
+	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("vpn_mode", connector.VpnMode)
+
+	if len(connector.Segments) > 0 {
+		segment, err := client.GetSegmentByName(connector.Segments[0])
+
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segment.Id)
+	}
+
+	return nil
+
 	return nil
 }
 
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
-
 	connector, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Connector (IPSec) %s", d.Id())
 	err = client.UpdateConnectorIPSec(d.Id(), connector)
 
 	if err != nil {
@@ -320,21 +344,25 @@ func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
-	id := d.Id()
 
-	log.Printf("[INFO] Deleting Connector (IPSec) %s", id)
-	err := client.DeleteConnectorIPSec(id)
-
-	return err
+	return client.DeleteConnectorIPSec(d.Id())
 }
 
 // generateConnectorIPSecRequest generate request for connector-ipsec
 func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSec, error) {
-	billingTags := convertTypeListToIntList(d.Get("billing_tags").([]interface{}))
+	client := m.(*alkira.AlkiraClient)
+
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
 
 	// For now, IPSec connector only support single segment
-	segments := []string{d.Get("segment").(string)}
+	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		return nil, err
+	}
+
 	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
 
 	if optErr != nil {
@@ -346,7 +374,6 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 
 	var policyOptions *alkira.ConnectorIPSecPolicyOptions
 	var routingOptions *alkira.ConnectorIPSecRoutingOptions
-	var err error
 
 	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
 	case "ROUTE_BASED":
@@ -375,7 +402,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		PolicyOptions:  policyOptions,
 		RoutingOptions: routingOptions,
 		SegmentOptions: segmentOptions,
-		Segments:       segments,
+		Segments:       []string{segment.Name},
 		Sites:          sites,
 		Size:           d.Get("size").(string),
 		VpnMode:        vpnMode,
