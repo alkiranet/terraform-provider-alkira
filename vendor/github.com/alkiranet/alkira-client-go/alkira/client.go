@@ -248,7 +248,7 @@ func (ac *AlkiraClient) update(uri string, body []byte) error {
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != 200 && response.StatusCode != 202 {
 		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
 	}
 
