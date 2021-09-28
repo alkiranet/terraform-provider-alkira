@@ -16,8 +16,8 @@ type PolicyRule struct {
 }
 
 type PolicyRuleMatchCondition struct {
-	ApplicationFamilyList []string `json:"applicationFamilyList"`
-	ApplicationList       []string `json:"applicationList"`
+	ApplicationFamilyList []int    `json:"applicationFamilyList"`
+	ApplicationList       []int    `json:"applicationList"`
 	Dscp                  string   `json:"dscp"`
 	DstIp                 string   `json:"dstIp,omitempty"`
 	DstPortList           []string `json:"dstPortList,omitempty"`
