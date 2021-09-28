@@ -13,21 +13,22 @@ Manage GCP Cloud Connector.
 ## Example Usage
 
 ```terraform
-#
-# Creating two segments and each one is for each connector
-#
+# segment
 resource "alkira_segment" "segment1" {
   name = "seg1"
   asn  = "65513"
   cidr = "10.16.1.0/24"
 }
 
+# group
+resource "alkira_group" "group1" {
+  name        = "group1"
+  description = "test group for gcp-vpc"
+}
 
-#
-# Create the credential to store the access to the AWS account that
-# VPCs belongs two. In this example, both VPCs belong to this AWS
-# account.
-#
+
+# Create the credential to store the access to the GCP account that
+# VPCs belongs to
 resource "alkira_credential_gcp_vpc" "terraform_gcp_account" {
   name                 = "customer-gcp"
   auth_provider        = "https://www.googleapis.com/oauth2/v1/certs"
@@ -42,19 +43,17 @@ resource "alkira_credential_gcp_vpc" "terraform_gcp_account" {
   type                 = "service_account"
 }
 
-#
 # Create GCP-VPC connector
-#
 resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
-  name           = "customer-vpc1"
+  name           = "example-vpc1"
   gcp_region     = "us-west1"
   gcp_vpc_id     = "0000000000000"
-  gcp_vpc_name   = "customer-vpc1"
-  credential_id  = alkira_credential_gcp_vpc.terraform_gcp_account.id
+  gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
-  group          = "test"
-  segment        = alkira_segment.segment1.name
   size           = "SMALL"
+  credential_id  = alkira_credential_gcp_vpc.terraform_gcp_account.id
+  group          = alkira_group.group1.name
+  segment_id     = alkira_segment.segment1.id
 }
 ```
 
@@ -69,17 +68,13 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 - **gcp_vpc_id** (String) GCP VPC ID.
 - **gcp_vpc_name** (String) GCP VPC name.
 - **name** (String) The name of the connector.
-- **segment** (String) The segment of the connector.
+- **segment_id** (Number) The Id of the segment associated with the connector.
 - **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
 
 ### Optional
 
-- **billing_tags** (List of Number) Tags for billing.
+- **billing_tag_ids** (List of Number) Tags for billing.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-
-### Read-Only
-
-- **connector_id** (Number)
 
 
