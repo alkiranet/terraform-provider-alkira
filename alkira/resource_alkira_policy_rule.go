@@ -17,12 +17,12 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"application_ids": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
 			"application_family_ids": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
 			"name": {
@@ -177,8 +177,8 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 	srcPortList := convertTypeListToStringList(d.Get("src_ports").([]interface{}))
 	dstPortList := convertTypeListToStringList(d.Get("dst_ports").([]interface{}))
 
-	applicationList := convertTypeListToStringList(d.Get("application_ids").([]interface{}))
-	applicationFamilyList := convertTypeListToStringList(d.Get("application_family_ids").([]interface{}))
+	applicationList := convertTypeListToIntList(d.Get("application_ids").([]interface{}))
+	applicationFamilyList := convertTypeListToIntList(d.Get("application_family_ids").([]interface{}))
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
 
 	request := &alkira.PolicyRule{
