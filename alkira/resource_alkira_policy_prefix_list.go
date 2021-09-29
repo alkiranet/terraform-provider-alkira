@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,31 +10,99 @@ import (
 
 func resourceAlkiraPolicyPrefixList() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyPrefixList,
-		Read:   resourcePolicyPrefixListRead,
-		Update: resourcePolicyPrefixListUpdate,
-		Delete: resourcePolicyPrefixListDelete,
+		Description: "Manage policy prefix list.",
+		Create:      resourcePolicyPrefixList,
+		Read:        resourcePolicyPrefixListRead,
+		Update:      resourcePolicyPrefixListUpdate,
+		Delete:      resourcePolicyPrefixListDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the prefix list.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The description of the prefix list.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"prefixes": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: "A list of prefixes.",
+				Type:        schema.TypeList,
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
 }
 
-func resourcePolicyPrefixList(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	request, err := generatePolicyPrefixListRequest(d, m)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to generate prefix list request")
+		return err
+	}
+
+	id, err := client.CreatePolicyPrefixList(request)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to create prefix list")
+		return err
+	}
+
+	d.SetId(id)
+	return resourcePolicyPrefixListRead(d, m)
+}
+
+func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	id, _ := strconv.Atoi(d.Id())
+	list, err := client.GetPolicyPrefixListById(id)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to get policy prefix list %s", d.Id())
+		return err
+	}
+
+	d.Set("name", list.Name)
+	d.Set("description", list.Description)
+	d.Set("prefixes", list.Prefixes)
+
+	return nil
+}
+
+func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	request, err := generatePolicyPrefixListRequest(d, m)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to generate policy prefix list request")
+		return err
+	}
+
+	err = client.UpdatePolicyPrefixList(d.Id(), request)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to update policy prefix list %s", d.Id())
+		return err
+	}
+
+	return resourcePolicyPrefixListRead(d, m)
+}
+
+func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	return client.DeletePolicyPrefixList(d.Id())
+}
+
+func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
 
 	prefixes := convertTypeListToStringList(d.Get("prefixes").([]interface{}))
 
@@ -43,29 +112,5 @@ func resourcePolicyPrefixList(d *schema.ResourceData, meta interface{}) error {
 		Prefixes:    prefixes,
 	}
 
-	log.Printf("[INFO] Policy prefix list Creating")
-	id, err := client.CreatePolicyPrefixList(list)
-
-	if err != nil {
-		log.Printf("[ERROR] failed to create prefix list")
-		return err
-	}
-
-	d.SetId(id)
-	return resourcePolicyPrefixListRead(d, meta)
-}
-
-func resourcePolicyPrefixListRead(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
-func resourcePolicyPrefixListUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourcePolicyPrefixListRead(d, meta)
-}
-
-func resourcePolicyPrefixListDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-
-	log.Printf("[INFO] Deleting policy prefix list %s", d.Id())
-	return client.DeletePolicyPrefixList(d.Id())
+	return list, nil
 }
