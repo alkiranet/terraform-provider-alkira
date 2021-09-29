@@ -46,16 +46,16 @@ resource "alkira_internet_application" "app1" {
 - **name** (String) The name of the internet application.
 - **private_ip** (String) The private IP associated with the internet application.
 - **private_port** (String) The private port associated with the internet application.
-- **segment_id** (Number) The segment of the internet application.
+- **segment_id** (Number) The ID of segment associated with the internet application.
 - **size** (String) The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) Ids of billing tags.
+- **billing_tag_ids** (List of Number) IDs of billing tags.
 - **id** (String) The ID of this resource.
 
 ### Read-Only
 
-- **group_id** (Number) Id of the auto generated system group.
+- **group_id** (Number) ID of the auto generated system group.
 
 

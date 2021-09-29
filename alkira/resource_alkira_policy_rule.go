@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,13 +66,13 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:    true,
 			},
 			"src_prefix_list_id": {
-				Description:   "The Id of prefix list as source associated with the rule.",
+				Description:   "The ID of prefix list as source associated with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"src_ip"},
 				Optional:      true,
 			},
 			"dst_prefix_list_id": {
-				Description:   "The Id of prefix list as destination associated with the rule.",
+				Description:   "The ID of prefix list as destination associated with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"dst_ip"},
 				Optional:      true,
@@ -82,15 +83,15 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Required:    true,
 			},
 			"internet_application_id": {
-				Description: "The Id of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.",
+				Description: "The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
 			"protocol": {
-				Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
+				Description:  "The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ICMP", "TCP", "UDP", "ANY"}, false),
 			},
 			"rule_action": {
 				Description:  "The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.",
@@ -106,7 +107,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:    true,
 			},
 			"rule_action_service_ids": {
-				Description: "Based on the service Ids, traffic is routed to the specified services.",
+				Description: "Based on the service IDs, traffic is routed to the specified services.",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Optional:    true,
@@ -150,7 +151,7 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", rule.Description)
 
 	d.Set("dscp", rule.MatchCondition.Dscp)
-	d.Set("Protocol", rule.MatchCondition.Protocol)
+	d.Set("Protocol", strings.ToUpper(rule.MatchCondition.Protocol))
 
 	d.Set("src_ip", rule.MatchCondition.SrcIp)
 	d.Set("dst_ip", rule.MatchCondition.DstIp)
@@ -214,7 +215,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 			SrcIp:                 d.Get("src_ip").(string),
 			DstIp:                 d.Get("dst_ip").(string),
 			Dscp:                  d.Get("dscp").(string),
-			Protocol:              d.Get("protocol").(string),
+			Protocol:              strings.ToLower(d.Get("protocol").(string)),
 			SrcPortList:           srcPortList,
 			DstPortList:           dstPortList,
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),

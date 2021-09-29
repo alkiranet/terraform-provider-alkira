@@ -32,12 +32,12 @@ resource "alkira_connector_internet_exit" "test1" {
 
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment_id** (String) The segment Id of the connector belongs to. Currently, only `1` segment is allowed.
+- **segment_id** (String) ID of segment associated with the connector.
 - **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, or `LARGE`.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) The list of billing tag Ids.
+- **billing_tag_ids** (List of Number) The list of billing tag IDs.
 - **description** (String) The description of the connector.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.

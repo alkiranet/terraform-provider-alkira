@@ -21,7 +21,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "Ids of billing tags.",
+				Description: "IDs of billing tags.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -42,7 +42,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required:    true,
 			},
 			"group_id": {
-				Description: "Id of the auto generated system group.",
+				Description: "ID of the auto generated system group.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
@@ -62,7 +62,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "The segment of the internet application.",
+				Description: "The ID of segment associated with the internet application.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},

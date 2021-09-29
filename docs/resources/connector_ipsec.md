@@ -64,17 +64,17 @@ resource "alkira_connector_ipsec" "test" {
 
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment** (String) The name of the segment associated with the connector.
+- **segment_id** (Number) The ID of the segment associated with the connector.
 - **size** (String) The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.
 - **vpn_mode** (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
 
-- **billing_tags** (List of Number) A list of Billing Tag by Id associated with the connector.
+- **billing_tag_ids** (List of Number) IDs of Billing Tag associated with the connector.
 - **endpoint** (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-- **policy_options** (Block Set) Policy options, both on-prem and cxp prefix list ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
+- **policy_options** (Block Set) Policy options, both on-prem and cxp prefix list IDs must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
 - **routing_options** (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or `BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
 - **segment_options** (Block Set) Additional options for each segment associated with the connector (see [below for nested schema](#nestedblock--segment_options))
 
@@ -140,7 +140,7 @@ Optional:
 
 - **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.
 - **customer_gateway_asn** (String) The customer gateway ASN to use for dynamic route propagation.
-- **prefix_list_id** (Number) The id of prefix list to use for static route propagation.
+- **prefix_list_id** (Number) The ID of prefix list to use for static route propagation.
 
 
 <a id="nestedblock--segment_options"></a>

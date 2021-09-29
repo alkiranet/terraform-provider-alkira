@@ -36,7 +36,7 @@ resource "alkira_policy_rule" "rule" {
 
 - **dscp** (String) The dscp value can be `any` or between `0` to `63` inclusive.
 - **name** (String) The name of the policy rule.
-- **protocol** (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
+- **protocol** (String) The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.
 
 ### Optional
 
@@ -45,14 +45,14 @@ resource "alkira_policy_rule" "rule" {
 - **description** (String) The description of the policy rule.
 - **dst_ip** (String) A single destination IP as The match condition of the rule.
 - **dst_ports** (List of String) Destination ports that can take values: `any` or `1` to `65535`.
-- **dst_prefix_list_id** (Number) The Id of prefix list as destination associated with the rule.
+- **dst_prefix_list_id** (Number) The ID of prefix list as destination associated with the rule.
 - **id** (String) The ID of this resource.
-- **internet_application_id** (Number) The Id of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.
+- **internet_application_id** (Number) The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.
 - **rule_action** (String) The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.
-- **rule_action_service_ids** (List of Number) Based on the service Ids, traffic is routed to the specified services.
+- **rule_action_service_ids** (List of Number) Based on the service IDs, traffic is routed to the specified services.
 - **rule_action_service_types** (List of String) Based on the service type, traffic is routed to service of the given type.
 - **src_ip** (String) A single source IP as The match condition of the rule.
 - **src_ports** (List of String) Source ports that can take values: `any` or `1` to `65535`.
-- **src_prefix_list_id** (Number) The Id of prefix list as source associated with the rule.
+- **src_prefix_list_id** (Number) The ID of prefix list as source associated with the rule.
 
 

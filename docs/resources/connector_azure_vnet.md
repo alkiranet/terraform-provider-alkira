@@ -60,11 +60,11 @@ resource "alkira_connector_azure_vnet" "test2" {
 ### Required
 
 - **azure_region** (String) Azure Region where VNET resides.
-- **azure_vnet_id** (String) Azure Virtual Network Id.
+- **azure_vnet_id** (String) Azure Virtual Network ID.
 - **credential_id** (String) ID of credential managed by Credential Manager.
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment_id** (Number) The segment of the connector.
+- **segment_id** (Number) The ID of the segment associated with the connector.
 - **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
 
 ### Optional
@@ -73,6 +73,6 @@ resource "alkira_connector_azure_vnet" "test2" {
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **routing_options** (String) Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
-- **routing_prefix_list_ids** (List of Number) Prefix List Ids.
+- **routing_prefix_list_ids** (List of Number) Prefix List IDs.
 
 

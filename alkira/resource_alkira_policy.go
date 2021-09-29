@@ -22,12 +22,12 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Optional:    true,
 			},
 			"enabled": {
-				Description: "Wether the policy is enabled.",
+				Description: "Whether the policy is enabled.",
 				Type:        schema.TypeBool,
 				Required:    true,
 			},
 			"from_groups": {
-				Description: "Ids of groups that will define source in the policy scope",
+				Description: "IDs of groups that will define source in the policy scope",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
@@ -43,13 +43,13 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Required:    true,
 			},
 			"segment_ids": {
-				Description: "Ids of segments that will define the policy scope.",
+				Description: "IDs of segments that will define the policy scope.",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
 			},
 			"to_groups": {
-				Description: "Ids of groups that will define destination in the policy scope.",
+				Description: "IDs of groups that will define destination in the policy scope.",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,

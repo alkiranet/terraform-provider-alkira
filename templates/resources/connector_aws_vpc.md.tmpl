@@ -122,7 +122,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 - **credential_id** (String) ID of credential managed by Credential Manager.
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
-- **segment_id** (Number) The segment of the connector belongs to. Currently, only `1` segment is allowed.
+- **segment_id** (Number) The ID of segment associated with the connector. Currently, only `1` segment is allowed.
 - **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE` or `2LARGE`.
 - **vpc_id** (String) The ID of the target VPC.
 
@@ -140,9 +140,9 @@ resource "alkira_connector_aws_vpc" "connector2" {
 
 Optional:
 
-- **id** (String) The Id of the route table
+- **id** (String) The ID of the route table
 - **options** (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
-- **prefix_list_ids** (List of Number) Prefix List Ids
+- **prefix_list_ids** (List of Number) Prefix List IDs
 
 
 <a id="nestedblock--vpc_subnet"></a>
@@ -151,4 +151,4 @@ Optional:
 Optional:
 
 - **cidr** (String) The CIDR of the subnet.
-- **id** (String) The Id of the subnet.
+- **id** (String) The ID of the subnet.

@@ -24,7 +24,7 @@ Manage Cisco SD-WAN Connector.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) A list of Billing Tag by Id associated with the connector.
+- **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **vedge** (Block Set) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
@@ -48,8 +48,8 @@ Optional:
 
 Required:
 
-- **segment_id** (Number) Segment Id.
-- **vrf_id** (Number) VRF Id.
+- **segment_id** (Number) Segment ID.
+- **vrf_id** (Number) VRF ID.
 
 Optional:
 

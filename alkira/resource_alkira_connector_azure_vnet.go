@@ -63,13 +63,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
 			},
 			"routing_prefix_list_ids": {
-				Description: "Prefix List Ids.",
+				Description: "Prefix List IDs.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"segment_id": {
-				Description: "The Id of the segment assoicated with the connector.",
+				Description: "The ID of the segment assoicated with the connector.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
