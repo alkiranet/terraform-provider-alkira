@@ -5,10 +5,15 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraPolicyRule() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage policy rule.\n\n" +
+			"This resource is usually used along with policy resources:" +
+			"`policy_prefix_list`, `policy_rule_list` and `policy`" +
+			"control the network traffic.",
 		Create: resourcePolicyRule,
 		Read:   resourcePolicyRuleRead,
 		Update: resourcePolicyRuleUpdate,
@@ -26,64 +31,85 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the policy rule.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The description of the policy rule.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"src_ip": {
+				Description:   "A single source IP as The match condition of the rule.",
 				Type:          schema.TypeString,
 				ConflictsWith: []string{"src_prefix_list_id"},
 				Optional:      true,
 			},
 			"dst_ip": {
+				Description:   "A single destination IP as The match condition of the rule.",
 				Type:          schema.TypeString,
 				ConflictsWith: []string{"dst_prefix_list_id"},
 				Optional:      true,
 			},
 			"src_ports": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Description: "Source ports that can take values: `any` or `1` to `65535`.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
 			},
 			"dst_ports": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Description: "Destination ports that can take values: `any` or `1` to `65535`.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
 			},
 			"src_prefix_list_id": {
+				Description:   "The Id of prefix list as source associated with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"src_ip"},
 				Optional:      true,
 			},
 			"dst_prefix_list_id": {
+				Description:   "The Id of prefix list as destination associated with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"dst_ip"},
 				Optional:      true,
 			},
 			"dscp": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The dscp value can be `any` or between `0` to `63` inclusive.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"internet_application_id": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Description: "The Id of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.",
+				Type:        schema.TypeInt,
+				Optional:    true,
 			},
 			"protocol": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
 			},
 			"rule_action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "ALLOW",
+				Description:  "The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "ALLOW",
+				ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DROP"}, false),
 			},
 			"rule_action_service_types": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Description: "Based on the service type, traffic is routed to service of the given type.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+			},
+			"rule_action_service_ids": {
+				Description: "Based on the service Ids, traffic is routed to the specified services.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Optional:    true,
 			},
 		},
 	}
@@ -99,7 +125,6 @@ func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Creating policy rule")
 	id, err := client.CreatePolicyRule(request)
 
 	if err != nil {
@@ -141,6 +166,7 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("rule_action", rule.RuleAction.Action)
 	d.Set("rule_action_service_types", rule.RuleAction.ServiceTypeList)
+	d.Set("rule_action_service_ids", rule.RuleAction.ServiceList)
 
 	return nil
 }
@@ -168,7 +194,6 @@ func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyRuleDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting policy rule %s", d.Id())
 	return client.DeletePolicyRule(d.Id())
 }
 
@@ -180,6 +205,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 	applicationList := convertTypeListToIntList(d.Get("application_ids").([]interface{}))
 	applicationFamilyList := convertTypeListToIntList(d.Get("application_family_ids").([]interface{}))
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
+	serviceList := convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{}))
 
 	request := &alkira.PolicyRule{
 		Description: d.Get("description").(string),
@@ -199,6 +225,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 		RuleAction: alkira.PolicyRuleAction{
 			Action:          d.Get("rule_action").(string),
 			ServiceTypeList: serviceTypeList,
+			ServiceList:     serviceList,
 		},
 	}
 

@@ -48,8 +48,8 @@ Optional:
 
 Required:
 
-- **segment_id** (String) Segment Id.
-- **vrf_id** (String) VRF Id.
+- **segment_id** (Number) Segment Id.
+- **vrf_id** (Number) VRF Id.
 
 Optional:
 
