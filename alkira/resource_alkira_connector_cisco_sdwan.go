@@ -23,7 +23,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by Id associated with the connector.",
+				Description: "A list of Billing Tag by ID associated with the connector.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -80,12 +80,12 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Default:     true,
 						},
 						"segment_id": {
-							Description: "Segment Id.",
+							Description: "Segment ID.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"vrf_id": {
-							Description: "VRF Id.",
+							Description: "VRF ID.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},

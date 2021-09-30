@@ -9,42 +9,50 @@ import (
 
 func resourceAlkiraPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicy,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		Description: "Manage policy.",
+		Create:      resourcePolicy,
+		Read:        resourcePolicyRead,
+		Update:      resourcePolicyUpdate,
+		Delete:      resourcePolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The description of the policy.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
+				Description: "Whether the policy is enabled.",
+				Type:        schema.TypeBool,
+				Required:    true,
 			},
 			"from_groups": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-				Required: true,
+				Description: "IDs of groups that will define source in the policy scope",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Required:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the policy.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"rule_list_id": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Description: "The `rulelist` that will be used by the policy.",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"segment_ids": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-				Required: true,
+				Description: "IDs of segments that will define the policy scope.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Required:    true,
 			},
 			"to_groups": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-				Required: true,
+				Description: "IDs of groups that will define destination in the policy scope.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Required:    true,
 			},
 		},
 	}
@@ -60,7 +68,6 @@ func resourcePolicy(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Creating Policy")
 	id, err := client.CreatePolicy(request)
 
 	if err != nil {
@@ -103,7 +110,6 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Policy")
 	err = client.UpdatePolicy(d.Id(), request)
 
 	if err != nil {
@@ -117,7 +123,6 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Policy %s", d.Id())
 	return client.DeletePolicy(d.Id())
 }
 

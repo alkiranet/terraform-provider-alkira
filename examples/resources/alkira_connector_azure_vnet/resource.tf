@@ -5,6 +5,6 @@ resource "alkira_connector_azure_vnet" "test1" {
   credential_id  = alkira_credential_azure_vnet.test1.id
   cxp            = "US-WEST"
   group          = "test"
-  segment        = alkira_segment.segment1.name
+  segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
 }

@@ -60,7 +60,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "The Id of the segment associated with the connector.",
+				Description: "The ID of the segment associated with the connector.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},

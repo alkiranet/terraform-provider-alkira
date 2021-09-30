@@ -6,10 +6,14 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraInternetApplication() *schema.Resource {
 	return &schema.Resource{
+		Description: "Manage Internet Application.\n\n" +
+			"The internet facing applications could be used with both" +
+			"Users & Sites or Cloud Connectors.",
 		Create: resourceInternetApplicationCreate,
 		Read:   resourceInternetApplicationRead,
 		Update: resourceInternetApplicationUpdate,
@@ -17,45 +21,56 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"connector_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "Connector ID.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"connector_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "Connector Type.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"fqdn_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "User provided FQDN prefix that will be published on route53.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"group_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Description: "ID of the auto generated system group.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the internet application.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The private IP associated with the internet application.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"private_port": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The private port associated with the internet application.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"segment_id": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Description: "The ID of segment associated with the internet application.",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"size": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description:  "The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 		},
 	}

@@ -55,7 +55,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "The segment of the connector belongs to. Currently, only `1` segment is allowed.",
+				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
@@ -108,7 +108,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 							Optional:    true,
 						},
 						"prefix_list_ids": {
-							Description: "Prefix List Ids",
+							Description: "Prefix List IDs",
 							Type:        schema.TypeList,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},

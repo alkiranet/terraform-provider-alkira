@@ -50,17 +50,17 @@ resource "alkira_service_pan" "test1" {
 - **cxp** (String) The CXP where the service should be provisioned.
 - **instance** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - **license_type** (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- **management_segment_id** (Number) Management Segment Id.
+- **management_segment_id** (Number) Management Segment ID.
 - **max_instance_count** (Number) Max number of Panorama instances for auto scale.
 - **name** (String) Name of the PAN service.
-- **segment_ids** (List of Number) The list of segment Ids the service belongs to.
+- **segment_ids** (List of Number) IDs of segments associated with the service.
 - **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - **type** (String) The type of the PAN firewall.
 - **version** (String) The version of the PAN firewall.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) A list of billing tag ids to associate with the service.
+- **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.

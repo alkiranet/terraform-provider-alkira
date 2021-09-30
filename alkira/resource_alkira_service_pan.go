@@ -19,7 +19,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "A list of billing tag ids to associate with the service.",
+				Description: "Billing tag IDs to associate with the service.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -79,7 +79,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:    true,
 			},
 			"management_segment_id": {
-				Description: "Management Segment Id.",
+				Description: "Management Segment ID.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
@@ -100,7 +100,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"segment_ids": {
-				Description: "The list of segment Ids the service belongs to.",
+				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},

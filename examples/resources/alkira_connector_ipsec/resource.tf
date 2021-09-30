@@ -22,7 +22,7 @@ resource "alkira_connector_ipsec" "connector-ipsec1" {
   name           = "connector-ipsec1"
   cxp            = "US-WEST"
   group          = alkira_group.group1.name
-  segment        = alkira_segment.segment1.name
+  segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
 
   vpn_mode       = "ROUTE_BASED"
