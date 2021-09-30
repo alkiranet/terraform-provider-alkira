@@ -41,7 +41,7 @@ resource "alkira_connector_aws_vpc" "connector1" {
   credential_id  = alkira_credential_aws_vpc.account1.id
   cxp            = "US-WEST"
   group          = alkira_group.group1.name
-  segment        = alkira_segment.segment1.name
+  segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
 }
 
@@ -78,7 +78,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 
   credential_id  = alkira_credential_aws_vpc.account1.id
   group          = alkira_group.group1.name
-  segment        = alkira_segment.segment1.name
+  segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
 
   vpc_route_table {

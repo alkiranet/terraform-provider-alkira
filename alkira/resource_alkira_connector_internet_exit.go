@@ -22,7 +22,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "The list of billing tag Ids.",
+				Description: "The list of billing tag IDs.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -48,7 +48,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "The segment Id of the connector belongs to. Currently, only `1` segment is allowed.",
+				Description: "ID of segment associated with the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
