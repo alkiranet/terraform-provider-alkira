@@ -20,11 +20,11 @@ Groups can contain one or many connectors across different segments. This groupi
 
 ### Required
 
-- **description** (String) The description of the group.
 - **name** (String) The name of the group.
 
 ### Optional
 
+- **description** (String) The description of the group.
 - **id** (String) The ID of this resource.
 
 
