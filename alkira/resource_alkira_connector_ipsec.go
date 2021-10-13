@@ -57,6 +57,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							},
 							Optional: true,
 						},
+						"enableTunnelRedundancy": {
+							Description: "The enableTunnelRedundancy indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
 						"advanced": {
 							Type: schema.TypeSet,
 							Elem: &schema.Resource{

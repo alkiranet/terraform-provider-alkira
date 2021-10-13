@@ -90,6 +90,7 @@ Optional:
 
 - **advanced** (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
 - **preshared_keys** (List of String) An array of presharedKeys, one per tunnel.
+- **enableTunnelRedundancy** (Boolean) The enableTunnelRedundancy indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.
 
 <a id="nestedblock--endpoint--advanced"></a>
 ### Nested Schema for `endpoint.advanced`
