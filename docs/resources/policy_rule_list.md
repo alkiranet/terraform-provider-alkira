@@ -55,9 +55,6 @@ resource "alkira_policy_rule_list" "test" {
 Required:
 
 - **priority** (Number)
-
-Optional:
-
 - **rule_id** (Number)
 
 
