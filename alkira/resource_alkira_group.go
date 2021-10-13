@@ -29,7 +29,7 @@ func resourceAlkiraGroup() *schema.Resource {
 			"description": {
 				Description: "The description of the group.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 		},
 	}
