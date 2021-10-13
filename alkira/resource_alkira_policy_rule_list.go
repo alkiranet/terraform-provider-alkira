@@ -33,7 +33,7 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 						},
 						"rule_id": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
