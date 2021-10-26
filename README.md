@@ -20,7 +20,8 @@ examples and start playing with the provider.
 ## Development Requirements
 
 -	[Terraform 0.12.29](https://releases.hashicorp.com/terraform/0.12.29/) 0.12.x
--	[Go](https://golang.org/doc/install) 1.14.x (to build the provider plugin)
+-	[Go](https://golang.org/doc/install) 1.16.x (to build the provider
+     plugin on all architectures, especially Apple M1)
 
 **NOTES:** Please don't use the latest Terraform 0.13 yet. The latest
 release has some backward compatiblity break changes. We are waiting
