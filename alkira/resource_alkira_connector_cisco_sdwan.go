@@ -41,12 +41,12 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 						"hostname": {
 							Description: "The hostname of the vEdge.",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 						},
 						"cloud_init_file": {
 							Description: "The cloud-init file for the vEdge.",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 						},
 						"credential_id": {
 							Description: "The ID of the credential for Cisco SD-WAN.",

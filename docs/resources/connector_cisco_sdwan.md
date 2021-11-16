@@ -35,11 +35,8 @@ Manage Cisco SD-WAN Connector.
 
 Required:
 
-- **credential_id** (String) The ID of the credential for Cisco SD-WAN.
-
-Optional:
-
 - **cloud_init_file** (String) The cloud-init file for the vEdge.
+- **credential_id** (String) The ID of the credential for Cisco SD-WAN.
 - **hostname** (String) The hostname of the vEdge.
 
 
