@@ -118,6 +118,8 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("azure_vnet_id", connector.VnetId)
+	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
+	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
