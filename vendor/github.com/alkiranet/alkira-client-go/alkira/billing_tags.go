@@ -72,7 +72,7 @@ func (ac *AlkiraClient) GetBillingTags() (string, error) {
 	return string(data), err
 }
 
-// GetBillingTag get a single billing tag by Id
+// GetBillingTagById get a single billing tag by Id
 func (ac *AlkiraClient) GetBillingTagById(id string) (BillingTag, error) {
 	uri := fmt.Sprintf("%s/tags/%s", ac.URI, id)
 

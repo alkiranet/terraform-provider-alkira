@@ -10,6 +10,7 @@ import (
 
 type ServicePan struct {
 	BillingTagIds       []int                `json:"billingTags"`
+	Bundle              string               `json:"bundle,omitempty"`
 	CXP                 string               `json:"cxp"`
 	CredentialId        string               `json:"credentialId"`
 	Id                  int                  `json:"id,omitempty"`

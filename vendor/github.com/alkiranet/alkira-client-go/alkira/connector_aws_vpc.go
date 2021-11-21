@@ -7,7 +7,6 @@ import (
 	"fmt"
 )
 
-// Structs for "VPC Routing" options
 type InputPrefixes struct {
 	Id    string `json:"id,omitempty"`
 	Type  string `json:"type"`
@@ -34,21 +33,21 @@ type ConnectorAwsVpcRouting struct {
 	Import interface{} `json:"importFromCXPOptions"`
 }
 
-// AWS-VPC connector
 type ConnectorAwsVpc struct {
-	BillingTags    []int       `json:"billingTags"`
-	CXP            string      `json:"cxp"`
-	CredentialId   string      `json:"credentialId"`
-	CustomerName   string      `json:"customerName"`
-	CustomerRegion string      `json:"customerRegion"`
-	Group          string      `json:"group"`
-	Id             json.Number `json:"id,omitempty"`
-	Name           string      `json:"name"`
-	Segments       []string    `json:"segments"`
-	Size           string      `json:"size"`
-	VpcId          string      `json:"vpcId"`
-	VpcOwnerId     string      `json:"vpcOwnerId"`
-	VpcRouting     interface{} `json:"vpcRouting"`
+	BillingTags                        []int       `json:"billingTags"`
+	CXP                                string      `json:"cxp"`
+	CredentialId                       string      `json:"credentialId"`
+	CustomerName                       string      `json:"customerName"`
+	CustomerRegion                     string      `json:"customerRegion"`
+	DirectInterVPCCommunicationEnabled bool        `json:"directInterVPCCommunicationEnabled,omitempty"`
+	Group                              string      `json:"group"`
+	Id                                 json.Number `json:"id,omitempty"`
+	Name                               string      `json:"name"`
+	Segments                           []string    `json:"segments"`
+	Size                               string      `json:"size"`
+	VpcId                              string      `json:"vpcId"`
+	VpcOwnerId                         string      `json:"vpcOwnerId"`
+	VpcRouting                         interface{} `json:"vpcRouting"`
 }
 
 // CreateConnectorAwsVPC create an AWS-VPC connector

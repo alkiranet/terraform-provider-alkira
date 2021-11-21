@@ -28,10 +28,11 @@ type ConnectorCiscoSdwan struct {
 	CiscoEdgeInfo        []CiscoSdwanEdgeInfo       `json:"ciscoEdgeInfo"`
 	CiscoEdgeVrfMappings []CiscoSdwanEdgeVrfMapping `json:"ciscoEdgeVRFMappings"`
 	Cxp                  string                     `json:"cxp"`
-	Group                string                     `json:"group"`
+	Group                string                     `json:"group,omitempty"`
 	Name                 string                     `json:"name"`
-	Id                   int                        `json:"id"`
+	Id                   int                        `json:"id,omitempty"`
 	Size                 string                     `json:"size"`
+	Type                 string                     `json:"type,omitempty"`
 	Version              string                     `json:"version"`
 }
 

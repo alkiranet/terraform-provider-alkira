@@ -55,7 +55,7 @@ type ConnectorIPSecPolicyOptions struct {
 // }
 //
 type ConnectorIPSecStaticRouting struct {
-	Availability string `json:availability"`
+	Availability string `json:"availability"`
 	PrefixListId int    `json:"prefixListId"`
 }
 
