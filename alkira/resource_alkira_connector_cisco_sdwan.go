@@ -55,7 +55,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
+				Required: true,
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -91,7 +91,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
+				Required: true,
 			},
 			"size": &schema.Schema{
 				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
