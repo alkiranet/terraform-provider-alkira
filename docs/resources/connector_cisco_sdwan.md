@@ -20,15 +20,15 @@ Manage Cisco SD-WAN Connector.
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
 - **size** (String) The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.
+- **vedge** (Block Set, Min: 1) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
 - **version** (String) The version of Cisco SD-WAN.
+- **vrf_segment_mapping** (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
 
 ### Optional
 
 - **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-- **vedge** (Block Set) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
-- **vrf_segment_mapping** (Block Set) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
 
 <a id="nestedblock--vedge"></a>
 ### Nested Schema for `vedge`
