@@ -12,10 +12,10 @@ func resourceAlkiraListCommunity() *schema.Resource {
 		Description: "This list could be used to matches a route when all " +
 			"values in the list are present on the route. A route matches " +
 			"a list when any of the values match.",
-		Create:      resourceListCommunity,
-		Read:        resourceListCommunityRead,
-		Update:      resourceListCommunityUpdate,
-		Delete:      resourceListCommunityDelete,
+		Create: resourceListCommunity,
+		Read:   resourceListCommunityRead,
+		Update: resourceListCommunityUpdate,
+		Delete: resourceListCommunityDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,9 +33,9 @@ func resourceAlkiraListCommunity() *schema.Resource {
 					"community in the list is a tag value in the format of " +
 					"`AA:NN` format (where AA and NN are `0-65535`). AA " +
 					"denotes a AS number.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

@@ -28,46 +28,46 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"aws_access_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "AWS access key",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AWS_ACCESS_KEY_ID",
 					nil),
-				Description: "AWS access key",
 			},
 			"aws_secret_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "AWS secret key",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AWS_SECRET_ACCESS_KEY",
 					nil),
-				Description: "AWS secret key",
 			},
 			"aws_role_arn": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The AWS Role Arn",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AWS_ROLE_ARN",
 					nil),
-				Description: "The AWS Role Arn",
 			},
 			"aws_external_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The AWS Role External ID",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AWS_ROLE_EXTERNAL_ID",
 					nil),
-				Description: "The AWS Role External ID",
 			},
 			"type": &schema.Schema{
+				Description: "The Type of AWS-VPC credential",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The Type of AWS-VPC credential",
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateCredential(d.Get("name").(string), "awsvpc", c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAwsVpc, c)
 
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[INFO] Updating credential (AWS-VPC) %s", d.Id())
-	err = client.UpdateCredential(d.Id(), d.Get("name").(string), "awsvpc", c)
+	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAwsVpc, c)
 
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) er
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
-	return client.DeleteCredential(credentialId, "awsvpc")
+	return client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc)
 }
 
 func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {

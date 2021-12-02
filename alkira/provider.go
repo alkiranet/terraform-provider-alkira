@@ -44,6 +44,7 @@ func Provider() *schema.Provider {
 			"alkira_credential_azure_vnet":   resourceAlkiraCredentialAzureVnet(),
 			"alkira_credential_cisco_sdwan":  resourceAlkiraCredentialCiscoSdwan(),
 			"alkira_credential_gcp_vpc":      resourceAlkiraCredentialGcpVpc(),
+			"alkira_credential_oci_vcn":      resourceAlkiraCredentialOciVcn(),
 			"alkira_credential_pan":          resourceAlkiraCredentialPan(),
 			"alkira_credential_pan_instance": resourceAlkiraCredentialPanInstance(),
 			"alkira_group":                   resourceAlkiraGroup(),

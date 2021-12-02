@@ -12,10 +12,10 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 		Description: "An extended community list matches a route when all values " +
 			"in the list are present on the route. A route matches an extended " +
 			"community list when any of the values match.",
-		Create:      resourceListExtendedCommunity,
-		Read:        resourceListExtendedCommunityRead,
-		Update:      resourceListExtendedCommunityUpdate,
-		Delete:      resourceListExtendedCommunityDelete,
+		Create: resourceListExtendedCommunity,
+		Read:   resourceListExtendedCommunityRead,
+		Update: resourceListExtendedCommunityUpdate,
+		Delete: resourceListExtendedCommunityDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,9 +36,9 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 					"in the format of `IPaddr:nn` where IPaddr is a `x.x.x.x` IPv4 " +
 					"address and nn is a 2 byte value `0-65535`. Type will only be" +
 					"`soo` for now.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

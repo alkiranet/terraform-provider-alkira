@@ -27,25 +27,25 @@ func resourceAlkiraCredentialCiscoSdwan() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"username": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Cisco SD-WAN username.",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"CISCO_SDWAN_USERNAME",
 					nil),
-				Description: "Cisco SD-WAN username",
 			},
 			"password": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Cisco SD-WAN password.",
+				Type:        schema.TypeString,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"CISCO_SDWAN_PASSWORD",
 					nil),
-				Description: "Cisco SD-WAN password",
 			},
 		},
 	}
@@ -59,7 +59,7 @@ func resourceCredentialCiscoSdwanCreate(d *schema.ResourceData, meta interface{}
 		Password: d.Get("password").(string),
 	}
 
-	id, err := client.CreateCredential(d.Get("name").(string), "ciscosdwan", c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c)
 
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func resourceCredentialCiscoSdwanUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[INFO] Updating Credential (ciscosdwan)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "ciscosdwan", c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c)
 
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func resourceCredentialCiscoSdwanDelete(d *schema.ResourceData, meta interface{}
 	client := meta.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting credential (Cisco SD-WAN %s)\n", d.Id())
-	err := client.DeleteCredential(d.Id(), "ciscosdwan")
+	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeCiscoSdwan)
 
 	return err
 }
