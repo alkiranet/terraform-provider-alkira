@@ -16,24 +16,24 @@ func resourceAlkiraCredentialPan() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"license_key": &schema.Schema{
+				Description: "PAN license key.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN license key",
 			},
 			"password": &schema.Schema{
+				Description: "PAN password.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN password",
 			},
 			"username": &schema.Schema{
+				Description: "PAN username.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN username",
 			},
 		},
 	}
@@ -49,7 +49,7 @@ func resourceCredentialPan(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating Credential (PAN)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), "pan", c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypePan, c)
 
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func resourceCredentialPanUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[INFO] Updating Credential (PAN)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "pan", c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypePan, c)
 
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func resourceCredentialPanDelete(d *schema.ResourceData, meta interface{}) error
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (PAN %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, "pan")
+	err := client.DeleteCredential(credentialId, alkira.CredentialTypePan)
 
 	if err != nil {
 		log.Printf("[INFO] Credential (PAN %s) was already deleted\n", credentialId)

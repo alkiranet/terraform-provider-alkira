@@ -36,12 +36,12 @@ You can provide your credentials via the `CISCO_SDWAN_USERNAME` and`CISCO_SDWAN_
 
 ### Required
 
-- **name** (String) The name of the credential
+- **name** (String) The name of the credential.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **password** (String) Cisco SD-WAN password
-- **username** (String) Cisco SD-WAN username
+- **password** (String) Cisco SD-WAN password.
+- **username** (String) Cisco SD-WAN username.
 
 

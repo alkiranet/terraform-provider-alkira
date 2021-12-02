@@ -16,34 +16,34 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"auth_key": &schema.Schema{
+				Description: "PAN instance auth key.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN instance auth key",
 			},
 			"auth_code": &schema.Schema{
+				Description: "PAN instance auth code.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN instance auth code",
 			},
 			"license_key": &schema.Schema{
+				Description: "PAN license key.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN license key",
 			},
 			"password": &schema.Schema{
+				Description: "PAN password.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN password",
 			},
 			"username": &schema.Schema{
+				Description: "PAN username.",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "PAN username",
 			},
 		},
 	}
@@ -61,7 +61,7 @@ func resourceCredentialPanInstance(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Creating Credential (PAN Instance)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), "paninstance", c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypePanInstance, c)
 
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[INFO] Updating Credential (PAN Instance)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "paninstance", c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypePanInstance, c)
 
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func resourceCredentialPanInstanceDelete(d *schema.ResourceData, meta interface{
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (PAN Instance %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, "paninstance")
+	err := client.DeleteCredential(credentialId, alkira.CredentialTypePanInstance)
 
 	if err != nil {
 		log.Printf("[INFO] Credential (PAN Instance %s) was already deleted\n", credentialId)
