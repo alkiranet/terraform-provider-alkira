@@ -7,6 +7,24 @@ import (
 	"fmt"
 )
 
+type CredentialType string
+
+const (
+	CredentialTypeArubaEdgeConnect CredentialType = "aruba-edge-connector-instances"
+	CredentialTypeAwsVpc                          = "awsvpc"
+	CredentialTypeAzureVnet                       = "azurevnet"
+	CredentialTypeChkpFw                          = "chkp-fw"
+	CredentialTypeChkpFwInstance                  = "chkp-fw-instance"
+	CredentialTypeChkpFwManagement                = "chkp-fw-management-server"
+	CredentialTypeCiscoSdwan                      = "ciscosdwan"
+	CredentialTypeGcpVpc                          = "gcpvpc"
+	CredentialTypeKeyPair                         = "keypair"
+	CredentialTypeLdap                            = "ldap"
+	CredentialTypeOciVcn                          = "ocivcn"
+	CredentialTypePan                             = "pan"
+	CredentialTypePanInstance                     = "paninstance"
+)
+
 type CredentialArubaEdgeConnect struct {
 	AccountKey string `json:"accountKey"`
 }
@@ -71,6 +89,13 @@ type CredentialLdap struct {
 	TlsCertificate string `json:"tlsCertificate"`
 }
 
+type CredentialOciVcn struct {
+	UserId      string `json:"userId"`
+	FingerPrint string `json:"fingerPrint"`
+	Key         string `json:"key"`
+	TenantId    string `json:"tenantId"`
+}
+
 type CredentialPan struct {
 	LicenseKey string `json:"licenseKey"`
 	Password   string `json:"password"`
@@ -102,8 +127,8 @@ type CredentialResponseDetail struct {
 }
 
 // CreateCredential create new credential
-func (ac *AlkiraClient) CreateCredential(name string, credentialType string, credential interface{}) (string, error) {
-	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, credentialType)
+func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, credential interface{}) (string, error) {
+	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
 
 	// This body is not the normal JSON format...
 	body, err := json.Marshal(Credentials{
@@ -128,18 +153,18 @@ func (ac *AlkiraClient) CreateCredential(name string, credentialType string, cre
 }
 
 // DeleteCredential delete credential by its Id
-func (ac *AlkiraClient) DeleteCredential(id string, credentialType string) error {
-	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, credentialType, id)
+func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error {
+	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
 	return ac.delete(uri)
 }
 
 // UpdateCredential update a given credential by its Id
-func (ac *AlkiraClient) UpdateCredential(id string, name string, credentialType string, credential interface{}) error {
-	if credentialType == "keypair" || credentialType == "aruba-edge-connector-instances" {
+func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype CredentialType, credential interface{}) error {
+	if ctype == CredentialTypeKeyPair || ctype == CredentialTypeArubaEdgeConnect {
 		return fmt.Errorf("UpdateCredential: not supported for the credential type")
 	}
 
-	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, credentialType, id)
+	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
 
 	// This body is not the normal JSON format...
 	body, err := json.Marshal(Credentials{
