@@ -5,14 +5,13 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 type PolicyPrefixList struct {
-	Description string   `json:"description"`
-	Id          int      `json:"id,omitempty"`
-	Name        string   `json:"name"`
-	Prefixes    []string `json:"prefixes"`
+	Description string      `json:"description"`
+	Id          json.Number `json:"id,omitempty"`
+	Name        string      `json:"name"`
+	Prefixes    []string    `json:"prefixes"`
 }
 
 // GetPolicyPrefixLists Get all prefixes from the given tenant network
@@ -24,8 +23,8 @@ func (ac *AlkiraClient) GetPolicyPrefixLists() (string, error) {
 }
 
 // GetPolicyPrefixListById get single prefix list by Id
-func (ac *AlkiraClient) GetPolicyPrefixListById(id int) (PolicyPrefixList, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) GetPolicyPrefixListById(id string) (PolicyPrefixList, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists/%s", ac.URI, ac.TenantNetworkId, id)
 
 	var prefixList PolicyPrefixList
 
@@ -90,7 +89,7 @@ func (ac *AlkiraClient) CreatePolicyPrefixList(p *PolicyPrefixList) (string, err
 		return "", fmt.Errorf("CreatePolicyPrefixList: failed to unmarshal: %v", err)
 	}
 
-	return strconv.Itoa(result.Id), nil
+	return string(result.Id), nil
 }
 
 // DeletePolicyPrefixList delete a policy prefix list
