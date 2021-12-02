@@ -90,7 +90,7 @@ func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
 		Type:              d.Get("type").(string),
 	}
 
-	log.Printf("[INFO] Createing Credential (GCP-VPC)")
+	log.Printf("[INFO] Creating Credential (GCP-VPC)")
 	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c)
 
 	if err != nil {

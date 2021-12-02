@@ -35,9 +35,9 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Description: "A list of CIDRs, The CIDR must be `/24` and a " +
 					"subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, " +
 					"`192.168.0.0/16`, `100.64.0.0/10`.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

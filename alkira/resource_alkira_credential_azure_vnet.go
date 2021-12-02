@@ -16,29 +16,29 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"application_id": &schema.Schema{
+				Description: "The Application ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The Application ID",
 			},
 			"subscription_id": &schema.Schema{
+				Description: "The subscription ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The subscription ID",
 			},
 			"secret_key": &schema.Schema{
+				Description: "The Secret Key",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The Secret Key",
 			},
 			"tenant_id": &schema.Schema{
+				Description: "The Tenant ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The Tenant ID",
 			},
 		},
 	}
@@ -55,7 +55,7 @@ func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[INFO] Creating Credential (AZURE-VNET)")
-	id, err := client.CreateCredential(d.Get("name").(string), "azurevnet", c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAzureVnet, c)
 
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[INFO] Updating Credential (AZURE-VNET)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "azurevnet", c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c)
 
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func resourceCredentialAzureVnetDelete(d *schema.ResourceData, meta interface{})
 	id := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (AZURE-VNET %s)\n", id)
-	err := client.DeleteCredential(id, "azurevnet")
+	err := client.DeleteCredential(id, alkira.CredentialTypeAzureVnet)
 
 	if err != nil {
 		return err

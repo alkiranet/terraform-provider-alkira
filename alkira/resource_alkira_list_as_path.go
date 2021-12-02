@@ -12,10 +12,10 @@ func resourceAlkiraListAsPath() *schema.Resource {
 		Description: "This list could be used in a policy rule, a route " +
 			"will match successfully if any one value from the list is " +
 			"included within the AS-PATH of the route.",
-		Create:      resourceListAsPath,
-		Read:        resourceListAsPathRead,
-		Update:      resourceListAsPathUpdate,
-		Delete:      resourceListAsPathDelete,
+		Create: resourceListAsPath,
+		Read:   resourceListAsPathRead,
+		Update: resourceListAsPathUpdate,
+		Delete: resourceListAsPathDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -32,9 +32,9 @@ func resourceAlkiraListAsPath() *schema.Resource {
 				Description: "Value can be regular expression of AS PATH " +
 					"or space sparated AS numbers. BGP regular expressions" +
 					"are based on POSIX 1003.2 regular expressions.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
