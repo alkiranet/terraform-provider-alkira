@@ -5,15 +5,14 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 type GlobalCidrList struct {
-	Description string   `json:"description"`
-	CXP         string   `json:"cxp"`
-	Id          int      `json:"id,omitempty"`
-	Name        string   `json:"name"`
-	Values      []string `json:"values"`
+	Description string      `json:"description"`
+	CXP         string      `json:"cxp"`
+	Id          json.Number `json:"id,omitempty"`
+	Name        string      `json:"name"`
+	Values      []string    `json:"values"`
 }
 
 // GetGlobalCidrLists Get all global CIDR list from the given tenant network
@@ -25,8 +24,8 @@ func (ac *AlkiraClient) GetGlobalCidrLists() (string, error) {
 }
 
 // GetGlobalCidrListById get single Global CIDR list by Id
-func (ac *AlkiraClient) GetGlobalCidrListById(id int) (GlobalCidrList, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/global-cidr-lists/%d", ac.URI, ac.TenantNetworkId, id)
+func (ac *AlkiraClient) GetGlobalCidrListById(id string) (GlobalCidrList, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/global-cidr-lists/%s", ac.URI, ac.TenantNetworkId, id)
 
 	var list GlobalCidrList
 
@@ -91,7 +90,7 @@ func (ac *AlkiraClient) CreateGlobalCidrList(p *GlobalCidrList) (string, error) 
 		return "", fmt.Errorf("CreateGlobalCidrList: failed to unmarshal: %v", err)
 	}
 
-	return strconv.Itoa(result.Id), nil
+	return string(result.Id), nil
 }
 
 // DeleteGlobalCidrList delete a global CIDR list

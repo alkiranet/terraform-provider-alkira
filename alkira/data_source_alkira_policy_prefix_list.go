@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,7 +36,7 @@ func dataSourceAlkiraPolicyPrefixListRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.SetId(strconv.Itoa(prefixList.Id))
+	d.SetId(string(prefixList.Id))
 	d.Set("prefixes", prefixList.Prefixes)
 	return nil
 }

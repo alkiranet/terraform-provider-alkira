@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,8 +60,7 @@ func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	id, _ := strconv.Atoi(d.Id())
-	list, err := client.GetPolicyPrefixListById(id)
+	list, err := client.GetPolicyPrefixListById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to get policy prefix list %s", d.Id())
