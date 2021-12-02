@@ -51,13 +51,24 @@ func resourceGroup(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	group, err := client.GetGroupById(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("name", group.Name)
+	d.Set("description", group.Description)
+
 	return nil
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Group Updating")
+	log.Printf("[INFO] Updating Group (%s)", d.Id())
 	err := client.UpdateGroup(d.Id(), d.Get("name").(string), d.Get("description").(string))
 
 	if err != nil {
@@ -70,12 +81,14 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Group %d", d.Id())
+	log.Printf("[INFO] Deleting Group (%d)", d.Id())
 	err := client.DeleteGroup(d.Id())
 
 	if err != nil {
 		return err
 	}
 
+	log.Printf("[INFO] Deleted Group (%s)", d.Id())
+	d.SetId("")
 	return nil
 }
