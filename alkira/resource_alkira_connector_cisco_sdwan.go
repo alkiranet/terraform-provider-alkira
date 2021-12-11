@@ -62,6 +62,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"type": {
+				Description: "The type of Cisco SD-WAN.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"vrf_segment_mapping": {
 				Description: "Specify target segment for VRF.",
 				Type:        schema.TypeSet,
@@ -129,6 +134,22 @@ func resourceConnectorCiscoSdwanCreate(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorCiscoSdwan(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.Cxp)
+	d.Set("group", connector.Group)
+	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("type", connector.Type)
+	d.Set("version", connector.Version)
+
 	return nil
 }
 
