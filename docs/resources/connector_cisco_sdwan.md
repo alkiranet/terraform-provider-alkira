@@ -29,6 +29,7 @@ Manage Cisco SD-WAN Connector.
 - **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
+- **type** (String) The type of Cisco SD-WAN.
 
 <a id="nestedblock--vedge"></a>
 ### Nested Schema for `vedge`
