@@ -20,11 +20,11 @@ description: |-
 - **application_id** (String) The Application ID
 - **name** (String) The name of the credential
 - **secret_key** (String) The Secret Key
-- **subscription_id** (String) The subscription ID
 - **tenant_id** (String) The Tenant ID
 
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **subscription_id** (String) The subscription ID
 
 
