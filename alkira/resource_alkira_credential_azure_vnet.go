@@ -28,7 +28,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"subscription_id": &schema.Schema{
 				Description: "The subscription ID",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"secret_key": &schema.Schema{
 				Description: "The Secret Key",
