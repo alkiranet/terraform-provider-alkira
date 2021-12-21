@@ -29,6 +29,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"azure_subscription_id": {
+				Description: "The Azure subscription ID of the VNET. If the `subscirption_id` was provided in the credential, the one in the credential will be always used.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"billing_tag_ids": {
 				Description: "Tags for billing.",
 				Type:        schema.TypeList,
@@ -118,6 +123,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("azure_vnet_id", connector.VnetId)
+	d.Set("azure_subscription_id", connector.SubscriptionId)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -179,6 +185,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Name:           d.Get("name").(string),
 		Segments:       []string{segment.Name},
 		Size:           d.Get("size").(string),
+		SubscriptionId: d.Get("azure_subscription_id").(string),
 		VnetId:         d.Get("azure_vnet_id").(string),
 		VnetRouting:    routing,
 	}

@@ -67,6 +67,8 @@ github.com/alkiranet/alkira-client-go v0.7.2 h1:lsMUmnFdIvkSm83w+La490/UEpMI52me
 github.com/alkiranet/alkira-client-go v0.7.2/go.mod h1:ZN48ehBXW6WSeJU0XCnMctSAv4+ki/0Qz7fhn2c/jpM=
 github.com/alkiranet/alkira-client-go v0.7.3 h1:8RxUBWdYussPPLSZtlf/yjWIQtq/a2HXLy5xzWBxJ0g=
 github.com/alkiranet/alkira-client-go v0.7.3/go.mod h1:ZN48ehBXW6WSeJU0XCnMctSAv4+ki/0Qz7fhn2c/jpM=
+github.com/alkiranet/alkira-client-go v0.7.4-hotfix1 h1:LRbPHvA28MQk/OaRawX/PYk30fF4zPGgTXyS3NNvyoY=
+github.com/alkiranet/alkira-client-go v0.7.4-hotfix1/go.mod h1:ZN48ehBXW6WSeJU0XCnMctSAv4+ki/0Qz7fhn2c/jpM=
 github.com/alkiranet/alkira-client-go v0.7.4 h1:8x98pLhpBfojEPMAzEvgMrk6ND4xfUoCbYigSJrohaU=
 github.com/alkiranet/alkira-client-go v0.7.4/go.mod h1:ZN48ehBXW6WSeJU0XCnMctSAv4+ki/0Qz7fhn2c/jpM=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
