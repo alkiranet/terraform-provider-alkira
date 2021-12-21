@@ -69,10 +69,12 @@ resource "alkira_connector_azure_vnet" "test2" {
 
 ### Optional
 
+- **azure_subscription_id** (String) The Azure subscription ID of the VNET. If the `subscirption_id` was provided in the credential, the one in the credential will be always used.
 - **billing_tag_ids** (List of Number) Tags for billing.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **routing_options** (String) Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - **routing_prefix_list_ids** (List of Number) Prefix List IDs.
+
 
 
