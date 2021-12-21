@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +32,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 			},
 			"enabled": {
 				Description: "Enable the rule or not.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Required:    true,
 			},
 			"match": {
@@ -53,13 +54,13 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"src_prefix_list_ids": {
-							Description: "The list of prefix ids as source.",
+							Description: "The list of prefix IDs as source.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"dst_prefix_list_ids": {
-							Description: "The list of prefix ids as destination.",
+							Description: "The list of prefix IDs as destination.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
@@ -272,7 +273,7 @@ func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
 			match.DestPortList = v
 		}
 		if v, ok := matchValue["protocol"].(string); ok {
-			match.Protocol = v
+			match.Protocol = strings.ToLower(v)
 		}
 	}
 
