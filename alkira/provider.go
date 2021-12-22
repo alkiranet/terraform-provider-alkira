@@ -56,6 +56,7 @@ func Provider() *schema.Provider {
 			"alkira_list_global_cidr":        resourceAlkiraListGlobalCidr(),
 			"alkira_internet_application":    resourceAlkiraInternetApplication(),
 			"alkira_policy":                  resourceAlkiraPolicy(),
+			"alkira_policy_nat_rule":         resourceAlkiraPolicyNatRule(),
 			"alkira_policy_prefix_list":      resourceAlkiraPolicyPrefixList(),
 			"alkira_policy_rule":             resourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":        resourceAlkiraPolicyRuleList(),
