@@ -27,6 +27,7 @@ type ConnectorAzureVnet struct {
 	NativeServices []string              `json:"nativeServices,omitempty"`
 	Segments       []string              `json:"segments"`
 	Size           string                `json:"size"`
+	SubscriptionId string                `json:"subscriptionId,omitempty"`
 	VnetId         string                `json:"vnetId"`
 	VnetRouting    *ConnectorVnetRouting `json:"vnetRouting"`
 }
