@@ -6,6 +6,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraPolicyNat() *schema.Resource {
@@ -28,9 +29,10 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Optional:    true,
 			},
 			"type": {
-				Description: "The type of NAT policy, currently only `INTRA_SEGMENT`is supported.",
-				Type:        schema.TypeBool,
-				Required:    true,
+				Description:  "The type of NAT policy, currently only `INTER_SEGMENT`is supported.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"INTER_SEGMENT"}, false),
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define the policy scope.",
@@ -52,7 +54,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 					"defined group is used in `included_groups` can be used here.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
-				Required: true,
+				Optional: true,
 			},
 			"nat_rule_ids": {
 				Description: "The list of NAT rules to be applied by the policy.",
@@ -142,8 +144,8 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 
 	client := m.(*alkira.AlkiraClient)
 
-	inGroups := convertTypeListToIntList(d.Get("include_group_ids").([]interface{}))
-	exGroups := convertTypeListToIntList(d.Get("exclude_group_ids").([]interface{}))
+	inGroups := convertTypeListToIntList(d.Get("included_group_ids").([]interface{}))
+	exGroups := convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{}))
 	natRules := convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
