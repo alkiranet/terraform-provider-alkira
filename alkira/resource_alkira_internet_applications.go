@@ -112,7 +112,6 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("Name", app.Name)
 	d.Set("private_ip", app.PrivateIp)
 	d.Set("prviate_port", app.PrivatePort)
-	d.Set("size", app.Size)
 
 	segment, err := client.GetSegmentByName(app.SegmentName)
 
@@ -120,6 +119,7 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 		return err
 	}
 	d.Set("segment_id", segment.Id)
+	d.Set("size", app.Size)
 
 	return nil
 }

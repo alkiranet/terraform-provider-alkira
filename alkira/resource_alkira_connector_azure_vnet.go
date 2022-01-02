@@ -30,9 +30,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"azure_subscription_id": {
-				Description: "The Azure subscription ID of the VNET. If the `subscirption_id` was provided in the credential, the one in the credential will be always used.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The Azure subscription ID of the VNET. If the" +
+					"`subscirption_id` was provided in the credential, the one" +
+					"in the credential will be always used.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"billing_tag_ids": {
 				Description: "Tags for billing.",
@@ -115,17 +117,17 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("cxp", connector.CXP)
-	d.Set("credential_id", connector.CredentialId)
 	d.Set("azure_region", connector.CustomerRegion)
+	d.Set("azure_subscription_id", connector.SubscriptionId)
+	d.Set("azure_vnet_id", connector.VnetId)
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("credential_id", connector.CredentialId)
+	d.Set("cxp", connector.CXP)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
-	d.Set("size", connector.Size)
-	d.Set("azure_vnet_id", connector.VnetId)
-	d.Set("azure_subscription_id", connector.SubscriptionId)
 	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
 	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
+	d.Set("size", connector.Size)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])

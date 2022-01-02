@@ -47,6 +47,17 @@ func resourceBillingTag(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBillingTagRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	tag, err := client.GetBillingTagById(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("name", tag.Name)
+	d.Set("description", tag.Description)
+
 	return nil
 }
 
