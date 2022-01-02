@@ -58,6 +58,18 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*alkira.AlkiraClient)
+
+	segment, err := client.GetSegmentById(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("asn", segment.Asn)
+	d.Set("cidr", segment.IpBlock)
+	d.Set("name", segment.Name)
+
 	return nil
 }
 

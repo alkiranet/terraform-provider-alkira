@@ -82,6 +82,32 @@ func resourceConnectorInternetExitCreate(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorInternetExitById(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.CXP)
+	d.Set("description", connector.Description)
+	d.Set("group", connector.Group)
+	d.Set("name", connector.Name)
+
+	// Set segment_id
+	if len(connector.Segments) > 0 {
+		segment, err := client.GetSegmentByName(connector.Segments[0])
+
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segment.Id)
+	}
+
+	d.Set("size", connector.Size)
+
 	return nil
 }
 

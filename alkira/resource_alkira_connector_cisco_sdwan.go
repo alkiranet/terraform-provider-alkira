@@ -33,6 +33,23 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"group": {
+				Description: "The group of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"type": {
+				Description: "The type of Cisco SD-WAN.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "VEDGE",
+			},
+			"size": &schema.Schema{
+				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
 				Type:        schema.TypeSet,
@@ -57,15 +74,10 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				},
 				Required: true,
 			},
-			"group": {
-				Description: "The group of the connector.",
+			"version": {
+				Description: "The version of Cisco SD-WAN.",
 				Type:        schema.TypeString,
-				Optional:    true,
-			},
-			"type": {
-				Description: "The type of Cisco SD-WAN.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"vrf_segment_mapping": {
 				Description: "Specify target segment for VRF.",
@@ -97,17 +109,6 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 					},
 				},
 				Required: true,
-			},
-			"size": &schema.Schema{
-				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
-			},
-			"version": {
-				Description: "The version of Cisco SD-WAN.",
-				Type:        schema.TypeString,
-				Required:    true,
 			},
 		},
 	}
@@ -148,6 +149,35 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("type", connector.Type)
+
+	// Set vedge
+	var vedge []map[string]interface{}
+
+	for _, info := range connector.CiscoEdgeInfo {
+		edge := map[string]interface{}{
+			"hostname":        info.HostName,
+			"cloud_init_file": info.CloudInitFile,
+			"credential_id":   info.CredentialId,
+		}
+		vedge = append(vedge, edge)
+	}
+
+	d.Set("vedge", vedge)
+
+	// Set vrf_segment_mapping
+	var mappings []map[string]interface{}
+
+	for _, m := range connector.CiscoEdgeVrfMappings {
+		mapping := map[string]interface{}{
+			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
+			"allow_nat_exit":           m.DisableInternetExit,
+			"segment_id":               m.SegmentId,
+			"vrf_id":                   m.Vrf,
+		}
+		mappings = append(mappings, mapping)
+	}
+
+	d.Set("vrf_segment_mapping", vedge)
 	d.Set("version", connector.Version)
 
 	return nil

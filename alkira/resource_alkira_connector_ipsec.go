@@ -191,8 +191,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional:    true,
 			},
 			"policy_options": {
-				Description: "Policy options, both on-prem and cxp prefix list ids must be provided if vpnMode is `POLICY_BASED`",
-				Type:        schema.TypeSet,
+				Description: "Policy options, both on-prem and cxp prefix" +
+					"list ids must be provided if vpnMode is `POLICY_BASED`",
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_prem_prefix_list_ids": {
@@ -212,8 +213,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"routing_options": {
-				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or `BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
-				Type:        schema.TypeSet,
+				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or" +
+					"`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -324,8 +326,6 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
-	d.Set("size", connector.Size)
-	d.Set("vpn_mode", connector.VpnMode)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -336,7 +336,8 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("segment_id", segment.Id)
 	}
 
-	return nil
+	d.Set("size", connector.Size)
+	d.Set("vpn_mode", connector.VpnMode)
 
 	return nil
 }

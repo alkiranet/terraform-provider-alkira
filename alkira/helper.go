@@ -111,7 +111,7 @@ func expandPanSegmentOptions(in *schema.Set) map[string]interface{} {
 
 func expandPanInstances(in *schema.Set) []alkira.ServicePanInstance {
 	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid IPSec site input")
+		log.Printf("[DEBUG] invalid PAN instance input")
 		return nil
 	}
 
