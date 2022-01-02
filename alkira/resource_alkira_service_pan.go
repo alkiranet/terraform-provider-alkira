@@ -24,6 +24,18 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
+			"bundle": {
+				Description: "The software image bundle that would be used for" +
+					"PAN instance deployment. This is applicable for licenseType" +
+					"`PAY_AS_YOU_GO` only. If not provided, the default" +
+					"`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`" +
+					"is legacy bundle and is not supported on AWS. It is recommended" +
+					"to use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports " +
+					"Global Protect).",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
+			},
 			"credential_id": {
 				Description: "ID of PAN credential managed by credential resource.",
 				Type:        schema.TypeString,
@@ -186,21 +198,31 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
-	d.Set("cxp", pan.CXP)
 	d.Set("credential_id", pan.CredentialId)
+	d.Set("cxp", pan.CXP)
 	d.Set("license_type", pan.LicenseType)
+	d.Set("management_segment_id", pan.ManagementSegmentId)
 	d.Set("max_instance_count", pan.MaxInstanceCount)
 	d.Set("min_instance_count", pan.MinInstanceCount)
-	d.Set("management_segment_id", pan.ManagementSegmentId)
 	d.Set("name", pan.Name)
 	d.Set("panorama_enabled", pan.PanoramaEnabled)
-	d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
-	d.Set("panorama_ip_address", pan.PanoramaIpAddress)
-	d.Set("panorama_template", pan.PanoramaTemplate)
 	d.Set("segment_ids", pan.SegmentIds)
 	d.Set("size", pan.Size)
+	d.Set("tunnel_protocol", pan.TunnelProtocol)
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
+
+	var instances []map[string]interface{}
+
+	for _, instance := range pan.Instances {
+		i := map[string]interface{}{
+			"name":          instance.Name,
+			"credential_id": instance.CredentialId,
+		}
+		instances = append(instances, i)
+	}
+
+	d.Set("instance", instances)
 
 	return nil
 }
@@ -250,6 +272,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaTemplate:    d.Get("panorama_template").(string),
 		SegmentOptions:      segmentOptions,
 		SegmentIds:          segmentIds,
+		TunnelProtocol:      d.Get("tunnel_protocol").(string),
 		Size:                d.Get("size").(string),
 		Type:                d.Get("type").(string),
 		Version:             d.Get("version").(string),
