@@ -39,7 +39,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Optional:    true,
 			},
 			"type": {
-				Description: "The type of Cisco SD-WAN.",
+				Description: "The type of Cisco SD-WAN. Default value is `VEDGE`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "VEDGE",

@@ -14,10 +14,10 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"The following methods are supported:\n\n" +
 			" - Static credentials\n" +
 			" - Environment variables\n\n" +
-			"*** Static Credentials:\n\n" +
+			"### Static Credentials:\n\n" +
 			"Static credentials can be provided by adding an `aws_access_key`" +
 			"and `aws_secret_key` in-line in the AWS provider block.\n\n" +
-			"*** Environment Variables:\n\n" +
+			"### Environment Variables:\n\n" +
 			"You can provide your credentials via the `AWS_ACCESS_KEY_ID` and" +
 			"`AWS_SECRET_ACCESS_KEY`, environment variables, representing your" +
 			"AWS Access Key and AWS Secret Key, respectively.",
