@@ -6,9 +6,9 @@ description: |-
   Manage AWS credential for authentication.
   The following methods are supported:
   Static credentialsEnvironment variables
-  *** Static Credentials:
+  Static Credentials:
   Static credentials can be provided by adding an aws_access_keyand aws_secret_key in-line in the AWS provider block.
-  *** Environment Variables:
+  Environment Variables:
   You can provide your credentials via the AWS_ACCESS_KEY_ID andAWS_SECRET_ACCESS_KEY, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
 ---
 
@@ -21,17 +21,18 @@ The following methods are supported:
  - Static credentials
  - Environment variables
 
-*** Static Credentials:
+### Static Credentials:
 
 Static credentials can be provided by adding an `aws_access_key`and `aws_secret_key` in-line in the AWS provider block.
 
-*** Environment Variables:
+### Environment Variables:
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and`AWS_SECRET_ACCESS_KEY`, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
 
 ## Example Usage
 
 ```terraform
+# Normal
 resource "alkira_credential_aws_vpc" "account1" {
   name           = "customer-aws-1"
   aws_access_key = "your_aws_acccess_key"
@@ -39,8 +40,7 @@ resource "alkira_credential_aws_vpc" "account1" {
   type           = "ACCESS_KEY"
 }
 
-or
-
+# Using environment variables
 export AWS_ACCESS_KEY_ID=XXX
 export AWS_SECRET_ACCESS_KEY=XXX
 

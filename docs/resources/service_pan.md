@@ -61,6 +61,7 @@ resource "alkira_service_pan" "test1" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
+- **bundle** (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
