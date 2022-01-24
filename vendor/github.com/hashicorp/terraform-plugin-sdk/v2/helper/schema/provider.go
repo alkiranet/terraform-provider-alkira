@@ -11,9 +11,9 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
-	grpcpluginctx "github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin/context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -33,7 +33,7 @@ var ReservedProviderFields = []string{
 // Deprecated: The use of a global context is discouraged. Please use the new
 // context aware CRUD methods.
 func StopContext(ctx context.Context) (context.Context, bool) {
-	stopContext, ok := ctx.Value(grpcpluginctx.StopContextKey).(context.Context)
+	stopContext, ok := ctx.Value(StopContextKey).(context.Context)
 	return stopContext, ok
 }
 
@@ -89,6 +89,9 @@ type Provider struct {
 	// receives a context.Context that will cancel when Terraform sends a
 	// cancellation signal. This function can yield Diagnostics.
 	ConfigureContextFunc ConfigureContextFunc
+
+	// configured is enabled after a Configure() call
+	configured bool
 
 	meta interface{}
 
@@ -261,6 +264,10 @@ func (p *Provider) Configure(ctx context.Context, c *terraform.ResourceConfig) d
 		return nil
 	}
 
+	if p.configured {
+		log.Printf("[WARN] Previously configured provider being re-configured. This can cause issues in concurrent testing if the configurations are not equal.")
+	}
+
 	sm := schemaMap(p.Schema)
 
 	// Get a ResourceData for this configuration. To do this, we actually
@@ -282,15 +289,23 @@ func (p *Provider) Configure(ctx context.Context, c *terraform.ResourceConfig) d
 		}
 		p.meta = meta
 	}
+
+	var diags diag.Diagnostics
+
 	if p.ConfigureContextFunc != nil {
-		meta, diags := p.ConfigureContextFunc(ctx, data)
+		meta, configureDiags := p.ConfigureContextFunc(ctx, data)
+		diags = append(diags, configureDiags...)
+
 		if diags.HasError() {
 			return diags
 		}
+
 		p.meta = meta
 	}
 
-	return nil
+	p.configured = true
+
+	return diags
 }
 
 // Resources returns all the available resource types that this provider
@@ -466,4 +481,9 @@ func (p *Provider) UserAgent(name, version string) string {
 	}
 
 	return ua
+}
+
+// GRPCProvider returns a gRPC server, for use with terraform-plugin-mux.
+func (p *Provider) GRPCProvider() tfprotov5.ProviderServer {
+	return NewGRPCProviderServer(p)
 }

@@ -46,7 +46,7 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Segment Creating")
 	id, err := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
-	log.Printf("[INFO] Segment ID: %d", id)
+	log.Printf("[INFO] Segment ID: %s", id)
 
 	if err != nil {
 		return err

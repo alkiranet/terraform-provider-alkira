@@ -35,7 +35,7 @@ func resourceBillingTag(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Billing Tag Creating")
 	id, err := client.CreateBillingTag(d.Get("name").(string), d.Get("description").(string))
-	log.Printf("[INFO] Billing Tag ID: %d", id)
+	log.Printf("[INFO] Billing Tag ID: %s", id)
 
 	if err != nil {
 		return err
