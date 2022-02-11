@@ -41,13 +41,54 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"global_protect_enabled": {
+				Description: "Enable global protect option or not. Default is `false`",
+				Type:        schema.TypeBool,
+				Required:    true,
+			},
+			"global_protect_segment_options": {
+				Description: "A mapping of segment_name -> zones_to_groups. The only segment names " +
+					"allowed are the segments that are already associated with the service." +
+					"options should apply. If global_protect_enabled is set to false, " +
+					"global_protect_segment_options shound not be included in your request.",
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_name": {
+							Description: "The name of the segment to which the global protect options should apply",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"remote_user_zone_name": {
+							Description: "Firewall security zone is created using the zone name for remote user sessions.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"portal_fqdn_prefix": {
+							Description: "Prefix for the global protect portal FQDN, this would " +
+								"be prepended to customer specific alkira domain For Example: " +
+								"if prefix is abc and tenant name is example then the FQDN would " +
+								"be abc.example.gpportal.alkira.com",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"service_group_name": {
+							Description: "The name of the service group. A group with the same name will be created.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
+				Optional: true,
+			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"instance": {
-				Type: schema.TypeSet,
+				Type:     schema.TypeSet,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -60,9 +101,42 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"global_protect_segment_options": {
+							Description: "These options should be set only when global protect is " +
+								"enabled on service. These are set per segment. It is expected that " +
+								"on a segment where global protect is enabled at least 1 instance " +
+								"should be set with portal_enabled and at least one with " +
+								"gateway_enabled. It can be on the same instance or a different " +
+								"instance under the segment.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment_name": {
+										Description: "This should be Segment Name for which Global Protect options needs to be set for a instance.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"portal_enabled": {
+										Description: "indicates if the Global Protect Portal is enabled on this PAN instance",
+										Type:        schema.TypeBool,
+										Required:    true,
+									},
+									"gateway_enabled": {
+										Description: "indicates if the Global Protect Gateway is enabled on this PAN instance",
+										Type:        schema.TypeBool,
+										Required:    true,
+									},
+									"prefix_list_id": {
+										Description: "Prefix List with Client IP Pool.",
+										Type:        schema.TypeInt,
+										Required:    true,
+									},
+								},
+							},
+						},
 					},
 				},
-				Required: true,
 			},
 			"license_type": {
 				Description:  "PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
@@ -255,27 +329,32 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	instances := expandPanInstances(d.Get("instance").(*schema.Set))
 	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
+	globalProtectSegmentOptions := expandGlobalProtectSegmentOptions(
+		d.Get("global_protect_segment_options").(*schema.Set),
+	)
 
 	service := &alkira.ServicePan{
-		BillingTagIds:       billingTagIds,
-		CXP:                 d.Get("cxp").(string),
-		CredentialId:        d.Get("credential_id").(string),
-		Instances:           instances,
-		LicenseType:         d.Get("license_type").(string),
-		MaxInstanceCount:    d.Get("max_instance_count").(int),
-		MinInstanceCount:    d.Get("min_instance_count").(int),
-		ManagementSegmentId: d.Get("management_segment_id").(int),
-		Name:                d.Get("name").(string),
-		PanoramaEnabled:     d.Get("panorama_enabled").(bool),
-		PanoramaDeviceGroup: d.Get("panorama_device_group").(string),
-		PanoramaIpAddress:   d.Get("panorama_ip_address").(string),
-		PanoramaTemplate:    d.Get("panorama_template").(string),
-		SegmentOptions:      segmentOptions,
-		SegmentIds:          segmentIds,
-		TunnelProtocol:      d.Get("tunnel_protocol").(string),
-		Size:                d.Get("size").(string),
-		Type:                d.Get("type").(string),
-		Version:             d.Get("version").(string),
+		BillingTagIds:               billingTagIds,
+		CXP:                         d.Get("cxp").(string),
+		CredentialId:                d.Get("credential_id").(string),
+		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
+		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
+		Instances:                   instances,
+		LicenseType:                 d.Get("license_type").(string),
+		MaxInstanceCount:            d.Get("max_instance_count").(int),
+		MinInstanceCount:            d.Get("min_instance_count").(int),
+		ManagementSegmentId:         d.Get("management_segment_id").(int),
+		Name:                        d.Get("name").(string),
+		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
+		PanoramaDeviceGroup:         d.Get("panorama_device_group").(string),
+		PanoramaIpAddress:           d.Get("panorama_ip_address").(string),
+		PanoramaTemplate:            d.Get("panorama_template").(string),
+		SegmentOptions:              segmentOptions,
+		SegmentIds:                  segmentIds,
+		TunnelProtocol:              d.Get("tunnel_protocol").(string),
+		Size:                        d.Get("size").(string),
+		Type:                        d.Get("type").(string),
+		Version:                     d.Get("version").(string),
 	}
 
 	return service, nil

@@ -81,7 +81,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Group (%d)", d.Id())
+	log.Printf("[INFO] Deleting Group (%s)", d.Id())
 	err := client.DeleteGroup(d.Id())
 
 	if err != nil {

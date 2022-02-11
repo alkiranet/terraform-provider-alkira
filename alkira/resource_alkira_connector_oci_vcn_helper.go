@@ -42,7 +42,7 @@ func generateConnectorOciVcnUserInputPrefixes(cidr []interface{}, subnets *schem
 
 	// Processing "vcn_cidr"
 	if len(cidr) > 0 {
-		log.Printf("[DEBUG] Processing vcn_cidr", cidr)
+		log.Printf("[DEBUG] Processing vcn_cidr %v", cidr)
 		cidrList := make([]alkira.ConnectorOciVcnInputPrefixes, len(cidr))
 
 		for i, value := range cidr {
