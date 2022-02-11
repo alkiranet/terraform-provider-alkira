@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -8,15 +8,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 )
 
-// Client timeout
-const timeout = 60
+// Default client timeout is 60s
+const defaultClientTimeout time.Duration = 60 * time.Second
 
 type AlkiraClient struct {
 	Username        string
@@ -43,10 +43,31 @@ func (s *Session) Cookies(u *url.URL) []*http.Cookie {
 }
 
 // NewAlkiraClient creates a new API client
-func NewAlkiraClient(url string, username string, password string) (*AlkiraClient, error) {
+func NewAlkiraClient(hostname string, username string, password string) (*AlkiraClient, error) {
 
-	// Construct the complete URI based on the given endpoint
-	apiUrl := "https://" + url + "/api"
+	// Construct the portal URI
+	url := "https://" + hostname
+
+	// Set the client timeout
+	clientTimeout := defaultClientTimeout
+
+	if t := os.Getenv("ALKIRA_CLIENT_TIMEOUT"); t != "" {
+		var err error
+		clientTimeout, err = time.ParseDuration(t)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
+		}
+	}
+
+	return NewAlkiraClientInternal(url, username, password, clientTimeout)
+}
+
+// NewAlkiraClientInternal creates a new client
+func NewAlkiraClientInternal(url string, username string, password string, timeout time.Duration) (*AlkiraClient, error) {
+
+	// Construct the portal URI based on the given endpoint
+	apiUrl := url + "/api"
 
 	loginRequestBody, err := json.Marshal(map[string]string{
 		"userName": username,
@@ -59,10 +80,8 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	// Using a client to set a timeout. This is alkira service. It
-	// should not take that long
 	var httpClient = &http.Client{
-		Timeout:   time.Second * timeout,
+		Timeout:   timeout,
 		Transport: tr,
 	}
 
@@ -70,9 +89,15 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	jar.jar = make(map[string][]*http.Cookie)
 	httpClient.Jar = jar
 
+	// User login
 	loginUrl := fmt.Sprintf("%s/user/login", apiUrl)
 
-	request, err := http.NewRequest("POST", loginUrl, bytes.NewBuffer(loginRequestBody))
+	request, requestErr := http.NewRequest("POST", loginUrl, bytes.NewBuffer(loginRequestBody))
+
+	if requestErr != nil {
+		return nil, fmt.Errorf("failed to create login request, %v", requestErr)
+	}
+
 	request.Header.Set("Content-Type", "application/json")
 	response, err := httpClient.Do(request)
 
@@ -91,7 +116,7 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	// Obtain the session
 	sessionUrl := apiUrl + "/sessions"
 
-	sessionRequest, err := http.NewRequest("POST", sessionUrl, bytes.NewBuffer(userAuthData))
+	sessionRequest, _ := http.NewRequest("POST", sessionUrl, bytes.NewBuffer(userAuthData))
 	sessionRequest.Header.Set("Content-Type", "application/json")
 	sessionResponse, err := httpClient.Do(sessionRequest)
 
@@ -102,9 +127,9 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	defer sessionResponse.Body.Close()
 
 	sessionData, _ := ioutil.ReadAll(sessionResponse.Body)
+	logf("DEBUG", "session data: %s\n", string(sessionData))
 
 	if sessionResponse.StatusCode != 200 {
-		log.Println(string(sessionData))
 		return nil, fmt.Errorf("failed to get session (%d)", sessionResponse.StatusCode)
 	}
 
@@ -112,7 +137,7 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	var result []TenantNetworkId
 	tenantNetworkUrl := apiUrl + "/tenantnetworks"
 
-	tenantNetworkRequest, err := http.NewRequest("GET", tenantNetworkUrl, nil)
+	tenantNetworkRequest, _ := http.NewRequest("GET", tenantNetworkUrl, nil)
 	tenantNetworkRequest.Header.Set("Content-Type", "application/json")
 	tenantNetworkResponse, err := httpClient.Do(tenantNetworkRequest)
 
@@ -123,9 +148,10 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
+	logf("DEBUG", "tenant network: %s\n", string(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to get session (%d)", sessionResponse.StatusCode)
+		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
 	}
 
 	json.Unmarshal([]byte(data), &result)
@@ -135,7 +161,7 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 	if len(result) > 0 {
 		tenantNetworkId = result[0].Id
 	} else {
-		return nil, fmt.Errorf("failed to get Tenant Network Id")
+		return nil, fmt.Errorf("failed to get tenant network ID")
 	}
 
 	// Construct our client with all information
@@ -146,12 +172,9 @@ func NewAlkiraClient(url string, username string, password string) (*AlkiraClien
 
 // get retrieve a resource by sending a GET request
 func (ac *AlkiraClient) get(uri string) ([]byte, error) {
-	request, err := http.NewRequest("GET", uri, nil)
+	logf("DEBUG", "request(GET) URI: %s\n", uri)
 
-	if err != nil {
-		return nil, fmt.Errorf("request(GET) failed: %v", err)
-	}
-
+	request, _ := http.NewRequest("GET", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
@@ -173,14 +196,8 @@ func (ac *AlkiraClient) get(uri string) ([]byte, error) {
 func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
 	logf("DEBUG", "request(POST): %s\n", string(body))
 
-	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(body))
-
-	if err != nil {
-		return nil, fmt.Errorf("request(POST) failed: %v", err)
-	}
-
+	request, _ := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
-
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
@@ -201,12 +218,7 @@ func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
 func (ac *AlkiraClient) delete(uri string) error {
 	logf("DEBUG", "request(DELETE) uri: %s\n", uri)
 
-	request, err := http.NewRequest("DELETE", uri, nil)
-
-	if err != nil {
-		return fmt.Errorf("request(DELETE) failed: %v", err)
-	}
-
+	request, _ := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
@@ -232,12 +244,7 @@ func (ac *AlkiraClient) delete(uri string) error {
 func (ac *AlkiraClient) update(uri string, body []byte) error {
 	logf("DEBUG", "request(PUT): %s\n", string(body))
 
-	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
-
-	if err != nil {
-		return fmt.Errorf("request(PUT) failed: %v", err)
-	}
-
+	request, _ := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
