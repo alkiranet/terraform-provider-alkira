@@ -58,7 +58,7 @@ func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
 				return state, "ERROR", err
 			}
 
-			log.Printf("[DEBUG] Tenant Network %d status received: %#v", client.TenantNetworkId, state)
+			log.Printf("[DEBUG] Tenant Network %s status received: %#v", client.TenantNetworkId, state)
 			return state, state, nil
 		},
 	}
@@ -103,7 +103,7 @@ func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {
 				return state, "ERROR", err
 			}
 
-			log.Printf("[DEBUG] Tenant Network %d status received: %#v", client.TenantNetworkId, state)
+			log.Printf("[DEBUG] Tenant Network %s status received: %#v", client.TenantNetworkId, state)
 			return state, state, nil
 		},
 	}
