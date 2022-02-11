@@ -46,10 +46,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeBool,
 				Required:    true,
 			},
-			//TODO(mac): finish writing this descritpion
 			"global_protect_segment_options": {
-				Description: "global_protect_segment_options is a map of the segments to which " +
-					"options should apply. Three fields are required in order for the map to be accepted",
+				Description: "A mapping of segment_name -> zones_to_groups. The only segment names " +
+					"allowed are the segments that are already associated with the service." +
+					"options should apply. If global_protect_enabled is set to false, " +
+					"global_protect_segment_options shound not be included in your request.",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -104,8 +105,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Description: "These options should be set only when global protect is " +
 								"enabled on service. These are set per segment. It is expected that " +
 								"on a segment where global protect is enabled at least 1 instance " +
-								"should be set with portalEnabled and at least one with " +
-								"gatewayEnabled. It can be on the same instance or different " +
+								"should be set with portal_enabled and at least one with " +
+								"gateway_enabled. It can be on the same instance or a different " +
 								"instance under the segment.",
 							Type:     schema.TypeSet,
 							Optional: true,
