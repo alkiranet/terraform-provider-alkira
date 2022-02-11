@@ -9,33 +9,57 @@ import (
 )
 
 type ServicePan struct {
-	BillingTagIds       []int                `json:"billingTags"`
-	Bundle              string               `json:"bundle,omitempty"`
-	CXP                 string               `json:"cxp"`
-	CredentialId        string               `json:"credentialId"`
-	Id                  int                  `json:"id,omitempty"`
-	Instances           []ServicePanInstance `json:"instances,omitempty"`
-	LicenseType         string               `json:"licenseType"`
-	ManagementSegmentId int                  `json:"managementSegment"`
-	MaxInstanceCount    int                  `json:"maxInstanceCount"`
-	MinInstanceCount    int                  `json:"minInstanceCount"`
-	Name                string               `json:"name"`
-	PanoramaEnabled     bool                 `json:"panoramaEnabled"`
-	PanoramaDeviceGroup string               `json:"panoramaDeviceGroup"`
-	PanoramaIpAddress   string               `json:"panoramaIPAddress"`
-	PanoramaTemplate    string               `json:"panoramaTemplate"`
-	PanWarmBootEnabled  bool                 `json:"panWarmBootEnabled,omitempty"`
-	SegmentIds          []int                `json:"segments"`
-	SegmentOptions      interface{}          `json:"segmentOptions,omitempty"`
-	Size                string               `json:"size"`
-	TunnelProtocol      string               `json:"tunnelProtocol,omitempty"`
-	Type                string               `json:"type"`
-	Version             string               `json:"version"`
+	BillingTagIds               []int                                `json:"billingTags"`
+	Bundle                      string                               `json:"bundle,omitempty"`
+	CXP                         string                               `json:"cxp"`
+	CredentialId                string                               `json:"credentialId"`
+	GlobalProtectEnabled        bool                                 `json:"globalProtectEnabled"`
+	GlobalProtectSegmentOptions map[string]*GlobalProtectSegmentName `json:"globalProtectSegmentOptions,omitempty"`
+	Id                          int                                  `json:"id,omitempty"`
+	Instances                   []ServicePanInstance                 `json:"instances,omitempty"`
+	LicenseType                 string                               `json:"licenseType"`
+	LicenseKey                  string                               `json:"licenseKey"`
+	ManagementSegmentId         int                                  `json:"managementSegment"`
+	MaxInstanceCount            int                                  `json:"maxInstanceCount"`
+	MinInstanceCount            int                                  `json:"minInstanceCount"`
+	Name                        string                               `json:"name"`
+	PanoramaEnabled             bool                                 `json:"panoramaEnabled"`
+	PanoramaDeviceGroup         string                               `json:"panoramaDeviceGroup"`
+	PanoramaIpAddress           string                               `json:"panoramaIPAddress"`
+	PanoramaTemplate            string                               `json:"panoramaTemplate"`
+	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
+	SegmentIds                  []int                                `json:"segments"`
+	SegmentOptions              interface{}                          `json:"segmentOptions,omitempty"`
+	Size                        string                               `json:"size"`
+	TunnelProtocol              string                               `json:"tunnelProtocol,omitempty"`
+	Type                        string                               `json:"type"`
+	Version                     string                               `json:"version"`
+}
+
+type GlobalProtectSegmentOptions struct {
+	SegmentName *GlobalProtectSegmentName `json:"segmentName"`
+}
+
+type GlobalProtectSegmentName struct {
+	RemoteUserZoneName string `json:"remoteUserZoneName"`
+	PortalFqdnPrefix   string `json:"portalFqdnPrefix"`
+	ServiceGroupName   string `json:"serviceGroupName"`
+}
+
+type GlobalProtectSegmentOptionsInstance struct {
+	SegmentName *GlobalProtectSegmentNameInstance `json:"segmentName"`
+}
+
+type GlobalProtectSegmentNameInstance struct {
+	PortalEnabled  bool `json:"portalEnabled"`
+	GatewayEnabled bool `json:"gatewayEnabled"`
+	PrefixListId   int  `json:"prefixListId"`
 }
 
 type ServicePanInstance struct {
-	CredentialId string `json:"credentialId"`
-	Name         string `json:"name"`
+	CredentialId                string                                       `json:"credentialId"`
+	Name                        string                                       `json:"name"`
+	GlobalProtectSegmentOptions map[string]*GlobalProtectSegmentNameInstance `json:"globalProtectSegmentOptions,omitempty"`
 }
 
 // CreateServicePan create service PAN
