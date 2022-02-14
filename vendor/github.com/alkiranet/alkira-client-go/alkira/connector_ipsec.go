@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -81,6 +81,7 @@ type ConnectorIPSec struct {
 	BillingTags    []int                         `json:"billingTags"`
 	CXP            string                        `json:"cxp"`
 	Group          string                        `json:"group"`
+	Enabled        bool                          `json:"enabled,omitempty"`
 	Id             json.Number                   `json:"id,omitempty"`
 	Name           string                        `json:"name"`
 	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`

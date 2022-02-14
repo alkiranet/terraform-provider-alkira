@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -17,19 +17,20 @@ type ConnectorVnetRouting struct {
 }
 
 type ConnectorAzureVnet struct {
-	BillingTags    []int                 `json:"billingTags"`
-	CXP            string                `json:"cxp"`
-	CredentialId   string                `json:"credentialId"`
-	CustomerRegion string                `json:"customerRegion"`
-	Group          string                `json:"group"`
-	Id             json.Number           `json:"id,omitempty"`
-	Name           string                `json:"name"`
-	NativeServices []string              `json:"nativeServices,omitempty"`
-	Segments       []string              `json:"segments"`
-	Size           string                `json:"size"`
-	SubscriptionId string                `json:"subscriptionId,omitempty"`
-	VnetId         string                `json:"vnetId"`
-	VnetRouting    *ConnectorVnetRouting `json:"vnetRouting"`
+	BillingTags       []int                 `json:"billingTags"`
+	CXP               string                `json:"cxp"`
+	CredentialId      string                `json:"credentialId"`
+	Group             string                `json:"group"`
+	Enabled           bool                  `json:"enabled,omitempty"`
+	Id                json.Number           `json:"id,omitempty"`
+	Name              string                `json:"name"`
+	NativeServices    []string              `json:"nativeServices,omitempty"`
+	ResourceGroupName string                `json:"resourceGroupName,omitempty"`
+	Segments          []string              `json:"segments"`
+	ServiceTags       []string              `json:"serviceTags,omitempty"`
+	Size              string                `json:"size"`
+	VnetId            string                `json:"vnetId"`
+	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
 }
 
 // CreateConnectorAzureVnet create a AZURE-VNET connector

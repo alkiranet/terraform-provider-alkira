@@ -23,6 +23,7 @@ type ConnectorInternet struct {
 	CXP                 string               `json:"cxp"`
 	Description         string               `json:"description"`
 	Group               string               `json:"group,omitempty"`
+	Enabled             bool                 `json:"enabled,omitempty"`
 	Id                  int                  `json:"id"`
 	Name                string               `json:"name"`
 	NumOfPublicIPs      int                  `json:"numOfPublicIPs,omitempty"`
