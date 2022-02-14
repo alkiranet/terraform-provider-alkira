@@ -39,6 +39,7 @@ resource "alkira_connector_internet_exit" "test1" {
 
 - **billing_tag_ids** (List of Number) The list of billing tag IDs.
 - **description** (String) The description of the connector.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **public_ip_number** (Number) The number of the public IPs to the connector. Default is `2`.

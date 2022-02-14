@@ -40,6 +40,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -109,6 +115,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
+	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
@@ -170,6 +177,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		BillingTags:  billingTags,
 		CXP:          d.Get("cxp").(string),
 		CredentialId: d.Get("credential_id").(string),
+		Enabled:      d.Get("enabled").(bool),
 		Group:        d.Get("group").(string),
 		Name:         d.Get("name").(string),
 		Segments:     []string{segment.Name},

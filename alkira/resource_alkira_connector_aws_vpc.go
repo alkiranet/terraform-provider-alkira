@@ -44,6 +44,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -155,15 +161,16 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("cxp", connector.CXP)
-	d.Set("credential_id", connector.CredentialId)
+	d.Set("aws_account_id", connector.VpcOwnerId)
 	d.Set("aws_region", connector.CustomerRegion)
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("credential_id", connector.CredentialId)
+	d.Set("cxp", connector.CXP)
+	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vpc_id", connector.VpcId)
-	d.Set("aws_account_id", connector.VpcOwnerId)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -239,6 +246,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerName:   client.Username,
 		CustomerRegion: d.Get("aws_region").(string),
+		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
 		Segments:       []string{segment.Name},

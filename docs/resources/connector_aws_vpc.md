@@ -129,6 +129,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) Tags for billing.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **vpc_cidr** (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
