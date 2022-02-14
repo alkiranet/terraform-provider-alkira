@@ -47,6 +47,12 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"public_ip_number": {
+				Description: "The number of the public IPs to the connector. Default is `2`.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     2,
+			},
 			"segment_id": {
 				Description: "ID of segment associated with the connector.",
 				Type:        schema.TypeString,
@@ -57,6 +63,21 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+			},
+			"traffic_distribution_algorithm": {
+				Description: "The type of the algorithm to be used for traffic distribution." +
+					"Currently, only `HASHING` is supported.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "HASHING",
+				ValidateFunc: validation.StringInSlice([]string{"HASHING"}, false),
+			},
+			"traffic_distribution_algorithm_attribute": {
+				Description:  "The attributes depends on the algorithm. For now, it's either `DEFAULT` or `SRC_IP`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "SRC_IP"}, false),
 			},
 		},
 	}
@@ -95,6 +116,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("description", connector.Description)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
+	d.Set("public_ip_number", connector.NumOfPublicIPs)
 
 	// Set segment_id
 	if len(connector.Segments) > 0 {
@@ -107,6 +129,11 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	d.Set("size", connector.Size)
+
+	if connector.TrafficDistribution != nil {
+		d.Set("traffic_distribution_algorithm", connector.TrafficDistribution.Algorithm)
+		d.Set("traffic_distribution_algorithm_attribute", connector.TrafficDistribution.AlgorithmAttributes.Keys)
+	}
 
 	return nil
 }
@@ -140,18 +167,29 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	segment, err := client.GetSegmentById(d.Get("segment_id").(string))
 
+	algorithmAttributes := alkira.AlgorithmAttributes{
+		Keys: d.Get("traffic_distribution_algorithm_attribute").(string),
+	}
+
+	trafficDistribution := alkira.TrafficDistribution{
+		Algorithm:           d.Get("traffic_distribution_algorithm").(string),
+		AlgorithmAttributes: algorithmAttributes,
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	request := &alkira.ConnectorInternet{
-		BillingTags: billingTags,
-		CXP:         d.Get("cxp").(string),
-		Description: d.Get("description").(string),
-		Group:       d.Get("group").(string),
-		Name:        d.Get("name").(string),
-		Segments:    []string{segment.Name},
-		Size:        d.Get("size").(string),
+		BillingTags:         billingTags,
+		CXP:                 d.Get("cxp").(string),
+		Description:         d.Get("description").(string),
+		Group:               d.Get("group").(string),
+		Name:                d.Get("name").(string),
+		NumOfPublicIPs:      d.Get("public_ip_number").(int),
+		Segments:            []string{segment.Name},
+		Size:                d.Get("size").(string),
+		TrafficDistribution: &trafficDistribution,
 	}
 
 	return request, nil

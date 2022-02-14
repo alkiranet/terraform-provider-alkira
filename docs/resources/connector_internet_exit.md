@@ -41,5 +41,8 @@ resource "alkira_connector_internet_exit" "test1" {
 - **description** (String) The description of the connector.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
+- **public_ip_number** (Number) The number of the public IPs to the connector. Default is `2`.
+- **traffic_distribution_algorithm** (String) The type of the algorithm to be used for traffic distribution.Currently, only `HASHING` is supported.
+- **traffic_distribution_algorithm_attribute** (String) The attributes depends on the algorithm. For now, it's either `DEFAULT` or `SRC_IP`.
 
 
