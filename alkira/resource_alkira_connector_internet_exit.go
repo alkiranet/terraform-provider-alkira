@@ -37,6 +37,12 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -114,6 +120,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
 	d.Set("description", connector.Description)
+	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("public_ip_number", connector.NumOfPublicIPs)
@@ -185,6 +192,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		CXP:                 d.Get("cxp").(string),
 		Description:         d.Get("description").(string),
 		Group:               d.Get("group").(string),
+		Enabled:             d.Get("enabled").(bool),
 		Name:                d.Get("name").(string),
 		NumOfPublicIPs:      d.Get("public_ip_number").(int),
 		Segments:            []string{segment.Name},

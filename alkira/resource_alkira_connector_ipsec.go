@@ -34,6 +34,12 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"endpoint": &schema.Schema{
 				Description: "The endpoint.",
 				Type:        schema.TypeSet,
@@ -324,6 +330,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
+	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 
@@ -414,6 +421,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 	connector := &alkira.ConnectorIPSec{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
+		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
 		PolicyOptions:  policyOptions,

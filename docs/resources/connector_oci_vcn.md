@@ -46,7 +46,6 @@ resource "alkira_connector_oci_vcn" "test" {
 
 - **credential_id** (String) ID of OCI-VCN credential.
 - **cxp** (String) The CXP where the connector should be provisioned.
-- **enabled** (Boolean) Whether the connector is enabled or not.
 - **name** (String) The name of the connector.
 - **oci_region** (String) OCI region of the VCN.
 - **primary** (Boolean) Wether the connector is primary.
@@ -57,6 +56,7 @@ resource "alkira_connector_oci_vcn" "test" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) IDs of billing tags.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **vcn_cidr** (List of String) The list of CIDR attached to the target VCN for routing purpose. It could be only specified if `vcn_subnet` is not specified.

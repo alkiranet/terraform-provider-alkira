@@ -34,6 +34,12 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"gcp_region": {
 				Description: "GCP region where VPC resides.",
 				Type:        schema.TypeString,
@@ -105,6 +111,7 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
+	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
@@ -163,6 +170,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerRegion: d.Get("gcp_region").(string),
+		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
 		Segments:       []string{segment.Name},

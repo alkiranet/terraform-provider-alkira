@@ -74,6 +74,7 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) Tags for billing.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 
