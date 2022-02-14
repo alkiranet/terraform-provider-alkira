@@ -59,6 +59,7 @@ resource "alkira_connector_cisco_sdwan" "test" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **type** (String) The type of Cisco SD-WAN. Default value is `VEDGE`.

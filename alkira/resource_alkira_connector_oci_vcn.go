@@ -29,9 +29,10 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Required:    true,
 			},
 			"enabled": {
-				Description: "Whether the connector is enabled or not.",
+				Description: "Is the connector enabled. Default is `true`.",
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
+				Default:     true,
 			},
 			"primary": {
 				Description: "Wether the connector is primary.",

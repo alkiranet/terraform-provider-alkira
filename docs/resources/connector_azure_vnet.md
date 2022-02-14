@@ -67,6 +67,7 @@ resource "alkira_connector_azure_vnet" "test2" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) Tags for billing.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 - **routing_options** (String) Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.

@@ -71,6 +71,7 @@ resource "alkira_connector_ipsec" "test" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) IDs of Billing Tag associated with the connector.
+- **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **endpoint** (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.

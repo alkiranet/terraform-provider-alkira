@@ -33,6 +33,12 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -146,6 +152,7 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
 	d.Set("group", connector.Group)
+	d.Set("enabled", connector.Enabled)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("type", connector.Type)
@@ -225,6 +232,7 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 		CiscoEdgeVrfMappings: mappings,
 		Cxp:                  d.Get("cxp").(string),
 		Group:                d.Get("group").(string),
+		Enabled:              d.Get("enabled").(bool),
 		Name:                 d.Get("name").(string),
 		Size:                 d.Get("size").(string),
 		Version:              d.Get("version").(string),
