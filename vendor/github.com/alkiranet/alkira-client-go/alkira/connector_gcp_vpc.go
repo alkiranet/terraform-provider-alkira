@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -21,6 +21,7 @@ type ConnectorGcpVpc struct {
 	CXP            string                  `json:"cxp"`
 	CredentialId   string                  `json:"credentialId"`
 	CustomerRegion string                  `json:"customerRegion"`
+	Enabled        bool                    `json:"enabled,omitempty"`
 	GcpRouting     *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
 	Group          string                  `json:"group"`
 	Id             json.Number             `json:"id,omitempty"`

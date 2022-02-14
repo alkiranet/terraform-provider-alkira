@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -29,6 +29,7 @@ type ConnectorCiscoSdwan struct {
 	CiscoEdgeVrfMappings []CiscoSdwanEdgeVrfMapping `json:"ciscoEdgeVRFMappings"`
 	Cxp                  string                     `json:"cxp"`
 	Group                string                     `json:"group,omitempty"`
+	Enabled              bool                       `json:"enabled,omitempty"`
 	Name                 string                     `json:"name"`
 	Id                   int                        `json:"id,omitempty"`
 	Size                 string                     `json:"size"`

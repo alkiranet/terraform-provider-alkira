@@ -24,7 +24,6 @@ A simple connector could be created like this:
 ```terraform
 resource "alkira_connector_azure_vnet" "test1" {
   name           = "test1"
-  azure_region   = "westus2"
   azure_vnet_id  = "/subscriptions/XXXX/resourceGroups/Test/providers/Microsoft.Network/virtualNetworks/test1"
   credential_id  = alkira_credential_azure_vnet.test1.id
   cxp            = "US-WEST"
@@ -41,7 +40,6 @@ Additionally, you could adjust routing by using `routing_options` and
 ```terraform
 resource "alkira_connector_azure_vnet" "test2" {
   name           = "test2"
-  azure_region   = "westus2"
   azure_vnet_id  = "/subscriptions/XXXX/resourceGroups/Test/providers/Microsoft.Network/virtualNetworks/test-vnet2"
   credential_id  = alkira_credential_azure_vnet.yours.id
   cxp            = "US-WEST"
@@ -59,7 +57,6 @@ resource "alkira_connector_azure_vnet" "test2" {
 
 ### Required
 
-- **azure_region** (String) Azure Region where VNET resides.
 - **azure_vnet_id** (String) Azure Virtual Network ID.
 - **credential_id** (String) ID of credential managed by Credential Manager.
 - **cxp** (String) The CXP where the connector should be provisioned.
@@ -69,7 +66,6 @@ resource "alkira_connector_azure_vnet" "test2" {
 
 ### Optional
 
-- **azure_subscription_id** (String) The Azure subscription ID of the VNET. If the `subscirption_id` was provided in the credential, the one in the credential will be always used.
 - **billing_tag_ids** (List of Number) Tags for billing.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
