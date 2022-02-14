@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -34,19 +34,19 @@ type ConnectorOciVcnRouting struct {
 }
 
 type ConnectorOciVcn struct {
-	Id             json.Number `json:"id,omitempty"`
-	CustomerRegion string      `json:"customerRegion"`
-	VcnId          string      `json:"vcnId"`
+	BillingTags    []int       `json:"billingTags"`
+	CXP            string      `json:"cxp"`
 	CredentialId   string      `json:"credentialId"`
+	CustomerRegion string      `json:"customerRegion"`
+	Enabled        bool        `json:"enabled"`
+	Group          string      `json:"group"`
+	Id             json.Number `json:"id,omitempty"`
+	Name           string      `json:"name"`
+	Primary        bool        `json:"primary"`
 	Segments       []string    `json:"segments"`
 	Size           string      `json:"size"`
+	VcnId          string      `json:"vcnId"`
 	VcnRouting     interface{} `json:"vcnRouting,omitempty"`
-	Enabled        bool        `json:"enabled"`
-	Primary        bool        `json:"primary"`
-	Name           string      `json:"name"`
-	CXP            string      `json:"cxp"`
-	Group          string      `json:"group"`
-	BillingTags    []int       `json:"billingTags"`
 }
 
 // CreateConnectorOciVcn create an OCI-VCN connector

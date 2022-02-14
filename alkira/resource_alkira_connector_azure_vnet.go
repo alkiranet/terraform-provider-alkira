@@ -19,22 +19,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 		Delete: resourceConnectorAzureVnetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"azure_region": {
-				Description: "Azure Region where VNET resides.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
 			"azure_vnet_id": {
 				Description: "Azure Virtual Network Id.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			"azure_subscription_id": {
-				Description: "The Azure subscription ID of the VNET. If the" +
-					"`subscirption_id` was provided in the credential, the one" +
-					"in the credential will be always used.",
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"billing_tag_ids": {
 				Description: "Tags for billing.",
@@ -117,8 +105,6 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	d.Set("azure_region", connector.CustomerRegion)
-	d.Set("azure_subscription_id", connector.SubscriptionId)
 	d.Set("azure_vnet_id", connector.VnetId)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("credential_id", connector.CredentialId)
@@ -181,17 +167,15 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		CustomerRegion: d.Get("azure_region").(string),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		Segments:       []string{segment.Name},
-		Size:           d.Get("size").(string),
-		SubscriptionId: d.Get("azure_subscription_id").(string),
-		VnetId:         d.Get("azure_vnet_id").(string),
-		VnetRouting:    routing,
+		BillingTags:  billingTags,
+		CXP:          d.Get("cxp").(string),
+		CredentialId: d.Get("credential_id").(string),
+		Group:        d.Get("group").(string),
+		Name:         d.Get("name").(string),
+		Segments:     []string{segment.Name},
+		Size:         d.Get("size").(string),
+		VnetId:       d.Get("azure_vnet_id").(string),
+		VnetRouting:  routing,
 	}
 
 	return request, nil

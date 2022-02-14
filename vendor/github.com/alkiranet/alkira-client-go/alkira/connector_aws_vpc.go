@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -40,6 +40,7 @@ type ConnectorAwsVpc struct {
 	CustomerName                       string      `json:"customerName"`
 	CustomerRegion                     string      `json:"customerRegion"`
 	DirectInterVPCCommunicationEnabled bool        `json:"directInterVPCCommunicationEnabled,omitempty"`
+	Enabled                            bool        `json:"enabled,omitempty"`
 	Group                              string      `json:"group"`
 	Id                                 json.Number `json:"id,omitempty"`
 	Name                               string      `json:"name"`
