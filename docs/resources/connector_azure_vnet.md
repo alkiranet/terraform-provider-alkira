@@ -72,6 +72,7 @@ resource "alkira_connector_azure_vnet" "test2" {
 - **id** (String) The ID of this resource.
 - **routing_options** (String) Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - **routing_prefix_list_ids** (List of Number) Prefix List IDs.
+- **service_tags** (List of String) list of service tags from Azure. Providing a service tag here,would result in service tag route configuration on VNET route table, sothat the traffic toward the service would directly steer towards thoseservices, and would not go via Alkira network.
 
 
 

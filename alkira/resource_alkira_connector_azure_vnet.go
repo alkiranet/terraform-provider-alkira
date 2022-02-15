@@ -74,6 +74,15 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
+			"service_tags": {
+				Description: "list of service tags from Azure. Providing a service tag here," +
+					"would result in service tag route configuration on VNET route table, so" +
+					"that the traffic toward the service would directly steer towards those" +
+					"services, and would not go via Alkira network.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 			"size": {
 				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:         schema.TypeString,
@@ -121,6 +130,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
 	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
 	d.Set("size", connector.Size)
+	d.Set("service_tags", connector.ServiceTags)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -164,6 +174,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
 	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
@@ -182,6 +193,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Name:         d.Get("name").(string),
 		Segments:     []string{segment.Name},
 		Size:         d.Get("size").(string),
+		ServiceTags:  serviceTags,
 		VnetId:       d.Get("azure_vnet_id").(string),
 		VnetRouting:  routing,
 	}
