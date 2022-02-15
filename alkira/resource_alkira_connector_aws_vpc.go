@@ -44,6 +44,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"direct_inter_vpc_communication": {
+				Description: "Enable direct inter-vpc communication. Default is set to `false`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
 				Type:        schema.TypeBool,
@@ -166,6 +172,7 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
+	d.Set("direct_inter_vpc_communication", connector.DirectInterVPCCommunicationEnabled)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
@@ -241,19 +248,20 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	}
 
 	request := &alkira.ConnectorAwsVpc{
-		BillingTags:    billingTags,
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		CustomerName:   client.Username,
-		CustomerRegion: d.Get("aws_region").(string),
-		Enabled:        d.Get("enabled").(bool),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		Segments:       []string{segment.Name},
-		Size:           d.Get("size").(string),
-		VpcId:          d.Get("vpc_id").(string),
-		VpcOwnerId:     d.Get("aws_account_id").(string),
-		VpcRouting:     vpcRouting,
+		BillingTags:                        billingTags,
+		CXP:                                d.Get("cxp").(string),
+		CredentialId:                       d.Get("credential_id").(string),
+		CustomerName:                       client.Username,
+		CustomerRegion:                     d.Get("aws_region").(string),
+		DirectInterVPCCommunicationEnabled: d.Get("direct_inter_vpc_communication").(bool),
+		Enabled:                            d.Get("enabled").(bool),
+		Group:                              d.Get("group").(string),
+		Name:                               d.Get("name").(string),
+		Segments:                           []string{segment.Name},
+		Size:                               d.Get("size").(string),
+		VpcId:                              d.Get("vpc_id").(string),
+		VpcOwnerId:                         d.Get("aws_account_id").(string),
+		VpcRouting:                         vpcRouting,
 	}
 
 	return request, nil

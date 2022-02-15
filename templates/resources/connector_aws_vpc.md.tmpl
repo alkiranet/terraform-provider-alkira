@@ -33,6 +33,9 @@ this point. You need to create a new connector for a new AWS VPC.
   be re-provisioned to make the change effective, e.g. changing the
   segment the connector is associated.
 
+* When direct inter-vpc communication is enabled, several other
+  functionalities won't work, like NAT policy, segment resource share,
+  internet-facing applications and traffic policies.
 
 ## Example Usage
 
@@ -129,6 +132,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 ### Optional
 
 - **billing_tag_ids** (List of Number) Tags for billing.
+- **direct_inter_vpc_communication** (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
 - **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
