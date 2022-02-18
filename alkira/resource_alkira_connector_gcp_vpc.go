@@ -40,6 +40,33 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"gcp_routing": {
+				Description: "GCP Routing describes the routes that are to be imported to the VPC " +
+					"from the CXP. This essentially controls how traffic is routed between the " +
+					"CXP and the VPC. gcpRouting provides a customized routing specification. " +
+					"When gcpRouting is not provided i.e when gcpRouting is null/empty then all " +
+					"traffic exiting the VPC will be sent to the CXP (i.e a default route to " +
+					"CXP will be added to all route tables on that VPC)",
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix_list_ids": {
+							Description: "Ids of prefix lists defined on the network.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"route_import_mode": {
+							Description: "The routeImportMode is an instruction which specifies " +
+								"the source of the routes that need to be imported. Only " +
+								"ADVERTISE_DEFAULT_ROUTE and ADVERTISE_CUSTOM_PREFIX are valid inputs.",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				Optional: true,
+			},
 			"gcp_region": {
 				Description: "GCP region where VPC resides.",
 				Type:        schema.TypeString,
@@ -156,7 +183,7 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 	client := m.(*alkira.AlkiraClient)
-
+	gcpRouting := convertGcpRouting(d.Get("gcp_routing").(*schema.Set))
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
@@ -169,6 +196,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
+		GcpRouting:     gcpRouting,
 		CustomerRegion: d.Get("gcp_region").(string),
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),

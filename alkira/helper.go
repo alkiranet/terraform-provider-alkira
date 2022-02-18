@@ -109,6 +109,35 @@ func expandPanSegmentOptions(in *schema.Set) map[string]interface{} {
 	return segmentOptions
 }
 
+func convertGcpRouting(in *schema.Set) *alkira.ConnectorGcpVpcRouting {
+	if in == nil || in.Len() > 1 {
+		log.Printf("[DEBUG] Only one object allowed in gcp routing options")
+		return nil
+	}
+
+	if in.Len() < 1 {
+		return nil
+	}
+
+	gcp := &alkira.ConnectorGcpVpcRouting{
+		ImportOptions: alkira.ConnectorGcpVpcImportOptions{},
+	}
+
+	for _, option := range in.List() {
+		cfg := option.(map[string]interface{})
+
+		if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
+			gcp.ImportOptions.PrefixListIds = convertTypeListToIntList(v)
+		}
+
+		if v, ok := cfg["route_import_mode"].(string); ok {
+			gcp.ImportOptions.RouteImportMode = v
+		}
+	}
+
+	return gcp
+}
+
 func expandGlobalProtectSegmentOptions(in *schema.Set) map[string]*alkira.GlobalProtectSegmentName {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid Global Protect Segment Options input")
