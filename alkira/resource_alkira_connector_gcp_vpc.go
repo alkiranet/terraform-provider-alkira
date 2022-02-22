@@ -6,6 +6,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorGcpVpc() *schema.Resource {
@@ -60,10 +61,13 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 							Description: "The routeImportMode is an instruction which specifies " +
 								"the source of the routes that need to be imported. Only " +
 								"`ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.",
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validateCustomPrefix,
-							//ValidateDiagFunc: validation.MapKeyLenBetween(0, 10),
+							Type:     schema.TypeString,
+							Required: true,
+							//ValidateDiagFunc: validateCustomPrefix,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX",
+							}, false),
 						},
 					},
 				},
