@@ -58,7 +58,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"custom_prefix": {
-							Description: "The routeImportMode is an instruction which specifies " +
+							Description: "custom_prefix is an instruction which specifies " +
 								"the source of the routes that need to be imported. Only " +
 								"`ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.",
 							Type:     schema.TypeString,
