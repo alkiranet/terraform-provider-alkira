@@ -84,7 +84,7 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 
 Required:
 
+- **custom_prefix** (String) The routeImportMode is an instruction which specifies the source of the routes that need to be imported. Only `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.
 - **prefix_list_ids** (List of Number) Ids of prefix lists defined on the network.
-- **route_import_mode** (String) The routeImportMode is an instruction which specifies the source of the routes that need to be imported. Only ADVERTISE_DEFAULT_ROUTE and ADVERTISE_CUSTOM_PREFIX are valid inputs.
 
 
