@@ -155,7 +155,6 @@ github.com/hashicorp/go-checkpoint
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
-## explicit
 github.com/hashicorp/go-cty/cty
 github.com/hashicorp/go-cty/cty/convert
 github.com/hashicorp/go-cty/cty/gocty
@@ -306,7 +305,6 @@ github.com/vmihailenco/msgpack/codes
 # github.com/xanzy/ssh-agent v0.2.1
 github.com/xanzy/ssh-agent
 # github.com/zclconf/go-cty v1.2.1
-## explicit
 github.com/zclconf/go-cty/cty
 github.com/zclconf/go-cty/cty/convert
 github.com/zclconf/go-cty/cty/function
