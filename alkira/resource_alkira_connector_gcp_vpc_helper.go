@@ -35,3 +35,14 @@ func convertGcpRouting(in *schema.Set) *alkira.ConnectorGcpVpcRouting {
 
 	return gcp
 }
+
+func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) {
+	in := make(map[string]interface{})
+	in["prefix_list_ids"] = c.ImportOptions.PrefixListIds
+	in["custom_prefix"] = c.ImportOptions.RouteImportMode
+
+	r := resourceAlkiraConnectorGcpVpc()
+	f := schema.HashResource(r)
+	s := schema.NewSet(f, []interface{}{in})
+	d.Set("gcp_routing", s)
+}

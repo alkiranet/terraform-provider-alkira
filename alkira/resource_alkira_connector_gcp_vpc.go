@@ -145,11 +145,13 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
+	d.Set("gcp_routing", connector.GcpRouting)
+	d.Set("gcp_vpc_id", connector.VpcId)
+	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
-	d.Set("gcp_vpc_id", connector.VpcId)
-	d.Set("gcp_vpc_name", connector.VpcName)
+	setGcpRoutingOptions(connector.GcpRouting, d)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
