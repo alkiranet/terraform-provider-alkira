@@ -63,7 +63,6 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 								"`ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.",
 							Type:     schema.TypeString,
 							Required: true,
-							//ValidateDiagFunc: validateCustomPrefix,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ADVERTISE_DEFAULT_ROUTE",
 								"ADVERTISE_CUSTOM_PREFIX",
