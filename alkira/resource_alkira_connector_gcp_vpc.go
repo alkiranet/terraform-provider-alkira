@@ -6,6 +6,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorGcpVpc() *schema.Resource {
@@ -39,6 +40,37 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
+			},
+			"gcp_routing": {
+				Description: "GCP Routing describes the routes that are to be imported to the VPC " +
+					"from the CXP. This essentially controls how traffic is routed between the " +
+					"CXP and the VPC. gcpRouting provides a customized routing specification. " +
+					"When gcpRouting is not provided i.e when gcpRouting is null/empty then all " +
+					"traffic exiting the VPC will be sent to the CXP (i.e a default route to " +
+					"CXP will be added to all route tables on that VPC)",
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix_list_ids": {
+							Description: "Ids of prefix lists defined on the network.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"custom_prefix": {
+							Description: "custom_prefix is an instruction which specifies " +
+								"the source of the routes that need to be imported. Only " +
+								"`ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.",
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX",
+							}, false),
+						},
+					},
+				},
+				Optional: true,
 			},
 			"gcp_region": {
 				Description: "GCP region where VPC resides.",
@@ -112,11 +144,13 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
+	d.Set("gcp_routing", connector.GcpRouting)
+	d.Set("gcp_vpc_id", connector.VpcId)
+	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
-	d.Set("gcp_vpc_id", connector.VpcId)
-	d.Set("gcp_vpc_name", connector.VpcName)
+	setGcpRoutingOptions(connector.GcpRouting, d)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -156,7 +190,7 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 	client := m.(*alkira.AlkiraClient)
-
+	gcpRouting := convertGcpRouting(d.Get("gcp_routing").(*schema.Set))
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
@@ -169,6 +203,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
+		GcpRouting:     gcpRouting,
 		CustomerRegion: d.Get("gcp_region").(string),
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
