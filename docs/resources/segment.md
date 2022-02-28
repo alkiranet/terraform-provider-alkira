@@ -28,12 +28,12 @@ resource "alkira_segment" "test" {
 
 ### Required
 
-- **asn** (String) The BGP ASN for the segment.
 - **cidr** (String) The CIDR block.
 - **name** (String) The name of the segment.
 
 ### Optional
 
+- **asn** (String) The BGP ASN for the segment. Default value is `65514`.
 - **id** (String) The ID of this resource.
 
 
