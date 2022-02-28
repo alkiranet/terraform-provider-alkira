@@ -27,9 +27,10 @@ func resourceAlkiraSegment() *schema.Resource {
 				Required:    true,
 			},
 			"asn": {
-				Description: "The BGP ASN for the segment.",
+				Description: "The BGP ASN for the segment. Default value is `65514`.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Default:     "65514",
 			},
 			"cidr": {
 				Description: "The CIDR block.",
