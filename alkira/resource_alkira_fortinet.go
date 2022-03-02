@@ -82,13 +82,13 @@ func resourceAlkiraFortinet() *schema.Resource {
 				Description: "The maximum number of Fortinet Firewall instances that should be " +
 					"deployed when auto-scale is enabled. Note that auto-scale is not supported " +
 					"with Fortinet at this time. max_instance_count must be greater than or " +
-					"equal to minInstanceCount.",
+					"equal to min_instance_count.",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"min_instance_count": {
 				Description: "The minimum number of Fortinet Firewall instances that should be " +
-					" deployed at any point of time",
+					" deployed at any point in time.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,

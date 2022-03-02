@@ -37,15 +37,16 @@ func resourceAlkiraCredentialFortinet() *schema.Resource {
 func resourceCredentialFortinet(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	f := &alkira.FortinetUserPass{
+	log.Println("[INFO] fortinet username: ", d.Get("username").(string))
+	log.Println("[INFO] fortinet password: ", d.Get("password").(string))
+
+	c := &alkira.CredentialFortinet{
 		UserName: d.Get("username").(string),
 		Password: d.Get("password").(string),
 	}
 
-	c := alkira.CredentialFortinet{
-		Name:        d.Get("name").(string),
-		Credentials: f,
-	}
+	log.Println("[INFO] c.UserName: ", c.UserName)
+	log.Println("[INFO] c.Password: ", c.Password)
 
 	log.Printf("[INFO] Creating Credential (Fortinet)")
 	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, c)
@@ -65,14 +66,9 @@ func resourceCredentialFortinetRead(d *schema.ResourceData, meta interface{}) er
 func resourceCredentialFortinetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	f := &alkira.FortinetUserPass{
+	c := &alkira.CredentialFortinet{
 		UserName: d.Get("username").(string),
 		Password: d.Get("password").(string),
-	}
-
-	c := alkira.CredentialFortinet{
-		Name:        d.Get("name").(string),
-		Credentials: f,
 	}
 
 	log.Printf("[INFO] Updating Credential (Fortinet)")
