@@ -58,6 +58,10 @@ func TestFortinetRead(t *testing.T) {
 	require.Equal(t, expectedSegment, d.Get("management_server_segment"))
 }
 
+//
+// TEST HELPER
+//
+
 func serveFortinet(t *testing.T, f *alkira.Fortinet) *alkira.AlkiraClient {
 	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, req *http.Request) {

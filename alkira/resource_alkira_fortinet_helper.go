@@ -15,8 +15,6 @@ func expandFortinetInstances(in *schema.Set) []alkira.FortinetInstance {
 
 	instances := make([]alkira.FortinetInstance, in.Len())
 	for i, instance := range in.List() {
-		//fmt.Println(i)
-		//fmt.Println(instance)
 		r := alkira.FortinetInstance{}
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["name"].(string); ok {

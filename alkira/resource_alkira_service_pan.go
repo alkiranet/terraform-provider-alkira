@@ -101,6 +101,40 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"global_protect_segment_options": {
+							Description: "These options should be set only when global protect is " +
+								"enabled on service. These are set per segment. It is expected that " +
+								"on a segment where global protect is enabled at least 1 instance " +
+								"should be set with portal_enabled and at least one with " +
+								"gateway_enabled. It can be on the same instance or a different " +
+								"instance under the segment.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment_name": {
+										Description: "This should be Segment Name for which Global Protect options needs to be set for a instance.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"portal_enabled": {
+										Description: "indicates if the Global Protect Portal is enabled on this PAN instance",
+										Type:        schema.TypeBool,
+										Required:    true,
+									},
+									"gateway_enabled": {
+										Description: "indicates if the Global Protect Gateway is enabled on this PAN instance",
+										Type:        schema.TypeBool,
+										Required:    true,
+									},
+									"prefix_list_id": {
+										Description: "Prefix List with Client IP Pool.",
+										Type:        schema.TypeInt,
+										Required:    true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},

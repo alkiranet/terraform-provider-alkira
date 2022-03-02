@@ -37,16 +37,10 @@ func resourceAlkiraCredentialFortinet() *schema.Resource {
 func resourceCredentialFortinet(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Println("[INFO] fortinet username: ", d.Get("username").(string))
-	log.Println("[INFO] fortinet password: ", d.Get("password").(string))
-
 	c := &alkira.CredentialFortinet{
 		UserName: d.Get("username").(string),
 		Password: d.Get("password").(string),
 	}
-
-	log.Println("[INFO] c.UserName: ", c.UserName)
-	log.Println("[INFO] c.Password: ", c.Password)
 
 	log.Printf("[INFO] Creating Credential (Fortinet)")
 	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, c)

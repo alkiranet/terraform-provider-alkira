@@ -19,13 +19,14 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 	m := makeMapFortinetInstance(expectedName, expectedSerialNumber, expectedCredentialId)
 	m1 := makeMapFortinetInstance(expectedName+"1", expectedSerialNumber+"1", expectedCredentialId+"1")
 	m2 := makeMapFortinetInstance(expectedName+"2", expectedSerialNumber+"2", expectedCredentialId+"2")
+	mArr := []interface{}{m, m1, m2}
 
 	r := resourceAlkiraFortinet()
 	f := schema.HashResource(r)
-	s := schema.NewSet(f, []interface{}{m, m1, m2})
+	s := schema.NewSet(f, mArr)
 
 	actual := expandFortinetInstances(s)
-	require.Equal(t, len(actual), 3)
+	require.Equal(t, len(actual), len(mArr))
 
 	//Sets are unordered. We need to find our comparable item
 	mIndex := 0
@@ -38,6 +39,10 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 
 	require.Equal(t, expectedFortinetInstance, actual[mIndex])
 }
+
+//
+// TEST HELPERS
+//
 
 func makeMapFortinetInstance(name string, serialNumber string, credentialId string) map[string]interface{} {
 	m := make(map[string]interface{})
