@@ -17,6 +17,14 @@ func resourceAlkiraFortinet() *schema.Resource {
 		Delete:      resourceFortinetDelete,
 
 		Schema: map[string]*schema.Schema{
+			"auto_scale": {
+				Description: "Indicate if auto_scale should be enabled for your Fortinet " +
+					"firewall. `ON` and `OFF` are accepted values. `OFF` is the default if " +
+					"field is omitted",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
+			},
 			"billing_tag_ids": {
 				Description: "Billing tag IDs to associate with the service.",
 				Type:        schema.TypeList,
@@ -156,6 +164,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	d.Set("auto_scale", f.AutoScale)
 	d.Set("billing_tag_ids", f.BillingTags)
 	d.Set("credential_id", f.CredentialId)
 	d.Set("cxp", f.Cxp)
@@ -218,6 +227,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 	segmentNames := convertTypeListToStringList(d.Get("segment_names").([]interface{}))
 
 	service := &alkira.Fortinet{
+		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
 		CredentialId:     d.Get("credential_id").(string),
 		Cxp:              d.Get("cxp").(string),
