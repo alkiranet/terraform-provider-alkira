@@ -32,7 +32,7 @@ func dataSourceAlkiraGroup() *schema.Resource {
 func dataSourceAlkiraGroupRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	group, err := client.GetGroupByName(d.Get("name").(string))
+	group, err := client.GetConnectorGroupByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
