@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -8,22 +8,22 @@ import (
 	"strconv"
 )
 
-type Group struct {
+type ConnectorGroup struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-// GetGroups get all groups from the given tenant network
-func (ac *AlkiraClient) GetGroups() (string, error) {
+// GetConnectorGroups get all connector groups from the given tenant network
+func (ac *AlkiraClient) GetConnectorGroups() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
 	data, err := ac.get(uri)
 	return string(data), err
 }
 
-// CreateGroup create a new Group
-func (ac *AlkiraClient) CreateGroup(name string, description string) (string, error) {
+// CreateConnectorGroup create a new connector group
+func (ac *AlkiraClient) CreateConnectorGroup(name string, description string) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
 
 	body, err := json.Marshal(map[string]string{
@@ -32,7 +32,7 @@ func (ac *AlkiraClient) CreateGroup(name string, description string) (string, er
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("CreateGroup: failed to marshal: %v", err)
+		return "", fmt.Errorf("CreateConnectorGroup: failed to marshal: %v", err)
 	}
 
 	data, err := ac.create(uri, body)
@@ -41,20 +41,20 @@ func (ac *AlkiraClient) CreateGroup(name string, description string) (string, er
 		return "", err
 	}
 
-	var result Group
+	var result ConnectorGroup
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return "", fmt.Errorf("CreateGroup: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("CreateConnectorGroup: failed to unmarshal: %v", err)
 	}
 
 	return strconv.Itoa(result.Id), nil
 }
 
-// GetGroup get a group by its Id
-func (ac *AlkiraClient) GetGroupById(id string) (Group, error) {
+// GetConnectorGroup get a connector group by its ID
+func (ac *AlkiraClient) GetConnectorGroupById(id string) (ConnectorGroup, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
-	var group Group
+	var group ConnectorGroup
 
 	data, err := ac.get(uri)
 
@@ -65,27 +65,27 @@ func (ac *AlkiraClient) GetGroupById(id string) (Group, error) {
 	err = json.Unmarshal([]byte(data), &group)
 
 	if err != nil {
-		return group, fmt.Errorf("GetGroup: failed to unmarshal: %v", err)
+		return group, fmt.Errorf("GetConnectorGroup: failed to unmarshal: %v", err)
 	}
 
 	return group, nil
 }
 
-// GetGroupByName get the group by its name
-func (ac *AlkiraClient) GetGroupByName(name string) (Group, error) {
-	var group Group
+// GetConnectorGroupByName get the connector group by its name
+func (ac *AlkiraClient) GetConnectorGroupByName(name string) (ConnectorGroup, error) {
+	var group ConnectorGroup
 
 	if len(name) == 0 {
 		return group, fmt.Errorf("Invalid group name input")
 	}
 
-	groups, err := ac.GetGroups()
+	groups, err := ac.GetConnectorGroups()
 
 	if err != nil {
 		return group, err
 	}
 
-	var result []Group
+	var result []ConnectorGroup
 	json.Unmarshal([]byte(groups), &result)
 
 	for _, g := range result {
@@ -97,14 +97,14 @@ func (ac *AlkiraClient) GetGroupByName(name string) (Group, error) {
 	return group, fmt.Errorf("failed to find the group by %s", name)
 }
 
-// DeleteGroup delete a group
-func (ac *AlkiraClient) DeleteGroup(id string) error {
+// DeleteConnectorGroup delete a connector group
+func (ac *AlkiraClient) DeleteConnectorGroup(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
 	return ac.delete(uri)
 }
 
-// UpdateGroup update a group by its id
-func (ac *AlkiraClient) UpdateGroup(id string, name string, description string) error {
+// UpdateConnectorGroup update a connector group by its ID
+func (ac *AlkiraClient) UpdateConnectorGroup(id string, name string, description string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(map[string]string{
@@ -113,7 +113,7 @@ func (ac *AlkiraClient) UpdateGroup(id string, name string, description string) 
 	})
 
 	if err != nil {
-		return fmt.Errorf("UpdateGroup: failed to marshal: %v", err)
+		return fmt.Errorf("UpdateConnectorGroup: failed to marshal: %v", err)
 	}
 
 	return ac.update(uri, body)
