@@ -8,14 +8,14 @@ import (
 )
 
 func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
-	groups, err := client.GetGroups()
+	groups, err := client.GetConnectorGroups()
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get groups")
 		return 0
 	}
 
-	var result []alkira.Group
+	var result []alkira.ConnectorGroup
 	json.Unmarshal([]byte(groups), &result)
 
 	for _, group := range result {
