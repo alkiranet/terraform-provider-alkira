@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -10,7 +10,8 @@ import (
 type CredentialType string
 
 const (
-	CredentialTypeArubaEdgeConnect CredentialType = "aruba-edge-connector-instances"
+	CredentialTypeAkamaiProlexic   CredentialType = "akamai-prolexic"
+	CredentialTypeArubaEdgeConnect                = "aruba-edge-connector-instances"
 	CredentialTypeAwsVpc                          = "awsvpc"
 	CredentialTypeAzureVnet                       = "azurevnet"
 	CredentialTypeChkpFw                          = "chkp-fw"
@@ -23,7 +24,12 @@ const (
 	CredentialTypeOciVcn                          = "ocivcn"
 	CredentialTypePan                             = "pan"
 	CredentialTypePanInstance                     = "paninstance"
+	CredentialTypeFortinet                        = "ftntfw"
 )
+
+type CredentialAkamaiProlexic struct {
+	BgpAuthenticationKey string `json:"bgpAuthenticationKey"`
+}
 
 type CredentialArubaEdgeConnect struct {
 	AccountKey string `json:"accountKey"`
@@ -76,6 +82,11 @@ type CredentialGcpVpc struct {
 	ProjectId         string `json:"project_id"`
 	TokenUri          string `json:"token_uri"`
 	Type              string `json:"type"`
+}
+
+type CredentialFortinet struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
 }
 
 type CredentialKeyPair struct {

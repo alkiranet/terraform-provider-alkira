@@ -327,8 +327,12 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	instances := expandPanInstances(d.Get("instance").(*schema.Set))
+	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
+	panoramaIpAddress := d.Get("panorama_ip_address").(string)
+	panoramaTemplate := d.Get("panorama_template").(string)
 	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
+
 	globalProtectSegmentOptions := expandGlobalProtectSegmentOptions(
 		d.Get("global_protect_segment_options").(*schema.Set),
 	)
@@ -346,9 +350,9 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		ManagementSegmentId:         d.Get("management_segment_id").(int),
 		Name:                        d.Get("name").(string),
 		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
-		PanoramaDeviceGroup:         d.Get("panorama_device_group").(string),
-		PanoramaIpAddress:           d.Get("panorama_ip_address").(string),
-		PanoramaTemplate:            d.Get("panorama_template").(string),
+		PanoramaDeviceGroup:         &panoramaDeviceGroup,
+		PanoramaIpAddress:           &panoramaIpAddress,
+		PanoramaTemplate:            &panoramaTemplate,
 		SegmentOptions:              segmentOptions,
 		SegmentIds:                  segmentIds,
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),

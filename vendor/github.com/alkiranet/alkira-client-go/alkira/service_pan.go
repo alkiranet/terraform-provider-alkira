@@ -24,9 +24,9 @@ type ServicePan struct {
 	MinInstanceCount            int                                  `json:"minInstanceCount"`
 	Name                        string                               `json:"name"`
 	PanoramaEnabled             bool                                 `json:"panoramaEnabled"`
-	PanoramaDeviceGroup         string                               `json:"panoramaDeviceGroup"`
-	PanoramaIpAddress           string                               `json:"panoramaIPAddress"`
-	PanoramaTemplate            string                               `json:"panoramaTemplate"`
+	PanoramaDeviceGroup         *string                              `json:"panoramaDeviceGroup,omitempty"`
+	PanoramaIpAddress           *string                              `json:"panoramaIPAddress,omitempty"`
+	PanoramaTemplate            *string                              `json:"panoramaTemplate,omitempty"`
 	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
 	SegmentIds                  []int                                `json:"segments"`
 	SegmentOptions              interface{}                          `json:"segmentOptions,omitempty"`

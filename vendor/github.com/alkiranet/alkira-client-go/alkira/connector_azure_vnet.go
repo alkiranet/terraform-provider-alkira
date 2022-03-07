@@ -7,9 +7,24 @@ import (
 	"fmt"
 )
 
-type ConnectorVnetImportOptions struct {
+type ConnectorVnetImportOptionsCidr struct {
 	RouteImportMode string `json:"routeImportMode"`
-	PrefixListIds   []int  `json:"prefixListIds,omitempty"`
+	PrefixListIds   []int  `json:"prefixListIds"`
+	Value           string `json:"value"`
+}
+
+type ConnectorVnetImportOptionsSubnet struct {
+	Id              string `json:"id"`
+	RouteImportMode string `json:"routeImportMode"`
+	PrefixListIds   []int  `json:"prefixListIds"`
+	Value           string `json:"value"`
+}
+
+type ConnectorVnetImportOptions struct {
+	Cidrs           []ConnectorVnetImportOptionsCidr   `json:"cidrs,omitempty"`
+	PrefixListIds   []int                              `json:"prefixListIds,omitempty"`
+	RouteImportMode string                             `json:"routeImportMode"`
+	Subnets         []ConnectorVnetImportOptionsSubnet `json:"subnets,omitempty"`
 }
 
 type ConnectorVnetRouting struct {
