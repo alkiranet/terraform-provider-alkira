@@ -70,6 +70,6 @@ Required:
 Optional:
 
 - **credential_id** (String) The id of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
-- **serial_number** (String) The serialNumber of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
+- **serial_number** (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
 
 

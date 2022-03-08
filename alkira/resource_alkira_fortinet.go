@@ -55,8 +55,8 @@ func resourceAlkiraFortinet() *schema.Resource {
 							Required:    true,
 						},
 						"serial_number": {
-							Description: "The serialNumber of the Fortinet Firewall instance. Required " +
-								"only when licenseType is BRING_YOUR_OWN.",
+							Description: "The serial_number of the Fortinet Firewall instance. " +
+								"Required only when licenseType is BRING_YOUR_OWN.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
