@@ -19,12 +19,6 @@ func dataSourceAlkiraGroupConnector() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"group_id": {
-				Description: "The ID of the group.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Optional:    true,
-			},
 		},
 	}
 }
@@ -39,7 +33,5 @@ func dataSourceAlkiraGroupConnectorRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(strconv.Itoa(group.Id))
-	d.Set("group_id", group.Id)
-
 	return nil
 }
