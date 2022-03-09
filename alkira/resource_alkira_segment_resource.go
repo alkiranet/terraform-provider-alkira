@@ -10,11 +10,27 @@ import (
 
 func resourceAlkiraSegmentResource() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage segment resource\n\n",
-		Create:      resourceSegmentResource,
-		Read:        resourceSegmentResourceRead,
-		Update:      resourceSegmentResourceUpdate,
-		Delete:      resourceSegmentResourceDelete,
+		Description: "Manage segment resource\n\n" +
+			"To use this resource, you will need to use or create `alkira_group`, `alkira_segment` and " +
+			"`alkira_policy_prefix_list`. " +
+			"There could be multiple `group_prefix` section defined as needed. The `group_prefix` should " +
+			"be defined like this:\n\n" +
+			"* ANY -> ANY:  where `group_id` must be `-1` and prefix_list_id must be `-1`. When an " +
+			"ANY -> ANY mapping is present then it should be the only mapping in the group_prefix\n\n" +
+			"* EXPLICIT Group -> ANY:  where `group_id` must be the ID of group of type EXPLICIT and " +
+			"prefix_list_id MUST be `-1`.\n\n" +
+			"* IMPLICIT Group -> ANY: where group_id must be the ID of group of type IMPLICIT, this is " +
+			"also known as a Connector Group and `prefix_list_id` must be `-1`. If an IMPLICIT group is " +
+			"mapped to ANY `prefix_list_id`, then an IMPLICIT Group -> `prefix_list_id` must NOT be present " +
+			"in `group_prefix`\n\n" +
+			"* IMPLICIT Group -> PrefixList ID: where `group_id` must be the ID of group of type IMPLICIT " +
+			"and `prefix_list_id` MUST be the ID of an existing `prefix_list_id`\n\n" +
+			"* SERVICE Group -> ANY: where `group_id` must be the ID of group of type SERVICE and `prefix_list_id` " +
+			"MUST be -1.",
+		Create: resourceSegmentResource,
+		Read:   resourceSegmentResourceRead,
+		Update: resourceSegmentResourceUpdate,
+		Delete: resourceSegmentResourceDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
