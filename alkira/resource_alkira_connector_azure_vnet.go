@@ -75,9 +75,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"service_tags": {
-				Description: "list of service tags from Azure. Providing a service tag here," +
-					"would result in service tag route configuration on VNET route table, so" +
-					"that the traffic toward the service would directly steer towards those" +
+				Description: "list of service tags from Azure. Providing a service tag here, " +
+					"would result in service tag route configuration on VNET route table, so " +
+					"that the traffic toward the service would directly steer towards those " +
 					"services, and would not go via Alkira network.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
