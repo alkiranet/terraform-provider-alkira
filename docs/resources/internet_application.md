@@ -40,7 +40,7 @@ resource "alkira_internet_application" "app1" {
 
 ### Required
 
-- **connector_id** (String) Connector ID.
+- **connector_id** (Number) Connector ID.
 - **connector_type** (String) Connector Type.
 - **fqdn_prefix** (String) User provided FQDN prefix that will be published on route53.
 - **name** (String) The name of the internet application.
