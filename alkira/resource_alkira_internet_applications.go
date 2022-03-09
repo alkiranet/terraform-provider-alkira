@@ -28,7 +28,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			},
 			"connector_id": {
 				Description: "Connector ID.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Required:    true,
 			},
 			"connector_type": {
@@ -162,7 +162,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 
 	request := &alkira.InternetApplication{
 		BillingTags:   billingTags,
-		ConnectorId:   d.Get("connector_id").(string),
+		ConnectorId:   d.Get("connector_id").(int),
 		ConnectorType: d.Get("connector_type").(string),
 		FqdnPrefix:    d.Get("fqdn_prefix").(string),
 		Name:          d.Get("name").(string),
