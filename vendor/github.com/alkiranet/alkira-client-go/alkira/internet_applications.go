@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -9,7 +9,7 @@ import (
 
 type InternetApplication struct {
 	BillingTags            []int       `json:"billingTags"`
-	ConnectorId            string      `json:"connectorId"`
+	ConnectorId            int         `json:"connectorId"`
 	ConnectorType          string      `json:"connectorType"`
 	FqdnPrefix             string      `json:"fqdnPrefix"`
 	Id                     json.Number `json:"id,omitempty"`

@@ -22,5 +22,10 @@ fmt:
 
 doc:
 	tfplugindocs generate
+
+vendor: GOPRIVATE=github.com/alkiranet
+vendor:
+	go mod vendor
+
 superclean:
 	git clean -x -d -f
