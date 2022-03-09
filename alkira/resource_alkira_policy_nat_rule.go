@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -47,20 +46,8 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Optional:    true,
 						},
-						"dst_prefixes": {
-							Description: "The list of prefixes for destination.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Optional:    true,
-						},
 						"src_prefix_list_ids": {
 							Description: "The list of prefix IDs as source.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
-							Optional:    true,
-						},
-						"dst_prefix_list_ids": {
-							Description: "The list of prefix IDs as destination.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
@@ -69,6 +56,18 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Description: "The list of ports for source.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"dst_prefixes": {
+							Description: "The list of prefixes for destination.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"dst_prefix_list_ids": {
+							Description: "The list of prefix IDs as destination.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"dst_ports": {
@@ -104,7 +103,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Optional:    true,
 						},
-						"src_addr_translation_prefiex_list_ids": {
+						"src_addr_translation_prefix_list_ids": {
 							Description: "The list of prefix list IDs.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -132,7 +131,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Optional:    true,
 						},
-						"dst_addr_translation_prefiex_list_ids": {
+						"dst_addr_translation_prefix_list_ids": {
 							Description: "The list of prefix list IDs.",
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -239,100 +238,4 @@ func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkir
 	}
 
 	return request, nil
-}
-
-// expandPolicyNatRuleMatch expand "match" section
-func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
-	if in == nil || in.Len() == 0 || in.Len() > 1 {
-		log.Printf("[ERROR] invalid match section (%d)", in.Len())
-		return nil
-	}
-
-	match := alkira.NatRuleMatch{}
-
-	for _, m := range in.List() {
-
-		matchValue := m.(map[string]interface{})
-
-		if v, ok := matchValue["src_prefixes"].([]string); ok {
-			match.SourcePrefixes = v
-		}
-		if v, ok := matchValue["src_prefix_list_ids"].([]int); ok {
-			match.SourcePrefixListIds = v
-		}
-		if v, ok := matchValue["dst_prefixes"].([]string); ok {
-			match.DestPrefixes = v
-		}
-		if v, ok := matchValue["dst_prefix_list_ids"].([]int); ok {
-			match.DestPrefixListIds = v
-		}
-		if v, ok := matchValue["src_ports"].([]string); ok {
-			match.SourcePortList = v
-		}
-		if v, ok := matchValue["dst_ports"].([]string); ok {
-			match.DestPortList = v
-		}
-		if v, ok := matchValue["protocol"].(string); ok {
-			match.Protocol = strings.ToLower(v)
-		}
-	}
-
-	return &match
-}
-
-// expandPolicyNatRuleAction expand "action" section
-func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
-	if in == nil || in.Len() == 0 || in.Len() > 1 {
-		log.Printf("[ERROR] invalid action section (%d)", in.Len())
-		return nil
-	}
-
-	st := alkira.NatRuleActionSrcTranslation{}
-	dt := alkira.NatRuleActionDstTranslation{}
-
-	for _, m := range in.List() {
-
-		actionValue := m.(map[string]interface{})
-
-		if v, ok := actionValue["src_addr_translation_type"].(string); ok {
-			st.TranslationType = v
-		}
-		if v, ok := actionValue["src_addr_translation_prefixes"].([]string); ok {
-			st.TranslatedPrefixes = v
-		}
-		if v, ok := actionValue["src_addr_translation_prefix_list_ids"].([]int); ok {
-			st.TranslatedPrefixListIds = v
-		}
-		if v, ok := actionValue["src_addr_translation_bidirectional"].(bool); ok {
-			st.Bidirectional = v
-		}
-		if v, ok := actionValue["src_addr_translation_match_and_invalidate"].(bool); ok {
-			st.MatchAndInvalidate = v
-		}
-		if v, ok := actionValue["dst_addr_translation_type"].(string); ok {
-			dt.TranslationType = v
-		}
-		if v, ok := actionValue["dst_addr_translation_prefixes"].([]string); ok {
-			dt.TranslatedPrefixes = v
-		}
-		if v, ok := actionValue["dst_addr_translation_prefix_list_ids"].([]int); ok {
-			dt.TranslatedPrefixListIds = v
-		}
-		if v, ok := actionValue["dst_addr_translation_ports"].([]string); ok {
-			dt.TranslatedPortList = v
-		}
-		if v, ok := actionValue["dst_addr_translation_bidirectional"].(bool); ok {
-			dt.Bidirectional = v
-		}
-		if v, ok := actionValue["dst_addr_translation_advertise_to_connector"].(bool); ok {
-			dt.AdvertiseToConnector = v
-		}
-	}
-
-	action := alkira.NatRuleAction{
-		SourceAddressTranslation:      st,
-		DestinationAddressTranslation: dt,
-	}
-
-	return &action
 }
