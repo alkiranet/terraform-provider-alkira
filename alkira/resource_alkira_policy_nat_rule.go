@@ -1,13 +1,11 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/k0kubun/pp"
 )
 
 func resourceAlkiraPolicyNatRule() *schema.Resource {
@@ -228,8 +226,6 @@ func resourcePolicyNatRuleDelete(d *schema.ResourceData, m interface{}) error {
 
 func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatRule, error) {
 
-	fmt.Println("PRINTING MATCH BEFORE PROCESSING")
-	fmt.Println(pp.Sprintln(d.Get("match").(*schema.Set)))
 	match := expandPolicyNatRuleMatch(d.Get("match").(*schema.Set))
 	action := expandPolicyNatRuleAction(d.Get("action").(*schema.Set))
 

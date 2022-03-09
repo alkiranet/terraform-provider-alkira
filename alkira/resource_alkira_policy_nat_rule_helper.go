@@ -1,13 +1,11 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/k0kubun/pp"
 )
 
 func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
@@ -44,8 +42,6 @@ func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
 			match.Protocol = strings.ToLower(v)
 		}
 	}
-
-	fmt.Println(pp.Sprintln("[INFO] NATRULEMATCH: ", match))
 
 	return &match
 }
@@ -103,8 +99,6 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		SourceAddressTranslation:      st,
 		DestinationAddressTranslation: dt,
 	}
-
-	fmt.Println(pp.Sprintln("[INFO] NATRULEACTION", action))
 
 	return &action
 }

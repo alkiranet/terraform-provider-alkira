@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/k0kubun/pp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +41,6 @@ func TestPolicyNatRuleExpandNatRuleActionArrays(t *testing.T) {
 	s := schema.NewSet(f, mArr)
 
 	actual := expandPolicyNatRuleAction(s)
-	pp.Println(actual)
 
 	//Src array validations
 	require.Equal(t,
