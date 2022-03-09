@@ -74,7 +74,7 @@ func (ac *AlkiraClient) GetSegmentResources() (string, error) {
 
 // GetSegmentResourceById get a single segment resource by ID
 func (ac *AlkiraClient) GetSegmentResourceById(id string) (SegmentResource, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/segment-resources", ac.URI, ac.TenantNetworkId)
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/segment-resources/%s", ac.URI, ac.TenantNetworkId, id)
 
 	var segmentResource SegmentResource
 
