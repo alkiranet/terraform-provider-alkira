@@ -66,6 +66,7 @@ func Provider() *schema.Provider {
 			"alkira_policy_rule":             resourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":        resourceAlkiraPolicyRuleList(),
 			"alkira_segment":                 resourceAlkiraSegment(),
+			"alkira_segment_resource":        resourceAlkiraSegmentResource(),
 			"alkira_service_pan":             resourceAlkiraServicePan(),
 			"alkira_tenant_network":          resourceAlkiraTenantNetwork(),
 		},
