@@ -30,7 +30,7 @@ resource "alkira_fortinet" "test1" {
   instances {
     name          = "tf-fortinet-instance1"
     serial_number = "test-instance-1"
-    credential_id = alkira_credential_fortinet.tf_test_fortinet.id
+    credential_id = alkira_credential_fortinet_instance.tf_test_fortinet_instance.id
   }
 }
 ```
