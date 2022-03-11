@@ -7,19 +7,27 @@ import (
 	"fmt"
 )
 
+type InternetApplicationTargets struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+	Ports []int  `json:"ports"`
+}
+
 type InternetApplication struct {
-	BillingTags            []int       `json:"billingTags"`
-	ConnectorId            int         `json:"connectorId"`
-	ConnectorType          string      `json:"connectorType"`
-	FqdnPrefix             string      `json:"fqdnPrefix"`
-	Id                     json.Number `json:"id,omitempty"`
-	InboundInternetGroupId json.Number `json:"inboundInternetGroupId,omitempty"`
-	Group                  string      `json:"group"`
-	Name                   string      `json:"name"`
-	PrivateIp              string      `json:"privateIp"`
-	PrivatePort            string      `json:"privatePort"`
-	SegmentName            string      `json:"segmentName"`
-	Size                   string      `json:"size"`
+	BillingTags            []int                        `json:"billingTags"`
+	ConnectorId            int                          `json:"connectorId"`
+	ConnectorType          string                       `json:"connectorType"`
+	FqdnPrefix             string                       `json:"fqdnPrefix"`
+	Group                  string                       `json:"group"`
+	Id                     json.Number                  `json:"id,omitempty"` // response only
+	InboundConnectorId     string                       `json:"inboundConnectorId,omitempty"`
+	InboundConnectorType   string                       `json:"inboundConnectorType,omitempty"`
+	InboundInternetGroupId json.Number                  `json:"inboundInternetGroupId,omitempty"`
+	Name                   string                       `json:"name"`
+	PublicIps              []string                     `json:"publicIps"`
+	SegmentName            string                       `json:"segmentName"`
+	Size                   string                       `json:"size"`
+	Targets                []InternetApplicationTargets `json:"targets,omitempty"`
 }
 
 // CreateInternetApplication create an internet application
@@ -49,14 +57,14 @@ func (ac *AlkiraClient) CreateInternetApplication(app *InternetApplication) (str
 	return string(result.Id), string(result.InboundInternetGroupId), nil
 }
 
-// DeleteInternetApplication delete given internet application by Id
+// DeleteInternetApplication delete given internet application by ID
 func (ac *AlkiraClient) DeleteInternetApplication(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
 
 	return ac.delete(uri)
 }
 
-// UpdateInternetApplication update a given internet application by Id
+// UpdateInternetApplication update a given internet application by ID
 func (ac *AlkiraClient) UpdateInternetApplication(id string, app *InternetApplication) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
 
@@ -70,7 +78,7 @@ func (ac *AlkiraClient) UpdateInternetApplication(id string, app *InternetApplic
 	return ac.update(uri, body)
 }
 
-// GetInternetApplication get internet application by Id
+// GetInternetApplication get internet application by ID
 func (ac *AlkiraClient) GetInternetApplication(id string) (*InternetApplication, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
 

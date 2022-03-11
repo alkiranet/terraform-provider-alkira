@@ -102,7 +102,7 @@ func (ac *AlkiraClient) DeletePolicyPrefixList(id string) error {
 // UpdatePolicyPrefixList update a PolicyPrefixList by id
 func (ac *AlkiraClient) UpdatePolicyPrefixList(id string, p *PolicyPrefixList) error {
 
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/PolicyPrefixLists/%s", ac.URI, ac.TenantNetworkId, id)
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/prefixlists/%s", ac.URI, ac.TenantNetworkId, id)
 
 	body, err := json.Marshal(p)
 
