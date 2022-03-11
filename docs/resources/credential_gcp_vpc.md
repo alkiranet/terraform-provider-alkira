@@ -3,12 +3,12 @@
 page_title: "alkira_credential_gcp_vpc Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  Manage Credential for GCP.
 ---
 
 # alkira_credential_gcp_vpc (Resource)
 
-
+Manage Credential for GCP.
 
 ## Example Usage
 
@@ -36,20 +36,20 @@ resource "alkira_credential_gcp_vpc" "gcp" {
 
 ### Required
 
-- **auth_provider** (String) Authentication Provider
-- **auth_uri** (String) Authentication URI
-- **client_email** (String) Client email
-- **client_id** (String) Client ID
-- **client_x509_cert_url** (String) Client X509 Cert URL
+- **client_email** (String) GCP Client email
+- **client_id** (String) GCP Client ID
+- **client_x509_cert_url** (String) GCP Client X509 Cert URL
 - **name** (String) The name of the credential
-- **private_key** (String) Private Key
-- **private_key_id** (String) Private Key ID
-- **project_id** (String) Project ID
-- **token_uri** (String) Token URI
-- **type** (String) Type
+- **private_key** (String) GCP Private Key
+- **private_key_id** (String) GCP Private Key ID
+- **project_id** (String) GCP Project ID
 
 ### Optional
 
+- **auth_provider** (String) GCP Authentication Provider
+- **auth_uri** (String) GCP Authentication URI
 - **id** (String) The ID of this resource.
+- **token_uri** (String) Token URI
+- **type** (String) GCP Auth Type, default value is `service_account`.
 
 
