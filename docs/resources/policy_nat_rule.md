@@ -53,7 +53,7 @@ Optional:
 
 Required:
 
-- **protocol** (String) The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.
+- **protocol** (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
 
 Optional:
 
