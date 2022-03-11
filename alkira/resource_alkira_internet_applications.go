@@ -51,16 +51,6 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"private_ip": {
-				Description: "The private IP associated with the internet application.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"private_port": {
-				Description: "The private port associated with the internet application.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
 			"segment_id": {
 				Description: "The ID of segment associated with the internet application.",
 				Type:        schema.TypeInt,
@@ -110,8 +100,6 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
 	d.Set("Name", app.Name)
-	d.Set("private_ip", app.PrivateIp)
-	d.Set("prviate_port", app.PrivatePort)
 
 	segment, err := client.GetSegmentByName(app.SegmentName)
 
@@ -166,8 +154,6 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		ConnectorType: d.Get("connector_type").(string),
 		FqdnPrefix:    d.Get("fqdn_prefix").(string),
 		Name:          d.Get("name").(string),
-		PrivateIp:     d.Get("private_ip").(string),
-		PrivatePort:   d.Get("private_port").(string),
 		SegmentName:   segment.Name,
 		Size:          d.Get("size").(string),
 	}
