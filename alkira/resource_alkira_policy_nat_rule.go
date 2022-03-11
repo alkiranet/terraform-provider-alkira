@@ -77,10 +77,10 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"protocol": {
-							Description:  "The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.",
+							Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ICMP", "TCP", "UDP", "ANY"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
 						},
 					},
 				},

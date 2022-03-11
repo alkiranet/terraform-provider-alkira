@@ -36,7 +36,7 @@ resource "alkira_policy_rule" "rule" {
 
 - **dscp** (String) The dscp value can be `any` or between `0` to `63` inclusive.
 - **name** (String) The name of the policy rule.
-- **protocol** (String) The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.
+- **protocol** (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
 
 ### Optional
 
