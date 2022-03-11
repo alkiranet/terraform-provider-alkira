@@ -9,66 +9,71 @@ import (
 
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCredentialGcpVpc,
-		Read:   resourceCredentialGcpVpcRead,
-		Update: resourceCredentialGcpVpcUpdate,
-		Delete: resourceCredentialGcpVpcDelete,
+		Description: "Manage Credential for GCP.",
+		Create:      resourceCredentialGcpVpc,
+		Read:        resourceCredentialGcpVpcRead,
+		Update:      resourceCredentialGcpVpcUpdate,
+		Delete:      resourceCredentialGcpVpcDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Description: "The name of the credential",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the credential",
 			},
 			"auth_provider": &schema.Schema{
+				Description: "GCP Authentication Provider",
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Authentication Provider",
+				Optional:    true,
+				Default:     "https://www.googleapis.com/oauth2/v1/certs",
 			},
 			"auth_uri": &schema.Schema{
+				Description: "GCP Authentication URI",
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Authentication URI",
+				Optional:    true,
+				Default:     "https://accounts.google.com/o/oauth2/auth",
 			},
 			"client_email": &schema.Schema{
+				Description: "GCP Client email",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Client email",
 			},
 			"client_id": &schema.Schema{
+				Description: "GCP Client ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Client ID",
 			},
 			"client_x509_cert_url": &schema.Schema{
+				Description: "GCP Client X509 Cert URL",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Client X509 Cert URL",
 			},
 			"private_key_id": &schema.Schema{
+				Description: "GCP Private Key ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Private Key ID",
 			},
 			"private_key": &schema.Schema{
+				Description: "GCP Private Key",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Private Key",
 			},
 			"project_id": &schema.Schema{
+				Description: "GCP Project ID",
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Project ID",
 			},
 			"token_uri": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
 				Description: "Token URI",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "https://oauth2.googleapis.com/token",
 			},
 			"type": &schema.Schema{
+				Description: "GCP Auth Type, default value is `service_account`.",
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Type",
+				Optional:    true,
+				Default:     "service_account",
 			},
 		},
 	}
