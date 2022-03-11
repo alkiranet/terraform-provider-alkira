@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,10 +87,10 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:    true,
 			},
 			"protocol": {
-				Description:  "The following protocols are supported, `ICMP`, `TCP`, `UDP` or `ANY`.",
+				Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ICMP", "TCP", "UDP", "ANY"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
 			},
 			"rule_action": {
 				Description:  "The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.",
@@ -151,7 +150,7 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", rule.Description)
 
 	d.Set("dscp", rule.MatchCondition.Dscp)
-	d.Set("Protocol", strings.ToUpper(rule.MatchCondition.Protocol))
+	d.Set("Protocol", rule.MatchCondition.Protocol)
 
 	d.Set("src_ip", rule.MatchCondition.SrcIp)
 	d.Set("dst_ip", rule.MatchCondition.DstIp)
@@ -215,7 +214,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 			SrcIp:                 d.Get("src_ip").(string),
 			DstIp:                 d.Get("dst_ip").(string),
 			Dscp:                  d.Get("dscp").(string),
-			Protocol:              strings.ToLower(d.Get("protocol").(string)),
+			Protocol:              d.Get("protocol").(string),
 			SrcPortList:           srcPortList,
 			DstPortList:           dstPortList,
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
