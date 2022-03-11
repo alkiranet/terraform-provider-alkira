@@ -34,6 +34,7 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":             resourceAlkiraBillingTag(),
+			"alkira_byoip_prefix":            resourceAlkiraByoipPrefix(),
 			"alkira_connector_aws_vpc":       resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":    resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_cisco_sdwan":   resourceAlkiraConnectorCiscoSdwan(),
@@ -68,7 +69,7 @@ func Provider() *schema.Provider {
 			"alkira_segment":                 resourceAlkiraSegment(),
 			"alkira_segment_resource":        resourceAlkiraSegmentResource(),
 			"alkira_segment_resource_share":  resourceAlkiraSegmentResourceShare(),
-      "alkira_service_pan":             resourceAlkiraServicePan(),
+			"alkira_service_pan":             resourceAlkiraServicePan(),
 			"alkira_tenant_network":          resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
