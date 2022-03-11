@@ -25,6 +25,7 @@ const (
 	CredentialTypePan                             = "pan"
 	CredentialTypePanInstance                     = "paninstance"
 	CredentialTypeFortinet                        = "ftntfw"
+	CredentialTypeFortinetInstance                = "ftntfw-instance"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -87,6 +88,11 @@ type CredentialGcpVpc struct {
 type CredentialFortinet struct {
 	UserName string `json:"userName"`
 	Password string `json:"password"`
+}
+
+type CredentialFortinetInstance struct {
+	LicenseType string `json:"licenseType"`
+	LicenseKey  string `json:"licenseKey"`
 }
 
 type CredentialKeyPair struct {
