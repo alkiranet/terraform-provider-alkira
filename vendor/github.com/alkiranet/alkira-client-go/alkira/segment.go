@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -9,10 +9,11 @@ import (
 )
 
 type Segment struct {
-	Asn     int    `json:"asn"`
-	Id      int    `json:"id"`
-	IpBlock string `json:"ipBlock"`
-	Name    string `json:"name"`
+	Asn                                        int    `json:"asn"`
+	Id                                         int    `json:"id"`
+	IpBlock                                    string `json:"ipBlock"`
+	Name                                       string `json:"name"`
+	ReservePublicIPsForUserAndSiteConnectivity bool   `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
 }
 
 // Get all segments from the given tenant network
@@ -23,7 +24,7 @@ func (ac *AlkiraClient) GetSegments() (string, error) {
 	return string(data), err
 }
 
-// GetSegment get single segment by Id
+// GetSegment get single segment by ID
 func (ac *AlkiraClient) GetSegmentById(id string) (Segment, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%s", ac.URI, ac.TenantNetworkId, id)
 
@@ -71,15 +72,16 @@ func (ac *AlkiraClient) GetSegmentByName(name string) (Segment, error) {
 }
 
 // CreateSegment create a new Segment
-func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (string, error) {
+func (ac *AlkiraClient) CreateSegment(segment *Segment) (string, error) {
 
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments", ac.URI, ac.TenantNetworkId)
 
-	body, err := json.Marshal(map[string]string{
-		"name":    name,
-		"asn":     asn,
-		"ipBlock": ipBlock,
-	})
+	// Construct the request
+	body, err := json.Marshal(segment)
+
+	if err != nil {
+		return "", fmt.Errorf("CreateSegment: failed to marshal: %v", err)
+	}
 
 	data, err := ac.create(uri, body)
 
@@ -97,22 +99,19 @@ func (ac *AlkiraClient) CreateSegment(name string, asn string, ipBlock string) (
 	return strconv.Itoa(result.Id), nil
 }
 
-// DeleteSegment delete a segment by given segment Id
+// DeleteSegment delete a segment by given segment ID
 func (ac *AlkiraClient) DeleteSegment(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%s", ac.URI, ac.TenantNetworkId, id)
 	return ac.delete(uri)
 }
 
-// UpdateSegment update a segment by segment Id
-func (ac *AlkiraClient) UpdateSegment(id string, name string, asn string, ipBlock string) error {
+// UpdateSegment update a segment by segment ID
+func (ac *AlkiraClient) UpdateSegment(id string, segment *Segment) error {
 
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%s", ac.URI, ac.TenantNetworkId, id)
 
-	body, err := json.Marshal(map[string]string{
-		"name":    name,
-		"asn":     asn,
-		"ipBlock": ipBlock,
-	})
+	// Construct the request
+	body, err := json.Marshal(segment)
 
 	if err != nil {
 		return fmt.Errorf("UpdateSegment: failed to marshal: %v", err)
