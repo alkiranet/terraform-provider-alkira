@@ -40,6 +40,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"byoip_options": &schema.Schema{
 				Description: "BYOIP options.",
 				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"byoip_prefix_id": {
@@ -54,7 +55,6 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 						},
 					},
 				},
-				Required: true,
 			},
 			"billing_tag_ids": {
 				Description: "A list of Billing Tag by ID associated with the connector.",
@@ -92,6 +92,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"tunnel_configuration": &schema.Schema{
 				Description: "Tunnel Configurations.",
 				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"alkira_public_ip": {
@@ -102,6 +103,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 						"tunnel_ips": {
 							Description: "Tunnel IPs.",
 							Type:        schema.TypeSet,
+							Required:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ran_tunnel_ip": {
@@ -125,11 +127,9 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 									},
 								},
 							},
-							Required: true,
 						},
 					},
 				},
-				Required: true,
 			},
 		},
 	}
@@ -172,6 +172,7 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 
+	// segment_id
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
 
@@ -180,6 +181,19 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 		}
 		d.Set("segment_id", segment.Id)
 	}
+
+	// byoip_options
+	var options []map[string]interface{}
+
+	for _, option := range connector.ByoipOptions {
+		i := map[string]interface{}{
+			"byoip_prefix_id":            option.ByoipId,
+			"enable_route_advertisement": option.RouteAdvertisementEnabled,
+		}
+		options = append(options, i)
+	}
+
+	d.Set("byoip_options", options)
 
 	return nil
 }
