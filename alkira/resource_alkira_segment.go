@@ -39,9 +39,9 @@ func resourceAlkiraSegment() *schema.Resource {
 			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
-					" `true`. Alkira reserves IPs " +
+					"`true`. Alkira reserves public IPs " +
 					"which can be used to create underlay tunnels between an " +
-					"external service and Alkira. For example the reserved IPs " +
+					"external service and Alkira. For example the reserved public IPs " +
 					"may be used to create tunnels to the Akamai Prolexic.",
 				Type:     schema.TypeBool,
 				Optional: true,
