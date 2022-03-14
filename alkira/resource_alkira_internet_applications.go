@@ -46,10 +46,36 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"inbound_connector_id": {
+				Description: "Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, " +
+					"it could be left empty.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"inbound_connector_type": {
+				Description: "The inbound connector type specifies how the internet application " +
+					"is to be opened up to the external world. By `DEFAULT` the native cloud " +
+					"internet connector is used. In this scenario, Alkira takes care of creating " +
+					"this inbound internet connector implicitly. If instead inbound access is via " +
+					"the `AKAMAI_PROLEXIC` connector, then you need to create and configure " +
+					"that connector and use it with the internet application.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "AKAMAI_PROLEXIC"}, false),
+			},
 			"name": {
 				Description: "The name of the internet application.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"public_ips": {
+				Description: "This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. " +
+					"The public IPs are to be used to access the internet application. These public IPs " +
+					"must belong to one of the BYOIP ranges configured for the Akamai Prolexic Connector.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_id": {
 				Description: "The ID of segment associated with the internet application.",
@@ -61,6 +87,31 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+			},
+			"target": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Description:  "The type of the target, one of `IP` or `ILB_NAME`.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"IP", "ILB_NAME"}, false),
+						},
+						"value": {
+							Description: "IFA ILB name or private IP.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"ports": {
+							Description: "list of internet application ports.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Required:    true,
+						},
+					},
+				},
+				Required: true,
 			},
 		},
 	}
@@ -99,15 +150,31 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("connector_id", app.ConnectorId)
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
-	d.Set("Name", app.Name)
+	d.Set("name", app.Name)
+	d.Set("public_ips", app.PublicIps)
+	d.Set("size", app.Size)
 
+	// segment_id
 	segment, err := client.GetSegmentByName(app.SegmentName)
 
 	if err != nil {
 		return err
 	}
 	d.Set("segment_id", segment.Id)
-	d.Set("size", app.Size)
+
+	// targets
+	var targets []map[string]interface{}
+
+	for _, target := range app.Targets {
+		i := map[string]interface{}{
+			"type":  target.Type,
+			"value": target.Value,
+			"ports": target.Ports,
+		}
+		targets = append(targets, i)
+	}
+
+	d.Set("targets", targets)
 
 	return nil
 }
@@ -140,7 +207,9 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	publicIps := convertTypeListToStringList(d.Get("public_ips").([]interface{}))
 
+	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
@@ -149,13 +218,17 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	}
 
 	request := &alkira.InternetApplication{
-		BillingTags:   billingTags,
-		ConnectorId:   d.Get("connector_id").(int),
-		ConnectorType: d.Get("connector_type").(string),
-		FqdnPrefix:    d.Get("fqdn_prefix").(string),
-		Name:          d.Get("name").(string),
-		SegmentName:   segment.Name,
-		Size:          d.Get("size").(string),
+		BillingTags:          billingTags,
+		ConnectorId:          d.Get("connector_id").(int),
+		ConnectorType:        d.Get("connector_type").(string),
+		FqdnPrefix:           d.Get("fqdn_prefix").(string),
+		InboundConnectorId:   d.Get("inbound_connector_id").(string),
+		InboundConnectorType: d.Get("inbound_connector_type").(string),
+		Name:                 d.Get("name").(string),
+		PublicIps:            publicIps,
+		SegmentName:          segment.Name,
+		Size:                 d.Get("size").(string),
+		Targets:              targets,
 	}
 
 	return request, nil
