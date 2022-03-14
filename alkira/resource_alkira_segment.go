@@ -28,7 +28,7 @@ func resourceAlkiraSegment() *schema.Resource {
 			},
 			"asn": {
 				Description: "The BGP ASN for the segment. Default value is `65514`.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     "65514",
 			},
@@ -37,17 +37,30 @@ func resourceAlkiraSegment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"reserve_public_ips": {
+				Description: "Default value is `false`. When this is set to " +
+					" `true`. Alkira reserves IPs " +
+					"which can be used to create underlay tunnels between an " +
+					"external service and Alkira. For example the reserved IPs " +
+					"may be used to create tunnels to the Akamai Prolexic.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
 
-func resourceSegment(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-	name := d.Get("name").(string)
+func resourceSegment(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Segment Creating")
-	id, err := client.CreateSegment(name, d.Get("asn").(string), d.Get("cidr").(string))
-	log.Printf("[INFO] Segment ID: %s", id)
+	segment, err := generateSegmentRequest(d)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := client.CreateSegment(segment)
 
 	if err != nil {
 		return err
@@ -55,11 +68,11 @@ func resourceSegment(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(id)
 
-	return resourceSegmentRead(d, meta)
+	return resourceSegmentRead(d, m)
 }
 
-func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
 	segment, err := client.GetSegmentById(d.Id())
 
@@ -70,24 +83,42 @@ func resourceSegmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("asn", segment.Asn)
 	d.Set("cidr", segment.IpBlock)
 	d.Set("name", segment.Name)
+	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
 
 	return nil
 }
 
-func resourceSegmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	segment, err := generateSegmentRequest(d)
+
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Updateing Segment %s", d.Id())
-	err := client.UpdateSegment(d.Id(), d.Get("name").(string), d.Get("asn").(string), d.Get("cidr").(string))
+	err = client.UpdateSegment(d.Id(), segment)
 
 	return err
 }
 
-func resourceSegmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Segment %s", d.Id())
 	err := client.DeleteSegment(d.Id())
 
 	return err
+}
+
+func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
+	seg := &alkira.Segment{
+		Asn:     d.Get("asn").(int),
+		IpBlock: d.Get("cidr").(string),
+		Name:    d.Get("name").(string),
+		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
+	}
+
+	return seg, nil
 }

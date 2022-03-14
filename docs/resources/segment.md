@@ -33,7 +33,8 @@ resource "alkira_segment" "test" {
 
 ### Optional
 
-- **asn** (String) The BGP ASN for the segment. Default value is `65514`.
+- **asn** (Number) The BGP ASN for the segment. Default value is `65514`.
 - **id** (String) The ID of this resource.
+- **reserve_public_ips** (Boolean) Default value is `false`. When this is set to  `true`. Alkira reserves IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved IPs may be used to create tunnels to the Akamai Prolexic.
 
 
