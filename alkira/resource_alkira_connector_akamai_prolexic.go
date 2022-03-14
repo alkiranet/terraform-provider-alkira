@@ -11,11 +11,15 @@ import (
 
 func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Connector for Akamai Prolexic.",
-		Create:      resourceConnectorAkamaiProlexicCreate,
-		Read:        resourceConnectorAkamaiProlexicRead,
-		Update:      resourceConnectorAkamaiProlexicUpdate,
-		Delete:      resourceConnectorAkamaiProlexicDelete,
+		Description: "Manage Connector for Akamai Prolexic. (BETA)\n\n" +
+			"This resource is still under active development. It may have further " +
+			"changes in the near future. Today, to use this connector, you will need " +
+			"to have onboarded a BYOIP with Do Not Advertise set to `true`. Also, the " +
+			"segment with public IPs needs to be reported to Akamai Representative.",
+		Create: resourceConnectorAkamaiProlexicCreate,
+		Read:   resourceConnectorAkamaiProlexicRead,
+		Update: resourceConnectorAkamaiProlexicUpdate,
+		Delete: resourceConnectorAkamaiProlexicDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,14 +37,14 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"byoip_prefix": &schema.Schema{
-				Description: "BYOIP prefixe.",
+			"byoip_options": &schema.Schema{
+				Description: "BYOIP options.",
 				Type:        schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"byoip_prefix_id": {
 							Description: "BYOIP prefix ID.",
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"enable_route_advertisement": {
@@ -80,6 +84,11 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
+			"segment_id": {
+				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
+				Type:        schema.TypeInt,
+				Required:    true,
+			},
 			"tunnel_configuration": &schema.Schema{
 				Description: "Tunnel Configurations.",
 				Type:        schema.TypeSet,
@@ -116,6 +125,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 									},
 								},
 							},
+							Required: true,
 						},
 					},
 				},
@@ -154,6 +164,7 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
+	d.Set("akamai_bgp_asn", connector.AkamaiBgpAsn)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
 	d.Set("group", connector.Group)
@@ -205,6 +216,8 @@ func generateConnectorAkamaiProlexicRequest(ac *alkira.AlkiraClient, d *schema.R
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	byoipOptions := expandConnectorAkamaiByoipOptions(d.Get("byoip_options").(*schema.Set))
+	tunnelConfigurations := expandConnectorAkamaiTunnelConfiguration(d.Get("tunnel_configuration").(*schema.Set))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
@@ -215,7 +228,7 @@ func generateConnectorAkamaiProlexicRequest(ac *alkira.AlkiraClient, d *schema.R
 
 	// Create hidden akamai-prolexic credential
 	c := alkira.CredentialAkamaiProlexic{
-		BgpAuthenticationKey: d.Get("bgp_authentication_key").(string),
+		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),
 	}
 
 	log.Printf("[INFO] Creating Credential (akamai-prolexic)")
@@ -226,14 +239,17 @@ func generateConnectorAkamaiProlexicRequest(ac *alkira.AlkiraClient, d *schema.R
 	}
 
 	connector := &alkira.ConnectorAkamaiProlexic{
-		BillingTags:  billingTags,
-		CXP:          d.Get("cxp").(string),
-		CredentialId: credentialId,
-		Group:        d.Get("group").(string),
-		Enabled:      d.Get("enabled").(bool),
-		Name:         d.Get("name").(string),
-		Segments:     []string{segment.Name},
-		Size:         d.Get("size").(string),
+		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
+		BillingTags:          billingTags,
+		ByoipOptions:         byoipOptions,
+		CXP:                  d.Get("cxp").(string),
+		CredentialId:         credentialId,
+		Group:                d.Get("group").(string),
+		Enabled:              d.Get("enabled").(bool),
+		Name:                 d.Get("name").(string),
+		Segments:             []string{segment.Name},
+		Size:                 d.Get("size").(string),
+		OverlayConfiguration: tunnelConfigurations,
 	}
 
 	return connector, nil

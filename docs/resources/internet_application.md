@@ -44,8 +44,6 @@ resource "alkira_internet_application" "app1" {
 - **connector_type** (String) Connector Type.
 - **fqdn_prefix** (String) User provided FQDN prefix that will be published on route53.
 - **name** (String) The name of the internet application.
-- **private_ip** (String) The private IP associated with the internet application.
-- **private_port** (String) The private port associated with the internet application.
 - **segment_id** (Number) The ID of segment associated with the internet application.
 - **size** (String) The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.
 
