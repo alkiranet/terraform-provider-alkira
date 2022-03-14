@@ -46,6 +46,24 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"inbound_connector_id": {
+				Description: "Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, " +
+					"it could be left empty.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"inbound_connector_type": {
+				Description: "The inbound connector type specifies how the internet application " +
+					"is to be opened up to the external world. By `DEFAULT` the native cloud " +
+					"internet connector is used. In this scenario, Alkira takes care of creating " +
+					"this inbound internet connector implicitly. If instead inbound access is via " +
+					"the `AKAMAI_PROLEXIC` connector then then you need to create and configure " +
+					"that connector and use it with the internet application.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "AKAMAI_PROLEXIC"}, false),
+			},
 			"name": {
 				Description: "The name of the internet application.",
 				Type:        schema.TypeString,
@@ -61,6 +79,31 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+			},
+			"target": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Description:  "The type of the target, one of `IP` or `ILB_NAME`.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"IP", "ILB_NAME"}, false),
+						},
+						"value": {
+							Description: "IFA ILB name or private IP.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"ports": {
+							Description: "list of internet application ports.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Required:    true,
+						},
+					},
+				},
+				Required: true,
 			},
 		},
 	}
@@ -140,7 +183,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-
+	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
@@ -149,13 +192,16 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	}
 
 	request := &alkira.InternetApplication{
-		BillingTags:   billingTags,
-		ConnectorId:   d.Get("connector_id").(int),
-		ConnectorType: d.Get("connector_type").(string),
-		FqdnPrefix:    d.Get("fqdn_prefix").(string),
-		Name:          d.Get("name").(string),
-		SegmentName:   segment.Name,
-		Size:          d.Get("size").(string),
+		BillingTags:          billingTags,
+		ConnectorId:          d.Get("connector_id").(int),
+		ConnectorType:        d.Get("connector_type").(string),
+		FqdnPrefix:           d.Get("fqdn_prefix").(string),
+		InboundConnectorId:   d.Get("inbound_connector_id").(string),
+		InboundConnectorType: d.Get("inbound_connector_type").(string),
+		Name:                 d.Get("name").(string),
+		SegmentName:          segment.Name,
+		Size:                 d.Get("size").(string),
+		Targets:              targets,
 	}
 
 	return request, nil
