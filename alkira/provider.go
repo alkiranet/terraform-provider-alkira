@@ -35,6 +35,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":                  resourceAlkiraBillingTag(),
 			"alkira_byoip_prefix":                 resourceAlkiraByoipPrefix(),
+			"alkira_connector_akamai_prolexic":    resourceAlkiraConnectorAkamaiProlexic(),
 			"alkira_connector_aws_vpc":            resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":         resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_cisco_sdwan":        resourceAlkiraConnectorCiscoSdwan(),
