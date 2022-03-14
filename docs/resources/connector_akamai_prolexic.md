@@ -80,6 +80,10 @@ resource "alkira_connector_akamai_prolexic" "test" {
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
 
+### Read-Only
+
+- **credential_id** (String) The credential ID for storing Akamai BGP authentication key.
+
 <a id="nestedblock--byoip_options"></a>
 ### Nested Schema for `byoip_options`
 

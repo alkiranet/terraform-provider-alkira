@@ -62,6 +62,11 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
+			"credential_id": {
+				Description: "The credential ID for storing Akamai BGP authentication key.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
@@ -251,6 +256,8 @@ func generateConnectorAkamaiProlexicRequest(ac *alkira.AlkiraClient, d *schema.R
 	if err != nil {
 		return nil, err
 	}
+
+	d.Set("credential_id", credentialId)
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
