@@ -144,7 +144,6 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
-	d.Set("gcp_routing", connector.GcpRouting)
 	d.Set("gcp_vpc_id", connector.VpcId)
 	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
