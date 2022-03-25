@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraFortinet() *schema.Resource {
+func resourceAlkiraServiceFortinet() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Fortinet firewall.",
 		Create:      resourceFortinetCreate,
