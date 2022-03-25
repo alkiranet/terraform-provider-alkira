@@ -230,13 +230,15 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Required:    true,
 						},
 						"availability": {
-							Description:  "The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.",
+							Description:  "The method to determine the availability of static route. The value could be " +
+								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.",
 							Type:         schema.TypeString,
 							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
 							Optional:     true,
+							Default:      "IPSEC_INTERFACE_PING",
 						},
 						"prefix_list_id": {
-							Description: "The id of prefix list to use for static route propagation.",
+							Description: "The ID of prefix list to use for static route propagation.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
@@ -280,7 +282,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"segment_id": {
-				Description: "The Id of the segment associated with the connector.",
+				Description: "The ID of the segment associated with the connector.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
