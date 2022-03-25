@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// expandIPSecEndpoint expand endpoint section
+// expandIPSecEndpoint expand IPSEC endpoint section
 func expandConnectorIPSecEndpoint(in *schema.Set) []*alkira.ConnectorIPSecSite {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] empty IPSec endpoint input")
@@ -28,11 +28,9 @@ func expandConnectorIPSecEndpoint(in *schema.Set) []*alkira.ConnectorIPSecSite {
 		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
 			r.CustomerGwIp = v
 		}
-		if v, ok := siteCfg["preshared_keys"].([]string); ok {
-			if len(v) != 0 {
-				r.PresharedKeys = v
-			}
-		}
+
+		r.BillingTags = convertTypeListToIntList(siteCfg["billing_tag_ids"].([]interface{}))
+		r.PresharedKeys = convertTypeListToStringList(siteCfg["preshared_keys"].([]interface{}))
 
 		sites[i] = &r
 	}

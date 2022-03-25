@@ -70,7 +70,6 @@ resource "alkira_connector_ipsec" "test" {
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) IDs of Billing Tag associated with the connector.
 - **enabled** (Boolean) Is the connector enabled. Default is `true`.
 - **endpoint** (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - **group** (String) The group of the connector.
@@ -141,7 +140,7 @@ Required:
 
 Optional:
 
-- **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.
+- **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
 - **customer_gateway_asn** (String) The customer gateway ASN to use for dynamic route propagation.
 - **prefix_list_id** (Number) The ID of prefix list to use for static route propagation.
 
