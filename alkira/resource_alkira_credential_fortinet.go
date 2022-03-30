@@ -1,3 +1,4 @@
+// Copyright (C) 2022 Alkira Inc. All Rights Reserved.
 package alkira
 
 import (
@@ -6,6 +7,8 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+//TODO(mac): add credential terraform stuff for checkpoint
 
 func resourceAlkiraCredentialFortinet() *schema.Resource {
 	return &schema.Resource{
@@ -66,7 +69,12 @@ func resourceCredentialFortinetUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Updating Credential (Fortinet)")
-	err := client.UpdateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, "ftntfw", c)
+	err := client.UpdateCredential(
+		d.Id(),
+		d.Get("name").(string),
+		alkira.CredentialTypeFortinet,
+		c,
+	)
 
 	if err != nil {
 		return err
@@ -80,7 +88,7 @@ func resourceCredentialFortinetDelete(d *schema.ResourceData, meta interface{}) 
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (Fortinet %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypePan)
+	err := client.DeleteCredential(credentialId, alkira.CredentialTypeFortinet)
 
 	if err != nil {
 		log.Printf("[INFO] Credential (Fortinet %s) was already deleted\n", credentialId)
