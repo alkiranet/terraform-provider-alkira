@@ -2,13 +2,11 @@ package alkira
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/kr/pretty"
 )
 
 type CheckpointGetSegById func(string) (alkira.Segment, error)
@@ -107,8 +105,6 @@ func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (
 
 	mg := &alkira.CheckpointManagementServer{}
 
-	pretty.Println("s.Lit(): ", in.List())
-
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["configuration_mode"].(string); ok {
@@ -121,17 +117,10 @@ func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (
 			mg.Domain = v
 		}
 		if v, ok := cfg["global_cidr_list_id"].(int); ok {
-			fmt.Println("found global_cidr_list_id")
 			mg.GlobalCidrListId = v
 		}
-
-		v, ok := cfg["ips"].([]interface{})
-		fmt.Println("ok: ", ok)
-		fmt.Println("v: ", v)
 		if v, ok := cfg["ips"].([]interface{}); ok {
-			//if v, ok := cfg["ips"].([]string); ok {
 			mg.Ips = convertTypeListToStringList(v)
-			pretty.Println("mg.Ips: ", mg.Ips)
 		}
 		if v, ok := cfg["reachability"].(string); ok {
 			mg.Reachability = v
@@ -155,7 +144,7 @@ func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (
 	return mg, nil
 }
 
-func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) map[string]interface{} {
+func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
 	m := make(map[string]interface{})
 	m["configuration_mode"] = mg.ConfigurationMode
 	m["credential_id"] = mg.CredentialId
@@ -168,7 +157,7 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) map
 	m["type"] = mg.Type
 	m["user_name"] = mg.UserName
 
-	return m
+	return []map[string]interface{}{m}
 }
 
 func deflateCheckpointSegmentOptions(c alkira.CheckpointSegmentNameToZone, fn CheckpointGetSegById) ([]map[string]interface{}, error) {

@@ -217,7 +217,6 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 	}
 }
 
-//TODO(mac): test READ UPDATE and WRITE
 func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
