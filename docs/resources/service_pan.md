@@ -48,7 +48,6 @@ resource "alkira_service_pan" "test1" {
 
 - **credential_id** (String) ID of PAN credential managed by credential resource.
 - **cxp** (String) The CXP where the service should be provisioned.
-- **global_protect_enabled** (Boolean) Enable global protect option or not. Default is `false`
 - **instance** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - **license_type** (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - **management_segment_id** (Number) Management Segment ID.
@@ -63,12 +62,13 @@ resource "alkira_service_pan" "test1" {
 
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **bundle** (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
+- **global_protect_enabled** (Boolean) Enable global protect option or not. Default is `false`
 - **global_protect_segment_options** (Block Set) A mapping of segment_name -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
 - **panorama_enabled** (Boolean) Enable Panorama or not. Default value is `false`.
-- **panorama_ip_address** (String) Panorama IP address.
+- **panorama_ip_addresses** (List of String) Panorama IP addresses.
 - **panorama_template** (String) Panorama Template.
 - **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 - **zones_to_groups** (Block Set) (see [below for nested schema](#nestedblock--zones_to_groups))
