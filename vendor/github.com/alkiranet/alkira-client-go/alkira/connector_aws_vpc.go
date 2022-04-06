@@ -33,22 +33,28 @@ type ConnectorAwsVpcRouting struct {
 	Import interface{} `json:"importFromCXPOptions"`
 }
 
+type TgwAttachment struct {
+	SubnetId         string `json:"subnetId"`
+	AvailabilityZone string `json:"availabilityZone"`
+}
+
 type ConnectorAwsVpc struct {
-	BillingTags                        []int       `json:"billingTags"`
-	CXP                                string      `json:"cxp"`
-	CredentialId                       string      `json:"credentialId"`
-	CustomerName                       string      `json:"customerName"`
-	CustomerRegion                     string      `json:"customerRegion"`
-	DirectInterVPCCommunicationEnabled bool        `json:"directInterVPCCommunicationEnabled,omitempty"`
-	Enabled                            bool        `json:"enabled,omitempty"`
-	Group                              string      `json:"group"`
-	Id                                 json.Number `json:"id,omitempty"`
-	Name                               string      `json:"name"`
-	Segments                           []string    `json:"segments"`
-	Size                               string      `json:"size"`
-	VpcId                              string      `json:"vpcId"`
-	VpcOwnerId                         string      `json:"vpcOwnerId"`
-	VpcRouting                         interface{} `json:"vpcRouting"`
+	BillingTags                        []int           `json:"billingTags"`
+	CXP                                string          `json:"cxp"`
+	CredentialId                       string          `json:"credentialId"`
+	CustomerName                       string          `json:"customerName"`
+	CustomerRegion                     string          `json:"customerRegion"`
+	DirectInterVPCCommunicationEnabled bool            `json:"directInterVPCCommunicationEnabled,omitempty"`
+	Enabled                            bool            `json:"enabled,omitempty"`
+	Group                              string          `json:"group"`
+	Id                                 json.Number     `json:"id,omitempty"`
+	Name                               string          `json:"name"`
+	Segments                           []string        `json:"segments"`
+	Size                               string          `json:"size"`
+	TgwAttachments                     []TgwAttachment `json:"tgwAttachments,omitempty"`
+	VpcId                              string          `json:"vpcId"`
+	VpcOwnerId                         string          `json:"vpcOwnerId"`
+	VpcRouting                         interface{}     `json:"vpcRouting"`
 }
 
 // CreateConnectorAwsVPC create an AWS-VPC connector
