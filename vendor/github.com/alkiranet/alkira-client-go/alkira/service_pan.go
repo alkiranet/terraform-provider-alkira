@@ -26,6 +26,7 @@ type ServicePan struct {
 	PanoramaEnabled             bool                                 `json:"panoramaEnabled"`
 	PanoramaDeviceGroup         *string                              `json:"panoramaDeviceGroup,omitempty"`
 	PanoramaIpAddress           *string                              `json:"panoramaIPAddress,omitempty"`
+	PanoramaIpAddresses         []string                             `json:"panoramaIPAddresses,omitempty"`
 	PanoramaTemplate            *string                              `json:"panoramaTemplate,omitempty"`
 	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
 	SegmentIds                  []int                                `json:"segments"`
