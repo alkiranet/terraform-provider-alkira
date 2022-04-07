@@ -77,3 +77,27 @@ func generateUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkir
 
 	return prefixes, nil
 }
+
+// expandAwsVpcTgwAttachments expand tgw_attachment of connector_aws_vpc
+func expandAwsVpcTgwAttachments(in *schema.Set) []alkira.TgwAttachment {
+	if in == nil || in.Len() == 0 {
+		log.Printf("[DEBUG] Empty VPC route table input")
+		return []alkira.TgwAttachment{}
+	}
+
+	attachments := make([]alkira.TgwAttachment, in.Len())
+	for i, attachment := range in.List() {
+		r := alkira.TgwAttachment{}
+		t := attachment.(map[string]interface{})
+		if v, ok := t["subnet_id"].(string); ok {
+			r.SubnetId = v
+		}
+		if v, ok := t["az"].(string); ok {
+			r.AvailabilityZone = v
+		}
+
+		attachments[i] = r
+	}
+
+	return attachments
+}
