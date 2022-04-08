@@ -86,5 +86,6 @@ Optional:
 
 - **advertise_on_prem_routes** (Boolean) Advertise On Prem Routes.
 - **allow_nat_exit** (Boolean) Allow NAT exit.
+- **customer_asn** (Number) BGP ASN on the customer premise side.
 
 
