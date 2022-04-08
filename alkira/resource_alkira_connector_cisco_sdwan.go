@@ -102,6 +102,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Optional:    true,
 							Default:     true,
 						},
+						"customer_asn": {
+							Description: "BGP ASN on the customer premise side.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
 						"segment_id": {
 							Description: "Segment ID.",
 							Type:        schema.TypeInt,
@@ -178,6 +183,7 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 		mapping := map[string]interface{}{
 			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
 			"allow_nat_exit":           m.DisableInternetExit,
+			"customer_asn":             m.CustomerAsn,
 			"segment_id":               m.SegmentId,
 			"vrf_id":                   m.Vrf,
 		}
@@ -258,6 +264,9 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 		}
 		if v, ok := t["allow_nat_exit"].(bool); ok {
 			r.DisableInternetExit = v
+		}
+		if v, ok := t["customer_asn"].(int); ok {
+			r.CustomerAsn = v
 		}
 		if v, ok := t["segment_id"].(int); ok {
 			r.SegmentId = v
