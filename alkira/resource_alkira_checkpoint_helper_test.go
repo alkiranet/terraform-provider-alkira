@@ -23,13 +23,13 @@ func TestExpandCheckpointSegmentOptionsValid(t *testing.T) {
 	s := newSetFromCheckpointResource(mArr)
 
 	mgs, err := expandCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	//Assertions
-	expected := fmt.Sprintf(`{"%s":{"%s":["%s"]}}`, expectedSegment.Name, expectedZoneName, expectedGroupName)
-	actual, err := json.Marshal(mgs)
-	require.Nil(t, err)
+	expected := fmt.Sprintf(`{"%s":{"segmentId":%d,"zonesToGroups":{"%s":["%s"]}}}`, expectedSegment.Name, expectedSegment.Id, expectedZoneName, expectedGroupName)
 
+	actual, err := json.Marshal(mgs)
+	require.NoError(t, err)
 	require.JSONEq(t, expected, string(actual))
 }
 
@@ -37,13 +37,13 @@ func TestExpandCheckpointSegmentOptionsInvalid(t *testing.T) {
 	//test nil set
 	c, err := expandCheckpointSegmentOptions(nil, nil)
 	require.Nil(t, c)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	//test empty set
 	s := newSetFromCheckpointResource(nil)
 	c, err = expandCheckpointSegmentOptions(s, nil)
 	require.Nil(t, c)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestExpandCheckpointInstanceValid(t *testing.T) {
@@ -71,71 +71,60 @@ func TestExpandCheckpointInstanceInvalid(t *testing.T) {
 }
 
 func TestConvertCheckpointSegmentOptionsValid(t *testing.T) {
-	expectedId := 11
+	expectedId := 0
+	expectedSegmentName := "segmentName"
 	expectedZoneName := "testZoneName"
 	expectedGroups := []string{"group1", "group2", "group3"}
 
 	mArr := makeNumCheckpointSegmentOptions(3, expectedId, expectedZoneName, expectedGroups)
 	s := newSetFromCheckpointResource(mArr)
 
-	_, actualZoneName, actualGroups, err := convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	if err != nil {
-		fmt.Println(err)
-	}
+	actual, err := convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
+	require.NoError(t, err)
 
-	require.Equal(t, expectedZoneName, actualZoneName)
-	require.Equal(t, expectedGroups, actualGroups)
+	require.Contains(t, actual, expectedSegmentName)
+	require.Equal(t, actual[expectedSegmentName].SegmentId, expectedId)
+	require.Contains(t, actual[expectedSegmentName].ZonesToGroups, expectedZoneName)
 }
 
 func TestConvertCheckpointSegmentOptionsInvalid(t *testing.T) {
 	//test nil Set
-	actualSegmentName, actualZoneName, actualGroups, err := convertCheckpointSegmentOptions(nil, getCheckpointSegmentInTest)
+	actual, err := convertCheckpointSegmentOptions(nil, getCheckpointSegmentInTest)
 	require.Error(t, err)
-	require.Empty(t, actualSegmentName)
-	require.Empty(t, actualZoneName)
-	require.Empty(t, actualGroups)
+	require.Nil(t, actual)
 
 	//test empty Set
 	s := newSetFromCheckpointResource(nil)
-	actualSegmentName, actualZoneName, actualGroups, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	require.Nil(t, err)
-	require.Empty(t, actualSegmentName)
-	require.Empty(t, actualZoneName)
-	require.Empty(t, actualGroups)
-
+	actual, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
+	require.NoError(t, err)
+	require.Empty(t, actual)
 }
 
 func TestConvertCheckpointSegmentOptionsGetError(t *testing.T) {
 	//test get Func is nil
 	mArr := makeNumCheckpointSegmentOptions(1, 0, "", []string{})
 	s := newSetFromCheckpointResource(mArr)
-	actualSegmentName, actualZoneName, actualGroups, err := convertCheckpointSegmentOptions(s, nil)
+	actual, err := convertCheckpointSegmentOptions(s, nil)
 	require.Error(t, err)
-	require.Empty(t, actualSegmentName)
-	require.Empty(t, actualZoneName)
-	require.Empty(t, actualGroups)
+	require.Empty(t, actual)
 
 	//test get Func returns error
 	s = newSetFromCheckpointResource(mArr)
-	actualSegmentName, actualZoneName, actualGroups, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentError)
+	actual, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentError)
 	require.Error(t, err)
-	require.Empty(t, actualSegmentName)
-	require.Empty(t, actualZoneName)
-	require.Empty(t, actualGroups)
+	require.Empty(t, actual)
 }
 
 func TestExpandCheckpointManagementServerValid(t *testing.T) {
 	//Setup
 	expectedManagementServer := initCheckpointTestManagementServer()
-	m := []interface{}{deflateCheckpointManagementServer(expectedManagementServer)}
-	m = m
-	//s := newSetFromCheckpointResource(m)
+	m := []interface{}{deflateCheckpointManagementServer(expectedManagementServer)[0]}
+	s := newSetFromCheckpointResource(m)
 
 	//Assertions
-	//actualManagementServer, err := expandCheckpointManagementServer(s, getCheckpointSegmentInTest)
-	//require.Nil(t, err)
-	//require.Equal(t, expectedManagementServer.Ips, actualManagementServer.Ips)
-	//require.Equal(t, expectedManagementServer.ConfigurationMode, actualManagementServer.ConfigurationMode)
+	actualManagementServer, err := expandCheckpointManagementServer(s, getCheckpointSegmentInTest)
+	require.NoError(t, err)
+	require.Equal(t, expectedManagementServer, *actualManagementServer)
 }
 
 func TestExpandCheckpointManagementServerGetError(t *testing.T) {
@@ -153,52 +142,43 @@ func TestDeflateManagementServerValid(t *testing.T) {
 	m := deflateCheckpointManagementServer(expected)
 
 	require.Equal(t, m[0]["configuration_mode"].(string), expected.ConfigurationMode)
-	require.Equal(t, m[0]["credential_id"], expected.CredentialId)
-	require.Equal(t, m[0]["domain"], expected.Domain)
-	require.Equal(t, m[0]["global_cidr_list_id"], expected.GlobalCidrListId)
+	require.Equal(t, m[0]["credential_id"].(string), expected.CredentialId)
+	require.Equal(t, m[0]["domain"].(string), expected.Domain)
+	require.Equal(t, m[0]["global_cidr_list_id"].(int), expected.GlobalCidrListId)
 	require.Equal(t, convertTypeListToStringList(m[0]["ips"].([]interface{})), expected.Ips)
-	require.Equal(t, m[0]["reachability"], expected.Reachability)
-	require.Equal(t, m[0]["segment"], expected.Segment)
-	require.Equal(t, m[0]["segment_id"], expected.SegmentId)
-	require.Equal(t, m[0]["type"], expected.Type)
-	require.Equal(t, m[0]["user_name"], expected.UserName)
+	require.Equal(t, m[0]["reachability"].(string), expected.Reachability)
+	require.Equal(t, m[0]["segment"].(string), expected.Segment)
+	require.Equal(t, m[0]["segment_id"].(int), expected.SegmentId)
+	require.Equal(t, m[0]["type"].(string), expected.Type)
+	require.Equal(t, m[0]["user_name"].(string), expected.UserName)
 }
 
 func TestDeflateCheckpointSegmentOptionsValid(t *testing.T) {
-	expectedSegmentName := "0"
 	expectedZoneName := "zoneName"
 	expectedGroups := []string{"1", "2", "3", "4"}
+	expectedSegment := &alkira.Segment{
+		Id:      0,
+		Name:    "0",
+		IpBlock: "10.255.254.0/24",
+		Asn:     65001,
+	}
 
-	nameToZone := make(alkira.CheckpointSegmentNameToZone)
-	zoneToGroups := make(alkira.CheckpointZoneToGroups)
+	zonesToGroups := make(alkira.CheckpointZoneToGroups)
+	zonesToGroups[expectedZoneName] = expectedGroups
 
-	nameToZone[expectedSegmentName] = zoneToGroups
-	zoneToGroups[expectedZoneName] = expectedGroups
+	z := alkira.OuterZoneToGroups{
+		SegmentId:     expectedSegment.Id,
+		ZonesToGroups: zonesToGroups,
+	}
 
-	actual, err := deflateCheckpointSegmentOptions(nameToZone, getCheckpointSegmentInTest)
-	require.Nil(t, err)
-	require.Len(t, actual, 1)
-}
+	segmentOptions := make(map[string]alkira.OuterZoneToGroups)
+	segmentOptions[expectedSegment.Name] = z
 
-func TestDeflateCheckpointSegmentOptionsGetError(t *testing.T) {
-	expectedSegmentName := "0"
-	expectedZoneName := "zoneName"
-	expectedGroups := []string{"1", "2", "3", "4"}
-
-	nameToZone := make(alkira.CheckpointSegmentNameToZone)
-	zoneToGroups := make(alkira.CheckpointZoneToGroups)
-
-	nameToZone[expectedSegmentName] = zoneToGroups
-	zoneToGroups[expectedZoneName] = expectedGroups
-
-	_, err := deflateCheckpointSegmentOptions(nameToZone, getCheckpointSegmentError)
-	require.Error(t, err)
-}
-
-func TestDeflateCheckpointSegmentOptionsNil(t *testing.T) {
-	//No error becuase the get segment function should never be called i.e. nothing to iterate over
-	_, err := deflateCheckpointSegmentOptions(nil, getCheckpointSegmentError)
-	require.Nil(t, err)
+	m := deflateCheckpointSegmentOptions(segmentOptions)
+	require.Len(t, m, 1)
+	require.Equal(t, m[0]["groups"], expectedGroups)
+	require.Equal(t, m[0]["zone_name"], expectedZoneName)
+	require.Equal(t, m[0]["segment_id"], expectedSegment.Id)
 }
 
 func TestDeflateCheckpointInstances(t *testing.T) {

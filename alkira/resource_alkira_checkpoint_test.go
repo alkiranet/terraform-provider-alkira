@@ -22,7 +22,7 @@ func TestGenerateCheckpointRequestService(t *testing.T) {
 	expectedManagementServer := &alkira.CheckpointManagementServer{
 		ConfigurationMode: "MANUAL",
 		CredentialId:      "testCredentialIdMg",
-		Domain:            "domeain",
+		Domain:            "domain",
 		GlobalCidrListId:  0,
 		Ips:               []string{"1", "2", "3"},
 		Reachability:      "reachability",
@@ -32,9 +32,25 @@ func TestGenerateCheckpointRequestService(t *testing.T) {
 		UserName:          "userName",
 	}
 
-	expectedSegmentOptions := make(alkira.CheckpointSegmentNameToZone)
-	expectedSegmentOptions["segmentName"] = make(alkira.CheckpointZoneToGroups)
-	expectedSegmentOptions["segmentName"]["DEFAULT"] = []string{"G1", "G2"}
+	expectedZoneName := "zoneName"
+	expectedGroups := []string{"1", "2", "3", "4"}
+	expectedSegment := &alkira.Segment{
+		Id:      0,
+		Name:    "0",
+		IpBlock: "10.255.254.0/24",
+		Asn:     65001,
+	}
+
+	zonesToGroups := make(alkira.CheckpointZoneToGroups)
+	zonesToGroups[expectedZoneName] = expectedGroups
+
+	z := alkira.OuterZoneToGroups{
+		SegmentId:     expectedSegment.Id,
+		ZonesToGroups: zonesToGroups,
+	}
+
+	expectedSegmentOptions := make(map[string]alkira.OuterZoneToGroups)
+	expectedSegmentOptions[expectedSegment.Name] = z
 
 	expectedCheckpoint := &alkira.Checkpoint{
 		AutoScale:        "ON",

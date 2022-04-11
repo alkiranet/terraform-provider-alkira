@@ -94,7 +94,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"credential_id": {
 							Description: "The credential id of the Checkpoint Firewall's management server. ",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 						},
 						"domain": {
 							Description: "Management server domain.",
@@ -161,7 +161,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			"pdp_ips": {
 				Description: "The IPs of the PDP Brokers.",
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_names": {
@@ -184,7 +184,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"zone_name": {
 							Description: "",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 						},
 						"groups": {
 							Description: "",
@@ -241,15 +241,8 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	checkpoint, err := client.GetCheckpointById(d.Id())
-
 	if err != nil {
 		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
-		return err
-	}
-
-	managementServer := deflateCheckpointManagementServer(*checkpoint.ManagementServer)
-	segmentOptions, err := deflateCheckpointSegmentOptions(checkpoint.SegmentOptions, client.GetSegmentById)
-	if err != nil {
 		return err
 	}
 
@@ -260,14 +253,14 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", checkpoint.Description)
 	d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
-	d.Set("management_server", managementServer)
+	d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
 	d.Set("segment_names", checkpoint.Segments)
 	d.Set("size", checkpoint.Size)
-	d.Set("segment_options", segmentOptions)
+	d.Set("segment_options", deflateCheckpointSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
 	d.Set("version", checkpoint.Version)
 

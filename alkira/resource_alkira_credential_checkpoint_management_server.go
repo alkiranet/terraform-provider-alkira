@@ -83,7 +83,7 @@ func resourceCredentialCheckpointManagementserverDelete(d *schema.ResourceData, 
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting Credential (Checkpoint Management Server %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypeChkpFwInstance)
+	err := client.DeleteCredential(credentialId, alkira.CredentialTypeChkpFwManagement)
 
 	if err != nil {
 		log.Printf("[INFO] Credential (Checkpoint Management Server %s) was already deleted\n", credentialId)
