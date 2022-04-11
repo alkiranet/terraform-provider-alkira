@@ -80,7 +80,7 @@ type ConnectorIPSecSegmentOptions struct {
 type ConnectorIPSec struct {
 	BillingTags    []int                         `json:"billingTags"`
 	CXP            string                        `json:"cxp"`
-	Group          string                        `json:"group"`
+	Group          string                        `json:"group,omitempty"`
 	Enabled        bool                          `json:"enabled,omitempty"`
 	Id             json.Number                   `json:"id,omitempty"`
 	Name           string                        `json:"name"`

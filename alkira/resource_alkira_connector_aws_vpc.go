@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage AWS Cloud Connector.",
+		Description: "Manage AWS VPC Cloud Connector.",
 		Create:      resourceConnectorAwsVpcCreate,
 		Read:        resourceConnectorAwsVpcRead,
 		Update:      resourceConnectorAwsVpcUpdate,
@@ -76,6 +76,25 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE"}, false),
+			},
+			"tgw_attachment": {
+				Description: "TGW attachment.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_id": {
+							Description: "The Id of the subnet.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"az": {
+							Description: "The availability zone of the subnet.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
 			},
 			"vpc_id": {
 				Description: "The ID of the target VPC.",
@@ -241,6 +260,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	}
 
 	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))
+	tgwAttachments := expandAwsVpcTgwAttachments(d.Get("tgw_attachment").(*schema.Set))
 
 	vpcRouting := alkira.ConnectorAwsVpcRouting{
 		Export: exportOptions,
@@ -259,6 +279,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Name:                               d.Get("name").(string),
 		Segments:                           []string{segment.Name},
 		Size:                               d.Get("size").(string),
+		TgwAttachments:                     tgwAttachments,
 		VpcId:                              d.Get("vpc_id").(string),
 		VpcOwnerId:                         d.Get("aws_account_id").(string),
 		VpcRouting:                         vpcRouting,

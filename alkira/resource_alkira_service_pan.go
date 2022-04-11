@@ -44,7 +44,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"global_protect_enabled": {
 				Description: "Enable global protect option or not. Default is `false`",
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
+				Default:     false,
 			},
 			"global_protect_segment_options": {
 				Description: "A mapping of segment_name -> zones_to_groups. The only segment names " +
@@ -154,10 +155,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"panorama_ip_address": {
-				Description: "Panorama IP address.",
-				Type:        schema.TypeString,
+			"panorama_ip_addresses": {
+				Description: "Panorama IP addresses.",
+				Type:        schema.TypeList,
 				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"panorama_template": {
 				Description: "Panorama Template.",
@@ -286,6 +288,14 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
 
+	if pan.PanoramaDeviceGroup != nil {
+		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
+	}
+
+	if pan.PanoramaTemplate != nil {
+		d.Set("panorama_template", pan.PanoramaTemplate)
+	}
+
 	var instances []map[string]interface{}
 
 	for _, instance := range pan.Instances {
@@ -328,7 +338,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	instances := expandPanInstances(d.Get("instance").(*schema.Set))
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
-	panoramaIpAddress := d.Get("panorama_ip_address").(string)
+	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
 	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
@@ -351,7 +361,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		Name:                        d.Get("name").(string),
 		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
 		PanoramaDeviceGroup:         &panoramaDeviceGroup,
-		PanoramaIpAddress:           &panoramaIpAddress,
+		PanoramaIpAddresses:         panoramaIpAddresses,
 		PanoramaTemplate:            &panoramaTemplate,
 		SegmentOptions:              segmentOptions,
 		SegmentIds:                  segmentIds,

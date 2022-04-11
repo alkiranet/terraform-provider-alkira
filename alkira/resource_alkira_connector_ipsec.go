@@ -23,12 +23,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"billing_tag_ids": {
-				Description: "A list of Billing Tag by Id associated with the connector.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
@@ -230,13 +224,15 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Required:    true,
 						},
 						"availability": {
-							Description:  "The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`.",
+							Description: "The method to determine the availability of static route. The value could be " +
+								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.",
 							Type:         schema.TypeString,
 							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
 							Optional:     true,
+							Default:      "IPSEC_INTERFACE_PING",
 						},
 						"prefix_list_id": {
-							Description: "The id of prefix list to use for static route propagation.",
+							Description: "The ID of prefix list to use for static route propagation.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
@@ -280,7 +276,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"segment_id": {
-				Description: "The Id of the segment associated with the connector.",
+				Description: "The ID of the segment associated with the connector.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
@@ -376,7 +372,6 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSec, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
 
 	// For now, IPSec connector only support single segment
@@ -419,7 +414,6 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 	}
 
 	connector := &alkira.ConnectorIPSec{
-		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
