@@ -33,7 +33,6 @@ func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
 	return instances
 }
 
-//func expandCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (alkira.CheckpointSegmentNameToZone, error) {
 func expandCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (map[string]alkira.OuterZoneToGroups, error) {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid Checkpoint segment options input")
@@ -95,42 +94,6 @@ func convertCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (m
 
 	return segmentOptions, nil
 }
-
-//func convertCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (string, string, []string, error) {
-//	var segmentName string
-//	var zoneName string
-//	var groups []string
-//
-//	if in == nil {
-//		return "", "", nil, errors.New("Checkpoint segment options cannot be nil")
-//	}
-//
-//	for _, options := range in.List() {
-//		optionsCfg := options.(map[string]interface{})
-//
-//		if v, ok := optionsCfg["segment_id"].(int); ok {
-//			if fn == nil {
-//				return "", "", nil, errors.New("Checkpoint's get segment by id (CheckpointGetSegById) cannot be nil")
-//			}
-//
-//			sg, err := fn(strconv.Itoa(v))
-//			if err != nil {
-//				return "", "", nil, err
-//			}
-//			segmentName = sg.Name
-//		}
-//
-//		if v, ok := optionsCfg["zone_name"].(string); ok {
-//			zoneName = v
-//		}
-//
-//		if v, ok := optionsCfg["groups"].([]interface{}); ok {
-//			groups = convertTypeListToStringList(v)
-//		}
-//	}
-//
-//	return segmentName, zoneName, groups, nil
-//}
 
 func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (*alkira.CheckpointManagementServer, error) {
 	if in == nil || in.Len() > 1 {

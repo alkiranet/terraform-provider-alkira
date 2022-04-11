@@ -22,7 +22,7 @@ func resourceAlkiraCredentialCheckpointInstance() *schema.Resource {
 				Required:    true,
 			},
 			"sic_key": &schema.Schema{
-				Description: "CheckpointInstance sic key.",
+				Description: "The checkpoint instance sic key.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

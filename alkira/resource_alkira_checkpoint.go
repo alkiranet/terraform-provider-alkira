@@ -121,12 +121,12 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Optional: true,
 						},
 						"segment_id": {
-							Description: "The id of the segment to be used to access the managemenr server.",
+							Description: "The id of the segment to be used to access the management server.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
 						"type": {
-							Description: "The type of the management server",
+							Description: "The type of the management server.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -177,17 +177,17 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
-							Description: "",
+							Description: "The ID of the segment.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "",
+							Description: "The name of the associated zone.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"groups": {
-							Description: "",
+							Description: "The list of Groups associated with the zone.",
 							Type:        schema.TypeList,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},

@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//TODO(mac): add credential terraform stuff for checkpoint
-
 func resourceAlkiraCredentialFortinet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCredentialFortinet,

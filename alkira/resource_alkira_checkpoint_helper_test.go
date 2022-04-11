@@ -310,16 +310,3 @@ func initCheckpointSegment() alkira.Segment {
 		ReservePublicIPsForUserAndSiteConnectivity: false,
 	}
 }
-
-//actual := alkira.CheckpointManagementServer{
-//	ConfigurationMode: "configurationMode",
-//	CredentialId:      "credentialId",
-//	Domain:            "domain",
-//	GlobalCidrListId:  "globalCidrListId",
-//	Ips:               []string{"1", "2", "3"},
-//	Reachability:      "reachability",
-//	Segment:           "segment",
-//	SegmentId:         "segmentId",
-//	Type:              "type",
-//	UserName:          "userName",
-//}

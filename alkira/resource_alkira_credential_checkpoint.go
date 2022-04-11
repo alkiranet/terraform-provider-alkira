@@ -22,7 +22,7 @@ func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"password": &schema.Schema{
-				Description: "Checkpoint password.",
+				Description: "The checkpoint credential password.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
