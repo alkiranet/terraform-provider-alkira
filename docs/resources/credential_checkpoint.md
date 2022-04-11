@@ -25,7 +25,7 @@ resource "alkira_credential_checkpoint" "tf_test_checkpoint" {
 ### Required
 
 - **name** (String) The name of the credential.
-- **password** (String) Checkpoint password.
+- **password** (String) The checkpoint credential password.
 
 ### Optional
 

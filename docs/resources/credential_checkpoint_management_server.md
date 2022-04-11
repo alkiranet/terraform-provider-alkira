@@ -25,7 +25,7 @@ resource "alkira_credential_checkpoint_management_server" "tf-test-checkpoint-mg
 ### Required
 
 - **name** (String) The name of the credential.
-- **password** (String) Checkpoint management server password.
+- **password** (String) The checkpoint management server password.
 
 ### Optional
 

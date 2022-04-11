@@ -25,7 +25,7 @@ resource "alkira_credential_checkpoint_instance" "tf_test_checkpoint_instance" {
 ### Required
 
 - **name** (String) The name of the credential.
-- **sic_key** (String) CheckpointInstance sic key.
+- **sic_key** (String) The checkpoint instance sic key.
 
 ### Optional
 

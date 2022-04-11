@@ -104,8 +104,8 @@ Optional:
 
 - **domain** (String) Management server domain.
 - **reachability** (String) This option specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server.
-- **segment_id** (Number) The id of the segment to be used to access the managemenr server.
-- **type** (String) The type of the management server
+- **segment_id** (Number) The id of the segment to be used to access the management server.
+- **type** (String) The type of the management server.
 - **user_name** (String) The user_name of the management server.
 
 
@@ -114,8 +114,8 @@ Optional:
 
 Required:
 
-- **groups** (List of String)
-- **segment_id** (Number)
-- **zone_name** (String)
+- **groups** (List of String) The list of Groups associated with the zone.
+- **segment_id** (Number) The ID of the segment.
+- **zone_name** (String) The name of the associated zone.
 
 
