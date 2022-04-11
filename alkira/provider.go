@@ -61,7 +61,7 @@ func Provider() *schema.Provider {
 			"alkira_fortinet":                                resourceAlkiraServiceFortinet(),
 			"alkira_group":                                   resourceAlkiraGroup(),
 			"alkira_group_user":                              resourceAlkiraGroupUser(),
-			"alkira_list_as_path":                            resourceAlkiraServiceFortinet(),
+			"alkira_list_as_path":                            resourceAlkiraListAsPath(),
 			"alkira_list_community":                          resourceAlkiraListCommunity(),
 			"alkira_list_extended_community":                 resourceAlkiraListExtendedCommunity(),
 			"alkira_list_global_cidr":                        resourceAlkiraListGlobalCidr(),
