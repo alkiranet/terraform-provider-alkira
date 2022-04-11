@@ -58,7 +58,7 @@ func Provider() *schema.Provider {
 			"alkira_service_checkpoint":                      resourceAlkiraCheckpoint(),
 			"alkira_cloudvisor_account":                      resourceAlkiraCloudVisorAccount(),
 			"alkira_group_connector":                         resourceAlkiraGroupConnector(),
-			"alkira_fortinet":                                resourceAlkiraServiceFortinet(),
+			"alkira_service_fortinet":                        resourceAlkiraServiceFortinet(),
 			"alkira_group":                                   resourceAlkiraGroup(),
 			"alkira_group_user":                              resourceAlkiraGroupUser(),
 			"alkira_list_as_path":                            resourceAlkiraListAsPath(),
