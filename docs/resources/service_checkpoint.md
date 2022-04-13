@@ -24,7 +24,7 @@ Manage checkpoint services
 - **max_instance_count** (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - **name** (String) Name of the Checkpoint Firewall service.
 - **segment_names** (List of String) The names of the segments associated with the service.
-- **segment_options** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--segment_options))
+- **segment_options** (Block Set, Min: 1) The segment options as used by your checkpoint firewall. (see [below for nested schema](#nestedblock--segment_options))
 - **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`.
 - **version** (String) The version of the Checkpoint Firewall.
 
@@ -34,6 +34,7 @@ Manage checkpoint services
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **description** (String) The description of the checkpoint service.
 - **id** (String) The ID of this resource.
+- **instances** (Block Set) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - **min_instance_count** (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time.
 - **pdp_ips** (List of String) The IPs of the PDP Brokers.
 - **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
@@ -65,5 +66,17 @@ Required:
 - **groups** (List of String) The list of Groups associated with the zone.
 - **segment_id** (Number) The ID of the segment.
 - **zone_name** (String) The name of the associated zone.
+
+
+<a id="nestedblock--instances"></a>
+### Nested Schema for `instances`
+
+Required:
+
+- **name** (String) The name of the Checkpoint Firewall instance.
+
+Optional:
+
+- **credential_id** (String) The ID of the Checkpoint Firewall instance credentials.
 
 
