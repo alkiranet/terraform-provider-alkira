@@ -11,6 +11,19 @@ import (
 
 type CheckpointGetSegById func(string) (alkira.Segment, error)
 
+func checkpointRespDetailsToCheckpointInstance(details []alkira.CredentialResponseDetail) []alkira.CheckpointInstance {
+	var instances []alkira.CheckpointInstance
+
+	for _, v := range details {
+		instances = append(instances, alkira.CheckpointInstance{
+			CredentialId: v.Id,
+			Name:         v.Name,
+		})
+	}
+
+	return instances
+}
+
 func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid Checkpoint instance input")

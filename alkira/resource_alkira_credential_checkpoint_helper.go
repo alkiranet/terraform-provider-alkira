@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
@@ -37,6 +38,7 @@ func createCheckpointCredentialInstances(sicKeys []string, client *alkira.Alkira
 
 func createCheckpointCredentialManagementServer(name, password string, client *alkira.AlkiraClient) error {
 	c := &alkira.CredentialCheckPointFwManagementServer{Password: password}
+	fmt.Println("NAME: ", name)
 
 	log.Printf("[INFO] Creating Credential (Checkpoint Management Server)")
 	_, err := client.CreateCredential(name, alkira.CredentialTypeChkpFwManagement, c)
@@ -78,25 +80,17 @@ func deleteCheckpointCredential(cid string, client *alkira.AlkiraClient) error {
 
 func deleteCheckpointCredentialInstances(client *alkira.AlkiraClient) error {
 	var err error
-	var credentials []alkira.CredentialResponseDetail
 
-	js, err := client.GetCredentials()
+	credentials, err := getAllCheckpointCredentialInstances(client)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal([]byte(js), &credentials)
-	if err != nil {
-		log.Printf("[INFO] Failed Unmarshalling Credential (CheckpointInstance)")
-		return err
-	}
-
+	log.Printf("[INFO] Deleting All Credential (CheckpointInstances)\n")
 	for _, v := range credentials {
-		if v.Type == "CHKPFW_INSTANCE" {
-			delErr := client.DeleteCredential(v.Id, alkira.CredentialTypeChkpFwInstance)
-			if delErr != nil {
-				err = fmt.Errorf("%w: ", err)
-			}
+		delErr := client.DeleteCredential(v.Id, alkira.CredentialTypeChkpFwInstance)
+		if delErr != nil {
+			err = fmt.Errorf("%w: ", err)
 		}
 	}
 
@@ -110,5 +104,75 @@ func deleteCheckpointCredentialManagementServerByName(name string, client *alkir
 	}
 
 	return client.DeleteCredential(managementServerCredential.Id, alkira.CredentialTypeChkpFwManagement)
+}
 
+func getAllCheckpointCredentials(client *alkira.AlkiraClient) ([]alkira.CredentialResponseDetail, error) {
+	var credentials []alkira.CredentialResponseDetail
+
+	js, err := client.GetCredentials()
+	if err != nil {
+		log.Printf("[INFO] Failed getting Credential list\n")
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(js), &credentials)
+	if err != nil {
+		log.Printf("[INFO] Failed Unmarshalling Credential (CheckpointInstance)")
+		return nil, err
+	}
+
+	fmt.Println("UNMARSHALLED: ", credentials)
+
+	var checkpointCredentials []alkira.CredentialResponseDetail
+	for _, v := range credentials {
+		if strings.Contains(v.Type, "CHKPFW") {
+			checkpointCredentials = append(checkpointCredentials, v)
+		}
+	}
+
+	return credentials, nil
+}
+
+func getAllCheckpointCredentialInstances(client *alkira.AlkiraClient) ([]alkira.CredentialResponseDetail, error) {
+	details, err := getAllCheckpointCredentials(client)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseAllCheckpointCredentialInstances(details), nil
+}
+
+func parseAllCheckpointCredentialInstances(credentials []alkira.CredentialResponseDetail) []alkira.CredentialResponseDetail {
+	var checkpointCredentials []alkira.CredentialResponseDetail
+
+	for _, v := range credentials {
+		if v.Type == "CHKPFW_INSTANCE" {
+			checkpointCredentials = append(checkpointCredentials, v)
+		}
+	}
+
+	return checkpointCredentials
+}
+
+//if strings.Contains(v.Type, "CHKPFW") == "CHKPFW_INSTANCE" {
+func parseCheckpointCredentialManagementServer(credentials []alkira.CredentialResponseDetail) *alkira.CredentialResponseDetail {
+	for _, v := range credentials {
+		if v.Type == "CHKPFW_MANAGEMENT_SERVER" {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func fromCheckpointCredentialRespDetailsToCheckpointInstance(credentials []alkira.CredentialResponseDetail) []alkira.CheckpointInstance {
+	var checkpointInstances []alkira.CheckpointInstance
+	for _, v := range credentials {
+		checkpointInstances = append(checkpointInstances, alkira.CheckpointInstance{
+			CredentialId: v.Id,
+			Name:         v.Name,
+		})
+	}
+
+	return checkpointInstances
 }

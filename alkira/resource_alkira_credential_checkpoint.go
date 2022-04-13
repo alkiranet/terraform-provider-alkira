@@ -2,6 +2,8 @@
 package alkira
 
 import (
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -86,20 +88,26 @@ func resourceCredentialCheckpointUpdate(d *schema.ResourceData, meta interface{}
 func resourceCredentialCheckpointDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
+	fmt.Println("HARPO1")
 	err := deleteCheckpointCredential(d.Id(), client)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("HARPO2")
 	err = deleteCheckpointCredentialInstances(client)
 	if err != nil {
 		return err
 	}
 
-	err = deleteCheckpointCredentialManagementServerByName(d.Get("name").(string), client)
-	if err != nil {
-		return err
-	}
+	//NOTE: normally we would check for an error after an attempt to delete but there is somse
+	//inconsistency with the API's clean up of the management server credential. When a call to
+	//delete the checkpoint service is made it also deletes the management server credential. It
+	//does not attempt to delete either the instance credentials or the base checkpoint service
+	//credentials. In this case, we simply make a call so we have confidence the resource has been
+	//removed. Hopefully we can clean this up in the future.
+	deleteCheckpointCredentialManagementServerByName(d.Get("name").(string), client)
 
+	fmt.Println("HARPO4")
 	return nil
 }

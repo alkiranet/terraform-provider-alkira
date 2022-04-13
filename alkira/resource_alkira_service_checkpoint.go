@@ -48,27 +48,28 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			//"instances": {
-			//	Type:     schema.TypeSet,
-			//	Required: true,
-			//	Description: "An array containing properties for each Checkpoint Firewall instance " +
-			//		"that needs to be deployed. The number of instances should be equal to " +
-			//		"`max_instance_count`.",
-			//	Elem: &schema.Resource{
-			//		Schema: map[string]*schema.Schema{
-			//			"name": {
-			//				Description: "The name of the Checkpoint Firewall instance.",
-			//				Type:        schema.TypeString,
-			//				Required:    true,
-			//			},
-			//			"credential_id": {
-			//				Description: "The ID of the Checkpoint Firewall instance credentials. ",
-			//				Type:        schema.TypeString,
-			//				Optional:    true,
-			//			},
-			//		},
-			//	},
-			//},
+			"instances": {
+				Type: schema.TypeSet,
+				//Required: true,
+				Optional: true,
+				Description: "An array containing properties for each Checkpoint Firewall instance " +
+					"that needs to be deployed. The number of instances should be equal to " +
+					"`max_instance_count`.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Description: "The name of the Checkpoint Firewall instance.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"credential_id": {
+							Description: "The ID of the Checkpoint Firewall instance credentials. ",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+			},
 			"license_type": {
 				Description:  "Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 				Type:         schema.TypeString,
@@ -177,7 +178,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			"segment_options": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "The segment options as used by your checkpoint firewall.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -234,7 +235,6 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	id, err := client.CreateCheckpoint(request)
 
 	if err != nil {
-		fmt.Println("HARPO: WE HAVE AN ERROR")
 		return err
 	}
 
@@ -245,7 +245,6 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	fmt.Println("HARPO1")
 	checkpoint, err := client.GetCheckpointById(d.Id())
 	if err != nil {
 		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
@@ -257,7 +256,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", checkpoint.CredentialId)
 	d.Set("cxp", checkpoint.Cxp)
 	d.Set("description", checkpoint.Description)
-	//d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
+	d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
 	d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
@@ -276,7 +275,6 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	fmt.Println("HARPO2")
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
@@ -293,18 +291,34 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Checkpoint %s", d.Id())
-	fmt.Println("HARPO3")
 	return client.DeleteCheckpoint(d.Id())
 }
 
-func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
+func generateCheckpointRequestUpdate(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	fmt.Println("HARPO4")
+	allCheckpointResponseDetails, err := getAllCheckpointCredentials(client)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("ALLCHECKPOINTRESPONSEDETAILS: ", allCheckpointResponseDetails)
+
 	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
 	if err != nil {
 		return nil, err
 	}
+
+	managementServerCredential := parseCheckpointCredentialManagementServer(allCheckpointResponseDetails)
+	var managementServerCredentialId string
+	if managementServerCredential != nil {
+		managementServerCredentialId = managementServerCredential.Id
+	}
+	managementServer.CredentialId = managementServerCredentialId
+
+	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
+	fmt.Println("INSTANCE RESP DETAILS: ", instanceRespDetails)
+	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
+	fmt.Println("INSTANCES: ", instances)
 
 	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), client.GetSegmentById)
 	if err != nil {
@@ -314,12 +328,66 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
 	return &alkira.Checkpoint{
-		AutoScale:    d.Get("auto_scale").(string),
-		BillingTags:  billingTagIds,
-		CredentialId: d.Get("credential_id").(string),
-		Cxp:          d.Get("cxp").(string),
-		Description:  d.Get("description").(string),
-		//Instances:        expandCheckpointInstances(d.Get("instances").(*schema.Set)),
+		AutoScale:        d.Get("auto_scale").(string),
+		BillingTags:      billingTagIds,
+		CredentialId:     d.Get("credential_id").(string),
+		Cxp:              d.Get("cxp").(string),
+		Description:      d.Get("description").(string),
+		Instances:        instances,
+		LicenseType:      d.Get("license_type").(string),
+		ManagementServer: managementServer,
+		MinInstanceCount: d.Get("min_instance_count").(int),
+		MaxInstanceCount: d.Get("max_instance_count").(int),
+		Name:             d.Get("name").(string),
+		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
+		Segments:         convertTypeListToStringList(d.Get("segment_names").([]interface{})),
+		SegmentOptions:   segmentOptions,
+		Size:             d.Get("size").(string),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		Version:          d.Get("version").(string),
+	}, nil
+}
+
+func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	allCheckpointResponseDetails, err := getAllCheckpointCredentials(client)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("ALLCHECKPOINTRESPONSEDETAILS: ", allCheckpointResponseDetails)
+
+	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
+	if err != nil {
+		return nil, err
+	}
+
+	managementServerCredential := parseCheckpointCredentialManagementServer(allCheckpointResponseDetails)
+	var managementServerCredentialId string
+	if managementServerCredential != nil {
+		managementServerCredentialId = managementServerCredential.Id
+	}
+	managementServer.CredentialId = managementServerCredentialId
+
+	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
+	fmt.Println("INSTANCE RESP DETAILS: ", instanceRespDetails)
+	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
+	fmt.Println("INSTANCES: ", instances)
+
+	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), client.GetSegmentById)
+	if err != nil {
+		return nil, err
+	}
+
+	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+
+	return &alkira.Checkpoint{
+		AutoScale:        d.Get("auto_scale").(string),
+		BillingTags:      billingTagIds,
+		CredentialId:     d.Get("credential_id").(string),
+		Cxp:              d.Get("cxp").(string),
+		Description:      d.Get("description").(string),
+		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
 		ManagementServer: managementServer,
 		MinInstanceCount: d.Get("min_instance_count").(int),
