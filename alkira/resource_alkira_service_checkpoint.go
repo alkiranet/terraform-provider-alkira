@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -47,27 +48,27 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"instances": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Description: "An array containing properties for each Checkpoint Firewall instance " +
-					"that needs to be deployed. The number of instances should be equal to " +
-					"`max_instance_count`.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Description: "The name of the Checkpoint Firewall instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"credential_id": {
-							Description: "The ID of the Checkpoint Firewall instance credentials. ",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-					},
-				},
-			},
+			//"instances": {
+			//	Type:     schema.TypeSet,
+			//	Required: true,
+			//	Description: "An array containing properties for each Checkpoint Firewall instance " +
+			//		"that needs to be deployed. The number of instances should be equal to " +
+			//		"`max_instance_count`.",
+			//	Elem: &schema.Resource{
+			//		Schema: map[string]*schema.Schema{
+			//			"name": {
+			//				Description: "The name of the Checkpoint Firewall instance.",
+			//				Type:        schema.TypeString,
+			//				Required:    true,
+			//			},
+			//			"credential_id": {
+			//				Description: "The ID of the Checkpoint Firewall instance credentials. ",
+			//				Type:        schema.TypeString,
+			//				Optional:    true,
+			//			},
+			//		},
+			//	},
+			//},
 			"license_type": {
 				Description:  "Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 				Type:         schema.TypeString,
@@ -94,7 +95,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"credential_id": {
 							Description: "The credential ID of the Checkpoint Firewall's management server. ",
 							Type:        schema.TypeString,
-							Required:    true,
+							//Required:    true,
+							Optional: true,
 						},
 						"domain": {
 							Description: "Management server domain.",
@@ -232,6 +234,7 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	id, err := client.CreateCheckpoint(request)
 
 	if err != nil {
+		fmt.Println("HARPO: WE HAVE AN ERROR")
 		return err
 	}
 
@@ -242,6 +245,7 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
+	fmt.Println("HARPO1")
 	checkpoint, err := client.GetCheckpointById(d.Id())
 	if err != nil {
 		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
@@ -253,7 +257,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", checkpoint.CredentialId)
 	d.Set("cxp", checkpoint.Cxp)
 	d.Set("description", checkpoint.Description)
-	d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
+	//d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
 	d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
@@ -272,6 +276,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
+	fmt.Println("HARPO2")
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
@@ -288,12 +293,14 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	log.Printf("[INFO] Deleting Checkpoint %s", d.Id())
+	fmt.Println("HARPO3")
 	return client.DeleteCheckpoint(d.Id())
 }
 
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
+	fmt.Println("HARPO4")
 	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
 	if err != nil {
 		return nil, err
@@ -307,12 +314,12 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
 	return &alkira.Checkpoint{
-		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      billingTagIds,
-		CredentialId:     d.Get("credential_id").(string),
-		Cxp:              d.Get("cxp").(string),
-		Description:      d.Get("description").(string),
-		Instances:        expandCheckpointInstances(d.Get("instances").(*schema.Set)),
+		AutoScale:    d.Get("auto_scale").(string),
+		BillingTags:  billingTagIds,
+		CredentialId: d.Get("credential_id").(string),
+		Cxp:          d.Get("cxp").(string),
+		Description:  d.Get("description").(string),
+		//Instances:        expandCheckpointInstances(d.Get("instances").(*schema.Set)),
 		LicenseType:      d.Get("license_type").(string),
 		ManagementServer: managementServer,
 		MinInstanceCount: d.Get("min_instance_count").(int),

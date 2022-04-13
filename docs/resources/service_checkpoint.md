@@ -19,7 +19,6 @@ Manage checkpoint services
 
 - **credential_id** (String) ID of Checkpoint Firewall credential managed by credential resource.
 - **cxp** (String) CXP region.
-- **instances** (Block Set, Min: 1) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - **license_type** (String) Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - **management_server** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
 - **max_instance_count** (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
@@ -39,30 +38,18 @@ Manage checkpoint services
 - **pdp_ips** (List of String) The IPs of the PDP Brokers.
 - **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
-<a id="nestedblock--instances"></a>
-### Nested Schema for `instances`
-
-Required:
-
-- **name** (String) The name of the Checkpoint Firewall instance.
-
-Optional:
-
-- **credential_id** (String) The ID of the Checkpoint Firewall instance credentials.
-
-
 <a id="nestedblock--management_server"></a>
 ### Nested Schema for `management_server`
 
 Required:
 
 - **configuration_mode** (String) The configurationMode specifies whether the firewall is to be automatically configured by Alkira or not. To automatically configure the firewall Alkira needs access to the CheckPoint management server. If you choose to use manual configuration Alkira will provide the customer information about the checkpoint instances so that you can manually configure the firewall.
-- **credential_id** (String) The credential ID of the Checkpoint Firewall's management server.
 - **global_cidr_list_id** (Number) The ID of the global cidr list to be associated with the management server.
 - **ips** (List of String) Management server IPs.
 
 Optional:
 
+- **credential_id** (String) The credential ID of the Checkpoint Firewall's management server.
 - **domain** (String) Management server domain.
 - **reachability** (String) This option specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
 - **segment_id** (Number) The ID of the segment to be used to access the management server.

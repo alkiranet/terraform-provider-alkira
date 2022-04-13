@@ -2,8 +2,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,29 +24,38 @@ func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"sic_keys": &schema.Schema{
+				Description: "The checkpoint instance sic keys.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Required:    true,
+			},
 		},
 	}
 }
 
 func resourceCredentialCheckpoint(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
+	name := d.Get("name").(string)
+	password := d.Get("password").(string)
 
-	c := &alkira.CredentialCheckPointFwService{
-		AdminPassword: d.Get("password").(string),
+	credentialId, err := createCheckpointCredential(name, password, client)
+	if err != nil {
+		return err
 	}
+	d.SetId(credentialId)
 
-	log.Printf("[INFO] Creating Credential (Checkpoint)")
-	credentialId, err := client.CreateCredential(
-		d.Get("name").(string),
-		alkira.CredentialTypeChkpFw,
-		c,
-	)
-
+	sicKeys := convertTypeListToStringList(d.Get("sic_keys").([]interface{}))
+	err = createCheckpointCredentialInstances(sicKeys, client)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(credentialId)
+	err = createCheckpointCredentialManagementServer(name, password, client)
+	if err != nil {
+		return err
+	}
+
 	return resourceCredentialCheckpointRead(d, meta)
 }
 
@@ -58,19 +65,17 @@ func resourceCredentialCheckpointRead(d *schema.ResourceData, meta interface{}) 
 
 func resourceCredentialCheckpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
+	name := d.Get("name").(string)
+	password := d.Get("password").(string)
 
-	c := &alkira.CredentialCheckPointFwService{
-		AdminPassword: d.Get("password").(string),
+	//update Checkpoint Credential
+	err := updateCheckpointCredential(d.Id(), name, password, client)
+	if err != nil {
+		return err
 	}
 
-	log.Printf("[INFO] Updating Credential (Checkpoint)")
-	err := client.UpdateCredential(
-		d.Id(),
-		d.Get("name").(string),
-		alkira.CredentialTypeChkpFw,
-		c,
-	)
-
+	//update Checkpoint Credential Management Server
+	err = updateCheckpointCredentialManagementServerByName(name, password, client)
 	if err != nil {
 		return err
 	}
@@ -80,13 +85,20 @@ func resourceCredentialCheckpointUpdate(d *schema.ResourceData, meta interface{}
 
 func resourceCredentialCheckpointDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
-	credentialId := d.Id()
 
-	log.Printf("[INFO] Deleting Credential (Checkpoint %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypeChkpFw)
-
+	err := deleteCheckpointCredential(d.Id(), client)
 	if err != nil {
-		log.Printf("[INFO] Credential (Checkpoint %s) was already deleted\n", credentialId)
+		return err
+	}
+
+	err = deleteCheckpointCredentialInstances(client)
+	if err != nil {
+		return err
+	}
+
+	err = deleteCheckpointCredentialManagementServerByName(d.Get("name").(string), client)
+	if err != nil {
+		return err
 	}
 
 	return nil
