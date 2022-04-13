@@ -209,6 +209,5 @@ func constructVnetRouting(option string, prefixList []interface{}) *alkira.Conne
 	routing.RouteImportMode = option
 	routing.PrefixListIds = convertTypeListToIntList(prefixList)
 
-	//return &alkira.ConnectorVnetRouting{routing}
-	return nil
+	return &alkira.ConnectorVnetRouting{routing}
 }

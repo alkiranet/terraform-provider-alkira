@@ -38,7 +38,6 @@ func createCheckpointCredentialInstances(sicKeys []string, client *alkira.Alkira
 
 func createCheckpointCredentialManagementServer(name, password string, client *alkira.AlkiraClient) error {
 	c := &alkira.CredentialCheckPointFwManagementServer{Password: password}
-	fmt.Println("NAME: ", name)
 
 	log.Printf("[INFO] Creating Credential (Checkpoint Management Server)")
 	_, err := client.CreateCredential(name, alkira.CredentialTypeChkpFwManagement, c)
@@ -120,8 +119,6 @@ func getAllCheckpointCredentials(client *alkira.AlkiraClient) ([]alkira.Credenti
 		log.Printf("[INFO] Failed Unmarshalling Credential (CheckpointInstance)")
 		return nil, err
 	}
-
-	fmt.Println("UNMARSHALLED: ", credentials)
 
 	var checkpointCredentials []alkira.CredentialResponseDetail
 	for _, v := range credentials {

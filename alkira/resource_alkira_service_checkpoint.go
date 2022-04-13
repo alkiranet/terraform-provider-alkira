@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -294,60 +293,6 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteCheckpoint(d.Id())
 }
 
-func generateCheckpointRequestUpdate(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
-	client := m.(*alkira.AlkiraClient)
-
-	allCheckpointResponseDetails, err := getAllCheckpointCredentials(client)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("ALLCHECKPOINTRESPONSEDETAILS: ", allCheckpointResponseDetails)
-
-	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
-	if err != nil {
-		return nil, err
-	}
-
-	managementServerCredential := parseCheckpointCredentialManagementServer(allCheckpointResponseDetails)
-	var managementServerCredentialId string
-	if managementServerCredential != nil {
-		managementServerCredentialId = managementServerCredential.Id
-	}
-	managementServer.CredentialId = managementServerCredentialId
-
-	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
-	fmt.Println("INSTANCE RESP DETAILS: ", instanceRespDetails)
-	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
-	fmt.Println("INSTANCES: ", instances)
-
-	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), client.GetSegmentById)
-	if err != nil {
-		return nil, err
-	}
-
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-
-	return &alkira.Checkpoint{
-		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      billingTagIds,
-		CredentialId:     d.Get("credential_id").(string),
-		Cxp:              d.Get("cxp").(string),
-		Description:      d.Get("description").(string),
-		Instances:        instances,
-		LicenseType:      d.Get("license_type").(string),
-		ManagementServer: managementServer,
-		MinInstanceCount: d.Get("min_instance_count").(int),
-		MaxInstanceCount: d.Get("max_instance_count").(int),
-		Name:             d.Get("name").(string),
-		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         convertTypeListToStringList(d.Get("segment_names").([]interface{})),
-		SegmentOptions:   segmentOptions,
-		Size:             d.Get("size").(string),
-		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		Version:          d.Get("version").(string),
-	}, nil
-}
-
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
@@ -355,7 +300,6 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("ALLCHECKPOINTRESPONSEDETAILS: ", allCheckpointResponseDetails)
 
 	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
 	if err != nil {
@@ -370,9 +314,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	managementServer.CredentialId = managementServerCredentialId
 
 	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
-	fmt.Println("INSTANCE RESP DETAILS: ", instanceRespDetails)
 	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
-	fmt.Println("INSTANCES: ", instances)
 
 	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), client.GetSegmentById)
 	if err != nil {

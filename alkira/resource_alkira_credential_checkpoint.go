@@ -2,8 +2,6 @@
 package alkira
 
 import (
-	"fmt"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -88,13 +86,11 @@ func resourceCredentialCheckpointUpdate(d *schema.ResourceData, meta interface{}
 func resourceCredentialCheckpointDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	fmt.Println("HARPO1")
 	err := deleteCheckpointCredential(d.Id(), client)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("HARPO2")
 	err = deleteCheckpointCredentialInstances(client)
 	if err != nil {
 		return err
@@ -108,6 +104,5 @@ func resourceCredentialCheckpointDelete(d *schema.ResourceData, meta interface{}
 	//removed. Hopefully we can clean this up in the future.
 	deleteCheckpointCredentialManagementServerByName(d.Get("name").(string), client)
 
-	fmt.Println("HARPO4")
 	return nil
 }
