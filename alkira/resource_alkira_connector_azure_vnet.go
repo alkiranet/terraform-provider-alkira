@@ -74,6 +74,37 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
+			"service_route": &schema.Schema{
+				Description: "Service route.",
+				Type:        schema.TypeSet,
+				Required:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Description:  "Type of service routes, either `SUBNET` or `CIDR`.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"SUBNET", "CIDR"}, false),
+						},
+						"subnet_id": {
+							Description: "ID of the `subnet` to set in the service route.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"value": {
+							Description: "Whether enabling route advertisement.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"service_tags": {
+							Description: "List of service tags provided by Azure.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"service_tags": {
 				Description: "list of service tags from Azure. Providing a service tag here, " +
 					"would result in service tag route configuration on VNET route table, so " +
@@ -83,6 +114,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+
 			"size": {
 				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:         schema.TypeString,
@@ -199,15 +231,4 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	return request, nil
-}
-
-// constructVnetRouting expand AZURE VNET routing options
-func constructVnetRouting(option string, prefixList []interface{}) *alkira.ConnectorVnetRouting {
-
-	routing := alkira.ConnectorVnetImportOptions{}
-
-	routing.RouteImportMode = option
-	routing.PrefixListIds = convertTypeListToIntList(prefixList)
-
-	return &alkira.ConnectorVnetRouting{routing}
 }
