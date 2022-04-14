@@ -241,6 +241,7 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 		Enabled:              d.Get("enabled").(bool),
 		Name:                 d.Get("name").(string),
 		Size:                 d.Get("size").(string),
+		Type:                 d.Get("type").(string),
 		Version:              d.Get("version").(string),
 	}
 
