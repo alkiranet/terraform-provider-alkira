@@ -48,8 +48,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Optional:    true,
 			},
 			"instances": {
-				Type: schema.TypeSet,
-				//Required: true,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Description: "An array containing properties for each Checkpoint Firewall instance " +
 					"that needs to be deployed. The number of instances should be equal to " +
@@ -82,7 +81,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"configuration_mode": {
-							Description: "The configurationMode specifies whether the firewall is " +
+							Description: "The configuration_mode specifies whether the firewall is " +
 								"to be automatically configured by Alkira or not. To automatically " +
 								"configure the firewall Alkira needs access to the CheckPoint " +
 								"management server. If you choose to use manual configuration " +
@@ -91,12 +90,6 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"MANUAL", "AUTOMATED"}, false),
-						},
-						"credential_id": {
-							Description: "The credential ID of the Checkpoint Firewall's management server. ",
-							Type:        schema.TypeString,
-							//Required:    true,
-							Optional: true,
 						},
 						"domain": {
 							Description: "Management server domain.",

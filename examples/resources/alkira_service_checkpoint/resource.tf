@@ -1,12 +1,11 @@
-# Checkpoint Resource
-resource "alkira_checkpoint" "test1" {
+resource "alkira_service_checkpoint" "test1" {
   auto_scale         = "OFF"
   cxp                = "US-WEST"
   credential_id      = alkira_credential_checkpoint.tf_test_checkpoint.id
   license_type       = "PAY_AS_YOU_GO"
-  max_instance_count = 1
-  min_instance_count = 1
-  name               = "name"
+  max_instance_count = 2
+  min_instance_count = 2
+  name               = "testname"
   segment_names      = [alkira_segment.test-seg-1.name]
   size               = "LARGE"
   tunnel_protocol    = "IPSEC"
@@ -18,14 +17,8 @@ resource "alkira_checkpoint" "test1" {
     groups     = [alkira_group.test.name]
   }
 
-  instances {
-    name          = "tf-checkpoint-instance-1"
-    credential_id = alkira_credential_checkpoint_instance.tf_test_checkpoint_instance.id
-  }
-
   management_server {
     configuration_mode  = "MANUAL"
-    credential_id       = alkira_credential_checkpoint_management_server.tf-test-checkpoint-mg-server-1.id
     global_cidr_list_id = 22
     ips                 = ["10.2.0.3"]
     reachability        = "PRIVATE"
@@ -34,4 +27,3 @@ resource "alkira_checkpoint" "test1" {
     user_name           = "admin"
   }
 }
-

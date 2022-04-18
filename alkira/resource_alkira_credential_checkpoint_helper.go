@@ -67,11 +67,11 @@ func updateCheckpointCredentialManagementServerByName(name, password string, cli
 
 func deleteCheckpointCredential(cid string, client *alkira.AlkiraClient) error {
 
-	log.Printf("[INFO] Deleting Credential (Checkpoint %s)\n", cid)
+	log.Printf("[INFO] Deleting Credential (Checkpoint %s)", cid)
 	err := client.DeleteCredential(cid, alkira.CredentialTypeChkpFw)
 
 	if err != nil {
-		log.Printf("[INFO] Credential (Checkpoint %s) was already deleted\n", cid)
+		log.Printf("[INFO] Credential (Checkpoint %s) was already deleted", cid)
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func deleteCheckpointCredentialInstances(client *alkira.AlkiraClient) error {
 		return err
 	}
 
-	log.Printf("[INFO] Deleting All Credential (CheckpointInstances)\n")
+	log.Printf("[INFO] Deleting All Credential (CheckpointInstances)")
 	for _, v := range credentials {
 		delErr := client.DeleteCredential(v.Id, alkira.CredentialTypeChkpFwInstance)
 		if delErr != nil {
@@ -110,7 +110,7 @@ func getAllCheckpointCredentials(client *alkira.AlkiraClient) ([]alkira.Credenti
 
 	js, err := client.GetCredentials()
 	if err != nil {
-		log.Printf("[INFO] Failed getting Credential list\n")
+		log.Printf("[INFO] Failed getting Credential list")
 		return nil, err
 	}
 

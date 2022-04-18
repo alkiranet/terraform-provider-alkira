@@ -96,7 +96,7 @@ func resourceCredentialCheckpointDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	//NOTE: normally we would check for an error after an attempt to delete but there is somse
+	//NOTE: normally we would check for an error after an attempt to delete but there is some
 	//inconsistency with the API's clean up of the management server credential. When a call to
 	//delete the checkpoint service is made it also deletes the management server credential. It
 	//does not attempt to delete either the instance credentials or the base checkpoint service
