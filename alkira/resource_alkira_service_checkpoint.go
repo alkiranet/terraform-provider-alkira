@@ -60,11 +60,6 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"credential_id": {
-							Description: "The ID of the Checkpoint Firewall instance credentials. ",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
 					},
 				},
 			},
