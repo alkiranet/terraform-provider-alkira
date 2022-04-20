@@ -17,8 +17,10 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 		Delete:      resourceZscalerDelete,
 
 		Schema: map[string]*schema.Schema{
-			"alkira_internet_connector_id": {
-				//NOTE: This field is included to ensure that teardown of the zscaler service happens first. By including this field we are ensuring a dependency for the alkira zscaler serivce. Terraform destroys dependencies first.
+			"connector_internet_exit_id": {
+				//NOTE: This field is included to ensure that teardown of the zscaler service happens first.
+				//By including this field we are ensuring a dependency for the alkira zscaler serivce.
+				//Terraform destroys dependencies first.
 				Description: "The id of the alkira connector internet exit for the zscaler service.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -35,7 +37,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Required:    true,
 			},
 			"description": {
-				Description: "The description of the Zscaler firewall.",
+				Description: "The description of the Zscaler service.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -48,23 +50,26 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"esp_dh_group_number": {
 							Description: "The IPSEC phase 2 DH Group to be used. Input value must " +
-								"be either `MODP1024` or `MODP2048`",
+								"be either `MODP1024` or `MODP2048`. The default value is `MODP1024`",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "MODP1024",
 							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
 						},
 						"esp_encryption_algorithm": {
 							Description: "The IPSEC phase 2 Encryption Algorithm to be used. " +
-								"Input value must be either `NULL` or `AES256CBC` ",
+								"Input value must be either `NULL` or `AES256CBC`. The default value is `NULL`",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "NULL",
 							ValidateFunc: validation.StringInSlice([]string{"NULL", "AES256CBC"}, false),
 						},
 						"esp_integrity_algorithm": {
 							Description: "The IPSEC phase 2 Integrity Algorithm to be used. " +
-								"Input value must be either `MD5` or `SHA256`.",
+								"Input value must be either `MD5` or `SHA256`. The default value is `MD5`.",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "MD5",
 							ValidateFunc: validation.StringInSlice([]string{"MD5", "SHA256"}, false),
 						},
 						"health_check_type": {
@@ -82,23 +87,26 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 						},
 						"ike_dh_group_number": {
 							Description: "The IPSEC phase 1 DH Group to be used. Input value " +
-								"must either be `MODP1024` or `MODP2048`",
+								"must either be `MODP1024` or `MODP2048`. The default is `MODP1024`",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "MODP1024",
 							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
 						},
 						"ike_encryption_algorithm": {
 							Description: "The IPSEC phase 1 Encryption Algorithm to be used. " +
-								"Only `AES256CBC` is allowed.",
+								"Only `AES256CBC` is allowed. The default value is `AES256CBC`.",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "AES256CBC",
 							ValidateFunc: validation.StringInSlice([]string{"AES256CBC"}, false),
 						},
 						"ike_integrity_algorithm": {
 							Description: "The IPSEC phase 1 Integrity Algorithm to be used. " +
-								"Only `SHA256` is allowed",
+								"Only `SHA256` is allowed. The default value is `SHA256`.",
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      "SHA256",
 							ValidateFunc: validation.StringInSlice([]string{"SHA256"}, false),
 						},
 						"local_fpdn_id": {
@@ -115,7 +123,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 							Description: "The ping destination to check connection health, " +
 								"should be provided when health_check_type is `PING_PROBE`",
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
@@ -133,9 +141,9 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			"secondary_public_edge_ip": {
 				Description: "The ip for standby Zscaler PoP to `cxp` region.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
-			"segment_names": {
+			"segment_ids": {
 				Description: "Names of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
@@ -160,13 +168,13 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 func resourceZscaler(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateZscalerRequest(d, m)
+	z, err := generateZscalerRequest(d, m)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[INFO] Creating zscaler %s", d.Id())
-	id, err := client.CreateZscaler(request)
+	id, err := client.CreateZscaler(z)
 
 	if err != nil {
 		return err
@@ -193,7 +201,7 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("name", z.Name)
 	d.Set("primary_public_edge_ip", z.PrimaryPublicEdgeIp)
 	d.Set("secondary_public_edge_ip", z.SecondaryPublicEdgeIp)
-	d.Set("segment_names", z.Segments)
+	d.Set("segment_ids", z.Segments)
 	d.Set("size", z.Size)
 	d.Set("tunnel_protocol", z.TunnelType)
 
@@ -203,13 +211,13 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateZscalerRequest(d, m)
+	z, err := generateZscalerRequest(d, m)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[INFO] Updating Zscaler %s", d.Id())
-	err = client.UpdateZscaler(d.Id(), request)
+	err = client.UpdateZscaler(d.Id(), z)
 
 	return err
 }
@@ -222,7 +230,15 @@ func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zscaler, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	cfgs, err := expandZscalerIpsecConfigurations(d.Get("ipsec_configuration").(*schema.Set))
+	if err != nil {
+		return nil, err
+	}
+
+	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentNames, err := convertSegmentIdsToSegmentNames(client, segIds)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +251,7 @@ func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zsca
 		Name:                  d.Get("name").(string),
 		PrimaryPublicEdgeIp:   d.Get("primary_public_edge_ip").(string),
 		SecondaryPublicEdgeIp: d.Get("secondary_public_edge_ip").(string),
-		Segments:              convertTypeListToStringList(d.Get("segment_names").([]interface{})),
+		Segments:              segmentNames,
 		Size:                  d.Get("size").(string),
 		TunnelType:            d.Get("tunnel_protocol").(string),
 	}, nil

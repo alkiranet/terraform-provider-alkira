@@ -56,3 +56,18 @@ func convertTypeListToStringList(in []interface{}) []string {
 
 	return strList
 }
+
+func convertSegmentIdsToSegmentNames(c *alkira.AlkiraClient, ids []string) ([]string, error) {
+	var segmentNames []string
+	for _, id := range ids {
+		seg, err := c.GetSegmentById(id)
+		if err != nil {
+			log.Printf("[DEBUG] failed to segment. %s does not exist: ", id)
+			return nil, err
+		}
+
+		segmentNames = append(segmentNames, seg.Name)
+	}
+
+	return segmentNames, nil
+}
