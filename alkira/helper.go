@@ -56,3 +56,12 @@ func convertTypeListToStringList(in []interface{}) []string {
 
 	return strList
 }
+
+func convertStringArrToInterfaceArr(sArr []string) []interface{} {
+	iArr := make([]interface{}, len(sArr))
+	for i, v := range sArr {
+		iArr[i] = v
+	}
+
+	return iArr
+}

@@ -23,7 +23,7 @@ func TestFortinetGenerateRequestManagementServer(t *testing.T) {
 		},
 	}
 
-	r := resourceAlkiraFortinet()
+	r := resourceAlkiraServiceFortinet()
 	d := r.TestResourceData()
 	d.Set("management_server_ip", expectedIpAddress)
 	d.Set("management_server_segment", expectedSegment)
@@ -50,7 +50,7 @@ func TestFortinetRead(t *testing.T) {
 	}
 	ac := serveFortinet(t, f)
 
-	r := resourceAlkiraFortinet()
+	r := resourceAlkiraServiceFortinet()
 	d := r.TestResourceData()
 
 	err := resourceFortinetRead(d, ac)
@@ -70,7 +70,7 @@ func TestFortinetReadAutoScale(t *testing.T) {
 	ac := serveFortinet(t, f)
 	f.ManagementServer = &alkira.FortinetManagmentServer{}
 
-	r := resourceAlkiraFortinet()
+	r := resourceAlkiraServiceFortinet()
 	d := r.TestResourceData()
 
 	err := resourceFortinetRead(d, ac)
