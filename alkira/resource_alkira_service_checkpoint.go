@@ -188,10 +188,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				},
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`.",
+				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
