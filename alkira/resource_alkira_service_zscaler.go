@@ -133,7 +133,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			"secondary_public_edge_ip": {
 				Description: "The ip for standby Zscaler PoP to `cxp` region.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"segment_names": {
 				Description: "Names of segments associated with the service.",
@@ -142,7 +142,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, ",
+				Description:  "The size of the service one of `SMALL`, `MEDIUM`, `LARGE`, ",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
