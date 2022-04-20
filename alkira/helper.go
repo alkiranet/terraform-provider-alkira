@@ -71,3 +71,12 @@ func convertSegmentIdsToSegmentNames(c *alkira.AlkiraClient, ids []string) ([]st
 
 	return segmentNames, nil
 }
+
+func convertStringArrToInterfaceArr(sArr []string) []interface{} {
+	iArr := make([]interface{}, len(sArr))
+	for i, v := range sArr {
+		iArr[i] = v
+	}
+
+	return iArr
+}
