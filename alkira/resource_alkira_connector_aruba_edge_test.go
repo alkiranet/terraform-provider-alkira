@@ -22,6 +22,9 @@ func TestGenerateArubaEdgeResource(t *testing.T) {
 	requireArubeEdgeInstancesMatch(t, expectedConnector.Instances, actualConnector.Instances)
 }
 
+//
+// HELPERS
+//
 func defaultConnector() alkira.ConnectorArubaEdge {
 	expectedArubaEdgeVrfMapping := []alkira.ArubaEdgeVRFMapping{
 		alkira.ArubaEdgeVRFMapping{false, 0, "DEFAULT", false, 0},

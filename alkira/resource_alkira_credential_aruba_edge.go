@@ -58,7 +58,7 @@ func resourceCredentialArubaEdgeUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[INFO] Updating credential (Aruba Edge) %s", d.Id())
-	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeArubaEdgeConnectInstance, c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeArubaEdgeConnectInstance, c)
 
 	if err != nil {
 		return err

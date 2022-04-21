@@ -29,7 +29,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 						},
 						"alkira_segment_id": {
 							Description: "The segment id associated with the Aruba Edge connector.",
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"aruba_edge_connect_segment_name": {
