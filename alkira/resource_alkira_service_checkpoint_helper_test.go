@@ -50,7 +50,13 @@ func TestExpandCheckpointInstanceValid(t *testing.T) {
 	instanceName := "testInstanceName"
 	instanceCredentialId := "testInstanceCredentialId"
 
-	mArr := makeNumCheckpointInstances(3, instanceName, instanceCredentialId)
+	seedInstance := alkira.CheckpointInstance{
+		CredentialId: instanceCredentialId,
+		Name:         instanceName,
+	}
+
+	expectedInstances := makeNumCheckpointInstances(3, seedInstance)
+	mArr := convertCheckpointInstanceToArrayInterface(expectedInstances)
 	s := newSetFromCheckpointResource(mArr)
 
 	instances := expandCheckpointInstances(s)
@@ -266,17 +272,41 @@ func makeNumCheckpointSegmentOptions(num int, id int, zoneName string, groups []
 	return mArr
 }
 
-func makeNumCheckpointInstances(num int, name string, id string) []interface{} {
+func convertCheckpointInstanceToArrayInterface(c []alkira.CheckpointInstance) []interface{} {
 	mArr := []interface{}{}
-	for i := 0; i < num; i++ {
-		name := name + strconv.Itoa(i)
-		credentialId := id + strconv.Itoa(i)
-
-		mArr = append(mArr, makeMapCheckpointInstance(name, credentialId))
+	for _, v := range c {
+		mArr = append(mArr, makeMapCheckpointInstance(v.Name, v.CredentialId))
 	}
 
 	return mArr
 }
+
+func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkira.CheckpointInstance {
+	var instances []alkira.CheckpointInstance
+
+	for i := 0; i < num; i++ {
+		c := alkira.CheckpointInstance{
+			Name:         seed.Name + strconv.Itoa(i),
+			CredentialId: seed.CredentialId + strconv.Itoa(i),
+		}
+
+		instances = append(instances, c)
+	}
+
+	return instances
+}
+
+//func makeNumCheckpointInstances(num int, name string, id string) []interface{} {
+//	mArr := []interface{}{}
+//	for i := 0; i < num; i++ {
+//		name := name + strconv.Itoa(i)
+//		credentialId := id + strconv.Itoa(i)
+//
+//		mArr = append(mArr, makeMapCheckpointInstance(name, credentialId))
+//	}
+//
+//	return mArr
+//}
 
 func getCheckpointSegmentInTest(id string) (alkira.Segment, error) {
 	return initCheckpointSegment(), nil

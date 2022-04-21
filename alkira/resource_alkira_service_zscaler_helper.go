@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"errors"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,12 +9,10 @@ import (
 
 func expandZscalerIpsecConfigurations(in *schema.Set) (*alkira.ZscalerIpSecConfig, error) {
 	if in == nil || in.Len() <= 0 {
-		log.Printf("[DEBUG] invalid ZscalerIpSecConfig input")
-		return nil, nil
+		return nil, errors.New("ZscalerIpSecConfig must be length 1")
 	}
 
 	if in.Len() > 1 {
-		log.Printf("[DEBUG] expandIpsecConfigurations Set input can have only one entry")
 		return nil, errors.New("expandIpsecConfigurations Set input can have only one entry")
 	}
 

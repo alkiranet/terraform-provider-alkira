@@ -73,7 +73,6 @@ func Provider() *schema.Provider {
 			"alkira_segment":                      resourceAlkiraSegment(),
 			"alkira_segment_resource":             resourceAlkiraSegmentResource(),
 			"alkira_segment_resource_share":       resourceAlkiraSegmentResourceShare(),
-			"alkira_service_fortinet":             resourceAlkiraServiceFortinet(),
 			"alkira_service_zscaler":              resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                  resourceAlkiraServicePan(),
 			"alkira_tenant_network":               resourceAlkiraTenantNetwork(),

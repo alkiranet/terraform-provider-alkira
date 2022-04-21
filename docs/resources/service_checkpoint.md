@@ -57,7 +57,7 @@ resource "alkira_service_checkpoint" "test1" {
 - **name** (String) Name of the Checkpoint Firewall service.
 - **segment_names** (List of String) The names of the segments associated with the service.
 - **segment_options** (Block Set, Min: 1) The segment options as used by your checkpoint firewall. (see [below for nested schema](#nestedblock--segment_options))
-- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`.
+- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - **version** (String) The version of the Checkpoint Firewall.
 
 ### Optional
@@ -105,9 +105,5 @@ Required:
 Required:
 
 - **name** (String) The name of the Checkpoint Firewall instance.
-
-Optional:
-
-- **credential_id** (String) The ID of the Checkpoint Firewall instance credentials.
 
 

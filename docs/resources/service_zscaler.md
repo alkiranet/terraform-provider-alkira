@@ -45,21 +45,21 @@ resource "alkira_service_zscaler" "test1" {
 
 ### Required
 
-- **connector_internet_exit_id** (String) The id of the alkira connector internet exit for the zscaler service.
+- **connector_internet_exit_id** (String) The ID of the alkira connector internet exit for the zscaler service.
 - **cxp** (String) The CXP where the service should be provisioned.
-- **description** (String) The description of the Zscaler service.
 - **ipsec_configuration** (Block Set, Min: 1) The IPSEC tunnel configuration. This field should only be set when tunnelType is IPSEC. (see [below for nested schema](#nestedblock--ipsec_configuration))
 - **name** (String) The name of the zscaler firewall.
-- **primary_public_edge_ip** (String) The ip for closest Zscaler PoP to `cxp` region.
+- **primary_public_edge_ip** (String) The IP for closest Zscaler PoP to `cxp` region.
 - **secondary_public_edge_ip** (String) The ip for standby Zscaler PoP to `cxp` region.
 - **segment_ids** (List of String) Names of segments associated with the service.
-- **size** (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`,
-- **tunnel_protocol** (String) The type of tunnel protocol to be used to connect to Zscaler PoP.
+- **size** (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.
 
 ### Optional
 
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
+- **description** (String) The description of the Zscaler service.
 - **id** (String) The ID of this resource.
+- **tunnel_protocol** (String) The type of tunnel protocol to be used to connect to Zscaler PoP.
 
 <a id="nestedblock--ipsec_configuration"></a>
 ### Nested Schema for `ipsec_configuration`

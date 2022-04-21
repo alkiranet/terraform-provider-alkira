@@ -21,7 +21,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				//NOTE: This field is included to ensure that teardown of the zscaler service happens first.
 				//By including this field we are ensuring a dependency for the alkira zscaler serivce.
 				//Terraform destroys dependencies first.
-				Description: "The id of the alkira connector internet exit for the zscaler service.",
+				Description: "The ID of the alkira connector internet exit for the zscaler service.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -39,7 +39,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			"description": {
 				Description: "The description of the Zscaler service.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"ipsec_configuration": {
 				Type:     schema.TypeSet,
@@ -134,7 +134,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Required:    true,
 			},
 			"primary_public_edge_ip": {
-				Description: "The ip for closest Zscaler PoP to `cxp` region.",
+				Description: "The IP for closest Zscaler PoP to `cxp` region.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -150,7 +150,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
-				Description:  "The size of the service one of `SMALL`, `MEDIUM`, `LARGE`, ",
+				Description:  "The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
@@ -158,7 +158,8 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			"tunnel_protocol": {
 				Description:  "The type of tunnel protocol to be used to connect to Zscaler PoP.",
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Default:      "IPSEC",
 				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
 			},
 		},
