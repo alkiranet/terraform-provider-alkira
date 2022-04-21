@@ -296,18 +296,6 @@ func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkir
 	return instances
 }
 
-//func makeNumCheckpointInstances(num int, name string, id string) []interface{} {
-//	mArr := []interface{}{}
-//	for i := 0; i < num; i++ {
-//		name := name + strconv.Itoa(i)
-//		credentialId := id + strconv.Itoa(i)
-//
-//		mArr = append(mArr, makeMapCheckpointInstance(name, credentialId))
-//	}
-//
-//	return mArr
-//}
-
 func getCheckpointSegmentInTest(id string) (alkira.Segment, error) {
 	return initCheckpointSegment(), nil
 }
