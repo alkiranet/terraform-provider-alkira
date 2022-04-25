@@ -48,12 +48,11 @@ func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
 
 func expandCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (map[string]alkira.OuterZoneToGroups, error) {
 	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid Checkpoint segment options input")
-		return nil, nil
+		return nil, errors.New("Checkpoint segment options cannot be null or empty")
 	}
 
 	if in.Len() < 1 {
-		return nil, nil
+		return nil, errors.New("Checkpoint segment options must be exactly 1 in length")
 	}
 
 	return convertCheckpointSegmentOptions(in, fn)

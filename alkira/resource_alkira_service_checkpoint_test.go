@@ -13,11 +13,11 @@ import (
 )
 
 func TestGenerateCheckpointRequestService(t *testing.T) {
-	expectedInstances := []alkira.CheckpointInstance{
-		{0, "testId0", "testCredentialId0", "internalName0"},
-		{1, "testId1", "testCredentialId1", "internalName1"},
-		{2, "testId2", "testCredentialId2", "internalName2"},
+	seedInstance := alkira.CheckpointInstance{
+		CredentialId: "testInstanceCredentialId",
+		Name:         "testInstanceName",
 	}
+	expectedInstances := makeNumCheckpointInstances(3, seedInstance)
 
 	expectedManagementServer := &alkira.CheckpointManagementServer{
 		ConfigurationMode: "MANUAL",
@@ -77,25 +77,18 @@ func TestGenerateCheckpointRequestService(t *testing.T) {
 	r := resourceAlkiraCheckpoint()
 	d := r.TestResourceData()
 
+	s := newSetFromCheckpointResource(convertCheckpointInstanceToArrayInterface(expectedInstances))
+	d.Set("instances", s)
+
 	err := resourceCheckpointRead(d, ac)
 	require.Nil(t, err)
 
-	actualInstances := expandCheckpointInstances(d.Get("instances").(*schema.Set))
+	actualInstances := expandCheckpointInstances(s)
+	require.ElementsMatch(t, actualInstances, expectedInstances)
 
-	for _, v := range expectedInstances {
-		found := false
-		for _, in := range actualInstances {
-			if in.Name == v.Name && in.CredentialId == v.CredentialId {
-				found = true
-				break
-			}
-		}
-		require.True(t, found)
-	}
-
-	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), getCheckpointSegmentInTest)
+	actualSegmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), getCheckpointSegmentInTest)
 	require.Nil(t, err)
-	require.Contains(t, segmentOptions, "segmentName")
+	require.Contains(t, actualSegmentOptions, "segmentName")
 }
 
 //
