@@ -37,20 +37,26 @@ func TestExpandCheckpointSegmentOptionsInvalid(t *testing.T) {
 	//test nil set
 	c, err := expandCheckpointSegmentOptions(nil, nil)
 	require.Nil(t, c)
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	//test empty set
 	s := newSetFromCheckpointResource(nil)
 	c, err = expandCheckpointSegmentOptions(s, nil)
 	require.Nil(t, c)
-	require.NoError(t, err)
+	require.Error(t, err)
 }
 
 func TestExpandCheckpointInstanceValid(t *testing.T) {
 	instanceName := "testInstanceName"
 	instanceCredentialId := "testInstanceCredentialId"
 
-	mArr := makeNumCheckpointInstances(3, instanceName, instanceCredentialId)
+	seedInstance := alkira.CheckpointInstance{
+		CredentialId: instanceCredentialId,
+		Name:         instanceName,
+	}
+
+	expectedInstances := makeNumCheckpointInstances(3, seedInstance)
+	mArr := convertCheckpointInstanceToArrayInterface(expectedInstances)
 	s := newSetFromCheckpointResource(mArr)
 
 	instances := expandCheckpointInstances(s)
@@ -266,16 +272,28 @@ func makeNumCheckpointSegmentOptions(num int, id int, zoneName string, groups []
 	return mArr
 }
 
-func makeNumCheckpointInstances(num int, name string, id string) []interface{} {
+func convertCheckpointInstanceToArrayInterface(c []alkira.CheckpointInstance) []interface{} {
 	mArr := []interface{}{}
-	for i := 0; i < num; i++ {
-		name := name + strconv.Itoa(i)
-		credentialId := id + strconv.Itoa(i)
-
-		mArr = append(mArr, makeMapCheckpointInstance(name, credentialId))
+	for _, v := range c {
+		mArr = append(mArr, makeMapCheckpointInstance(v.Name, v.CredentialId))
 	}
 
 	return mArr
+}
+
+func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkira.CheckpointInstance {
+	var instances []alkira.CheckpointInstance
+
+	for i := 0; i < num; i++ {
+		c := alkira.CheckpointInstance{
+			Name:         seed.Name + strconv.Itoa(i),
+			CredentialId: seed.CredentialId + strconv.Itoa(i),
+		}
+
+		instances = append(instances, c)
+	}
+
+	return instances
 }
 
 func getCheckpointSegmentInTest(id string) (alkira.Segment, error) {
