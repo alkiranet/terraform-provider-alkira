@@ -125,6 +125,12 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required.")
 				}
 
+				avail, availOk := routingOptionsInput["availability"].(string)
+
+				if availOk {
+					staticOption.Availability = avail
+				}
+
 				routingOptions = alkira.ConnectorIPSecRoutingOptions{
 					StaticRouting: &staticOption,
 				}
@@ -157,6 +163,12 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 					staticOption.PrefixListId = id
 				} else {
 					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required.")
+				}
+
+				avail, availOk := routingOptionsInput["availability"].(string)
+
+				if availOk {
+					staticOption.Availability = avail
 				}
 
 				asn, asnOk := routingOptionsInput["customer_gateway_asn"].(string)

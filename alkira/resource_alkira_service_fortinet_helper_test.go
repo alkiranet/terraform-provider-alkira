@@ -21,7 +21,7 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 	m2 := makeMapFortinetInstance(expectedName+"2", expectedSerialNumber+"2", expectedCredentialId+"2")
 	mArr := []interface{}{m, m1, m2}
 
-	r := resourceAlkiraFortinet()
+	r := resourceAlkiraServiceFortinet()
 	f := schema.HashResource(r)
 	s := schema.NewSet(f, mArr)
 
