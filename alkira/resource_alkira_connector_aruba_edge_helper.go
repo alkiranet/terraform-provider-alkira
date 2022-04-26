@@ -24,33 +24,52 @@ func deflateArubaEdgeInstances(ins []alkira.ArubaEdgeInstance) []map[string]inte
 	return instances
 }
 
-func expandArubaEdgeInstances(in *schema.Set) []alkira.ArubaEdgeInstance {
+func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]alkira.ArubaEdgeInstance, error) {
+
 	var instances []alkira.ArubaEdgeInstance
 
-	for _, v := range in.List() {
-		var instance alkira.ArubaEdgeInstance
-		m := v.(map[string]interface{})
-
-		if v, ok := m["account_name"].(string); ok {
-			instance.AccountName = v
-		}
-		if v, ok := m["credential_id"].(string); ok {
-			instance.CredentialId = v
-		}
-		if v, ok := m["host_name"].(string); ok {
-			instance.HostName = v
-		}
-		if v, ok := m["name"].(string); ok {
-			instance.Name = v
-		}
-		if v, ok := m["site_tag"].(string); ok {
-			instance.SiteTag = v
-		}
-
-		instances = append(instances, instance)
+	credentialResponse, err := getAllCredentialsAsCredentialResponseDetails(client)
+	if err != nil {
+		return nil, err
 	}
 
-	return instances
+	for _, v := range in.List() {
+		var name, accountKey, accountName, hostName, siteTag string
+		m := v.(map[string]interface{})
+
+		if v, ok := m["account_key"].(string); ok {
+			accountKey = v
+		}
+		if v, ok := m["name"].(string); ok {
+			name = v
+		}
+		if v, ok := m["host_name"].(string); ok {
+			hostName = v
+		}
+		if v, ok := m["account_name"].(string); ok {
+			accountName = v
+		}
+		if v, ok := m["site_tag"].(string); ok {
+			siteTag = v
+		}
+
+		credId, err := findOrCreateArubaEdgeInstanceCredentialByName(client, credentialResponse, name, accountKey)
+		if err != nil {
+			return nil, err
+		}
+
+		c := alkira.ArubaEdgeInstance{
+			AccountName:  accountName,
+			CredentialId: credId,
+			HostName:     hostName,
+			Name:         name,
+			SiteTag:      siteTag,
+		}
+
+		instances = append(instances, c)
+	}
+
+	return instances, nil
 }
 
 func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping) []map[string]interface{} {
@@ -59,7 +78,7 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping) []map[string]i
 	for _, vrfmapping := range vrf {
 		i := map[string]interface{}{
 			"advertise_on_prem_routes":        vrfmapping.AdvertiseOnPremRoutes,
-			"alkira_segment_id":               vrfmapping.AlkiraSegmentId,
+			"segment_id":                      vrfmapping.AlkiraSegmentId,
 			"aruba_edge_connect_segment_name": vrfmapping.ArubaEdgeConnectSegmentName,
 			"disable_internet_exit":           vrfmapping.DisableInternetExit,
 			"gateway_gbp_asn":                 vrfmapping.GatewayBgpAsn,
@@ -85,7 +104,7 @@ func expandArubeEdgeVrfMapping(in *schema.Set) []alkira.ArubaEdgeVRFMapping {
 		if v, ok := m["advertise_on_prem_routes"].(bool); ok {
 			arubaEdgeVRFMapping.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := m["alkira_segment_id"].(int); ok {
+		if v, ok := m["segment_id"].(int); ok {
 			arubaEdgeVRFMapping.AlkiraSegmentId = v
 		}
 		if v, ok := m["aruba_edge_connect_segment_name"].(string); ok {
@@ -117,4 +136,34 @@ func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("version", connector.Version)
+}
+
+func findArubaEdgeInstanceResponseDetailByName(credentials []alkira.CredentialResponseDetail, name string) *alkira.CredentialResponseDetail {
+	for _, c := range credentials {
+		if name == c.Name {
+			return &c
+		}
+	}
+
+	return nil
+}
+
+func createArubaEdgeInstanceCredential(client *alkira.AlkiraClient, name, accountKey string) (string, error) {
+	return client.CreateCredential(name, alkira.CredentialTypeArubaEdgeConnectInstance, alkira.CredentialArubaEdgeConnectInstance{AccountKey: accountKey})
+}
+
+func findOrCreateArubaEdgeInstanceCredentialByName(client *alkira.AlkiraClient, credentials []alkira.CredentialResponseDetail, name, accountKey string) (string, error) {
+	credential := findArubaEdgeInstanceResponseDetailByName(credentials, name)
+
+	//If credential is not found in existing set create a new one
+	if credential == nil {
+		newCredentialId, err := createArubaEdgeInstanceCredential(client, name, accountKey)
+		if err != nil {
+			return "", err
+		}
+
+		return newCredentialId, nil
+	}
+
+	return credential.Id, nil
 }

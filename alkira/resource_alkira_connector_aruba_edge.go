@@ -27,7 +27,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Optional:    true,
 							Default:     false,
 						},
-						"alkira_segment_id": {
+						"segment_id": {
 							Description: "The segment id associated with the Aruba Edge connector.",
 							Type:        schema.TypeString,
 							Required:    true,
@@ -60,9 +60,10 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			},
 			"boost_mode": {
 				Description: "If enabled the Aruba Edge Connect image supporting the boost mode " +
-					"for given size(or bandwidth) would be deployed in Alkira CXP.",
+					"for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.",
 				Type:     schema.TypeBool,
-				Required: true,
+				Default:  false,
+				Optional: true,
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -82,20 +83,21 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			"instances": {
 				Description: "The Aruba Edge connector instances.",
 				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account_name": {
-							Description: "The account name given in SilverPeak orchestrator registration.",
+							Description: "The account name given in Silver Peak orchestrator registration.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"credential_id": {
-							Description: "The credential ID of the Aruba Edge instance.",
+						"account_key": {
+							Description: "The account key generated in Silver Peak orchestrator account.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"host_name": {
-							Description: "The host name given to the Aruba SD-WAN appliance that appears in SilverPeak orchestrator.",
+							Description: "The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -105,21 +107,20 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Required:    true,
 						},
 						"site_tag": {
-							Description: "site tag that appears on the SD-WAN appliance on SilverPeak orchestrator",
+							Description: "The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 					},
 				},
-				Required: true,
 			},
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_names": {
-				Description: "The names of the segments associated with the Aruba Edge connector.",
+			"segment_ids": {
+				Description: "The IDs of the segments associated with the Aruba Edge connector.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -195,10 +196,25 @@ func resourceConnectorArubaEdgeUpdate(d *schema.ResourceData, m interface{}) err
 func resourceConnectorArubaEdgeDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
+	//NOTE: In other cases I have noticed that we must manually delete associataed resource
+	//credentials. In this case, the backend infers that is neccesary and handles this process for us
 	return client.DeleteConnectorArubaEdge(d.Id())
 }
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentNames, err := convertSegmentIdsToSegmentNames(client, segIds)
+	if err != nil {
+		return nil, err
+	}
+
+	instances, err := expandArubaEdgeInstances(d.Get("instances").(*schema.Set), client)
+	if err != nil {
+		return nil, err
+	}
+
 	return &alkira.ConnectorArubaEdge{
 		ArubaEdgeVrfMapping: expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set)),
 		BillingTags:         convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
@@ -206,9 +222,9 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		Cxp:                 d.Get("cxp").(string),
 		GatewayBgpAsn:       d.Get("gateway_gbp_asn").(int),
 		Group:               d.Get("group").(string),
-		Instances:           expandArubaEdgeInstances(d.Get("instances").(*schema.Set)),
+		Instances:           instances,
 		Name:                d.Get("name").(string),
-		Segments:            convertTypeListToStringList(d.Get("segment_names").([]interface{})),
+		Segments:            segmentNames,
 		Size:                d.Get("size").(string),
 		TunnelProtocol:      d.Get("tunnel_protocol").(string),
 		Version:             d.Get("version").(string),
