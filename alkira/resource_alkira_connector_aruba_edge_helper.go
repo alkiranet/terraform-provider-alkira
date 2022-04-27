@@ -1,7 +1,8 @@
 package alkira
 
 import (
-	"log"
+	"errors"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,7 +79,7 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping) []map[string]i
 	for _, vrfmapping := range vrf {
 		i := map[string]interface{}{
 			"advertise_on_prem_routes":        vrfmapping.AdvertiseOnPremRoutes,
-			"segment_id":                      vrfmapping.AlkiraSegmentId,
+			"segment_id":                      strconv.Itoa(vrfmapping.AlkiraSegmentId),
 			"aruba_edge_connect_segment_name": vrfmapping.ArubaEdgeConnectSegmentName,
 			"disable_internet_exit":           vrfmapping.DisableInternetExit,
 			"gateway_gbp_asn":                 vrfmapping.GatewayBgpAsn,
@@ -89,12 +90,11 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping) []map[string]i
 	return mappings
 }
 
-func expandArubeEdgeVrfMapping(in *schema.Set) []alkira.ArubaEdgeVRFMapping {
+func expandArubeEdgeVrfMapping(in *schema.Set) ([]alkira.ArubaEdgeVRFMapping, error) {
 	var mappings []alkira.ArubaEdgeVRFMapping
 
 	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid aruba edge mapping input")
-		return nil
+		return nil, errors.New("Invalid aruba edge mapping input: Cannot be nil or empty.")
 	}
 
 	for _, v := range in.List() {
@@ -104,8 +104,12 @@ func expandArubeEdgeVrfMapping(in *schema.Set) []alkira.ArubaEdgeVRFMapping {
 		if v, ok := m["advertise_on_prem_routes"].(bool); ok {
 			arubaEdgeVRFMapping.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := m["segment_id"].(int); ok {
-			arubaEdgeVRFMapping.AlkiraSegmentId = v
+		if v, ok := m["segment_id"].(string); ok {
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, err
+			}
+			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
 		if v, ok := m["aruba_edge_connect_segment_name"].(string); ok {
 			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = v
@@ -120,7 +124,7 @@ func expandArubeEdgeVrfMapping(in *schema.Set) []alkira.ArubaEdgeVRFMapping {
 		mappings = append(mappings, arubaEdgeVRFMapping)
 	}
 
-	return mappings
+	return mappings, nil
 }
 
 func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.ResourceData) {

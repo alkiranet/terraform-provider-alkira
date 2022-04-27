@@ -215,8 +215,13 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
+	vrfMappings, err := expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set))
+	if err != nil {
+		return nil, err
+	}
+
 	return &alkira.ConnectorArubaEdge{
-		ArubaEdgeVrfMapping: expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set)),
+		ArubaEdgeVrfMapping: vrfMappings,
 		BillingTags:         convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		BoostMode:           d.Get("boost_mode").(bool),
 		Cxp:                 d.Get("cxp").(string),
