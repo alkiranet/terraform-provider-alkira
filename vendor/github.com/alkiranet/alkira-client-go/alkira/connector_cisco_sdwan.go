@@ -9,11 +9,11 @@ import (
 )
 
 type CiscoSdwanEdgeVrfMapping struct {
-	AdvertiseOnPremRoutes bool  `json:"advertiseOnPremRoutes"`
-	CustomerAsn           int   `json:"customerAsn,omitempty"`
-	DisableInternetExit   bool  `json:"disableInternetExit"`
-	SegmentId             int   `json:"segmentId"`
-	Vrf                   int   `json:"vrf"`
+	AdvertiseOnPremRoutes bool `json:"advertiseOnPremRoutes"`
+	CustomerAsn           int  `json:"customerAsn,omitempty"`
+	DisableInternetExit   bool `json:"disableInternetExit"`
+	SegmentId             int  `json:"segmentId"`
+	Vrf                   int  `json:"vrf"`
 }
 
 type CiscoSdwanEdgeInfo struct {

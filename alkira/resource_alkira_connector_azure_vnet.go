@@ -57,7 +57,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"routing_options": {
-				Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+				Description:  " Routing options for VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "ADVERTISE_DEFAULT_ROUTE",
@@ -74,27 +74,62 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
-			"service_route": &schema.Schema{
-				Description: "Service route.",
+			"vnet_cidr": &schema.Schema{
+				Description: "Configure routing options on specified VNET CIDR.",
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Description:  "Type of service routes, either `SUBNET` or `CIDR`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"SUBNET", "CIDR"}, false),
-						},
-						"subnet_id": {
-							Description: "ID of the `subnet` to set in the service route.",
+						"cidr": {
+							Description: "VNET CIDR.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
-						"value": {
-							Description: "Whether enabling route advertisement.",
+						"routing_options": {
+							Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "ADVERTISE_DEFAULT_ROUTE",
+							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+						},
+						"prefix_list_ids": {
+							Description: "Prefix List IDs.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"service_tags": {
+							Description: "List of service tags provided by Azure.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"vnet_subnet": &schema.Schema{
+				Description: "Configure routing options on specified VNET Subnet.",
+				Type:        schema.TypeSet,
+				Required:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_id": {
+							Description: "VNET subnet ID.",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"routing_options": {
+							Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "ADVERTISE_DEFAULT_ROUTE",
+							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+						},
+						"prefix_list_ids": {
+							Description: "Prefix List IDs.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
@@ -114,7 +149,6 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-
 			"size": {
 				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
 				Type:         schema.TypeString,
@@ -207,12 +241,17 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
-	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		return nil, err
+	}
+
+	routing, err := constructVnetRouting(d)
+
+	if err != nil {
 		return nil, err
 	}
 
