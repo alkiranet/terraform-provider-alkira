@@ -131,7 +131,9 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
+				Description: "The tunnel protocol to be used. IPSEC and GRE are the only valid options. " +
+					"IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the " +
+					"default selection. ",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPSEC",

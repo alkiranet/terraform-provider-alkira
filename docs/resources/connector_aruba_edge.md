@@ -68,7 +68,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 - **boost_mode** (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-- **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- **tunnel_protocol** (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
