@@ -26,7 +26,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
   aruba_edge_vrf_mapping {
     segment_id                      = alkira_segment.test1.id
-    aruba_edge_connect_segment_name = alkira_segment.test1.name
+    aruba_edge_connect_segment_name = "aruba_edge_segment_name"
     gateway_gbp_asn                 = 88
   }
 
