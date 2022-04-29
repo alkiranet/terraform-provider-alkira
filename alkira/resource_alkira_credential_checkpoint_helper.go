@@ -2,7 +2,6 @@
 package alkira
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -106,17 +105,8 @@ func deleteCheckpointCredentialManagementServerByName(name string, client *alkir
 }
 
 func getAllCheckpointCredentials(client *alkira.AlkiraClient) ([]alkira.CredentialResponseDetail, error) {
-	var credentials []alkira.CredentialResponseDetail
-
-	js, err := client.GetCredentials()
+	credentials, err := getAllCredentialsAsCredentialResponseDetails(client)
 	if err != nil {
-		log.Printf("[INFO] Failed getting Credential list")
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(js), &credentials)
-	if err != nil {
-		log.Printf("[INFO] Failed Unmarshalling Credential (CheckpointInstance)")
 		return nil, err
 	}
 
