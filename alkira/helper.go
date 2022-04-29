@@ -80,3 +80,20 @@ func convertStringArrToInterfaceArr(sArr []string) []interface{} {
 
 	return iArr
 }
+
+func getAllCredentialsAsCredentialResponseDetails(client *alkira.AlkiraClient) ([]alkira.CredentialResponseDetail, error) {
+	credentials, err := client.GetCredentials()
+	if err != nil {
+		log.Printf("[INFO] Failed getting Credential list")
+		return nil, err
+	}
+
+	var result []alkira.CredentialResponseDetail
+	err = json.Unmarshal([]byte(credentials), &result)
+	if err != nil {
+		log.Printf("[INFO] Failed Unmarshalling Credentials")
+		return nil, err
+	}
+
+	return result, nil
+}
