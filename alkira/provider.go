@@ -45,7 +45,6 @@ func Provider() *schema.Provider {
 			"alkira_connector_internet_exit":      resourceAlkiraConnectorInternetExit(),
 			"alkira_connector_ipsec":              resourceAlkiraConnectorIPSec(),
 			"alkira_credential_aws_vpc":           resourceAlkiraCredentialAwsVpc(),
-			"alkira_credential_aruba_edge":        resourceAlkiraCredentialArubaEdge(),
 			"alkira_credential_azure_vnet":        resourceAlkiraCredentialAzureVnet(),
 			"alkira_credential_cisco_sdwan":       resourceAlkiraCredentialCiscoSdwan(),
 			"alkira_credential_checkpoint":        resourceAlkiraCredentialCheckpoint(),
