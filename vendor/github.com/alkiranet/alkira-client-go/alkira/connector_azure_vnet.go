@@ -7,6 +7,28 @@ import (
 	"fmt"
 )
 
+type ConnectorVnetServiceRoute struct {
+	Id             string   `json:"id"`
+	ServiceTags    []string `json:"serviceTags"`
+	NativeServices []string `json:"nativeServices,omitempty"`
+	Value          string   `json:"value"`
+}
+
+type ConnectorVnetServiceRoutes struct {
+	Cidrs   []ConnectorVnetServiceRoute `json:"cidrs"`
+	Subnets []ConnectorVnetServiceRoute `json:"subnets"`
+}
+
+type ConnectorVnetExportOptionUserInputPrefix struct {
+	Id    string `json:"id"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ConnectorVnetExportOptions struct {
+	UserInputPrefixes []ConnectorVnetExportOptionUserInputPrefix `json:"userInputPrefixes"`
+}
+
 type ConnectorVnetImportOptionsCidr struct {
 	RouteImportMode string `json:"routeImportMode"`
 	PrefixListIds   []int  `json:"prefixListIds"`
@@ -28,7 +50,9 @@ type ConnectorVnetImportOptions struct {
 }
 
 type ConnectorVnetRouting struct {
+	ExportOptions ConnectorVnetExportOptions `json:"exportToCXPOptions,omitempty"`
 	ImportOptions ConnectorVnetImportOptions `json:"importFromCXPOptions"`
+	ServiceRoutes ConnectorVnetServiceRoutes `json:"serviceRoutes,omitempty"`
 }
 
 type ConnectorAzureVnet struct {

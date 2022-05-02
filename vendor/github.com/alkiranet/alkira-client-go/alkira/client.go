@@ -184,6 +184,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+	logf("DEBUG", "request(GET) RSP: %s\n", string(data))
 
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
@@ -206,6 +207,7 @@ func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+	logf("DEBUG", "request(POST) RSP: %s\n", string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
 		return nil, fmt.Errorf("(%d) %s", response.StatusCode, string(data))
@@ -216,18 +218,19 @@ func (ac *AlkiraClient) create(uri string, body []byte) ([]byte, error) {
 
 // delete send a DELETE request to delete a resource
 func (ac *AlkiraClient) delete(uri string) error {
-	logf("DEBUG", "request(DELETE) uri: %s\n", uri)
+	logf("DEBUG", "request(DEL) uri: %s\n", uri)
 
 	request, _ := http.NewRequest("DELETE", uri, nil)
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("request(DELETE) failed, %v", err)
+		return fmt.Errorf("request(DEL) failed, %v", err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+	logf("DEBUG", "request(DEL) RSP: %s\n", string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
@@ -254,6 +257,7 @@ func (ac *AlkiraClient) update(uri string, body []byte) error {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+	logf("DEBUG", "request(PUT) RSP: %s\n", string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))

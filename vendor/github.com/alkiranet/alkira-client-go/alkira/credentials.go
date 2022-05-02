@@ -10,29 +10,29 @@ import (
 type CredentialType string
 
 const (
-	CredentialTypeAkamaiProlexic   CredentialType = "akamai-prolexic"
-	CredentialTypeArubaEdgeConnect                = "aruba-edge-connector-instances"
-	CredentialTypeAwsVpc                          = "awsvpc"
-	CredentialTypeAzureVnet                       = "azurevnet"
-	CredentialTypeChkpFw                          = "chkp-fw"
-	CredentialTypeChkpFwInstance                  = "chkp-fw-instance"
-	CredentialTypeChkpFwManagement                = "chkp-fw-management-server"
-	CredentialTypeCiscoSdwan                      = "ciscosdwan"
-	CredentialTypeGcpVpc                          = "gcpvpc"
-	CredentialTypeKeyPair                         = "keypair"
-	CredentialTypeLdap                            = "ldap"
-	CredentialTypeOciVcn                          = "ocivcn"
-	CredentialTypePan                             = "pan"
-	CredentialTypePanInstance                     = "paninstance"
-	CredentialTypeFortinet                        = "ftntfw"
-	CredentialTypeFortinetInstance                = "ftntfw-instance"
+	CredentialTypeAkamaiProlexic           CredentialType = "akamai-prolexic"
+	CredentialTypeArubaEdgeConnectInstance                = "aruba-edge-connector-instances"
+	CredentialTypeAwsVpc                                  = "awsvpc"
+	CredentialTypeAzureVnet                               = "azurevnet"
+	CredentialTypeChkpFw                                  = "chkp-fw"
+	CredentialTypeChkpFwInstance                          = "chkp-fw-instance"
+	CredentialTypeChkpFwManagement                        = "chkp-fw-management-server"
+	CredentialTypeCiscoSdwan                              = "ciscosdwan"
+	CredentialTypeGcpVpc                                  = "gcpvpc"
+	CredentialTypeKeyPair                                 = "keypair"
+	CredentialTypeLdap                                    = "ldap"
+	CredentialTypeOciVcn                                  = "ocivcn"
+	CredentialTypePan                                     = "pan"
+	CredentialTypePanInstance                             = "paninstance"
+	CredentialTypeFortinet                                = "ftntfw"
+	CredentialTypeFortinetInstance                        = "ftntfw-instance"
 )
 
 type CredentialAkamaiProlexic struct {
 	BgpAuthenticationKey string `json:"bgpAuthenticationKey"`
 }
 
-type CredentialArubaEdgeConnect struct {
+type CredentialArubaEdgeConnectInstance struct {
 	AccountKey string `json:"accountKey"`
 }
 
@@ -177,7 +177,7 @@ func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error 
 
 // UpdateCredential update a given credential by its Id
 func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype CredentialType, credential interface{}) error {
-	if ctype == CredentialTypeKeyPair || ctype == CredentialTypeArubaEdgeConnect {
+	if ctype == CredentialTypeKeyPair || ctype == CredentialTypeArubaEdgeConnectInstance {
 		return fmt.Errorf("UpdateCredential: not supported for the credential type")
 	}
 
