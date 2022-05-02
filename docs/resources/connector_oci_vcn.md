@@ -50,7 +50,7 @@ resource "alkira_connector_oci_vcn" "test" {
 - **oci_region** (String) OCI region of the VCN.
 - **primary** (Boolean) Wether the connector is primary.
 - **segment_id** (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 - **vcn_id** (String) The OCID of the VCN.
 
 ### Optional
