@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -11,72 +8,90 @@ import (
 // constructVnetRouting construct connector_azure_vnet routing options
 func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting, error) {
 
-	vnetRouting := alkira.ConnectorVnetRouting{}
-
 	importOptions := alkira.ConnectorVnetImportOptions{}
 	importOptions.RouteImportMode = d.Get("routing_options").(string)
 	importOptions.PrefixListIds = convertTypeListToIntList(d.Get("routing_prefix_list_ids").([]interface{}))
 
-	serviceRoutes, err := constructVnetServiceRoutes(d.Get("service_route").(*schema.Set))
-
-	if err != nil {
-		return nil, err
-	}
-
-	vnetRouting.ImportOptions = importOptions
-	vnetRouting.ServiceRoutes = *serviceRoutes
-
-	return &vnetRouting, nil
-}
-
-// constructVnetServiceRoutes expand service route of connector_azure_vnet
-func constructVnetServiceRoutes(in *schema.Set) (*alkira.ConnectorVnetServiceRoutes, error) {
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] empty service_route of connector_azure_vnet")
-		return nil, nil
-	}
-
 	serviceRoutes := alkira.ConnectorVnetServiceRoutes{}
 
-	for _, input := range in.List() {
-		serviceRouteInput := input.(map[string]interface{})
+	// Processing vnet_subnet blocks
+	for _, block := range d.Get("vnet_subnet").(*schema.Set).List() {
+		content := block.(map[string]interface{})
 
-		switch serviceRouteType := serviceRouteInput["type"].(string); serviceRouteType {
-		case "CIDR":
-			{
-				cidr := alkira.ConnectorVnetServiceRoute{}
+		if _, ok := content["routing_options"].(string); ok {
+			subnetImportOption := alkira.ConnectorVnetImportOptionsSubnet{}
 
-				if v, ok := serviceRouteInput["value"].(string); ok {
-					cidr.Value = v
-				}
-
-				cidr.ServiceTags = convertTypeListToStringList(serviceRouteInput["service_tags"].([]interface{}))
-
-				serviceRoutes.Cidrs = append(serviceRoutes.Cidrs, cidr)
+			if v, ok := content["subnet_id"].(string); ok {
+				subnetImportOption.Id = v
 			}
-		case "SUBNET":
-			{
-				subnet := alkira.ConnectorVnetServiceRoute{}
 
-				if v, ok := serviceRouteInput["subnet_id"].(string); ok {
-					subnet.Id = v
-				} else {
-					return nil, fmt.Errorf("ERROR: subnet_id is required if type of service routes is SUBNET.")
-				}
-
-				if v, ok := serviceRouteInput["value"].(string); ok {
-					subnet.Value = v
-				}
-
-				subnet.ServiceTags = convertTypeListToStringList(serviceRouteInput["service_tags"].([]interface{}))
-
-				serviceRoutes.Subnets = append(serviceRoutes.Subnets, subnet)
+			if v, ok := content["subnet_value"].(string); ok {
+				subnetImportOption.Value = v
 			}
-		default:
-			return nil, fmt.Errorf("ERROR: invalid routing type")
+
+			if v, ok := content["routing_options"].(string); ok {
+				subnetImportOption.RouteImportMode = v
+			}
+
+			subnetImportOption.PrefixListIds = convertTypeListToIntList(content["prefix_list_ids"].([]interface{}))
+
+			importOptions.Subnets = append(importOptions.Subnets, subnetImportOption)
+		}
+
+		if len(content["service_tags"].([]interface{})) > 0 {
+			subnetServiceRoute := alkira.ConnectorVnetServiceRoute{}
+
+			if v, ok := content["subnet_id"].(string); ok {
+				subnetServiceRoute.Id = v
+			}
+
+			if v, ok := content["subnet_value"].(string); ok {
+				subnetServiceRoute.Value = v
+			}
+
+			subnetServiceRoute.ServiceTags = convertTypeListToStringList(content["service_tags"].([]interface{}))
+
+			serviceRoutes.Subnets = append(serviceRoutes.Subnets, subnetServiceRoute)
 		}
 	}
 
-	return &serviceRoutes, nil
+	// Processing vnet_cidr blocks
+	for _, block := range d.Get("vnet_cidr").(*schema.Set).List() {
+		content := block.(map[string]interface{})
 
+		if _, ok := content["routing_options"].(string); ok {
+			cidrImportOption := alkira.ConnectorVnetImportOptionsCidr{}
+
+			if v, ok := content["cidr"].(string); ok {
+				cidrImportOption.Value = v
+			}
+
+			if v, ok := content["routing_options"].(string); ok {
+				cidrImportOption.RouteImportMode = v
+			}
+
+			cidrImportOption.PrefixListIds = convertTypeListToIntList(content["prefix_list_ids"].([]interface{}))
+
+			importOptions.Cidrs = append(importOptions.Cidrs, cidrImportOption)
+		}
+
+		if len(content["service_tags"].([]interface{})) > 0 {
+			cidrServiceRoute := alkira.ConnectorVnetServiceRoute{}
+
+			if v, ok := content["cidr"].(string); ok {
+				cidrServiceRoute.Value = v
+			}
+
+			cidrServiceRoute.ServiceTags = convertTypeListToStringList(content["service_tags"].([]interface{}))
+
+			serviceRoutes.Cidrs = append(serviceRoutes.Cidrs, cidrServiceRoute)
+		}
+	}
+
+	vnetRouting := alkira.ConnectorVnetRouting{
+		ImportOptions: importOptions,
+		ServiceRoutes: serviceRoutes,
+	}
+
+	return &vnetRouting, nil
 }

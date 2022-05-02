@@ -57,7 +57,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"routing_options": {
-				Description:  " Routing options for VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
+				Description: " Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` " +
+					"or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "ADVERTISE_DEFAULT_ROUTE",
@@ -77,19 +78,18 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			"vnet_cidr": &schema.Schema{
 				Description: "Configure routing options on specified VNET CIDR.",
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr": {
 							Description: "VNET CIDR.",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 						},
 						"routing_options": {
-							Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Description:  "Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "ADVERTISE_DEFAULT_ROUTE",
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
@@ -101,16 +101,16 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
 			"vnet_subnet": &schema.Schema{
-				Description: "Configure routing options on specified VNET Subnet.",
+				Description: "Configure routing options on the specified VNET subnet.",
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"subnet_id": {
@@ -119,10 +119,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Required:    true,
 						},
 						"routing_options": {
-							Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Description:  "Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "ADVERTISE_DEFAULT_ROUTE",
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
@@ -134,7 +133,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -150,10 +149,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2L`, `4L`, `5L`, `10L` and `20L`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2L`, `4L`, `5L`, `10L`, `20L`}, false),
 			},
 		},
 	}
