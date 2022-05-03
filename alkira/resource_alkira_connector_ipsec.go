@@ -62,9 +62,12 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional: true,
 						},
 						"enable_tunnel_redundancy": {
-							Description: "indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Disable this if all tunnels will not be configured or enabled " +
+								"on the on-premise device. If disabled, connector health will be shown " +
+								"as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels " +
+								"need to be `UP` for the connector health to be shown as `UP`.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"billing_tag_ids": {
 							Description: "A list of IDs of billing tag associated with the endpoint.",
@@ -287,10 +290,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Required:    true,
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"vpn_mode": &schema.Schema{
 				Description:  "The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.",

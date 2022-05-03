@@ -103,9 +103,10 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 		},
 	}

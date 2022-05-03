@@ -84,10 +84,10 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Optional:    true,
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
