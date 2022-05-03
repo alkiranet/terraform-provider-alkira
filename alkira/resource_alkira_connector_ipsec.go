@@ -62,8 +62,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional: true,
 						},
 						"enable_tunnel_redundancy": {
-							Description: "indicates to Alkira that health for the site should " +
-								"be reported as good as long as any one of the tunnels is up.",
+							Description: "Disable this if all tunnels will not be configured or enabled " +
+								"on the on-premise device. If disabled, connector health will be shown " +
+								"as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels " +
+								"need to be `UP` for the connector health to be shown as `UP`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
