@@ -3,12 +3,15 @@
 page_title: "alkira_credential_azure_vnet Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  Manage AWS credential for authentication.
+  You can provide your credentials via the AK_AZURE_APPLICATION_ID AK_AZURE_SUBSCRIPTION_ID, AK_AZURE_SECRET_KEY and AK_AZURE_TENANT_ID environment variables.
 ---
 
 # alkira_credential_azure_vnet (Resource)
 
+Manage AWS credential for authentication.
 
+You can provide your credentials via the `AK_AZURE_APPLICATION_ID` `AK_AZURE_SUBSCRIPTION_ID`, `AK_AZURE_SECRET_KEY` and `AK_AZURE_TENANT_ID` environment variables.
 
 ## Example Usage
 
