@@ -11,11 +11,15 @@ import (
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage IPSec Connector.",
-		Create:      resourceConnectorIPSecCreate,
-		Read:        resourceConnectorIPSecRead,
-		Update:      resourceConnectorIPSecUpdate,
-		Delete:      resourceConnectorIPSecDelete,
+		Description: "Manage IPSec Connector.\n\n\n\n" +
+			"## VPN Mode\n\n" +
+			"`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's " +
+			"defined as `ROUTE_BASED`, `routing_options` block is required. When " +
+			"it's defined as `POLICY_BASED`, `policy_options` block is required.",
+		Create: resourceConnectorIPSecCreate,
+		Read:   resourceConnectorIPSecRead,
+		Update: resourceConnectorIPSecUpdate,
+		Delete: resourceConnectorIPSecDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -261,16 +265,18 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"disable_internet_exit": {
-							Description: "Enable or disable access to the internet when traffic arrives via this connector.",
+						"allow_nat_exit": {
+							Description: "Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     true,
 						},
 
-						"disable_advertise_on_prem_routes": {
-							Description: "Additional options for each segment associated with the connector.",
+						"Advertise_on_prem_routes": {
+							Description: "Additional options for each segment associated with the connector. Default is `false`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 						},
 					},
 				},
