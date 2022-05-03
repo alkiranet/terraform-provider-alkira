@@ -19,8 +19,8 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"and `aws_secret_key` in-line in the AWS provider block.\n\n" +
 			"### Environment Variables:\n\n" +
 			"You can provide your credentials via enviromental variables:\n\n " +
-			"* AWS_ACCESS_KEY_ID\n * AWS_SECRET_ACCESS_KEY\n * AWS_ROLE_ARN\n " +
-			"* AWS_ROLE_EXTERNAL_ID\n\n",
+			"* AK_AWS_ACCESS_KEY_ID\n * AK_AWS_SECRET_ACCESS_KEY\n * AK_AWS_ROLE_ARN\n " +
+			"* AK_AWS_ROLE_EXTERNAL_ID\n\n",
 		Create: resourceCredentialAwsVpc,
 		Read:   resourceCredentialAwsVpcRead,
 		Update: resourceCredentialAwsVpcUpdate,
@@ -37,7 +37,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ACCESS_KEY_ID",
+					"AK_AWS_ACCESS_KEY_ID",
 					nil),
 			},
 			"aws_secret_key": &schema.Schema{
@@ -45,7 +45,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_SECRET_ACCESS_KEY",
+					"AK_AWS_SECRET_ACCESS_KEY",
 					nil),
 			},
 			"aws_role_arn": &schema.Schema{
@@ -53,7 +53,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ROLE_ARN",
+					"AK_AWS_ROLE_ARN",
 					nil),
 			},
 			"aws_external_id": &schema.Schema{
@@ -61,7 +61,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ROLE_EXTERNAL_ID",
+					"AK_AWS_ROLE_EXTERNAL_ID",
 					nil),
 			},
 			"type": &schema.Schema{
