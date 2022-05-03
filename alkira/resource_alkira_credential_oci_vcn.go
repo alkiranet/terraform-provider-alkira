@@ -21,7 +21,7 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Description: "The name of the credential.",
+				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

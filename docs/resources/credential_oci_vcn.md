@@ -38,7 +38,7 @@ resource "alkira_credential_oci_vcn" "tftest" {
 
 - **fingerprint** (String) Fingerprint of the API key of the user.
 - **key** (String) API key of the user.
-- **name** (String) The name of the credential.
+- **name** (String) Name of the credential.
 - **tenant_ocid** (String) OCID of the tenant.
 - **user_ocid** (String) OCID of the user.
 

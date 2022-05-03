@@ -28,12 +28,12 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Description: "The name of the credential",
+				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"aws_access_key": &schema.Schema{
-				Description: "AWS access key",
+				Description: "AWS access key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
@@ -41,7 +41,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					nil),
 			},
 			"aws_secret_key": &schema.Schema{
-				Description: "AWS secret key",
+				Description: "AWS secret key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
@@ -49,7 +49,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					nil),
 			},
 			"aws_role_arn": &schema.Schema{
-				Description: "The AWS Role Arn",
+				Description: "AWS Role ARN.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
@@ -57,7 +57,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					nil),
 			},
 			"aws_external_id": &schema.Schema{
-				Description: "The AWS Role External ID",
+				Description: "AWS Role External ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
@@ -65,7 +65,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					nil),
 			},
 			"type": &schema.Schema{
-				Description: "The Type of AWS-VPC credential",
+				Description: "Type of AWS-VPC credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
