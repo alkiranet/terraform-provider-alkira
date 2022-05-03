@@ -69,7 +69,7 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 - **gcp_vpc_name** (String) GCP VPC name.
 - **name** (String) The name of the connector.
 - **segment_id** (Number) The ID of the segment associated with the connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 
 ### Optional
 

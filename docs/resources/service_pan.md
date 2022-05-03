@@ -54,7 +54,7 @@ resource "alkira_service_pan" "test1" {
 - **max_instance_count** (Number) Max number of Panorama instances for auto scale.
 - **name** (String) Name of the PAN service.
 - **segment_ids** (List of Number) IDs of segments associated with the service.
-- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
+- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 - **type** (String) The type of the PAN firewall.
 - **version** (String) The version of the PAN firewall.
 

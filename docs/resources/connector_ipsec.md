@@ -45,7 +45,7 @@ resource "alkira_connector_ipsec" "ipsec" {
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
 - **segment_id** (Number) The ID of the segment associated with the connector.
-- **size** (String) The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 - **vpn_mode** (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
@@ -70,7 +70,7 @@ Optional:
 
 - **advanced** (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
 - **billing_tag_ids** (List of Number) A list of IDs of billing tag associated with the endpoint.
-- **enable_tunnel_redundancy** (Boolean) indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.
+- **enable_tunnel_redundancy** (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
 - **preshared_keys** (List of String) An array of presharedKeys, one per tunnel.
 
 <a id="nestedblock--endpoint--advanced"></a>
