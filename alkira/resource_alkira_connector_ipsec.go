@@ -274,7 +274,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Default:     true,
 						},
 
-						"Advertise_on_prem_routes": {
+						"advertise_on_prem_routes": {
 							Description: "Additional options for each segment associated with the connector. Default is `false`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
