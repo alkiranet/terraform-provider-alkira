@@ -9,7 +9,8 @@ description: |-
   Static Credentials:
   Static credentials can be provided by adding an aws_access_keyand aws_secret_key in-line in the AWS provider block.
   Environment Variables:
-  You can provide your credentials via the AWS_ACCESS_KEY_ID andAWS_SECRET_ACCESS_KEY, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
+  You can provide your credentials via enviromental variables:
+  AWSACCESSKEY_IDAWSSECRETACCESS_KEYAWSROLEARNAWSROLEEXTERNAL_ID
 ---
 
 # alkira_credential_aws_vpc (Resource)
@@ -27,7 +28,12 @@ Static credentials can be provided by adding an `aws_access_key`and `aws_secret_
 
 ### Environment Variables:
 
-You can provide your credentials via the `AWS_ACCESS_KEY_ID` and`AWS_SECRET_ACCESS_KEY`, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
+You can provide your credentials via enviromental variables:
+
+ * AWS_ACCESS_KEY_ID
+ * AWS_SECRET_ACCESS_KEY
+ * AWS_ROLE_ARN
+ * AWS_ROLE_EXTERNAL_ID
 
 ## Example Usage
 
