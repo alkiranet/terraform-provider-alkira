@@ -13,12 +13,12 @@ func resourceAlkiraCredentialCiscoSdwan() *schema.Resource {
 			"The following methods are supported:\n\n" +
 			" - Static credentials\n" +
 			" - Environment variables\n\n" +
-			"*** Static Credentials:\n\n" +
+			"### Static Credentials:\n\n" +
 			"Static credentials can be provided by adding an `username`" +
 			"and `password` in-line in the CISCO SD-WAN block.\n\n" +
-			"*** Environment Variables:\n\n" +
-			"You can provide your credentials via the `CISCO_SDWAN_USERNAME` and" +
-			"`CISCO_SDWAN_PASSWORD`, environment variables, representing your" +
+			"### Environment Variables:\n\n" +
+			"You can provide your credentials via the `AK_CISCO_SDWAN_USERNAME` and" +
+			"`AK_CISCO_SDWAN_PASSWORD`, environment variables, representing your" +
 			"Cisco SD-WAN username and password, respectively.",
 		Create: resourceCredentialCiscoSdwanCreate,
 		Read:   resourceCredentialCiscoSdwanRead,
@@ -36,7 +36,7 @@ func resourceAlkiraCredentialCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"CISCO_SDWAN_USERNAME",
+					"AK_CISCO_SDWAN_USERNAME",
 					nil),
 			},
 			"password": &schema.Schema{
@@ -44,7 +44,7 @@ func resourceAlkiraCredentialCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"CISCO_SDWAN_PASSWORD",
+					"AK_CISCO_SDWAN_PASSWORD",
 					nil),
 			},
 		},
