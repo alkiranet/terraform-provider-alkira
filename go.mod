@@ -2,6 +2,8 @@ module github.com/alkiranet/terraform-provider-alkira
 
 go 1.16
 
+replace github.com/hashicorp/go-getter => github.com/hashicorp/go-getter v1.5.11
+
 require (
 	github.com/alkiranet/alkira-client-go v0.9.7
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
