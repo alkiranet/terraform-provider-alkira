@@ -3,15 +3,21 @@
 page_title: "alkira_credential_azure_vnet Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage AWS credential for authentication.
-  You can provide your credentials via the AK_AZURE_APPLICATION_ID AK_AZURE_SUBSCRIPTION_ID, AK_AZURE_SECRET_KEY and AK_AZURE_TENANT_ID environment variables.
+  Credential for interacting with Azure.
+  You could also provide your credentials via the following environmental variables:
+  AKAZUREAPPLICATION_IDAKAZURESUBSCRIPTION_IDAKAZURESECRET_KEYAKAZURETENANT_ID
 ---
 
 # alkira_credential_azure_vnet (Resource)
 
-Manage AWS credential for authentication.
+Credential for interacting with Azure.
 
-You can provide your credentials via the `AK_AZURE_APPLICATION_ID` `AK_AZURE_SUBSCRIPTION_ID`, `AK_AZURE_SECRET_KEY` and `AK_AZURE_TENANT_ID` environment variables.
+You could also provide your credentials via the following environmental variables:
+
+ * AK_AZURE_APPLICATION_ID
+ * AK_AZURE_SUBSCRIPTION_ID
+ * AK_AZURE_SECRET_KEY
+ * AK_AZURE_TENANT_ID
 
 ## Example Usage
 
@@ -29,14 +35,14 @@ resource "alkira_credential_azure_vnet" "test" {
 
 ### Required
 
-- **application_id** (String) The Application ID
-- **name** (String) The name of the credential
-- **secret_key** (String) The Secret Key
-- **tenant_id** (String) The Tenant ID
+- **application_id** (String) Azure Application ID.
+- **name** (String) The name of the credential.
+- **secret_key** (String) Azure Secret Key.
+- **tenant_id** (String) Azure Tenant ID.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **subscription_id** (String) The subscription ID
+- **subscription_id** (String) Azure subscription ID.
 
 
