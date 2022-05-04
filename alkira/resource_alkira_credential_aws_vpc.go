@@ -18,9 +18,9 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"Static credentials can be provided by adding an `aws_access_key`" +
 			"and `aws_secret_key` in-line in the AWS provider block.\n\n" +
 			"### Environment Variables:\n\n" +
-			"You can provide your credentials via the `AWS_ACCESS_KEY_ID` and" +
-			"`AWS_SECRET_ACCESS_KEY`, environment variables, representing your" +
-			"AWS Access Key and AWS Secret Key, respectively.",
+			"You can provide your credentials via enviromental variables:\n\n " +
+			"* AK_AWS_ACCESS_KEY_ID\n * AK_AWS_SECRET_ACCESS_KEY\n * AK_AWS_ROLE_ARN\n " +
+			"* AK_AWS_ROLE_EXTERNAL_ID\n\n",
 		Create: resourceCredentialAwsVpc,
 		Read:   resourceCredentialAwsVpcRead,
 		Update: resourceCredentialAwsVpcUpdate,
@@ -28,44 +28,44 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Description: "The name of the credential",
+				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"aws_access_key": &schema.Schema{
-				Description: "AWS access key",
+				Description: "AWS access key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ACCESS_KEY_ID",
+					"AK_AWS_ACCESS_KEY_ID",
 					nil),
 			},
 			"aws_secret_key": &schema.Schema{
-				Description: "AWS secret key",
+				Description: "AWS secret key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_SECRET_ACCESS_KEY",
+					"AK_AWS_SECRET_ACCESS_KEY",
 					nil),
 			},
 			"aws_role_arn": &schema.Schema{
-				Description: "The AWS Role Arn",
+				Description: "AWS Role ARN.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ROLE_ARN",
+					"AK_AWS_ROLE_ARN",
 					nil),
 			},
 			"aws_external_id": &schema.Schema{
-				Description: "The AWS Role External ID",
+				Description: "AWS Role External ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
-					"AWS_ROLE_EXTERNAL_ID",
+					"AK_AWS_ROLE_EXTERNAL_ID",
 					nil),
 			},
 			"type": &schema.Schema{
-				Description: "The Type of AWS-VPC credential",
+				Description: "Type of AWS-VPC credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

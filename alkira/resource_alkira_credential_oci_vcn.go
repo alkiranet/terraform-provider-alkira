@@ -9,15 +9,19 @@ import (
 
 func resourceAlkiraCredentialOciVcn() *schema.Resource {
 	return &schema.Resource{
-		Description: "Credential for accessing Oracle Cloud.",
-		Create:      resourceCredentialOciVcn,
-		Read:        resourceCredentialOciVcnRead,
-		Update:      resourceCredentialOciVcnUpdate,
-		Delete:      resourceCredentialOciVcnDelete,
+		Description: "Credential for accessing Oracle Cloud.\n\n" +
+			"You can provide your credentials via the following enviromental " +
+			"variables:\n\n * AK_OCI_USER_OCID\n " +
+			"* AK_OCI_FINGERPRINT\n * AK_OCI_KEY\n " +
+			"* AK_OCI_TENANT_OCID\n",
+		Create: resourceCredentialOciVcn,
+		Read:   resourceCredentialOciVcnRead,
+		Update: resourceCredentialOciVcnUpdate,
+		Delete: resourceCredentialOciVcnDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Description: "The name of the credential.",
+				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -25,21 +29,33 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 				Description: "OCID of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_OCI_USER_OCID",
+					nil),
 			},
 			"fingerprint": &schema.Schema{
 				Description: "Fingerprint of the API key of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_OCI_FINGERPRINT",
+					nil),
 			},
 			"key": &schema.Schema{
 				Description: "API key of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_OCI_KEY",
+					nil),
 			},
 			"tenant_ocid": &schema.Schema{
 				Description: "OCID of the tenant.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_OCI_TENANT_OCID",
+					nil),
 			},
 		},
 	}

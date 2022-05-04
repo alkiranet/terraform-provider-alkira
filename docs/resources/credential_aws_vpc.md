@@ -9,7 +9,8 @@ description: |-
   Static Credentials:
   Static credentials can be provided by adding an aws_access_keyand aws_secret_key in-line in the AWS provider block.
   Environment Variables:
-  You can provide your credentials via the AWS_ACCESS_KEY_ID andAWS_SECRET_ACCESS_KEY, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
+  You can provide your credentials via enviromental variables:
+  AKAWSACCESSKEYIDAKAWSSECRETACCESSKEYAKAWSROLE_ARNAKAWSROLEEXTERNALID
 ---
 
 # alkira_credential_aws_vpc (Resource)
@@ -27,7 +28,12 @@ Static credentials can be provided by adding an `aws_access_key`and `aws_secret_
 
 ### Environment Variables:
 
-You can provide your credentials via the `AWS_ACCESS_KEY_ID` and`AWS_SECRET_ACCESS_KEY`, environment variables, representing yourAWS Access Key and AWS Secret Key, respectively.
+You can provide your credentials via enviromental variables:
+
+ * AK_AWS_ACCESS_KEY_ID
+ * AK_AWS_SECRET_ACCESS_KEY
+ * AK_AWS_ROLE_ARN
+ * AK_AWS_ROLE_EXTERNAL_ID
 
 ## Example Usage
 
@@ -55,15 +61,15 @@ resource "alkira_credential_aws_vpc" "account1" {
 
 ### Required
 
-- **name** (String) The name of the credential
-- **type** (String) The Type of AWS-VPC credential
+- **name** (String) Name of the credential.
+- **type** (String) Type of AWS-VPC credential.
 
 ### Optional
 
-- **aws_access_key** (String) AWS access key
-- **aws_external_id** (String) The AWS Role External ID
-- **aws_role_arn** (String) The AWS Role Arn
-- **aws_secret_key** (String) AWS secret key
+- **aws_access_key** (String) AWS access key.
+- **aws_external_id** (String) AWS Role External ID.
+- **aws_role_arn** (String) AWS Role ARN.
+- **aws_secret_key** (String) AWS secret key.
 - **id** (String) The ID of this resource.
 
 
