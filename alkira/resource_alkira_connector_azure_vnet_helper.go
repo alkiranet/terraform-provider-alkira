@@ -8,6 +8,8 @@ import (
 // constructVnetRouting construct connector_azure_vnet routing options
 func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting, error) {
 
+	exportOptions := alkira.ConnectorVnetExportOptions{}
+
 	importOptions := alkira.ConnectorVnetImportOptions{}
 	importOptions.RouteImportMode = d.Get("routing_options").(string)
 	importOptions.PrefixListIds = convertTypeListToIntList(d.Get("routing_prefix_list_ids").([]interface{}))
@@ -18,6 +20,21 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 	for _, block := range d.Get("vnet_subnet").(*schema.Set).List() {
 		content := block.(map[string]interface{})
 
+		// Processing export options for subnet
+		subnetUserInputPrefix := alkira.ConnectorVnetExportOptionUserInputPrefix{}
+		subnetUserInputPrefix.Type = "SUBNET"
+
+		if v, ok := content["subnet_id"].(string); ok {
+			subnetUserInputPrefix.Id = v
+		}
+
+		if v, ok := content["subnet_cidr"].(string); ok {
+			subnetUserInputPrefix.Value = v
+		}
+
+		exportOptions.UserInputPrefixes = append(exportOptions.UserInputPrefixes, subnetUserInputPrefix)
+
+		// Processing import options for subnet
 		if _, ok := content["routing_options"].(string); ok {
 			subnetImportOption := alkira.ConnectorVnetImportOptionsSubnet{}
 
@@ -25,7 +42,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 				subnetImportOption.Id = v
 			}
 
-			if v, ok := content["subnet_value"].(string); ok {
+			if v, ok := content["subnet_cidr"].(string); ok {
 				subnetImportOption.Value = v
 			}
 
@@ -38,6 +55,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 			importOptions.Subnets = append(importOptions.Subnets, subnetImportOption)
 		}
 
+		// Processing service routes for subnet
 		if len(content["service_tags"].([]interface{})) > 0 {
 			subnetServiceRoute := alkira.ConnectorVnetServiceRoute{}
 
@@ -45,7 +63,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 				subnetServiceRoute.Id = v
 			}
 
-			if v, ok := content["subnet_value"].(string); ok {
+			if v, ok := content["subnet_cidr"].(string); ok {
 				subnetServiceRoute.Value = v
 			}
 
@@ -59,6 +77,17 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 	for _, block := range d.Get("vnet_cidr").(*schema.Set).List() {
 		content := block.(map[string]interface{})
 
+		// Processing export options for CIDR
+		cidrUserInputPrefix := alkira.ConnectorVnetExportOptionUserInputPrefix{}
+		cidrUserInputPrefix.Type = "CIDR"
+
+		if v, ok := content["cidr"].(string); ok {
+			cidrUserInputPrefix.Value = v
+		}
+
+		exportOptions.UserInputPrefixes = append(exportOptions.UserInputPrefixes, cidrUserInputPrefix)
+
+		// Processing import options for CIDR
 		if _, ok := content["routing_options"].(string); ok {
 			cidrImportOption := alkira.ConnectorVnetImportOptionsCidr{}
 
@@ -75,6 +104,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 			importOptions.Cidrs = append(importOptions.Cidrs, cidrImportOption)
 		}
 
+		// Processing service routes for CIDR
 		if len(content["service_tags"].([]interface{})) > 0 {
 			cidrServiceRoute := alkira.ConnectorVnetServiceRoute{}
 
@@ -89,6 +119,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 	}
 
 	vnetRouting := alkira.ConnectorVnetRouting{
+		ExportOptions: exportOptions,
 		ImportOptions: importOptions,
 		ServiceRoutes: serviceRoutes,
 	}

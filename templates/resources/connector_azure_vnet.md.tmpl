@@ -143,6 +143,7 @@ Optional:
 Required:
 
 - **subnet_id** (String) VNET subnet ID.
+- **subnet_cidr** (String) VNET subnet CIDR.
 
 Optional:
 

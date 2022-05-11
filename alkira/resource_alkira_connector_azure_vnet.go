@@ -118,6 +118,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"subnet_cidr": {
+							Description: "VNET subnet CIDR.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 						"routing_options": {
 							Description:  "Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
