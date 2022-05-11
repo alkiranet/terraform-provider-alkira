@@ -264,7 +264,7 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 			r.AdvertiseOnPremRoutes = v
 		}
 		if v, ok := t["allow_nat_exit"].(bool); ok {
-			r.DisableInternetExit = v
+			r.DisableInternetExit = !v
 		}
 		if v, ok := t["customer_asn"].(int); ok {
 			r.CustomerAsn = v
