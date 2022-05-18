@@ -44,7 +44,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"NOT overlap the cidr used for the segment IP block associated with " +
 								"the service",
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"backup_cxps": {
@@ -54,7 +54,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"this feature. It is NOT required that the backup_cxps should have " +
 								"a configured Infoblox service before it can be designated as a backup.",
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -103,15 +103,12 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"created or if an existing grid master should be used. NOTE: " +
 								"creation of new external grid masters is not supported at " +
 								"this time, but will be supported in future releases.",
-							Type:         schema.TypeBool,
-							Optional:     true,
-							Default:      false,
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+							//TODO(mac): we need to verify that this validation function work in a
+							//live test
 							ValidateFunc: ExternalMustBeFalse(),
-						},
-						"grid_master_credential_id": {
-							Description: "The grid master credentials.",
-							Type:        schema.TypeString,
-							Required:    true,
 						},
 						"ip": {
 							Description: "The ip address of the grid master.",
@@ -123,11 +120,19 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"shared_secret_credential_id": {
-							Description: "The shared secret credentials. This is the shared " +
-								"secret to be used when InfoBlox instances need to join the grid.",
-							Type:     schema.TypeString,
-							Required: true,
+						//TODO(mac): can I make this a variable in another file so they don't have
+						//to hardcode this?
+						"username": {
+							Description: "The Grid Master user name.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						//TODO(mac): can I make this a variable in another file so they don't have
+						//to hardcode this?
+						"password": {
+							Description: "The Grid Master password.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 					},
 				},
@@ -146,8 +151,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"credential_id": {
-							Description: "The credentials for the instance.",
+						"name": {
+							Description: "The name of the Infoblox instance.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -157,15 +162,20 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required:    true,
 						},
 						"model": {
-							Description: "The model of the InfoBlox instance.",
+							Description: "The model of the Infoblox instance.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"password": {
+							Description: "The password associated with the infoblox instance.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"type": {
-							Description: "The type of the InfoBlox instance that is to be provisioned. " +
+							Description: "The type of the Infoblox instance that is to be provisioned. " +
 								"There can only be one MASTER ever provisioned. When the grid master " +
 								"is provisioned by Alkira, provisioning needs to happen in two steps. " +
-								"First the InfoBlox service must be provisioned with only 1 instance " +
+								"First the Infoblox service must be provisioned with only 1 instance " +
 								"of type MASTER. Subsequently other instances of the grid may be " +
 								"added to the instances list and provisioned. When the grid master " +
 								"is external (i.e not provisioned by Alkira) then no instances of " +
@@ -175,7 +185,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE, MEMBER"}, false),
 						},
 						"version": {
-							Description: "The version of the InfoBlox instance to be used.",
+							Description: "The version of the Infoblox instance to be used.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -193,7 +203,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_names": { //TODO(mac): these needs to be converted from names to ids in the request to the backend
+			"segment_names": {
 				Description: "Names of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
@@ -206,6 +216,12 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"shared_secret": {
+				Description: "Shared Secret of the InfoBlox grid. This cannot be empty.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+
 			"size": {
 				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
@@ -272,35 +288,65 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteInfoblox(d.Id())
 }
 
-func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Infoblox, error) {
-	gridMaster, err := expandInfobloxGridMaster(d.Get("grid_master").(*schema.Set))
+//TODO(mac): rewrite your test for generateInfobloxRequest
+func generateInfobloxRequest(d *schema.ResourceData, m interface{}, clientCalls InfobloxClientRequestCalls) (*alkira.Infoblox, error) {
+	//client := m.(*alkira.AlkiraClient)
+
+	//Create Infoblox Service Credential
+	name := d.Get("name").(string)
+	shared_secret := d.Get("shared_secret").(string)
+	infobloxCredentialId, err := clientCalls.CreateInfobloxCredential(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	if err != nil {
 		return nil, err
 	}
 
-	anycast, err := expandInfobloxAnycast(d.Get("anycast").(*schema.Set))
+	//Parse Grid Master
+	gm := d.Get("grid_master").(*schema.set)
+	createGMCredential := clientCalls.CreateInfobloxGridMasterCredential
+	gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, createGMCredential)
+	if err != nil {
+		return err
+	}
+
+	//Parse Instances
+	instancesSet := d.Get("instances").(*schema.Set)
+	createInstanceCredentialsFn := clientCalls.CreateInfobloxInstanceCredential
+	instances, err := expandInfobloxInstances(instancesSet, createInstanceCredentialsFn)
 	if err != nil {
 		return nil, err
 	}
 
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	instances := expandInfobloxInstances(d.Get("instances").(*schema.Set))
-	segmentNames := convertTypeListToStringList(d.Get("segment_names").([]interface{}))
+	//Parse Anycast
+	anycast, err = expandInfobloxAnycast(d.Get("anycast").(*schema.Set))
+	if err != nil {
+		return nil, err
+	}
 
 	return &alkira.Infoblox{
 		AnyCast:          *anycast,
-		BillingTags:      billingTagIds,
+		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
-		GridMaster:       *gridMaster,
+		GridMaster:       gridMaster,
 		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
-		Name:             d.Get("name").(string),
-		Segments:         segmentNames,
+		Name:             name,
+		Segments:         convertTypeListToStringList(d.Get("segment_names").([]interface{})),
 		ServiceGroupName: d.Get("service_group_name").(string),
 		Size:             d.Get("size").(string),
 	}, nil
+}
+
+type infobloxCreateGridMasterCredential func(name string, credentialType string, credential *alkira.CredentialInfobloxGridMaster) (string, error)
+type infobloxCreateInstanceCredential func(name string, credentialType string, credential *alkira.CredentialInfobloxInstance) (string, error)
+type infobloxCreateCredential func(name string, credentialType string, credential *alkira.CredentialInfoblox) (string, error)
+
+//This struct is created primarily for the benefit of testing.
+type InfobloxClientRequestCalls struct {
+	CreateInfobloxCredential           infobloxCreateCredential
+	CreateInfobloxInstanceCredential   infobloxCreateInstanceCredential
+	CreateInfobloxGridMasterCredential infobloxCreateGridMasterCredential
 }
 
 func ExternalMustBeFalse() schema.SchemaValidateFunc {

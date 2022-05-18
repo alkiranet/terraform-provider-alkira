@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandInfobloxInstances(in *schema.Set) []alkira.InfobloxInstance {
+func expandInfobloxInstances(
+	in *schema.Set,
+	createCredential infobloxCreateInstanceCredential,
+) ([]alkira.InfobloxInstance, error) {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] invalid Infoblox instance input")
 		return nil
@@ -16,13 +19,13 @@ func expandInfobloxInstances(in *schema.Set) []alkira.InfobloxInstance {
 
 	instances := make([]alkira.InfobloxInstance, in.Len())
 	for i, instance := range in.List() {
-		r := alkira.InfobloxInstance{}
+		var r alkira.InfobloxInstance
+		var name string
+		var password string
+
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["any_cast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
-		}
-		if v, ok := instanceCfg["credential_id"].(string); ok {
-			r.CredentialId = v
 		}
 		if v, ok := instanceCfg["host_name"].(string); ok {
 			r.HostName = v
@@ -30,12 +33,29 @@ func expandInfobloxInstances(in *schema.Set) []alkira.InfobloxInstance {
 		if v, ok := instanceCfg["model"].(string); ok {
 			r.Model = v
 		}
+		if v, ok := instanceCfg["name"].(string); ok {
+			name = v
+		}
+		if v, ok := instanceCfg["password"].(string); ok {
+			password = v
+		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}
 		if v, ok := instanceCfg["version"].(string); ok {
 			r.Version = v
 		}
+
+		//Create credential for instance
+	    var credentialType := 	alkira.CredentialTypeInfobloxInstance
+		var credentialInstance := alkira.CredentialInfobloxInstance{password}
+		credentialId, err := createCredential(name, credentialType, credentialInstance)
+		if err != nil {
+			return nil, err
+		}
+
+		r.CredentialId = credentialId
+
 		instances[i] = r
 	}
 
@@ -60,41 +80,57 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	return instances
 }
 
-func expandInfobloxGridMaster(in *schema.Set) (*alkira.InfobloxGridMaster, error) {
+func expandInfobloxGridMaster(
+	in *schema.Set,
+	sharedSecretCredentialId string,
+	createCredential infobloxCreateGridMasterCredential,
+) (alkira.InfobloxGridMaster, error) {
+
 	if in == nil || in.Len() > 1 || in.Len() < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
 	}
 
-	im := &alkira.InfobloxGridMaster{}
+	im := alkira.InfobloxGridMaster{}
 
 	for _, option := range in.List() {
+		var username string
+		var password string
+
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["external"].(bool); ok {
 			im.External = v
 		}
-		if v, ok := cfg["grid_master_credential_id"].(string); ok {
-			im.GridMasterCredentialId = v
-		}
 		if v, ok := cfg["ip"].(string); ok {
 			im.Ip = v
+		}
+		if v, ok := cfg["username"].(string); ok {
+			username = v
+		}
+		if v, ok := cfg["password"].(string); ok {
+			password = v
 		}
 		if v, ok := cfg["name"].(string); ok {
 			im.Name = v
 		}
-		if v, ok := cfg["shared_secret_credential_id"].(string); ok {
-			im.SharedSecretCredentialId = v
-		}
+
 	}
+
+	sharedSecretCredentialId, err := createCredential(im.Name, alkira.CredentialTypeInfobloxGridMaster, &CredentialInfobloxGridMaster{username, password})
+	if err != nil {
+		return nil, err
+	}
+
+	im.GridMasterCredentialId = gridMasterCredentialId
+	im.SharedSecretCredentialId = sharedSecretCredentialId
+
 	return im, nil
 }
 
 func deflateInfobloxGridMaster(im alkira.InfobloxGridMaster) []map[string]interface{} {
 	m := make(map[string]interface{})
 	m["external"] = im.External
-	m["grid_master_credential_id"] = im.GridMasterCredentialId
 	m["ip"] = im.Ip
 	m["name"] = im.Name
-	m["shared_secret_credential_id"] = im.SharedSecretCredentialId
 
 	return []map[string]interface{}{m}
 }
