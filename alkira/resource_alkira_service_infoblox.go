@@ -235,7 +235,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m)
+	request, err := generateInfobloxRequest(d, m, client.CreateCredential)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to generate infoblox request")
@@ -269,7 +269,7 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m)
+	request, err := generateInfobloxRequest(d, m, client.CreateCredential)
 
 	if err != nil {
 		return err
@@ -289,35 +289,40 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 //TODO(mac): rewrite your test for generateInfobloxRequest
-func generateInfobloxRequest(d *schema.ResourceData, m interface{}, clientCalls InfobloxClientRequestCalls) (*alkira.Infoblox, error) {
+//func generateInfobloxRequest(d *schema.ResourceData, m interface{}, createCredential createCredential) (*alkira.Infoblox, error) {
+func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential) (*alkira.Infoblox, error) {
 	//client := m.(*alkira.AlkiraClient)
 
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := clientCalls.CreateInfobloxCredential(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
+	//infobloxCredentialId, err := clientCalls.CreateInfobloxCredential(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
+	infobloxCredentialId, err := cc(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	if err != nil {
 		return nil, err
 	}
 
 	//Parse Grid Master
-	gm := d.Get("grid_master").(*schema.set)
-	createGMCredential := clientCalls.CreateInfobloxGridMasterCredential
-	gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, createGMCredential)
+	gm := d.Get("grid_master").(*schema.Set)
+	//gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, createGMCredential)
+	gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, cc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	//Parse Instances
 	instancesSet := d.Get("instances").(*schema.Set)
-	createInstanceCredentialsFn := clientCalls.CreateInfobloxInstanceCredential
-	instances, err := expandInfobloxInstances(instancesSet, createInstanceCredentialsFn)
+	fmt.Println("Instances are a pain in the arse")
+	fmt.Println("InstanceSet: ", instancesSet)
+	//createInstanceCredentialsFn := clientCalls.CreateInfobloxInstanceCredential
+	//instances, err := expandInfobloxInstances(instancesSet, createInstanceCredentialsFn)
+	instances, err := expandInfobloxInstances(instancesSet, cc)
 	if err != nil {
 		return nil, err
 	}
 
 	//Parse Anycast
-	anycast, err = expandInfobloxAnycast(d.Get("anycast").(*schema.Set))
+	anycast, err := expandInfobloxAnycast(d.Get("anycast").(*schema.Set))
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +333,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, clientCalls 
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
-		GridMaster:       gridMaster,
+		GridMaster:       *gridMaster,
 		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
 		Name:             name,
@@ -336,17 +341,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, clientCalls 
 		ServiceGroupName: d.Get("service_group_name").(string),
 		Size:             d.Get("size").(string),
 	}, nil
-}
-
-type infobloxCreateGridMasterCredential func(name string, credentialType string, credential *alkira.CredentialInfobloxGridMaster) (string, error)
-type infobloxCreateInstanceCredential func(name string, credentialType string, credential *alkira.CredentialInfobloxInstance) (string, error)
-type infobloxCreateCredential func(name string, credentialType string, credential *alkira.CredentialInfoblox) (string, error)
-
-//This struct is created primarily for the benefit of testing.
-type InfobloxClientRequestCalls struct {
-	CreateInfobloxCredential           infobloxCreateCredential
-	CreateInfobloxInstanceCredential   infobloxCreateInstanceCredential
-	CreateInfobloxGridMasterCredential infobloxCreateGridMasterCredential
 }
 
 func ExternalMustBeFalse() schema.SchemaValidateFunc {

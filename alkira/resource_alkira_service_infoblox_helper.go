@@ -2,19 +2,14 @@ package alkira
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandInfobloxInstances(
-	in *schema.Set,
-	createCredential infobloxCreateInstanceCredential,
-) ([]alkira.InfobloxInstance, error) {
+func expandInfobloxInstances(in *schema.Set, createCredential createCredential) ([]alkira.InfobloxInstance, error) {
 	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid Infoblox instance input")
-		return nil
+		return nil, fmt.Errorf("[DEBUG] invalid Infoblox instance input")
 	}
 
 	instances := make([]alkira.InfobloxInstance, in.Len())
@@ -46,10 +41,8 @@ func expandInfobloxInstances(
 			r.Version = v
 		}
 
-		//Create credential for instance
-	    var credentialType := 	alkira.CredentialTypeInfobloxInstance
-		var credentialInstance := alkira.CredentialInfobloxInstance{password}
-		credentialId, err := createCredential(name, credentialType, credentialInstance)
+		credentialInstance := alkira.CredentialInfobloxInstance{password}
+		credentialId, err := createCredential(name, alkira.CredentialTypeInfobloxInstance, credentialInstance)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +52,7 @@ func expandInfobloxInstances(
 		instances[i] = r
 	}
 
-	return instances
+	return instances, nil
 }
 
 func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interface{} {
@@ -77,24 +70,21 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 		instances = append(instances, i)
 	}
 
+	fmt.Println("len(instances): ", len(instances))
 	return instances
 }
 
-func expandInfobloxGridMaster(
-	in *schema.Set,
-	sharedSecretCredentialId string,
-	createCredential infobloxCreateGridMasterCredential,
-) (alkira.InfobloxGridMaster, error) {
+func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, createCredential createCredential) (*alkira.InfobloxGridMaster, error) {
 
 	if in == nil || in.Len() > 1 || in.Len() < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
 	}
 
-	im := alkira.InfobloxGridMaster{}
+	im := &alkira.InfobloxGridMaster{}
 
+	var username string
+	var password string
 	for _, option := range in.List() {
-		var username string
-		var password string
 
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["external"].(bool); ok {
@@ -115,7 +105,11 @@ func expandInfobloxGridMaster(
 
 	}
 
-	sharedSecretCredentialId, err := createCredential(im.Name, alkira.CredentialTypeInfobloxGridMaster, &CredentialInfobloxGridMaster{username, password})
+	gridMasterCredentialId, err := createCredential(
+		im.Name,
+		alkira.CredentialTypeInfobloxGridMaster,
+		&alkira.CredentialInfobloxGridMaster{username, password},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +163,19 @@ func deflateInfobloxAnycast(ia alkira.InfobloxAnycast) []map[string]interface{} 
 }
 
 func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
+	//fmt.Println()
+	//fmt.Println("in: ", in)
+	//fmt.Println()
+	//fmt.Println()
+	//fmt.Println("Type of deflateInfobloxInstances", reflect.TypeOf(deflateInfobloxInstances(in.Instances)))
+	//fmt.Println()
+	//fmt.Println("deflateInfobloxInstances(in.Instances): ", deflateInfobloxInstances(in.Instances))
+	//fmt.Println()
+	//fmt.Println("Type of deflateInfobloxGridMaster", reflect.TypeOf(deflateInfobloxGridMaster(in.GridMaster)))
+	//fmt.Println()
+	//fmt.Println("deflateInfobloxGridMaster: ", deflateInfobloxGridMaster(in.GridMaster))
+	//fmt.Println()
+
 	d.Set("anycast", deflateInfobloxAnycast(in.AnyCast))
 	d.Set("billing_tag_ids", in.BillingTags)
 	d.Set("cxp", in.Cxp)
@@ -180,4 +187,5 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("segment_names", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
+
 }
