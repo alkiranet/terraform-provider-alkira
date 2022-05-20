@@ -70,22 +70,6 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	}
 
 	return m
-	//var instances []map[string]interface{}
-
-	//for _, instance := range c {
-	//	i := map[string]interface{}{
-	//		"any_cast_enabled": instance.AnyCastEnabled,
-	//		//"credential_id":    instance.CredentialId,
-	//		//"host_name":        instance.HostName,
-	//		//"model":            instance.Model,
-	//		//"type":             instance.Type,
-	//		//"version":          instance.Version,
-	//	}
-	//	instances = append(instances, i)
-	//}
-
-	//fmt.Println("len(instances): ", len(instances))
-	//return instances
 }
 
 func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, createCredential createCredential) (*alkira.InfobloxGridMaster, error) {
@@ -151,7 +135,6 @@ func expandInfobloxAnycast(in *schema.Set) (*alkira.InfobloxAnycast, error) {
 
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
-		//convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 		if v, ok := cfg["enabled"].(bool); ok {
 			ia.Enabled = v
 		}
@@ -176,19 +159,6 @@ func deflateInfobloxAnycast(ia alkira.InfobloxAnycast) []map[string]interface{} 
 }
 
 func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
-	//fmt.Println()
-	//fmt.Println("in: ", in)
-	//fmt.Println()
-	//fmt.Println()
-	//fmt.Println("Type of deflateInfobloxInstances", reflect.TypeOf(deflateInfobloxInstances(in.Instances)))
-	//fmt.Println()
-	//fmt.Println("deflateInfobloxInstances(in.Instances): ", deflateInfobloxInstances(in.Instances))
-	//fmt.Println()
-	//fmt.Println("Type of deflateInfobloxGridMaster", reflect.TypeOf(deflateInfobloxGridMaster(in.GridMaster)))
-	//fmt.Println()
-	//fmt.Println("deflateInfobloxGridMaster: ", deflateInfobloxGridMaster(in.GridMaster))
-	//fmt.Println()
-
 	d.Set("anycast", deflateInfobloxAnycast(in.AnyCast))
 	d.Set("billing_tag_ids", in.BillingTags)
 	d.Set("cxp", in.Cxp)
@@ -200,5 +170,4 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("segment_names", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
-
 }

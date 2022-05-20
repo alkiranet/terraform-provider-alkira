@@ -39,7 +39,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Description: "Defines if AnyCast should be enabled. Default is `false`",
 							Type:        schema.TypeBool,
 							Required:    true,
-							//Default:     false,
 						},
 						"ips": {
 							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
@@ -87,7 +86,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			//NOTE: for v1 of Infoblox support we are not supporting the creation of a new infoblox
 			//service on behalf of our customer. Instead the customer must have a preexsting
-			//infoblox service. Future releases will allow for this. At that time this comment
+			//infoblox service. Future releases will allow for this. At taht time this comment
 			//should be removed.
 			"grid_master": {
 				Type:     schema.TypeSet,
@@ -106,11 +105,9 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"created or if an existing grid master should be used. NOTE: " +
 								"creation of new external grid masters is not supported at " +
 								"this time, but will be supported in future releases.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-							//TODO(mac): we need to verify that this validation function work in a
-							//live test
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
 							ValidateFunc: ExternalMustBeFalse(),
 						},
 						"ip": {
@@ -123,15 +120,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						//TODO(mac): can I make this a variable in another file so they don't have
-						//to hardcode this?
 						"username": {
 							Description: "The Grid Master user name.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						//TODO(mac): can I make this a variable in another file so they don't have
-						//to hardcode this?
 						"password": {
 							Description: "The Grid Master password.",
 							Type:        schema.TypeString,
@@ -248,7 +241,6 @@ func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	id, err := client.CreateInfoblox(request)
 
 	if err != nil {
-		//clean up credentials?
 		return err
 	}
 
@@ -292,11 +284,7 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteInfoblox(d.Id())
 }
 
-//TODO(mac): rewrite your test for generateInfobloxRequest
-//func generateInfobloxRequest(d *schema.ResourceData, m interface{}, createCredential createCredential) (*alkira.Infoblox, error) {
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential) (*alkira.Infoblox, error) {
-	//client := m.(*alkira.AlkiraClient)
-
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string) + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
@@ -364,7 +352,8 @@ func ExternalMustBeFalse() schema.SchemaValidateFunc {
 //that exists. This throws an error. To avoid that this function will be used to add a random suffix
 //of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
 //occurs when creating the infoblox there will be no clash with existing credentials. This is only
-//neccesary because the infoblox credentials are not exposed in the UI.
+//neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
+//manage the credentials themselves.
 func randomNameSuffix() string {
 	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
 

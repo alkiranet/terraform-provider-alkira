@@ -2,43 +2,16 @@ package alkira
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/kr/pretty"
 	"github.com/stretchr/testify/require"
 )
 
-func TestMac(t *testing.T) {
-	instance := makeInfobloxInstance("mac", 4, false)
-	instance1 := makeInfobloxInstance("mac1", 4, false)
-	c := []alkira.InfobloxInstance{instance, instance1}
-
-	m := deflateInfobloxInstances(c)
-	//var m []map[string]interface{}
-	//for _, v := range c {
-	//	j := map[string]interface{}{
-	//		"any_cast_enabled": v.AnyCastEnabled,
-	//		"host_name":        v.HostName,
-	//		"model":            v.Model,
-	//		"name":             v.Name,
-	//		"type":             v.Type,
-	//		"version":          v.Version,
-	//	}
-	//	m = append(m, j)
-	//}
-	d := resourceAlkiraInfoblox().TestResourceData()
-	d.Set("instances", m)
-	pretty.Println(d.Get("instances").(*schema.Set))
-}
-
 func TestExpandDeflateInfoblox(t *testing.T) {
 	expectedInstances := makeInfobloxInstances(4, true)
-	//fmt.Println("expectedInstances: ", len(expectedInstances))
 	expectedGridMaster := makeInfobloxGridMaster("gm", false)
 	expectedAnycast := makeInfobloxAnycast(3, 5, "backupVal", "ipsVal", false)
 
@@ -47,7 +20,6 @@ func TestExpandDeflateInfoblox(t *testing.T) {
 		Instances:  expectedInstances,
 		GridMaster: expectedGridMaster,
 	}
-	expectedInfoblox = expectedInfoblox
 
 	createCredentialFn := func(name string, ctype alkira.CredentialType, credential interface{}) (string, error) {
 		return "credentialId", nil
@@ -57,10 +29,7 @@ func TestExpandDeflateInfoblox(t *testing.T) {
 	setAllInfobloxResourceFields(d, expectedInfoblox)
 
 	actualInfoblox, err := generateInfobloxRequest(d, nil, createCredentialFn)
-	fmt.Println("err: ", err)
 	require.NoError(t, err)
-	pretty.Println("actualInfoblox; ", actualInfoblox)
-	actualInfoblox = actualInfoblox
 
 	require.Equal(t, expectedGridMaster, actualInfoblox.GridMaster)
 	require.Equal(t, expectedAnycast, actualInfoblox.AnyCast)
@@ -136,14 +105,9 @@ func sortInfobloxInstancesByHost(ins []alkira.InfobloxInstance) {
 func requireInfobloxInstancesEqual(t *testing.T, expected, actual []alkira.InfobloxInstance) {
 	require.Equal(t, len(expected), len(actual))
 
-	//It doesn't really matter how we sort as long as they are in the same order. I chose
-	//credentialId because it has the most potential for uniqueness i.e. the model field could
-	//conceivably all be the same.
+	//It doesn't really matter how we sort as long as they are in the same order.
 	sortInfobloxInstancesByHost(expected)
 	sortInfobloxInstancesByHost(actual)
-
-	pretty.Println(expected)
-	pretty.Println(actual)
 
 	for i, v := range actual {
 		require.Equal(t, expected[i].AnyCastEnabled, v.AnyCastEnabled)
