@@ -3,6 +3,9 @@ package alkira
 import (
 	"fmt"
 	"log"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,8 +38,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"enabled": {
 							Description: "Defines if AnyCast should be enabled. Default is `false`",
 							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Required:    true,
+							//Default:     false,
 						},
 						"ips": {
 							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
@@ -182,7 +185,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"type MASTER should be configured.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE, MEMBER"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
 						},
 						"version": {
 							Description: "The version of the Infoblox instance to be used.",
@@ -245,6 +248,7 @@ func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	id, err := client.CreateInfoblox(request)
 
 	if err != nil {
+		//clean up credentials?
 		return err
 	}
 
@@ -294,9 +298,8 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 	//client := m.(*alkira.AlkiraClient)
 
 	//Create Infoblox Service Credential
-	name := d.Get("name").(string)
+	name := d.Get("name").(string) + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	//infobloxCredentialId, err := clientCalls.CreateInfobloxCredential(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	infobloxCredentialId, err := cc(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	if err != nil {
 		return nil, err
@@ -304,7 +307,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 
 	//Parse Grid Master
 	gm := d.Get("grid_master").(*schema.Set)
-	//gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, createGMCredential)
 	gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, cc)
 	if err != nil {
 		return nil, err
@@ -312,10 +314,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 
 	//Parse Instances
 	instancesSet := d.Get("instances").(*schema.Set)
-	fmt.Println("Instances are a pain in the arse")
-	fmt.Println("InstanceSet: ", instancesSet)
-	//createInstanceCredentialsFn := clientCalls.CreateInfobloxInstanceCredential
-	//instances, err := expandInfobloxInstances(instancesSet, createInstanceCredentialsFn)
 	instances, err := expandInfobloxInstances(instancesSet, cc)
 	if err != nil {
 		return nil, err
@@ -358,4 +356,29 @@ func ExternalMustBeFalse() schema.SchemaValidateFunc {
 		errors = append(errors, fmt.Errorf("expected value to be false: future software updates will allow for an input value of true."))
 		return warnings, errors
 	}
+}
+
+//For infoblox if there is a failed attempt to create infoblox the backend does not clean up the
+//credentials that were created in preparation for the creation of the infoblox service. This means
+//if you make the same attempt to create an infoblox there will likely already be a credential name
+//that exists. This throws an error. To avoid that this function will be used to add a random suffix
+//of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
+//occurs when creating the infoblox there will be no clash with existing credentials. This is only
+//neccesary because the infoblox credentials are not exposed in the UI.
+func randomNameSuffix() string {
+	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	rand.Seed(time.Now().UnixNano())
+	min := 0
+	max := len(possibleChars)
+	var sb strings.Builder
+	var lengthNewStr int = 20
+
+	for i := 0; i < lengthNewStr; i++ {
+		j := rand.Intn(max-min) + min
+		s := string(possibleChars[j])
+		sb.WriteString(s)
+	}
+
+	return sb.String()
 }

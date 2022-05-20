@@ -29,7 +29,7 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 			r.Model = v
 		}
 		if v, ok := instanceCfg["name"].(string); ok {
-			name = v
+			name = v + randomNameSuffix()
 		}
 		if v, ok := instanceCfg["password"].(string); ok {
 			password = v
@@ -56,22 +56,36 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 }
 
 func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interface{} {
-	var instances []map[string]interface{}
-
-	for _, instance := range c {
-		i := map[string]interface{}{
-			"any_cast_enabled": instance.AnyCastEnabled,
-			"credential_id":    instance.CredentialId,
-			"host_name":        instance.HostName,
-			"model":            instance.Model,
-			"type":             instance.Type,
-			"version":          instance.Version,
+	var m []map[string]interface{}
+	for _, v := range c {
+		j := map[string]interface{}{
+			"any_cast_enabled": v.AnyCastEnabled,
+			"host_name":        v.HostName,
+			"model":            v.Model,
+			"name":             v.Name,
+			"type":             v.Type,
+			"version":          v.Version,
 		}
-		instances = append(instances, i)
+		m = append(m, j)
 	}
 
-	fmt.Println("len(instances): ", len(instances))
-	return instances
+	return m
+	//var instances []map[string]interface{}
+
+	//for _, instance := range c {
+	//	i := map[string]interface{}{
+	//		"any_cast_enabled": instance.AnyCastEnabled,
+	//		//"credential_id":    instance.CredentialId,
+	//		//"host_name":        instance.HostName,
+	//		//"model":            instance.Model,
+	//		//"type":             instance.Type,
+	//		//"version":          instance.Version,
+	//	}
+	//	instances = append(instances, i)
+	//}
+
+	//fmt.Println("len(instances): ", len(instances))
+	//return instances
 }
 
 func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, createCredential createCredential) (*alkira.InfobloxGridMaster, error) {
@@ -102,11 +116,10 @@ func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, c
 		if v, ok := cfg["name"].(string); ok {
 			im.Name = v
 		}
-
 	}
 
 	gridMasterCredentialId, err := createCredential(
-		im.Name,
+		im.Name+randomNameSuffix(),
 		alkira.CredentialTypeInfobloxGridMaster,
 		&alkira.CredentialInfobloxGridMaster{username, password},
 	)
