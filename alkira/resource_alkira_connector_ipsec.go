@@ -11,11 +11,15 @@ import (
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage IPSec Connector.",
-		Create:      resourceConnectorIPSecCreate,
-		Read:        resourceConnectorIPSecRead,
-		Update:      resourceConnectorIPSecUpdate,
-		Delete:      resourceConnectorIPSecDelete,
+		Description: "Manage IPSec Connector.\n\n\n\n" +
+			"## VPN Mode\n\n" +
+			"`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's " +
+			"defined as `ROUTE_BASED`, `routing_options` block is required. When " +
+			"it's defined as `POLICY_BASED`, `policy_options` block is required.",
+		Create: resourceConnectorIPSecCreate,
+		Read:   resourceConnectorIPSecRead,
+		Update: resourceConnectorIPSecUpdate,
+		Delete: resourceConnectorIPSecDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -58,9 +62,12 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional: true,
 						},
 						"enable_tunnel_redundancy": {
-							Description: "indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Disable this if all tunnels will not be configured or enabled " +
+								"on the on-premise device. If disabled, connector health will be shown " +
+								"as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels " +
+								"need to be `UP` for the connector health to be shown as `UP`.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"billing_tag_ids": {
 							Description: "A list of IDs of billing tag associated with the endpoint.",
@@ -260,16 +267,18 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"disable_internet_exit": {
-							Description: "Enable or disable access to the internet when traffic arrives via this connector.",
+						"allow_nat_exit": {
+							Description: "Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     true,
 						},
 
-						"disable_advertise_on_prem_routes": {
-							Description: "Additional options for each segment associated with the connector.",
+						"advertise_on_prem_routes": {
+							Description: "Additional options for each segment associated with the connector. Default is `false`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 						},
 					},
 				},
@@ -281,10 +290,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Required:    true,
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"vpn_mode": &schema.Schema{
 				Description:  "The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.",

@@ -4,11 +4,20 @@ page_title: "alkira_credential_oci_vcn Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Credential for accessing Oracle Cloud.
+  You can provide your credentials via the following enviromental variables:
+  AKOCIUSER_OCIDAKOCIFINGERPRINTAKOCIKEYAKOCITENANT_OCID
 ---
 
 # alkira_credential_oci_vcn (Resource)
 
 Credential for accessing Oracle Cloud.
+
+You can provide your credentials via the following enviromental variables:
+
+ * AK_OCI_USER_OCID
+ * AK_OCI_FINGERPRINT
+ * AK_OCI_KEY
+ * AK_OCI_TENANT_OCID
 
 ## Example Usage
 
@@ -29,7 +38,7 @@ resource "alkira_credential_oci_vcn" "tftest" {
 
 - **fingerprint** (String) Fingerprint of the API key of the user.
 - **key** (String) API key of the user.
-- **name** (String) The name of the credential.
+- **name** (String) Name of the credential.
 - **tenant_ocid** (String) OCID of the tenant.
 - **user_ocid** (String) OCID of the user.
 

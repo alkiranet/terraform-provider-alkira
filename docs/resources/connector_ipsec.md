@@ -4,6 +4,8 @@ page_title: "alkira_connector_ipsec Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Manage IPSec Connector.
+  VPN Mode
+  vpn_mode could be either ROUTE_BASED or POLICY_BASED. When it's defined as ROUTE_BASED, routing_options block is required. When it's defined as POLICY_BASED, policy_options block is required.
 ---
 
 # alkira_connector_ipsec (Resource)
@@ -11,38 +13,16 @@ description: |-
 Manage IPSec Connector.
 
 
+
 ## VPN Mode
 
-`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's
-defined as `ROUTE_BASED`, `routing_options` block is required. When
-it's defined as `POLICY_BASED`, `policy_options` block is required.
-
+`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's defined as `ROUTE_BASED`, `routing_options` block is required. When it's defined as `POLICY_BASED`, `policy_options` block is required.
 
 ## Example Usage
 
 ```terraform
-#
-# Create a segment
-#
-resource "alkira_segment" "segment1" {
-  name = "seg1"
-  asn  = "65513"
-  cidr = "10.16.1.0/24"
-}
-
-#
-# Create a group
-#
-resource "alkira_group" "group1" {
-  name        = "group1"
-  description = "group1"
-}
-
-#
-# Create IPSec connector and attach it with one segment and group.
-#
-resource "alkira_connector_ipsec" "test" {
-  name           = "test"
+resource "alkira_connector_ipsec" "ipsec" {
+  name           = "connector-test-ipsec"
   cxp            = "US-WEST"
   group          = alkira_group.group1.name
   segment_id     = alkira_segment.segment1.id
@@ -65,7 +45,7 @@ resource "alkira_connector_ipsec" "test" {
 - **cxp** (String) The CXP where the connector should be provisioned.
 - **name** (String) The name of the connector.
 - **segment_id** (Number) The ID of the segment associated with the connector.
-- **size** (String) The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.
+- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 - **vpn_mode** (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
@@ -74,8 +54,8 @@ resource "alkira_connector_ipsec" "test" {
 - **endpoint** (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - **group** (String) The group of the connector.
 - **id** (String) The ID of this resource.
-- **policy_options** (Block Set) Policy options, both on-prem and cxp prefix list IDs must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
-- **routing_options** (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or `BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
+- **policy_options** (Block Set) Policy options, both on-prem and cxp prefixlist ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
+- **routing_options** (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
 - **segment_options** (Block Set) Additional options for each segment associated with the connector (see [below for nested schema](#nestedblock--segment_options))
 
 <a id="nestedblock--endpoint"></a>
@@ -89,9 +69,9 @@ Required:
 Optional:
 
 - **advanced** (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
-- **billing_tag_ids** (List of Number) IDs of Billing Tag associated with the endpoint.
+- **billing_tag_ids** (List of Number) A list of IDs of billing tag associated with the endpoint.
+- **enable_tunnel_redundancy** (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
 - **preshared_keys** (List of String) An array of presharedKeys, one per tunnel.
-- **enable_tunnel_redundancy** (Boolean) indicates to Alkira that health for the site should be reported as good as long as any one of the tunnels is up.
 
 <a id="nestedblock--endpoint--advanced"></a>
 ### Nested Schema for `endpoint.advanced`
@@ -141,6 +121,7 @@ Required:
 Optional:
 
 - **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
+- **bgp_auth_key** (String) BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).
 - **customer_gateway_asn** (String) The customer gateway ASN to use for dynamic route propagation.
 - **prefix_list_id** (Number) The ID of prefix list to use for static route propagation.
 
@@ -154,7 +135,7 @@ Required:
 
 Optional:
 
-- **disable_advertise_on_prem_routes** (Boolean) Additional options for each segment associated with the connector.
-- **disable_internet_exit** (Boolean) Enable or disable access to the internet when traffic arrives via this connector.
+- **advertise_on_prem_routes** (Boolean) Additional options for each segment associated with the connector. Default is `false`.
+- **allow_nat_exit** (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.
 
 

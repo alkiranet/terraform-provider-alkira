@@ -57,7 +57,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"routing_options": {
-				Description:  "Routing options, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+				Description: " Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` " +
+					"or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "ADVERTISE_DEFAULT_ROUTE",
@@ -74,6 +75,75 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
+			"vnet_cidr": &schema.Schema{
+				Description: "Configure routing options on specified VNET CIDR.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Description: "VNET CIDR.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"routing_options": {
+							Description:  "Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+						},
+						"prefix_list_ids": {
+							Description: "Prefix List IDs.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"service_tags": {
+							Description: "List of service tags provided by Azure.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"vnet_subnet": &schema.Schema{
+				Description: "Configure routing options on the specified VNET subnet.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_id": {
+							Description: "VNET subnet ID.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"subnet_cidr": {
+							Description: "VNET subnet CIDR.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"routing_options": {
+							Description:  "Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+						},
+						"prefix_list_ids": {
+							Description: "Prefix List IDs.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+						},
+						"service_tags": {
+							Description: "List of service tags provided by Azure.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"service_tags": {
 				Description: "list of service tags from Azure. Providing a service tag here, " +
 					"would result in service tag route configuration on VNET route table, so " +
@@ -84,10 +154,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
 		},
 	}
@@ -175,12 +245,17 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
-	routing := constructVnetRouting(d.Get("routing_options").(string), d.Get("routing_prefix_list_ids").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		return nil, err
+	}
+
+	routing, err := constructVnetRouting(d)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -199,15 +274,4 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	return request, nil
-}
-
-// constructVnetRouting expand AZURE VNET routing options
-func constructVnetRouting(option string, prefixList []interface{}) *alkira.ConnectorVnetRouting {
-
-	routing := alkira.ConnectorVnetImportOptions{}
-
-	routing.RouteImportMode = option
-	routing.PrefixListIds = convertTypeListToIntList(prefixList)
-
-	return &alkira.ConnectorVnetRouting{routing}
 }

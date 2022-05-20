@@ -51,10 +51,10 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Default:     "VEDGE",
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector. one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
@@ -264,7 +264,7 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 			r.AdvertiseOnPremRoutes = v
 		}
 		if v, ok := t["allow_nat_exit"].(bool); ok {
-			r.DisableInternetExit = v
+			r.DisableInternetExit = !v
 		}
 		if v, ok := t["customer_asn"].(int); ok {
 			r.CustomerAsn = v

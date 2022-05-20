@@ -9,6 +9,11 @@ import (
 
 func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 	return &schema.Resource{
+		Description: "Credential for interacting with Azure.\n\n" +
+			"You could also provide your credentials via the following " +
+			"environmental variables:\n\n * AK_AZURE_APPLICATION_ID\n " +
+			"* AK_AZURE_SUBSCRIPTION_ID\n * AK_AZURE_SECRET_KEY\n " +
+			"* AK_AZURE_TENANT_ID\n",
 		Create: resourceCredentialAzureVnet,
 		Read:   resourceCredentialAzureVnetRead,
 		Update: resourceCredentialAzureVnetUpdate,
@@ -16,29 +21,41 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Description: "The name of the credential",
+				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"application_id": &schema.Schema{
-				Description: "The Application ID",
+				Description: "Azure Application ID.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_AZURE_APPLICATION_ID",
+					nil),
 			},
 			"subscription_id": &schema.Schema{
-				Description: "The subscription ID",
+				Description: "Azure subscription ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_AZURE_SUBSCRIPTION_ID",
+					nil),
 			},
 			"secret_key": &schema.Schema{
-				Description: "The Secret Key",
+				Description: "Azure Secret Key.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_AZURE_SECRET_KEY",
+					nil),
 			},
 			"tenant_id": &schema.Schema{
-				Description: "The Tenant ID",
+				Description: "Azure Tenant ID.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_AZURE_TENANT_ID",
+					nil),
 			},
 		},
 	}
