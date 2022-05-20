@@ -7,6 +7,8 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
+type createCredential = func(name string, ctype alkira.CredentialType, credential interface{}) (string, error)
+
 func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 	groups, err := client.GetConnectorGroups()
 
