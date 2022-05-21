@@ -21,7 +21,7 @@ provider "alkira" {
 ```
 
 You could also create your provider or provide your credentials via
-the `ALKIRA_PORTAL`, `ALKIRA_USERNAME` and `ALIRA_PASSWORD`,
+the `ALKIRA_PORTAL`, `ALKIRA_USERNAME` and `ALKIRA_PASSWORD`,
 environment variables, representing your Alkira tenant portal URI,
 username and password, respectively. For example,
 
