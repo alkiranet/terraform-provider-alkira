@@ -3,9 +3,14 @@ package alkira
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
+
+type createCredential = func(name string, ctype alkira.CredentialType, credential interface{}) (string, error)
 
 func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 	groups, err := client.GetConnectorGroups()
@@ -57,10 +62,12 @@ func convertTypeListToStringList(in []interface{}) []string {
 	return strList
 }
 
-func convertSegmentIdsToSegmentNames(c *alkira.AlkiraClient, ids []string) ([]string, error) {
+type getSegmentById = func(id string) (alkira.Segment, error)
+
+func convertSegmentIdsToSegmentNames(getSegById getSegmentById, ids []string) ([]string, error) {
 	var segmentNames []string
 	for _, id := range ids {
-		seg, err := c.GetSegmentById(id)
+		seg, err := getSegById(id)
 		if err != nil {
 			log.Printf("[DEBUG] failed to segment. %s does not exist: ", id)
 			return nil, err
@@ -96,4 +103,30 @@ func getAllCredentialsAsCredentialResponseDetails(client *alkira.AlkiraClient) (
 	}
 
 	return result, nil
+}
+
+//For infoblox if there is a failed POST for infoblox the backend does not clean up the
+//credentials that were created in preparation for creating the infoblox service. This means
+//if you make the same attempt to create an infoblox there will likely already be a credential name
+//that exists. This throws an error. To avoid that this function will be used to add a random suffix
+//of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
+//occurs when creating the infoblox there will be no clash with existing credentials. This is only
+//neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
+//manage the credentials themselves.
+func randomNameSuffix() string {
+	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	rand.Seed(time.Now().UnixNano())
+	min := 0
+	max := len(possibleChars)
+	var sb strings.Builder
+	var lengthNewStr int = 20
+
+	for i := 0; i < lengthNewStr; i++ {
+		j := rand.Intn(max-min) + min
+		s := string(possibleChars[j])
+		sb.WriteString(s)
+	}
+
+	return sb.String()
 }
