@@ -239,7 +239,7 @@ func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zsca
 	}
 
 	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(client, segIds)
+	segmentNames, err := convertSegmentIdsToSegmentNames(client.GetSegmentById, segIds)
 	if err != nil {
 		return nil, err
 	}
