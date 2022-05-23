@@ -130,7 +130,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 					},
 				},
 			},
-			"instances": {
+			"instance": {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Description: "The properties pertaining to each individual instance of the Infoblox service.",
@@ -293,7 +293,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 	}
 
 	//Parse Instances
-	instancesSet := d.Get("instances").(*schema.Set)
+	instancesSet := d.Get("instance").(*schema.Set)
 	instances, err := expandInfobloxInstances(instancesSet, cc)
 	if err != nil {
 		return nil, err
