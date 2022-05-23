@@ -196,7 +196,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			//TODO(mac): these need to be converted into segment names before being passed back to the backend
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
