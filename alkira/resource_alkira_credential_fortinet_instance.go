@@ -24,7 +24,7 @@ func resourceAlkiraCredentialFortinetInstance() *schema.Resource {
 			"license_key": &schema.Schema{
 				Description: "Fortinet license key.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"license_type": {
 				Description:  "Fortinet instance license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
