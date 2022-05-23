@@ -18,29 +18,28 @@ resource "alkira_service_infoblox" "test" {
   global_cidr_list_id = alkira_list_global_cidr.testcidr.id
   license_type        = "BRING_YOUR_OWN"
   name                = "alkiraServiceInfoblox5"
-  segment_names       = [alkira_segment.test1.name]
+  segment_ids         = [alkira_segment.test1.id]
   service_group_name  = "serviceGroupName"
-  shared_secret       = "thisisanewsecredetshhhhh"
-  size                = "SMALL"
+  shared_secret       = "thisisanewsecredet"
 
   instances {
-    any_cast_enabled = false
-    name             = "instance2"
-    host_name        = "host_name.localdomain"
-    model            = "TE-V1425"
-    password         = "password1234"
-    type             = "MASTER_CANDIDATE"
-    version          = "8.5.2"
+    anycast_enabled = false
+    name            = "instance3"
+    hostname        = "hostname.localdomain"
+    model           = "TE-V1425"
+    password        = "password1234"
+    type            = "MASTER_CANDIDATE"
+    version         = "8.5.2"
   }
 
   instances {
-    any_cast_enabled = false
-    name             = "instance2"
-    host_name        = "host_name.localdomain"
-    model            = "TE-V1425"
-    password         = "password1234"
-    type             = "MASTER_CANDIDATE"
-    version          = "8.5.2"
+    anycast_enabled = false
+    name            = "instance2"
+    hostname        = "hostname.localdomain"
+    model           = "TE-V1425"
+    password        = "password1234"
+    type            = "MASTER_CANDIDATE"
+    version         = "8.5.2"
   }
 
   anycast {
@@ -69,7 +68,7 @@ resource "alkira_service_infoblox" "test" {
 - **instances** (Block Set, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instances))
 - **license_type** (String) Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - **name** (String) Name of the Infoblox service.
-- **segment_names** (List of String) Names of segments associated with the service.
+- **segment_ids** (List of String) IDs of segments associated with the service.
 - **service_group_name** (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
 - **shared_secret** (String) Shared Secret of the InfoBlox grid. This cannot be empty.
 
@@ -78,19 +77,15 @@ resource "alkira_service_infoblox" "test" {
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **description** (String) The description of the Infoblox service.
 - **id** (String) The ID of this resource.
-- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 
 <a id="nestedblock--anycast"></a>
 ### Nested Schema for `anycast`
 
-Required:
-
-- **enabled** (Boolean) Defines if AnyCast should be enabled. Default is `false`
-
 Optional:
 
-- **backup_cxps** (List of String) The backup_cxps to be used when the current Infoblox service is not available. The backup_cxps also need to have a configured Infoblox service inorder to take advantage of this feature. It is NOT required that the backup_cxps should have a configured Infoblox service before it can be designated as a backup.
-- **ips** (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The ips used for AnyCast MUST NOT overlap the cidr used for the segment IP block associated with the service
+- **backup_cxps** (List of String) The `backup_cxps` to be used when the current Infoblox service is not available. The backup_cxps also need to have a configured Infoblox service inorder to take advantage of this feature. It is NOT required that the backup_cxps should have a configured Infoblox service before it can be designated as a backup.
+- **enabled** (Boolean) Defines if AnyCast should be enabled. Default is `false`
+- **ips** (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR used for the segment IP block associated with the service
 
 
 <a id="nestedblock--grid_master"></a>
@@ -113,7 +108,7 @@ Optional:
 
 Required:
 
-- **host_name** (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
+- **hostname** (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
 - **model** (String) The model of the Infoblox instance.
 - **name** (String) The name of the Infoblox instance.
 - **password** (String) The password associated with the infoblox instance.
@@ -122,6 +117,6 @@ Required:
 
 Optional:
 
-- **any_cast_enabled** (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service.
+- **anycast_enabled** (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service.
 
 

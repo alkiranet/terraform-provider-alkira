@@ -1,11 +1,7 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
-	"math/rand"
-	"strings"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,19 +34,20 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"enabled": {
 							Description: "Defines if AnyCast should be enabled. Default is `false`",
 							Type:        schema.TypeBool,
-							Required:    true,
+							Optional:    true,
+							Default:     false,
 						},
 						"ips": {
 							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
-								"is enabled this list cannot be empty. The ips used for AnyCast MUST " +
-								"NOT overlap the cidr used for the segment IP block associated with " +
+								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
+								"NOT overlap the CIDR used for the segment IP block associated with " +
 								"the service",
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"backup_cxps": {
-							Description: "The backup_cxps to be used when the current " +
+							Description: "The `backup_cxps` to be used when the current " +
 								"Infoblox service is not available. The backup_cxps also need to " +
 								"have a configured Infoblox service inorder to take advantage of " +
 								"this feature. It is NOT required that the backup_cxps should have " +
@@ -139,7 +136,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Description: "The properties pertaining to each individual instance of the Infoblox service.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"any_cast_enabled": {
+						"anycast_enabled": {
 							Description: " This knob controls whether AnyCast is to be enabled " +
 								"for this instance or not. AnyCast can only be enabled on an " +
 								"instance if it is also enabled on the service.",
@@ -152,7 +149,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"host_name": {
+						"hostname": {
 							Description: "The host name of the instance. The host name MUST always have a suffix `.localdomain`.",
 							Type:        schema.TypeString,
 							Required:    true,
@@ -199,14 +196,15 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_names": {
-				Description: "Names of segments associated with the service.",
+			//TODO(mac): these need to be converted into segment names before being passed back to the backend
+			"segment_ids": {
+				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"service_group_name": {
-				Description: " The name of the service group to be associated with the service. " +
+				Description: "The name of the service group to be associated with the service. " +
 					"A service group represents the service in traffic policies, route policies " +
 					"and when configuring segment resource shares.",
 				Type:     schema.TypeString,
@@ -217,13 +215,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-
-			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
-			},
 		},
 	}
 }
@@ -231,7 +222,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m, client.CreateCredential)
+	request, err := generateInfobloxRequest(d, m, client.CreateCredential, client.GetSegmentById)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to generate infoblox request")
@@ -265,7 +256,7 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m, client.CreateCredential)
+	request, err := generateInfobloxRequest(d, m, client.CreateCredential, client.GetSegmentById)
 
 	if err != nil {
 		return err
@@ -284,7 +275,8 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteInfoblox(d.Id())
 }
 
-func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential) (*alkira.Infoblox, error) {
+func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential, gs getSegmentById) (*alkira.Infoblox, error) {
+
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string) + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
@@ -313,6 +305,13 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 		return nil, err
 	}
 
+	//segmentIdsToSegmentNames
+	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segment_names, err := convertSegmentIdsToSegmentNames(gs, ids)
+	if err != nil {
+		return nil, err
+	}
+
 	return &alkira.Infoblox{
 		AnyCast:          *anycast,
 		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
@@ -323,51 +322,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
 		Name:             name,
-		Segments:         convertTypeListToStringList(d.Get("segment_names").([]interface{})),
+		Segments:         segment_names,
 		ServiceGroupName: d.Get("service_group_name").(string),
-		Size:             d.Get("size").(string),
 	}, nil
-}
-
-func ExternalMustBeFalse() schema.SchemaValidateFunc {
-	return func(i interface{}, b string) (warnings []string, errors []error) {
-		v, ok := i.(bool)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type boolean"))
-			return warnings, errors
-		}
-
-		if !v {
-			return warnings, errors
-		}
-
-		errors = append(errors, fmt.Errorf("expected value to be false: future software updates will allow for an input value of true."))
-		return warnings, errors
-	}
-}
-
-//For infoblox if there is a failed attempt to create infoblox the backend does not clean up the
-//credentials that were created in preparation for the creation of the infoblox service. This means
-//if you make the same attempt to create an infoblox there will likely already be a credential name
-//that exists. This throws an error. To avoid that this function will be used to add a random suffix
-//of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
-//occurs when creating the infoblox there will be no clash with existing credentials. This is only
-//neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
-//manage the credentials themselves.
-func randomNameSuffix() string {
-	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
-
-	rand.Seed(time.Now().UnixNano())
-	min := 0
-	max := len(possibleChars)
-	var sb strings.Builder
-	var lengthNewStr int = 20
-
-	for i := 0; i < lengthNewStr; i++ {
-		j := rand.Intn(max-min) + min
-		s := string(possibleChars[j])
-		sb.WriteString(s)
-	}
-
-	return sb.String()
 }

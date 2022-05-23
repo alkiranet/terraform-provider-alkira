@@ -19,10 +19,10 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 		var password string
 
 		instanceCfg := instance.(map[string]interface{})
-		if v, ok := instanceCfg["any_cast_enabled"].(bool); ok {
+		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
 		}
-		if v, ok := instanceCfg["host_name"].(string); ok {
+		if v, ok := instanceCfg["hostname"].(string); ok {
 			r.HostName = v
 		}
 		if v, ok := instanceCfg["model"].(string); ok {
@@ -59,12 +59,12 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	var m []map[string]interface{}
 	for _, v := range c {
 		j := map[string]interface{}{
-			"any_cast_enabled": v.AnyCastEnabled,
-			"host_name":        v.HostName,
-			"model":            v.Model,
-			"name":             v.Name,
-			"type":             v.Type,
-			"version":          v.Version,
+			"anycast_enabled": v.AnyCastEnabled,
+			"hostname":        v.HostName,
+			"model":           v.Model,
+			"name":            v.Name,
+			"type":            v.Type,
+			"version":         v.Version,
 		}
 		m = append(m, j)
 	}
@@ -167,7 +167,24 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("grid_master", deflateInfobloxGridMaster(in.GridMaster))
 	d.Set("instances", deflateInfobloxInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
-	d.Set("segment_names", in.Segments)
+	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
+}
+
+func ExternalMustBeFalse() schema.SchemaValidateFunc {
+	return func(i interface{}, b string) (warnings []string, errors []error) {
+		v, ok := i.(bool)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type boolean"))
+			return warnings, errors
+		}
+
+		if !v {
+			return warnings, errors
+		}
+
+		errors = append(errors, fmt.Errorf("expected value to be false: future software updates will allow for an input value of true."))
+		return warnings, errors
+	}
 }

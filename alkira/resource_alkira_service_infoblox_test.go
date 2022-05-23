@@ -25,10 +25,14 @@ func TestExpandDeflateInfoblox(t *testing.T) {
 		return "credentialId", nil
 	}
 
+	getSegByIdFn := func(id string) (alkira.Segment, error) {
+		return alkira.Segment{}, nil
+	}
+
 	d := resourceAlkiraInfoblox().TestResourceData()
 	setAllInfobloxResourceFields(d, expectedInfoblox)
 
-	actualInfoblox, err := generateInfobloxRequest(d, nil, createCredentialFn)
+	actualInfoblox, err := generateInfobloxRequest(d, nil, createCredentialFn, getSegByIdFn)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedGridMaster, actualInfoblox.GridMaster)
