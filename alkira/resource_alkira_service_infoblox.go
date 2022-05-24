@@ -144,11 +144,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"name": {
-							Description: "The name of the Infoblox instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"hostname": {
 							Description: "The host name of the instance. The host name MUST always have a suffix `.localdomain`.",
 							Type:        schema.TypeString,
@@ -277,9 +272,10 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential, gs getSegmentById) (*alkira.Infoblox, error) {
 
 	//Create Infoblox Service Credential
-	name := d.Get("name").(string) + randomNameSuffix()
+	name := d.Get("name").(string)
+	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := cc(name, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
+	infobloxCredentialId, err := cc(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	if err != nil {
 		return nil, err
 	}

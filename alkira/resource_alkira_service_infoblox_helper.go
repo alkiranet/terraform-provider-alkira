@@ -15,7 +15,7 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 	instances := make([]alkira.InfobloxInstance, in.Len())
 	for i, instance := range in.List() {
 		var r alkira.InfobloxInstance
-		var name string
+		var nameWithSuffix string
 		var password string
 
 		instanceCfg := instance.(map[string]interface{})
@@ -23,13 +23,15 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 			r.AnyCastEnabled = v
 		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
+			//Note: Name is required but not used in the API. So rather than make our user input an
+			//extra field that we just ignore anyway r.Name is set to hostname and the credential
+			//name is based off the hostname as well.
+			r.Name = v
 			r.HostName = v
+			nameWithSuffix = v + randomNameSuffix()
 		}
 		if v, ok := instanceCfg["model"].(string); ok {
 			r.Model = v
-		}
-		if v, ok := instanceCfg["name"].(string); ok {
-			name = v + randomNameSuffix()
 		}
 		if v, ok := instanceCfg["password"].(string); ok {
 			password = v
@@ -42,7 +44,7 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 		}
 
 		credentialInstance := alkira.CredentialInfobloxInstance{password}
-		credentialId, err := createCredential(name, alkira.CredentialTypeInfobloxInstance, credentialInstance)
+		credentialId, err := createCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance)
 		if err != nil {
 			return nil, err
 		}

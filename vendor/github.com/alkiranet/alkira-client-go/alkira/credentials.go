@@ -26,7 +26,23 @@ const (
 	CredentialTypePanInstance                             = "paninstance"
 	CredentialTypeFortinet                                = "ftntfw"
 	CredentialTypeFortinetInstance                        = "ftntfw-instance"
+	CredentialTypeInfoblox                                = "infoblox"
+	CredentialTypeInfobloxInstance                        = "infoblox-instance"
+	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
 )
+
+type CredentialInfoblox struct {
+	SharedSecret string `json:"sharedSecret"`
+}
+
+type CredentialInfobloxInstance struct {
+	Password string `json:"password"`
+}
+
+type CredentialInfobloxGridMaster struct {
+	Username string `json:"userName"`
+	Password string `json:"password"`
+}
 
 type CredentialAkamaiProlexic struct {
 	BgpAuthenticationKey string `json:"bgpAuthenticationKey"`
