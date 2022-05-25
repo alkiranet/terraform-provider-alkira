@@ -16,20 +16,17 @@ func TestFortinetGenerateRequestManagementServer(t *testing.T) {
 	expectedSegment := "default"
 	expectedAutoScale := "OFF"
 
-	f := &alkira.Fortinet{
-		ManagementServer: &alkira.FortinetManagmentServer{
-			IpAddress: expectedIpAddress,
-			Segment:   expectedSegment,
-		},
-	}
-
 	r := resourceAlkiraServiceFortinet()
 	d := r.TestResourceData()
 	d.Set("management_server_ip", expectedIpAddress)
 	d.Set("management_server_segment", expectedSegment)
 	d.Set("auto_scale", expectedAutoScale)
 
-	actual, err := generateFortinetRequest(d, f)
+	getSegmentByIdFn := func(id string) (alkira.Segment, error) {
+		return alkira.Segment{}, nil
+	}
+
+	actual, err := generateFortinetRequest(d, getSegmentByIdFn)
 	require.Nil(t, err)
 	require.Equal(t, expectedIpAddress, actual.ManagementServer.IpAddress)
 	require.Equal(t, expectedSegment, actual.ManagementServer.Segment)
