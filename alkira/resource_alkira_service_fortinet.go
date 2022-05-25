@@ -106,8 +106,8 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_names": {
-				Description: "Names of segments associated with the service.",
+			"segment_ids": {
+				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -137,7 +137,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 func resourceFortinetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateFortinetRequest(d, m)
+	request, err := generateFortinetRequest(d, client.GetSegmentById)
 
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
-	d.Set("segment_names", f.Segments)
+	d.Set("segment_ids", f.Segments)
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
@@ -198,7 +198,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 func resourceFortinetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateFortinetRequest(d, m)
+	request, err := generateFortinetRequest(d, client.GetSegmentById)
 
 	if err != nil {
 		return err
@@ -217,14 +217,20 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteFortinet(d.Id())
 }
 
-func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
+func generateFortinetRequest(d *schema.ResourceData, gs getSegmentById) (*alkira.Fortinet, error) {
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	managementServer := &alkira.FortinetManagmentServer{
 		IpAddress: d.Get("management_server_ip").(string),
 		Segment:   d.Get("management_server_segment").(string),
 	}
 	instances := expandFortinetInstances(d.Get("instances").(*schema.Set))
-	segmentNames := convertTypeListToStringList(d.Get("segment_names").([]interface{}))
+
+	// convert segment ids to segment names
+	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentNames, err := convertSegmentIdsToSegmentNames(gs, segmentIds)
+	if err != nil {
+		return nil, err
+	}
 
 	service := &alkira.Fortinet{
 		AutoScale:        d.Get("auto_scale").(string),

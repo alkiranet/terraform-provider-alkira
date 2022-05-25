@@ -110,7 +110,6 @@ Required:
 
 - **hostname** (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
 - **model** (String) The model of the Infoblox instance.
-- **name** (String) The name of the Infoblox instance.
 - **password** (String) The password associated with the infoblox instance.
 - **type** (String) The type of the Infoblox instance that is to be provisioned. There can only be one MASTER ever provisioned. When the grid master is provisioned by Alkira, provisioning needs to happen in two steps. First the Infoblox service must be provisioned with only 1 instance of type MASTER. Subsequently other instances of the grid may be added to the instances list and provisioned. When the grid master is external (i.e not provisioned by Alkira) then no instances of type MASTER should be configured.
 - **version** (String) The version of the Infoblox instance to be used.
