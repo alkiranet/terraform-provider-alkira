@@ -8,6 +8,14 @@ import (
 )
 
 func expandInfobloxInstances(in *schema.Set, createCredential createCredential) ([]alkira.InfobloxInstance, error) {
+	if in == nil {
+		return nil, fmt.Errorf("MARCO")
+	}
+
+	if in.Len() == 0 {
+		return nil, fmt.Errorf("POLO")
+	}
+
 	if in == nil || in.Len() == 0 {
 		return nil, fmt.Errorf("[DEBUG] invalid Infoblox instance input")
 	}
@@ -64,7 +72,6 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"anycast_enabled": v.AnyCastEnabled,
 			"hostname":        v.HostName,
 			"model":           v.Model,
-			"name":            v.Name,
 			"type":            v.Type,
 			"version":         v.Version,
 		}
@@ -75,7 +82,6 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 }
 
 func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, createCredential createCredential) (*alkira.InfobloxGridMaster, error) {
-
 	if in == nil || in.Len() > 1 || in.Len() < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
 	}
@@ -167,7 +173,7 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
 	d.Set("grid_master", deflateInfobloxGridMaster(in.GridMaster))
-	d.Set("instances", deflateInfobloxInstances(in.Instances))
+	d.Set("instance", deflateInfobloxInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
 	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)

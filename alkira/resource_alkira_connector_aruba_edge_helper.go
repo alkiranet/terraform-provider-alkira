@@ -73,24 +73,29 @@ func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]al
 	return instances, nil
 }
 
-func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping) []map[string]interface{} {
+func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, gs getSegmentByName) ([]map[string]interface{}, error) {
 	var mappings []map[string]interface{}
 
 	for _, vrfmapping := range vrf {
+		arcSeg, err := gs(vrfmapping.ArubaEdgeConnectSegmentName)
+		if err != nil {
+			return nil, err
+		}
+
 		i := map[string]interface{}{
-			"advertise_on_prem_routes":        vrfmapping.AdvertiseOnPremRoutes,
-			"segment_id":                      strconv.Itoa(vrfmapping.AlkiraSegmentId),
-			"aruba_edge_connect_segment_name": vrfmapping.ArubaEdgeConnectSegmentName,
-			"disable_internet_exit":           vrfmapping.DisableInternetExit,
-			"gateway_gbp_asn":                 vrfmapping.GatewayBgpAsn,
+			"advertise_on_prem_routes":      vrfmapping.AdvertiseOnPremRoutes,
+			"segment_id":                    strconv.Itoa(vrfmapping.AlkiraSegmentId),
+			"aruba_edge_connect_segment_id": arcSeg.Id,
+			"disable_internet_exit":         vrfmapping.DisableInternetExit,
+			"gateway_gbp_asn":               vrfmapping.GatewayBgpAsn,
 		}
 		mappings = append(mappings, i)
 	}
 
-	return mappings
+	return mappings, nil
 }
 
-func expandArubeEdgeVrfMapping(in *schema.Set) ([]alkira.ArubaEdgeVRFMapping, error) {
+func expandArubeEdgeVrfMapping(in *schema.Set, gs getSegmentById) ([]alkira.ArubaEdgeVRFMapping, error) {
 	var mappings []alkira.ArubaEdgeVRFMapping
 
 	if in == nil || in.Len() == 0 {
@@ -111,8 +116,13 @@ func expandArubeEdgeVrfMapping(in *schema.Set) ([]alkira.ArubaEdgeVRFMapping, er
 			}
 			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
-		if v, ok := m["aruba_edge_connect_segment_name"].(string); ok {
-			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = v
+		if v, ok := m["aruba_edge_connect_segment_id"].(string); ok {
+			segment, err := gs(v)
+			if err != nil {
+				return nil, err
+			}
+
+			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = segment.Name
 		}
 		if v, ok := m["disable_internet_exit"].(bool); ok {
 			arubaEdgeVRFMapping.DisableInternetExit = v
@@ -127,8 +137,13 @@ func expandArubeEdgeVrfMapping(in *schema.Set) ([]alkira.ArubaEdgeVRFMapping, er
 	return mappings, nil
 }
 
-func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.ResourceData) {
-	d.Set("aruba_edge_vrf_mapping", deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping))
+func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.ResourceData, gs getSegmentByName) error {
+	m, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, gs)
+	if err != nil {
+		return err
+	}
+
+	d.Set("aruba_edge_vrf_mapping", m)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("boost_mode", connector.BoostMode)
 	d.Set("cxp", connector.Cxp)
@@ -140,6 +155,8 @@ func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("version", connector.Version)
+
+	return nil
 }
 
 func findArubaEdgeInstanceResponseDetailByName(credentials []alkira.CredentialResponseDetail, name string) *alkira.CredentialResponseDetail {

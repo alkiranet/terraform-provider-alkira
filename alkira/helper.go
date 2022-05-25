@@ -63,6 +63,7 @@ func convertTypeListToStringList(in []interface{}) []string {
 }
 
 type getSegmentById = func(id string) (alkira.Segment, error)
+type getSegmentByName = func(name string) (alkira.Segment, error)
 
 func convertSegmentIdsToSegmentNames(getSegById getSegmentById, ids []string) ([]string, error) {
 	var segmentNames []string

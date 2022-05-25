@@ -25,9 +25,9 @@ resource "alkira_connector_aruba_edge" "test1" {
   version         = "v668"
 
   aruba_edge_vrf_mapping {
-    segment_id                      = alkira_segment.test1.id
-    aruba_edge_connect_segment_name = "aruba_edge_segment_name"
-    gateway_gbp_asn                 = 88
+    segment_id                    = alkira_segment.test1.id
+    aruba_edge_connect_segment_id = "aruba_edge_segment_id"
+    gateway_gbp_asn               = 88
   }
 
   instances {
@@ -87,7 +87,7 @@ Required:
 
 Required:
 
-- **aruba_edge_connect_segment_name** (String) The segment name of the Aruba Edge connector.
+- **aruba_edge_connect_segment_id** (String) The segment ID of the Aruba Edge connector.
 - **gateway_gbp_asn** (Number) The gateway BGP ASN.
 - **segment_id** (String) The segment id associated with the Aruba Edge connector.
 

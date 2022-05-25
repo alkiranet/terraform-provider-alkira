@@ -6,7 +6,7 @@ resource "alkira_service_checkpoint" "test1" {
   max_instance_count = 2
   min_instance_count = 2
   name               = "testname"
-  segment_names      = [alkira_segment.test-seg-1.name]
+  segment_ids        = [alkira_segment.test-seg-1.id]
   size               = "LARGE"
   tunnel_protocol    = "IPSEC"
   version            = "R80.30"

@@ -31,15 +31,21 @@ func TestArubaEdgeDefalteInstance(t *testing.T) {
 
 func TestDeflateArubaEdgeVrfMapping(t *testing.T) {
 	expectedVrfMapping := generateNumArubaEdgeVrfMapping(4)
-	m := deflateArubaEdgeVrfMapping(expectedVrfMapping)
+
+	getSegmentFn := func(string) (alkira.Segment, error) {
+		return alkira.Segment{Id: 2}, nil
+	}
+
+	m, err := deflateArubaEdgeVrfMapping(expectedVrfMapping, getSegmentFn)
+	require.Nil(t, err)
 
 	for _, v := range m {
 		require.Contains(t, v, "advertise_on_prem_routes")
 		require.NotZero(t, v["advertise_on_prem_routes"])
 		require.Contains(t, v, "segment_id")
 		require.NotZero(t, v["segment_id"])
-		require.Contains(t, v, "aruba_edge_connect_segment_name")
-		require.NotZero(t, v["aruba_edge_connect_segment_name"])
+		require.Contains(t, v, "aruba_edge_connect_segment_id")
+		require.NotZero(t, v["aruba_edge_connect_segment_id"])
 		require.Contains(t, v, "disable_internet_exit")
 		require.NotZero(t, v["disable_internet_exit"])
 		require.Contains(t, v, "gateway_gbp_asn")
@@ -54,7 +60,14 @@ func TestExpandArubaEdgeVrfMapping(t *testing.T) {
 	r := resourceAlkiraConnectorArubaEdge()
 	s := schema.NewSet(schema.HashResource(r), makeArrInterfaceFromArubaEdgeVrf(expectedArubaEdgeVrfMappings))
 
-	actualArubaEdgeVrfMappings, err := expandArubeEdgeVrfMapping(s)
+	getSegmentFn := func(id string) (alkira.Segment, error) {
+		i, err := strconv.Atoi(id)
+		require.Nil(t, err)
+
+		return alkira.Segment{Id: i, Name: id}, nil
+	}
+
+	actualArubaEdgeVrfMappings, err := expandArubeEdgeVrfMapping(s, getSegmentFn)
 	require.NoError(t, err)
 
 	//Sets are not guaranteed an order
@@ -105,7 +118,7 @@ func generateNumArubaEdgeVrfMapping(num int) []alkira.ArubaEdgeVRFMapping {
 		instances = append(instances, alkira.ArubaEdgeVRFMapping{
 			AdvertiseOnPremRoutes:       true,
 			AlkiraSegmentId:             i + 1,
-			ArubaEdgeConnectSegmentName: "arubaEdgeConnectSegmentName" + strconv.Itoa(i),
+			ArubaEdgeConnectSegmentName: strconv.Itoa(i + 1),
 			DisableInternetExit:         true,
 			GatewayBgpAsn:               i + 1,
 		})
@@ -134,11 +147,11 @@ func generateNumArubaEdgeInstance(num int) []alkira.ArubaEdgeInstance {
 	return instances
 }
 
-func makeMapArubaEdgeVrfMapping(ar alkira.ArubaEdgeVRFMapping) map[string]interface{} {
+func makeMapArubaEdgeVrfMapping(ar alkira.ArubaEdgeVRFMapping, id int) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["advertise_on_prem_routes"] = ar.AdvertiseOnPremRoutes
 	m["segment_id"] = strconv.Itoa(ar.AlkiraSegmentId)
-	m["aruba_edge_connect_segment_name"] = ar.ArubaEdgeConnectSegmentName
+	m["aruba_edge_connect_segment_id"] = strconv.Itoa(id)
 	m["disable_internet_exit"] = ar.DisableInternetExit
 	m["gateway_gbp_asn"] = ar.GatewayBgpAsn
 
@@ -148,7 +161,7 @@ func makeMapArubaEdgeVrfMapping(ar alkira.ArubaEdgeVRFMapping) map[string]interf
 func makeArrInterfaceFromArubaEdgeVrf(ar []alkira.ArubaEdgeVRFMapping) []interface{} {
 	var i []interface{}
 	for _, a := range ar {
-		m := makeMapArubaEdgeVrfMapping(a)
+		m := makeMapArubaEdgeVrfMapping(a, a.AlkiraSegmentId)
 		i = append(i, m)
 	}
 

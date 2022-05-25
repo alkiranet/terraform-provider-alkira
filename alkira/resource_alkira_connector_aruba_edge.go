@@ -28,12 +28,12 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Default:     false,
 						},
 						"segment_id": {
-							Description: "The segment id associated with the Aruba Edge connector.",
+							Description: "The segment ID associated with the Aruba Edge connector.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"aruba_edge_connect_segment_name": {
-							Description: "The segment name of the Aruba Edge connector.",
+						"aruba_edge_connect_segment_id": {
+							Description: "The segment ID of the Aruba Edge connector.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -174,7 +174,7 @@ func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	setArubaEdgeResourceFields(connector, d)
+	setArubaEdgeResourceFields(connector, d, client.GetSegmentByName)
 
 	return err
 }
@@ -217,7 +217,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
-	vrfMappings, err := expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set))
+	vrfMappings, err := expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set), client.GetSegmentById)
 	if err != nil {
 		return nil, err
 	}

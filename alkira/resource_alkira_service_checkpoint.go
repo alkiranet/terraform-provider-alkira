@@ -156,8 +156,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"segment_names": {
-				Description: "The names of the segments associated with the service.",
+			"segment_ids": {
+				Description: "The IDs of the segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -250,7 +250,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_names", checkpoint.Segments)
+	d.Set("segment_ids", checkpoint.Segments)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateCheckpointSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
@@ -309,6 +309,12 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		return nil, err
 	}
 
+	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentNames, err := convertSegmentIdsToSegmentNames(client.GetSegmentById, segmentIds)
+	if err != nil {
+		return nil, err
+	}
+
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
 	return &alkira.Checkpoint{
@@ -324,7 +330,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		Name:             d.Get("name").(string),
 		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         convertTypeListToStringList(d.Get("segment_names").([]interface{})),
+		Segments:         segmentNames,
 		SegmentOptions:   segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
