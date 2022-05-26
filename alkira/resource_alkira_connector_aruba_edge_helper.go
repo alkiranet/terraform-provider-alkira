@@ -143,6 +143,11 @@ func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.
 		return err
 	}
 
+	segmentIds, err := convertSegmentNamesToSegmentIds(gs, connector.Segments)
+	if err != nil {
+		return err
+	}
+
 	d.Set("aruba_edge_vrf_mapping", m)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("boost_mode", connector.BoostMode)
@@ -151,7 +156,7 @@ func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.
 	d.Set("group", connector.Group)
 	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
 	d.Set("name", connector.Name)
-	d.Set("segment_names", connector.Segments)
+	d.Set("segment_ids", segmentIds)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("version", connector.Version)

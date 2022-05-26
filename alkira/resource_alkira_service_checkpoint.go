@@ -229,12 +229,19 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	return resourceCheckpointRead(d, m)
 }
 
+//TODO(mac): change the function parameters to includ the functions needed to get things for the
+//purpose of testing.
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	checkpoint, err := client.GetCheckpointById(d.Id())
 	if err != nil {
 		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
+		return err
+	}
+
+	segmentIds, err := convertSegmentNamesToSegmentIds(client.GetSegmentByName, checkpoint.Segments)
+	if err != nil {
 		return err
 	}
 
@@ -250,7 +257,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_ids", checkpoint.Segments)
+	d.Set("segment_ids", segmentIds)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateCheckpointSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)

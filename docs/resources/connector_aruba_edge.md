@@ -89,7 +89,7 @@ Required:
 
 - **aruba_edge_connect_segment_id** (String) The segment ID of the Aruba Edge connector.
 - **gateway_gbp_asn** (Number) The gateway BGP ASN.
-- **segment_id** (String) The segment id associated with the Aruba Edge connector.
+- **segment_id** (String) The segment ID associated with the Aruba Edge connector.
 
 Optional:
 

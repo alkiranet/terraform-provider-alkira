@@ -190,7 +190,11 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	z, err := client.GetZscalerById(d.Id())
+	if err != nil {
+		return err
+	}
 
+	segmentIds, err := convertSegmentNamesToSegmentIds(client.GetSegmentByName, z.Segments)
 	if err != nil {
 		return err
 	}
@@ -202,7 +206,7 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("name", z.Name)
 	d.Set("primary_public_edge_ip", z.PrimaryPublicEdgeIp)
 	d.Set("secondary_public_edge_ip", z.SecondaryPublicEdgeIp)
-	d.Set("segment_ids", z.Segments)
+	d.Set("segment_ids", segmentIds)
 	d.Set("size", z.Size)
 	d.Set("tunnel_protocol", z.TunnelType)
 

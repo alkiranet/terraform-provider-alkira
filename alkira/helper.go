@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -78,6 +79,21 @@ func convertSegmentIdsToSegmentNames(getSegById getSegmentById, ids []string) ([
 	}
 
 	return segmentNames, nil
+}
+
+func convertSegmentNamesToSegmentIds(getSegByName getSegmentByName, names []string) ([]string, error) {
+	var segmentIds []string
+	for _, name := range names {
+		seg, err := getSegByName(name)
+		if err != nil {
+			log.Printf("[DEBUG] failed to segment. %s does not exist: ", name)
+			return nil, err
+		}
+
+		segmentIds = append(segmentIds, strconv.Itoa(seg.Id))
+	}
+
+	return segmentIds, nil
 }
 
 func convertStringArrToInterfaceArr(sArr []string) []interface{} {
