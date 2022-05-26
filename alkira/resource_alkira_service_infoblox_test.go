@@ -19,7 +19,6 @@ func TestExpandDeflateInfoblox(t *testing.T) {
 		AnyCast:    expectedAnycast,
 		Instances:  expectedInstances,
 		GridMaster: expectedGridMaster,
-		Cxp:        "HARPO",
 	}
 
 	createCredentialFn := func(name string, ctype alkira.CredentialType, credential interface{}) (string, error) {
