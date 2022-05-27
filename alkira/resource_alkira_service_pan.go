@@ -48,14 +48,14 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Default:     false,
 			},
 			"global_protect_segment_options": {
-				Description: "A mapping of segment_name -> zones_to_groups. The only segment names " +
+				Description: "A mapping of segment_id -> zones_to_groups. The only segment names " +
 					"allowed are the segments that are already associated with the service." +
 					"options should apply. If global_protect_enabled is set to false, " +
 					"global_protect_segment_options shound not be included in your request.",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"segment_name": {
+						"segment_id": {
 							Description: "The name of the segment to which the global protect options should apply",
 							Type:        schema.TypeString,
 							Required:    true,
@@ -113,8 +113,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"segment_name": {
-										Description: "This should be Segment Name for which Global Protect options needs to be set for a instance.",
+									"segment_id": {
+										Description: "The segment ID for Global Protect options.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
@@ -220,8 +220,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"segment_name": {
-							Description: "The name of the segment.",
+						"segment_id": {
+							Description: "The ID of the segment.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -334,21 +334,27 @@ func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
-
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	instances := expandPanInstances(d.Get("instance").(*schema.Set))
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
-	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
-	segmentOptions := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set))
 
-	globalProtectSegmentOptions := expandGlobalProtectSegmentOptions(
-		d.Get("global_protect_segment_options").(*schema.Set),
-	)
+	instances, err := expandPanInstances(d.Get("instance").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+
+	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+
+	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
 
 	service := &alkira.ServicePan{
-		BillingTagIds:               billingTagIds,
+		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:                         d.Get("cxp").(string),
 		CredentialId:                d.Get("credential_id").(string),
 		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
@@ -364,7 +370,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaIpAddresses:         panoramaIpAddresses,
 		PanoramaTemplate:            &panoramaTemplate,
 		SegmentOptions:              segmentOptions,
-		SegmentIds:                  segmentIds,
+		SegmentIds:                  convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),
 		Size:                        d.Get("size").(string),
 		Type:                        d.Get("type").(string),

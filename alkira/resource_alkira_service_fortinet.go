@@ -106,8 +106,8 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_names": {
-				Description: "Names of segments associated with the service.",
+			"segment_ids": {
+				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -174,7 +174,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
-	d.Set("segment_names", f.Segments)
+	d.Set("segment_ids", f.Segments)
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
@@ -224,7 +224,13 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		Segment:   d.Get("management_server_segment").(string),
 	}
 	instances := expandFortinetInstances(d.Get("instances").(*schema.Set))
-	segmentNames := convertTypeListToStringList(d.Get("segment_names").([]interface{}))
+
+	// convert segment ids to segment names
+	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
+	if err != nil {
+		return nil, err
+	}
 
 	service := &alkira.Fortinet{
 		AutoScale:        d.Get("auto_scale").(string),

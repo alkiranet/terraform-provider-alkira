@@ -25,12 +25,12 @@ resource "alkira_credential_fortinet_instance" "tf_test_fortinet-instance" {
 
 ### Required
 
-- **license_key** (String) Fortinet license key.
 - **license_type** (String) Fortinet instance license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - **name** (String) The name of the credential.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **license_key** (String) Fortinet license key.
 
 

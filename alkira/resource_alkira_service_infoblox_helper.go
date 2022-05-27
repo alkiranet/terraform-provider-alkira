@@ -7,9 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandInfobloxInstances(in *schema.Set, createCredential createCredential) ([]alkira.InfobloxInstance, error) {
+func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || in.Len() == 0 {
-		return nil, fmt.Errorf("[DEBUG] invalid Infoblox instance input")
+		return nil, fmt.Errorf("invalid infoblox instance input")
 	}
 
 	instances := make([]alkira.InfobloxInstance, in.Len())
@@ -44,7 +46,7 @@ func expandInfobloxInstances(in *schema.Set, createCredential createCredential) 
 		}
 
 		credentialInstance := alkira.CredentialInfobloxInstance{password}
-		credentialId, err := createCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance)
+		credentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +66,6 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"anycast_enabled": v.AnyCastEnabled,
 			"hostname":        v.HostName,
 			"model":           v.Model,
-			"name":            v.Name,
 			"type":            v.Type,
 			"version":         v.Version,
 		}
@@ -74,7 +75,8 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	return m
 }
 
-func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, createCredential createCredential) (*alkira.InfobloxGridMaster, error) {
+func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
+	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() > 1 || in.Len() < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
@@ -104,7 +106,7 @@ func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, c
 		}
 	}
 
-	gridMasterCredentialId, err := createCredential(
+	gridMasterCredentialId, err := client.CreateCredential(
 		im.Name+randomNameSuffix(),
 		alkira.CredentialTypeInfobloxGridMaster,
 		&alkira.CredentialInfobloxGridMaster{username, password},
@@ -167,7 +169,7 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
 	d.Set("grid_master", deflateInfobloxGridMaster(in.GridMaster))
-	d.Set("instances", deflateInfobloxInstances(in.Instances))
+	d.Set("instance", deflateInfobloxInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
 	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
