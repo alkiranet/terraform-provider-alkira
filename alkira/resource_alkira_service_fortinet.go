@@ -137,7 +137,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 func resourceFortinetCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateFortinetRequest(d, client.GetSegmentById)
+	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 func resourceFortinetUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateFortinetRequest(d, client.GetSegmentById)
+	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return err
@@ -217,7 +217,7 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteFortinet(d.Id())
 }
 
-func generateFortinetRequest(d *schema.ResourceData, gs getSegmentById) (*alkira.Fortinet, error) {
+func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	managementServer := &alkira.FortinetManagmentServer{
 		IpAddress: d.Get("management_server_ip").(string),
@@ -227,7 +227,7 @@ func generateFortinetRequest(d *schema.ResourceData, gs getSegmentById) (*alkira
 
 	// convert segment ids to segment names
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(gs, segmentIds)
+	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
 	if err != nil {
 		return nil, err
 	}

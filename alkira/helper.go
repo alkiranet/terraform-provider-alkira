@@ -11,8 +11,6 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
-type createCredential = func(name string, ctype alkira.CredentialType, credential interface{}) (string, error)
-
 func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
 	groups, err := client.GetConnectorGroups()
 
@@ -63,15 +61,14 @@ func convertTypeListToStringList(in []interface{}) []string {
 	return strList
 }
 
-type getSegmentById = func(id string) (alkira.Segment, error)
-type getSegmentByName = func(name string) (alkira.Segment, error)
+func convertSegmentIdsToSegmentNames(ids []string, m interface{}) ([]string, error) {
+	client := m.(*alkira.AlkiraClient)
 
-func convertSegmentIdsToSegmentNames(getSegById getSegmentById, ids []string) ([]string, error) {
 	var segmentNames []string
 	for _, id := range ids {
-		seg, err := getSegById(id)
+		seg, err := client.GetSegmentById(id)
 		if err != nil {
-			log.Printf("[DEBUG] failed to segment. %s does not exist: ", id)
+			log.Printf("[DEBUG] failed to get segment. %s does not exist: ", id)
 			return nil, err
 		}
 
@@ -81,10 +78,12 @@ func convertSegmentIdsToSegmentNames(getSegById getSegmentById, ids []string) ([
 	return segmentNames, nil
 }
 
-func convertSegmentNamesToSegmentIds(getSegByName getSegmentByName, names []string) ([]string, error) {
+func convertSegmentNamesToSegmentIds(names []string, m interface{}) ([]string, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	var segmentIds []string
 	for _, name := range names {
-		seg, err := getSegByName(name)
+		seg, err := client.GetSegmentByName(name)
 		if err != nil {
 			log.Printf("[DEBUG] failed to segment. %s does not exist: ", name)
 			return nil, err

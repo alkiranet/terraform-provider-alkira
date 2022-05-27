@@ -73,11 +73,12 @@ func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]al
 	return instances, nil
 }
 
-func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, gs getSegmentByName) ([]map[string]interface{}, error) {
-	var mappings []map[string]interface{}
+func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{}) ([]map[string]interface{}, error) {
+	client := m.(*alkira.AlkiraClient)
 
+	var mappings []map[string]interface{}
 	for _, vrfmapping := range vrf {
-		arcSeg, err := gs(vrfmapping.ArubaEdgeConnectSegmentName)
+		arcSeg, err := client.GetSegmentByName(vrfmapping.ArubaEdgeConnectSegmentName)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +96,7 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, gs getSegmentB
 	return mappings, nil
 }
 
-func expandArubeEdgeVrfMapping(in *schema.Set, gs getSegmentById) ([]alkira.ArubaEdgeVRFMapping, error) {
+func expandArubaEdgeVrfMappings(in *schema.Set, gs getSegmentById) ([]alkira.ArubaEdgeVRFMapping, error) {
 	var mappings []alkira.ArubaEdgeVRFMapping
 
 	if in == nil || in.Len() == 0 {
@@ -135,33 +136,6 @@ func expandArubeEdgeVrfMapping(in *schema.Set, gs getSegmentById) ([]alkira.Arub
 	}
 
 	return mappings, nil
-}
-
-func setArubaEdgeResourceFields(connector *alkira.ConnectorArubaEdge, d *schema.ResourceData, gs getSegmentByName) error {
-	m, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, gs)
-	if err != nil {
-		return err
-	}
-
-	segmentIds, err := convertSegmentNamesToSegmentIds(gs, connector.Segments)
-	if err != nil {
-		return err
-	}
-
-	d.Set("aruba_edge_vrf_mapping", m)
-	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("boost_mode", connector.BoostMode)
-	d.Set("cxp", connector.Cxp)
-	d.Set("gateway_gbp_asn", connector.GatewayBgpAsn)
-	d.Set("group", connector.Group)
-	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
-	d.Set("name", connector.Name)
-	d.Set("segment_ids", segmentIds)
-	d.Set("size", connector.Size)
-	d.Set("tunnel_protocol", connector.TunnelProtocol)
-	d.Set("version", connector.Version)
-
-	return nil
 }
 
 func findArubaEdgeInstanceResponseDetailByName(credentials []alkira.CredentialResponseDetail, name string) *alkira.CredentialResponseDetail {

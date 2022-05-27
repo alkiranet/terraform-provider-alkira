@@ -29,31 +29,6 @@ func TestArubaEdgeDefalteInstance(t *testing.T) {
 	}
 }
 
-func TestDeflateArubaEdgeVrfMapping(t *testing.T) {
-	expectedVrfMapping := generateNumArubaEdgeVrfMapping(4)
-
-	getSegmentFn := func(string) (alkira.Segment, error) {
-		return alkira.Segment{Id: 2}, nil
-	}
-
-	m, err := deflateArubaEdgeVrfMapping(expectedVrfMapping, getSegmentFn)
-	require.Nil(t, err)
-
-	for _, v := range m {
-		require.Contains(t, v, "advertise_on_prem_routes")
-		require.NotZero(t, v["advertise_on_prem_routes"])
-		require.Contains(t, v, "segment_id")
-		require.NotZero(t, v["segment_id"])
-		require.Contains(t, v, "aruba_edge_connect_segment_id")
-		require.NotZero(t, v["aruba_edge_connect_segment_id"])
-		require.Contains(t, v, "disable_internet_exit")
-		require.NotZero(t, v["disable_internet_exit"])
-		require.Contains(t, v, "gateway_gbp_asn")
-		require.NotZero(t, v["gateway_gbp_asn"])
-	}
-
-}
-
 func TestExpandArubaEdgeVrfMapping(t *testing.T) {
 	expectedArubaEdgeVrfMappings := generateNumArubaEdgeVrfMapping(3)
 
@@ -67,7 +42,7 @@ func TestExpandArubaEdgeVrfMapping(t *testing.T) {
 		return alkira.Segment{Id: i, Name: id}, nil
 	}
 
-	actualArubaEdgeVrfMappings, err := expandArubeEdgeVrfMapping(s, getSegmentFn)
+	actualArubaEdgeVrfMappings, err := expandArubaEdgeVrfMappings(s, getSegmentFn)
 	require.NoError(t, err)
 
 	//Sets are not guaranteed an order

@@ -229,8 +229,6 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	return resourceCheckpointRead(d, m)
 }
 
-//TODO(mac): change the function parameters to includ the functions needed to get things for the
-//purpose of testing.
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
@@ -240,7 +238,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(client.GetSegmentByName, checkpoint.Segments)
+	segmentIds, err := convertSegmentNamesToSegmentIds(checkpoint.Segments, m)
 	if err != nil {
 		return err
 	}
@@ -317,7 +315,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	}
 
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(client.GetSegmentById, segmentIds)
+	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
 	if err != nil {
 		return nil, err
 	}

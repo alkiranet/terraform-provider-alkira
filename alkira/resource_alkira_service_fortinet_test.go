@@ -11,28 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFortinetGenerateRequestManagementServer(t *testing.T) {
-	expectedIpAddress := "10.0.1.1"
-	expectedSegment := "default"
-	expectedAutoScale := "OFF"
-
-	r := resourceAlkiraServiceFortinet()
-	d := r.TestResourceData()
-	d.Set("management_server_ip", expectedIpAddress)
-	d.Set("management_server_segment", expectedSegment)
-	d.Set("auto_scale", expectedAutoScale)
-
-	getSegmentByIdFn := func(id string) (alkira.Segment, error) {
-		return alkira.Segment{}, nil
-	}
-
-	actual, err := generateFortinetRequest(d, getSegmentByIdFn)
-	require.Nil(t, err)
-	require.Equal(t, expectedIpAddress, actual.ManagementServer.IpAddress)
-	require.Equal(t, expectedSegment, actual.ManagementServer.Segment)
-	require.Equal(t, expectedAutoScale, actual.AutoScale)
-}
-
 func TestFortinetRead(t *testing.T) {
 	expectedCxp := "US-WEST"
 	expectedIp := "10.1.1.0"

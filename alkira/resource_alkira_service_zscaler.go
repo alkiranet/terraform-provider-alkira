@@ -194,7 +194,7 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(client.GetSegmentByName, z.Segments)
+	segmentIds, err := convertSegmentNamesToSegmentIds(z.Segments, m)
 	if err != nil {
 		return err
 	}
@@ -235,15 +235,13 @@ func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zscaler, error) {
-	client := m.(*alkira.AlkiraClient)
-
 	cfgs, err := expandZscalerIpsecConfigurations(d.Get("ipsec_configuration").(*schema.Set))
 	if err != nil {
 		return nil, err
 	}
 
 	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(client.GetSegmentById, segIds)
+	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
 	if err != nil {
 		return nil, err
 	}

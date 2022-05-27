@@ -216,7 +216,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m, client.CreateCredential, client.GetSegmentById)
+	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to generate infoblox request")
@@ -250,7 +250,7 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateInfobloxRequest(d, m, client.CreateCredential, client.GetSegmentById)
+	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
 		return err
@@ -269,27 +269,28 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteInfoblox(d.Id())
 }
 
-func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCredential, gs getSegmentById) (*alkira.Infoblox, error) {
+func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Infoblox, error) {
+	client := m.(*alkira.AlkiraClient)
 
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := cc(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
+	infobloxCredentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
 	if err != nil {
 		return nil, err
 	}
 
 	//Parse Grid Master
-	gm := d.Get("grid_master").(*schema.Set)
-	gridMaster, err := expandInfobloxGridMaster(gm, infobloxCredentialId, cc)
+	gmSet := d.Get("grid_master").(*schema.Set)
+	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
 	if err != nil {
 		return nil, err
 	}
 
 	//Parse Instances
 	instancesSet := d.Get("instance").(*schema.Set)
-	instances, err := expandInfobloxInstances(instancesSet, cc)
+	instances, err := expandInfobloxInstances(instancesSet, m)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +303,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}, cc createCre
 
 	//segmentIdsToSegmentNames
 	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segment_names, err := convertSegmentIdsToSegmentNames(gs, ids)
+	segment_names, err := convertSegmentIdsToSegmentNames(ids, m)
 	if err != nil {
 		return nil, err
 	}

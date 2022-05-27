@@ -24,7 +24,6 @@ resource "alkira_service_infoblox" "test" {
 
   instances {
     anycast_enabled = false
-    name            = "instance3"
     hostname        = "hostname.localdomain"
     model           = "TE-V1425"
     password        = "password1234"
@@ -34,7 +33,6 @@ resource "alkira_service_infoblox" "test" {
 
   instances {
     anycast_enabled = false
-    name            = "instance2"
     hostname        = "hostname.localdomain"
     model           = "TE-V1425"
     password        = "password1234"

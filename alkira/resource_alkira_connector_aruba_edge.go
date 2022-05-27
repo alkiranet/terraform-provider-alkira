@@ -174,7 +174,28 @@ func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	setArubaEdgeResourceFields(connector, d, client.GetSegmentByName)
+	arubaEdgeMappings, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, m)
+	if err != nil {
+		return err
+	}
+
+	segmentIds, err := convertSegmentNamesToSegmentIds(connector.Segments, m)
+	if err != nil {
+		return err
+	}
+
+	d.Set("aruba_edge_vrf_mapping", arubaEdgeMappings)
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("boost_mode", connector.BoostMode)
+	d.Set("cxp", connector.Cxp)
+	d.Set("gateway_gbp_asn", connector.GatewayBgpAsn)
+	d.Set("group", connector.Group)
+	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
+	d.Set("name", connector.Name)
+	d.Set("segment_ids", segmentIds)
+	d.Set("size", connector.Size)
+	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("version", connector.Version)
 
 	return err
 }
@@ -207,7 +228,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 	client := m.(*alkira.AlkiraClient)
 
 	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(client.GetSegmentById, segIds)
+	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +238,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
-	vrfMappings, err := expandArubeEdgeVrfMapping(d.Get("aruba_edge_vrf_mapping").(*schema.Set), client.GetSegmentById)
+	vrfMappings, err := expandArubaEdgeVrfMappings(d.Get("aruba_edge_vrf_mapping").(*schema.Set), client.GetSegmentById)
 	if err != nil {
 		return nil, err
 	}
