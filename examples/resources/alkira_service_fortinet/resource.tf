@@ -7,7 +7,7 @@ resource "alkira_fortinet" "test1" {
   max_instance_count        = 1
   min_instance_count        = 1
   name                      = "test1-update"
-  segment_names             = [alkira_segment.test1.name, alkira_segment.test2.name]
+  segment_ids               = [alkira_segment.test1.id, alkira_segment.test2.id]
   size                      = "SMALL"
   tunnel_protocol           = "IPSEC"
   version                   = "7.0.2"

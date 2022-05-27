@@ -14,29 +14,44 @@ Manage PAN firewall.
 
 ```terraform
 resource "alkira_service_pan" "test1" {
-  name                  = "test1"
-  credential_id         = alkira_credential_pan.test1.id
-  cxp                   = "US-WEST"
-  license_type          = "BRING_YOUR_OWN"
-  management_segment_id = alkira_segment.segment1.id
-  panorama_enabled      = "false"
-  panorama_device_group = "alkira-test"
-  panorama_ip_address   = "172.16.0.8"
-  panorama_template     = "test"
-  segment_ids           = [alkira_segment.segment1.id, alkira_segment.segment2.id]
-  size                  = "SMALL"
-  type                  = "VM-300"
-  version               = "9.0.5-xfr"
+  name                   = "test1-update"
+  credential_id          = alkira_credential_pan.tf_test_pan.id
+  cxp                    = "US-WEST"
+  global_protect_enabled = "true"
+  license_type           = "PAY_AS_YOU_GO"
+  panorama_enabled       = false
+  panorama_device_group  = "alkira-test"
+  panorama_ip_addresses  = ["172.16.0.8"]
+  panorama_template      = "test"
+  max_instance_count     = 1
+  segment_ids            = [alkira_segment.test1.id, alkira_segment.test2.id]
+  management_segment_id  = alkira_segment.test1.id
+  size                   = "SMALL"
+  type                   = "VM-300"
+  version                = "9.0.5-xfr"
+
+  global_protect_segment_options {
+    segment_id            = (alkira_segment.test1.id)
+    remote_user_zone_name = "doesn't matter"
+    portal_fqdn_prefix    = "also doesn't matter"
+    service_group_name    = "still doesn't matter"
+  }
 
   instance {
-    name = "instance1"
-    credential_id = alkira_credential_pan_instance.test1.id
+    name          = "tf-pan-instance-1"
+    credential_id = alkira_credential_pan_instance.tf_test_pan_instance.id
+    global_protect_segment_options {
+      segment_id      = (alkira_segment.test1.id)
+      portal_enabled  = true
+      gateway_enabled = true
+      prefix_list_id  = 548
+    }
   }
 
   zones_to_groups {
-    segment_name = alkira_segment.segment1.name
-    zone_name    = "Zone11"
-    groups       = [alkira_group.pan.name]
+    segment_id = alkira_segment.test1.id
+    zone_name  = "Zone11"
+    groups     = [alkira_group.test.name]
   }
 }
 ```
@@ -63,7 +78,7 @@ resource "alkira_service_pan" "test1" {
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **bundle** (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - **global_protect_enabled** (Boolean) Enable global protect option or not. Default is `false`
-- **global_protect_segment_options** (Block Set) A mapping of segment_name -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- **global_protect_segment_options** (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - **panorama_device_group** (String) Panorama device group.
@@ -93,7 +108,7 @@ Required:
 - **gateway_enabled** (Boolean) indicates if the Global Protect Gateway is enabled on this PAN instance
 - **portal_enabled** (Boolean) indicates if the Global Protect Portal is enabled on this PAN instance
 - **prefix_list_id** (Number) Prefix List with Client IP Pool.
-- **segment_name** (String) This should be Segment Name for which Global Protect options needs to be set for a instance.
+- **segment_id** (String) The segment ID for Global Protect options.
 
 
 
@@ -104,7 +119,7 @@ Required:
 
 - **portal_fqdn_prefix** (String) Prefix for the global protect portal FQDN, this would be prepended to customer specific alkira domain For Example: if prefix is abc and tenant name is example then the FQDN would be abc.example.gpportal.alkira.com
 - **remote_user_zone_name** (String) Firewall security zone is created using the zone name for remote user sessions.
-- **segment_name** (String) The name of the segment to which the global protect options should apply
+- **segment_id** (String) The name of the segment to which the global protect options should apply
 - **service_group_name** (String) The name of the service group. A group with the same name will be created.
 
 
@@ -113,7 +128,7 @@ Required:
 
 Required:
 
-- **segment_name** (String) The name of the segment.
+- **segment_id** (String) The ID of the segment.
 - **zone_name** (String) The name of the zone.
 
 Optional:

@@ -21,7 +21,7 @@ resource "alkira_service_checkpoint" "test1" {
   max_instance_count = 2
   min_instance_count = 2
   name               = "testname"
-  segment_names      = [alkira_segment.test-seg-1.name]
+  segment_ids        = [alkira_segment.test-seg-1.id]
   size               = "LARGE"
   tunnel_protocol    = "IPSEC"
   version            = "R80.30"
@@ -55,7 +55,7 @@ resource "alkira_service_checkpoint" "test1" {
 - **management_server** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
 - **max_instance_count** (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - **name** (String) Name of the Checkpoint Firewall service.
-- **segment_names** (List of String) The names of the segments associated with the service.
+- **segment_ids** (List of String) The IDs of the segments associated with the service.
 - **segment_options** (Block Set, Min: 1) The segment options as used by your checkpoint firewall. (see [below for nested schema](#nestedblock--segment_options))
 - **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - **version** (String) The version of the Checkpoint Firewall.

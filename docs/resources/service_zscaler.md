@@ -20,7 +20,7 @@ resource "alkira_service_zscaler" "test1" {
   name                         = "extramostbestestname"
   primary_public_edge_ip       = "11.11.11.11"
   secondary_public_edge_ip     = "12.12.12.12"
-  segment_names                = [alkira_segment.test1.name]
+  segment_ids                  = [alkira_segment.test1.id]
   size                         = "MEDIUM"
   tunnel_protocol              = "IPSEC"
 
