@@ -238,7 +238,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
-	vrfMappings, err := expandArubaEdgeVrfMappings(d.Get("aruba_edge_vrf_mapping").(*schema.Set), client.GetSegmentById)
+	vrfMappings, err := expandArubaEdgeVrfMappings(d.Get("aruba_edge_vrf_mapping").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

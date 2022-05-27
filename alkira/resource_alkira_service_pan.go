@@ -247,7 +247,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateServicePanRequest(d, client.GetSegmentById)
+	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
 		return err
@@ -314,7 +314,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generateServicePanRequest(d, client.GetSegmentById)
+	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
 		return err
@@ -333,23 +333,22 @@ func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteServicePan(d.Id())
 }
 
-func generateServicePanRequest(d *schema.ResourceData, gs getSegmentById) (*alkira.ServicePan, error) {
-
+func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
-	instances, err := expandPanInstances(d.Get("instance").(*schema.Set), gs)
+	instances, err := expandPanInstances(d.Get("instance").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
-	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), gs)
+	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
-	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), gs)
+	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

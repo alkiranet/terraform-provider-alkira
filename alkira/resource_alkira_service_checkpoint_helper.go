@@ -46,7 +46,7 @@ func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
 	return instances
 }
 
-func expandCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (map[string]alkira.OuterZoneToGroups, error) {
+func expandCheckpointSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.OuterZoneToGroups, error) {
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("Checkpoint segment options cannot be null or empty")
 	}
@@ -55,16 +55,14 @@ func expandCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (ma
 		return nil, errors.New("Checkpoint segment options must be exactly 1 in length")
 	}
 
-	return convertCheckpointSegmentOptions(in, fn)
+	return convertCheckpointSegmentOptions(in, m)
 }
 
-func convertCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (map[string]alkira.OuterZoneToGroups, error) {
+func convertCheckpointSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.OuterZoneToGroups, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil {
 		return nil, errors.New("Checkpoint segment options cannot be nil")
-	}
-
-	if fn == nil {
-		return nil, errors.New("Checkpoint's get segment by id (CheckpointGetSegById) cannot be nil")
 	}
 
 	zonesToGroups := make(alkira.CheckpointZoneToGroups)
@@ -83,7 +81,7 @@ func convertCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (m
 		}
 
 		if v, ok := optionsCfg["segment_id"].(int); ok {
-			sg, err := fn(strconv.Itoa(v))
+			sg, err := client.GetSegmentById(strconv.Itoa(v))
 			if err != nil {
 				return nil, err
 			}
@@ -107,7 +105,9 @@ func convertCheckpointSegmentOptions(in *schema.Set, fn CheckpointGetSegById) (m
 	return segmentOptions, nil
 }
 
-func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (*alkira.CheckpointManagementServer, error) {
+func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || in.Len() > 1 {
 		log.Printf("[DEBUG] Only one object allowed in managment server options")
 		return nil, nil
@@ -140,7 +140,7 @@ func expandCheckpointManagementServer(in *schema.Set, fn CheckpointGetSegById) (
 			mg.Reachability = v
 		}
 		if v, ok := cfg["segment_id"].(int); ok {
-			sg, err := fn(strconv.Itoa(v))
+			sg, err := client.GetSegmentById(strconv.Itoa(v))
 			if err != nil {
 				return nil, err
 			}

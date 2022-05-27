@@ -85,7 +85,7 @@ func convertSegmentNamesToSegmentIds(names []string, m interface{}) ([]string, e
 	for _, name := range names {
 		seg, err := client.GetSegmentByName(name)
 		if err != nil {
-			log.Printf("[DEBUG] failed to segment. %s does not exist: ", name)
+			log.Printf("[DEBUG] failed to get segment. %s does not exist: ", name)
 			return nil, err
 		}
 

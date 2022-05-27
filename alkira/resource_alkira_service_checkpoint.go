@@ -294,7 +294,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		return nil, err
 	}
 
-	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), client.GetSegmentById)
+	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +309,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
 	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
 
-	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), client.GetSegmentById)
+	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

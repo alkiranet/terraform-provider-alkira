@@ -96,9 +96,10 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{})
 	return mappings, nil
 }
 
-func expandArubaEdgeVrfMappings(in *schema.Set, gs getSegmentById) ([]alkira.ArubaEdgeVRFMapping, error) {
-	var mappings []alkira.ArubaEdgeVRFMapping
+func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEdgeVRFMapping, error) {
+	client := m.(*alkira.AlkiraClient)
 
+	var mappings []alkira.ArubaEdgeVRFMapping
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("Invalid aruba edge mapping input: Cannot be nil or empty.")
 	}
@@ -118,7 +119,7 @@ func expandArubaEdgeVrfMappings(in *schema.Set, gs getSegmentById) ([]alkira.Aru
 			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
 		if v, ok := m["aruba_edge_connect_segment_id"].(string); ok {
-			segment, err := gs(v)
+			segment, err := client.GetSegmentById(v)
 			if err != nil {
 				return nil, err
 			}

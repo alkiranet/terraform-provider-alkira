@@ -13,10 +13,8 @@ type panZone struct {
 	Groups  interface{}
 }
 
-func expandGlobalProtectSegmentOptions(
-	in *schema.Set,
-	gs getSegmentById,
-) (map[string]*alkira.GlobalProtectSegmentName, error) {
+func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentName, error) {
+	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("invalid Global Protect Segment Options input")
@@ -29,7 +27,7 @@ func expandGlobalProtectSegmentOptions(
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segment, err := gs(v)
+			segment, err := client.GetSegmentById(v)
 			if err != nil {
 				return nil, err
 			}
@@ -51,10 +49,8 @@ func expandGlobalProtectSegmentOptions(
 	return sgmtOptions, nil
 }
 
-func expandGlobalProtectSegmentOptionsInstance(
-	in *schema.Set,
-	gs getSegmentByName,
-) (map[string]*alkira.GlobalProtectSegmentNameInstance, error) {
+func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentNameInstance, error) {
+	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("invalid input for Global Pan Protect Options for service PAN instance")
@@ -67,7 +63,7 @@ func expandGlobalProtectSegmentOptionsInstance(
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segment, err := gs(v)
+			segment, err := client.GetSegmentById(v)
 			if err != nil {
 				return nil, err
 			}
@@ -89,7 +85,9 @@ func expandGlobalProtectSegmentOptionsInstance(
 	return sgmtOptions, nil
 }
 
-func expandPanSegmentOptions(in *schema.Set, gs getSegmentByName) (map[string]interface{}, error) {
+func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("invalid SegmentOptions input")
 	}
@@ -100,7 +98,7 @@ func expandPanSegmentOptions(in *schema.Set, gs getSegmentByName) (map[string]in
 		r := panZone{}
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["segment_id"].(string); ok {
-			segment, err := gs(v)
+			segment, err := client.GetSegmentById(v)
 			if err != nil {
 				return nil, err
 			}
@@ -135,7 +133,7 @@ func expandPanSegmentOptions(in *schema.Set, gs getSegmentByName) (map[string]in
 
 	return segmentOptions, nil
 }
-func expandPanInstances(in *schema.Set, gs getSegmentByName) ([]alkira.ServicePanInstance, error) {
+func expandPanInstances(in *schema.Set, m interface{}) ([]alkira.ServicePanInstance, error) {
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("invalid PAN instance input")
 	}
@@ -151,7 +149,7 @@ func expandPanInstances(in *schema.Set, gs getSegmentByName) ([]alkira.ServicePa
 			r.CredentialId = v
 		}
 		if v, ok := instanceCfg["global_protect_segment_options"].(*schema.Set); ok {
-			options, err := expandGlobalProtectSegmentOptionsInstance(v, gs)
+			options, err := expandGlobalProtectSegmentOptionsInstance(v, m)
 			if err != nil {
 				return nil, err
 			}
