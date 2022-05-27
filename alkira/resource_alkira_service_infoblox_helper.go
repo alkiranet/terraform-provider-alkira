@@ -8,14 +8,6 @@ import (
 )
 
 func expandInfobloxInstances(in *schema.Set, createCredential createCredential) ([]alkira.InfobloxInstance, error) {
-	if in == nil {
-		return nil, fmt.Errorf("MARCO")
-	}
-
-	if in.Len() == 0 {
-		return nil, fmt.Errorf("POLO")
-	}
-
 	if in == nil || in.Len() == 0 {
 		return nil, fmt.Errorf("[DEBUG] invalid Infoblox instance input")
 	}
