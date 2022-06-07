@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -112,6 +113,41 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"segment_options": {
+				Description: "A mapping of segment_id -> zones_to_groups. The only segment names " +
+					"allowed are the segments that are already associated with the service." +
+					"options should apply. If global_protect_enabled is set to false, " +
+					"global_protect_segment_options shound not be included in your request.",
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_id": {
+							Description: "The name of the segment to which the global protect options should apply",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"remote_user_zone_name": {
+							Description: "Firewall security zone is created using the zone name for remote user sessions.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"portal_fqdn_prefix": {
+							Description: "Prefix for the global protect portal FQDN, this would " +
+								"be prepended to customer specific alkira domain For Example: " +
+								"if prefix is abc and tenant name is example then the FQDN would " +
+								"be abc.example.gpportal.alkira.com",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"service_group_name": {
+							Description: "The name of the service group. A group with the same name will be created.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
+				Optional: true,
+			},
 			"size": {
 				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
@@ -129,6 +165,30 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Description: "The version of the Fortinet Firewall.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"zones_to_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_id": {
+							Description: "The ID of the segment.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"zone_name": {
+							Description: "The name of the zone.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"groups": {
+							Description: "The name of the group.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -163,6 +223,8 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	//TODO(mac): make sure the documentation for segment options is up to date with fortinet
 
 	d.Set("auto_scale", f.AutoScale)
 	d.Set("billing_tag_ids", f.BillingTags)
@@ -232,6 +294,11 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
+	//globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	service := &alkira.Fortinet{
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
@@ -250,4 +317,42 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 	}
 
 	return service, nil
+}
+
+func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.FortinetSegmentName, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	if in == nil || in.Len() == 0 {
+		return nil, errors.New("invalid Fortinet Segment Options input")
+	}
+
+	sgmtOptions := make(map[string]*alkira.FortinetSegmentName)
+	for _, sgmtOption := range in.List() {
+		r := &alkira.FortinetSegmentName{}
+		segmentCfg := sgmtOption.(map[string]interface{})
+		var segmentName string
+
+		if v, ok := segmentCfg["segment_id"].(string); ok {
+			segment, err := client.GetSegmentById(v)
+			if err != nil {
+				return nil, err
+			}
+
+			segmentName = segment.Name
+			r.SegmentId = segment.Id
+		}
+		if v, ok := segmentCfg["remote_user_zone_name"].(string); ok {
+			r.RemoteUserZoneName = v
+		}
+		if v, ok := segmentCfg["portal_fqdn_prefix"].(string); ok {
+			r.PortalFqdnPrefix = v
+		}
+		if v, ok := segmentCfg["service_group_name"].(string); ok {
+			r.ServiceGroupName = v
+		}
+
+		sgmtOptions[segmentName] = r
+	}
+
+	return sgmtOptions, nil
 }
