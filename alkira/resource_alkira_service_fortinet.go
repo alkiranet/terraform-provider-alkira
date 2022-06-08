@@ -189,8 +189,6 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	//TODO(mac): make sure the documentation for segment options is up to date with fortinet
-
 	d.Set("auto_scale", f.AutoScale)
 	d.Set("billing_tag_ids", f.BillingTags)
 	d.Set("credential_id", f.CredentialId)
