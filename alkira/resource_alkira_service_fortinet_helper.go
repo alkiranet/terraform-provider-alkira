@@ -3,6 +3,7 @@ package alkira
 import (
 	"errors"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,38 +35,74 @@ func expandFortinetInstances(in *schema.Set) []alkira.FortinetInstance {
 	return instances
 }
 
-func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentName, error) {
-	client := m.(*alkira.AlkiraClient)
-
+func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.FortinetSegmentName, error) {
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("invalid Fortinet Segment Options input")
+		return nil, errors.New("Fortinet segment options cannot be null or empty")
 	}
 
-	sgmtOptions := make(map[string]*alkira.GlobalProtectSegmentName)
-	for _, sgmtOption := range in.List() {
-		r := &alkira.GlobalProtectSegmentName{}
-		segmentCfg := sgmtOption.(map[string]interface{})
-		var segmentName string
+	if in.Len() < 1 {
+		return nil, errors.New("Fortinet segment options must be exactly 1 in length")
+	}
 
-		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segment, err := client.GetSegmentById(v)
+	client := m.(*alkira.AlkiraClient)
+
+	if in == nil {
+		return nil, errors.New("Fortinet segment options cannot be nil")
+	}
+
+	zonesToGroups := make(alkira.FortinetZoneToGroups)
+	segmentOptions := make(map[string]alkira.FortinetSegmentName)
+
+	for _, options := range in.List() {
+		optionsCfg := options.(map[string]interface{})
+		z := alkira.FortinetSegmentName{}
+
+		var zoneName *string
+		var segment *alkira.Segment
+		var groups []string
+
+		if v, ok := optionsCfg["zone_name"].(string); ok {
+			zoneName = &v
+		}
+
+		if v, ok := optionsCfg["segment_id"].(int); ok {
+			sg, err := client.GetSegmentById(strconv.Itoa(v))
 			if err != nil {
 				return nil, err
 			}
-			segmentName = segment.Name
-		}
-		if v, ok := segmentCfg["remote_user_zone_name"].(string); ok {
-			r.RemoteUserZoneName = v
-		}
-		if v, ok := segmentCfg["portal_fqdn_prefix"].(string); ok {
-			r.PortalFqdnPrefix = v
-		}
-		if v, ok := segmentCfg["service_group_name"].(string); ok {
-			r.ServiceGroupName = v
+			segment = &sg
 		}
 
-		sgmtOptions[segmentName] = r
+		if v, ok := optionsCfg["groups"].([]interface{}); ok {
+			groups = convertTypeListToStringList(v)
+		}
+
+		if zoneName == nil || segment == nil || groups == nil {
+			return nil, errors.New("segment_option fields cannot be nil")
+		}
+
+		zonesToGroups[*zoneName] = groups
+		z.SegmentId = segment.Id
+		z.ZonesToGroups = zonesToGroups
+		segmentOptions[segment.Name] = z
 	}
 
-	return sgmtOptions, nil
+	return segmentOptions, nil
+}
+
+func deflateFortinetSegmentOptions(c map[string]alkira.FortinetSegmentName) []map[string]interface{} {
+	var options []map[string]interface{}
+
+	for _, outerZoneToGroups := range c {
+		for zone, groups := range outerZoneToGroups.ZonesToGroups {
+			i := map[string]interface{}{
+				"segment_id": outerZoneToGroups.SegmentId,
+				"zone_name":  zone,
+				"groups":     groups,
+			}
+			options = append(options, i)
+		}
+	}
+
+	return options
 }
