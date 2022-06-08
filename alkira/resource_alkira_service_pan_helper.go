@@ -17,7 +17,7 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("invalid Global Protect Segment Options input")
+		return nil, nil
 	}
 
 	sgmtOptions := make(map[string]*alkira.GlobalProtectSegmentName)
@@ -53,7 +53,7 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("invalid input for Global Pan Protect Options for service PAN instance")
+		return nil, nil
 	}
 
 	sgmtOptions := make(map[string]*alkira.GlobalProtectSegmentNameInstance)
