@@ -17,4 +17,11 @@ resource "alkira_fortinet" "test1" {
     serial_number = "test-instance-1"
     credential_id = alkira_credential_fortinet_instance.tf_test_fortinet_instance.id
   }
+
+  //optional
+  segment_options {
+    segment_id = alkira_segment.test1.id
+    zone_name  = "DEFAULT"
+    groups     = [alkira_group.test.name]
+  }
 }

@@ -112,6 +112,31 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"segment_options": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "The segment options as used by your Fortinet firewall.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_id": {
+							Description: "The ID of the segment.",
+							Type:        schema.TypeInt,
+							Required:    true,
+						},
+						"zone_name": {
+							Description: "The name of the associated zone.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"groups": {
+							Description: "The list of Groups associated with the zone.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"size": {
 				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
@@ -175,6 +200,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
 	d.Set("segment_ids", f.Segments)
+	d.Set("segment_options", deflateFortinetSegmentOptions(f.SegmentOptions))
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
@@ -232,6 +258,11 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
+	segmentOptions, err := expandFortinetSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+
 	service := &alkira.Fortinet{
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
@@ -244,6 +275,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		MinInstanceCount: d.Get("min_instance_count").(int),
 		Name:             d.Get("name").(string),
 		Segments:         segmentNames,
+		SegmentOptions:   segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		Version:          d.Get("version").(string),
