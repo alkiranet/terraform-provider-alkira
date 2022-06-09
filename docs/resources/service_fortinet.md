@@ -32,6 +32,13 @@ resource "alkira_fortinet" "test1" {
     serial_number = "test-instance-1"
     credential_id = alkira_credential_fortinet_instance.tf_test_fortinet_instance.id
   }
+
+  //optional
+  segment_options {
+    segment_id = alkira_segment.test1.id
+    zone_name  = "DEFAULT"
+    groups     = [alkira_group.test.name]
+  }
 }
 ```
 
@@ -58,6 +65,7 @@ resource "alkira_fortinet" "test1" {
 - **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
 - **id** (String) The ID of this resource.
 - **min_instance_count** (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
+- **segment_options** (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
 - **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
 <a id="nestedblock--instances"></a>
@@ -71,5 +79,15 @@ Optional:
 
 - **credential_id** (String) The id of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
 - **serial_number** (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
+
+
+<a id="nestedblock--segment_options"></a>
+### Nested Schema for `segment_options`
+
+Required:
+
+- **groups** (List of String) The list of Groups associated with the zone.
+- **segment_id** (Number) The ID of the segment.
+- **zone_name** (String) The name of the associated zone.
 
 

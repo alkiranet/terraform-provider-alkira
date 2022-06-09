@@ -114,8 +114,8 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "The segment options as used by your checkpoint firewall.",
+				Optional:    true,
+				Description: "The segment options as used by your Fortinet firewall.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {

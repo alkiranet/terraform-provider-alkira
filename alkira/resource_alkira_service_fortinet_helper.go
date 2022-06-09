@@ -37,18 +37,15 @@ func expandFortinetInstances(in *schema.Set) []alkira.FortinetInstance {
 
 func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.FortinetSegmentName, error) {
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("Fortinet segment options cannot be null or empty")
+		//At the time of this writing segment options is optional we don't care if they don't submit anything.
+		return nil, nil
 	}
 
-	if in.Len() < 1 {
+	if in.Len() > 1 || in.Len() < 1 {
 		return nil, errors.New("Fortinet segment options must be exactly 1 in length")
 	}
 
 	client := m.(*alkira.AlkiraClient)
-
-	if in == nil {
-		return nil, errors.New("Fortinet segment options cannot be nil")
-	}
 
 	zonesToGroups := make(alkira.FortinetZoneToGroups)
 	segmentOptions := make(map[string]alkira.FortinetSegmentName)
