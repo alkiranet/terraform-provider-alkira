@@ -17,11 +17,14 @@ Use this data source to get an existing policy prefix list.
 
 ### Required
 
-- **name** (String) The name of the policy prefix list.
+- `name` (String) The name of the policy prefix list.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **prefixes** (String) Prefixes in the prefix list.
+- `prefixes` (String) Prefixes in the prefix list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -41,20 +41,23 @@ resource "alkira_policy_rule_list" "test" {
 
 ### Required
 
-- **name** (String)
-- **rules** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rules))
+- `name` (String)
+- `rules` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rules))
 
 ### Optional
 
-- **description** (String)
-- **id** (String) The ID of this resource.
+- `description` (String)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--rules"></a>
 ### Nested Schema for `rules`
 
 Required:
 
-- **priority** (Number)
-- **rule_id** (Number)
+- `priority` (Number)
+- `rule_id` (Number)
 
 

@@ -9,11 +9,13 @@ import (
 )
 
 type Segment struct {
-	Asn                                        int    `json:"asn"`
-	Id                                         int    `json:"id"`
-	IpBlock                                    string `json:"ipBlock"`
-	Name                                       string `json:"name"`
-	ReservePublicIPsForUserAndSiteConnectivity bool   `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
+	Asn                                        int      `json:"asn"`
+	EnterpriseDNSServerIP                      string   `json:"enterpriseDNSServerIP,omitempty"`
+	Id                                         int      `json:"id,omitempty"` // only for response
+	IpBlock                                    string   `json:"ipBlock"`
+	IpBlocks                                   []string `json:"ipBlocks,omitempty"`
+	Name                                       string   `json:"name"`
+	ReservePublicIPsForUserAndSiteConnectivity bool     `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
 }
 
 // Get all segments from the given tenant network

@@ -61,16 +61,19 @@ resource "alkira_policy" "test" {
 
 ### Required
 
-- **enabled** (Boolean) Whether the policy is enabled.
-- **from_groups** (List of Number) IDs of groups that will define source in the policy scope
-- **name** (String) The name of the policy.
-- **rule_list_id** (Number) The `rulelist` that will be used by the policy.
-- **segment_ids** (List of Number) IDs of segments that will define the policy scope.
-- **to_groups** (List of Number) IDs of groups that will define destination in the policy scope.
+- `enabled` (Boolean) Whether the policy is enabled.
+- `from_groups` (List of Number) IDs of groups that will define source in the policy scope
+- `name` (String) The name of the policy.
+- `rule_list_id` (Number) The `rulelist` that will be used by the policy.
+- `segment_ids` (List of Number) IDs of segments that will define the policy scope.
+- `to_groups` (List of Number) IDs of groups that will define destination in the policy scope.
 
 ### Optional
 
-- **description** (String) The description of the policy.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the policy.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

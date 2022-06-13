@@ -42,63 +42,66 @@ resource "alkira_connector_ipsec" "ipsec" {
 
 ### Required
 
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **segment_id** (Number) The ID of the segment associated with the connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
-- **vpn_mode** (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `segment_id` (Number) The ID of the segment associated with the connector.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+- `vpn_mode` (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
 
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **endpoint** (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **policy_options** (Block Set) Policy options, both on-prem and cxp prefixlist ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
-- **routing_options** (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
-- **segment_options** (Block Set) Additional options for each segment associated with the connector (see [below for nested schema](#nestedblock--segment_options))
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `endpoint` (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
+- `group` (String) The group of the connector.
+- `policy_options` (Block Set) Policy options, both on-prem and cxp prefixlist ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
+- `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
+- `segment_options` (Block Set) Additional options for each segment associated with the connector (see [below for nested schema](#nestedblock--segment_options))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--endpoint"></a>
 ### Nested Schema for `endpoint`
 
 Required:
 
-- **customer_gateway_ip** (String) The IP address of the customer gateway.
-- **name** (String) The name of the endpoint.
+- `customer_gateway_ip` (String) The IP address of the customer gateway.
+- `name` (String) The name of the endpoint.
 
 Optional:
 
-- **advanced** (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
-- **billing_tag_ids** (List of Number) A list of IDs of billing tag associated with the endpoint.
-- **enable_tunnel_redundancy** (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
-- **preshared_keys** (List of String) An array of presharedKeys, one per tunnel.
+- `advanced` (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
+- `billing_tag_ids` (List of Number) A list of IDs of billing tag associated with the endpoint.
+- `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
+- `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
 
 <a id="nestedblock--endpoint--advanced"></a>
 ### Nested Schema for `endpoint.advanced`
 
 Required:
 
-- **dpd_delay** (String) Interval to check the liveness of a peer.
-- **dpd_timeout** (String) Timeouts to check the liveness of a peer. IKEv1 only.
-- **esp_dh_group_numbers** (String)
-- **esp_encryption_algorithms** (String)
-- **esp_integrity_algorithms** (String)
-- **esp_life_time** (Number) Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.
-- **esp_random_time** (String)
-- **esp_rekey_time** (String)
-- **ike_dh_group_numbers** (String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`
-- **ike_encryption_algorithms** (String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
-- **ike_integrity_algorithms** (String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
-- **ike_over_time** (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
-- **ike_random_time** (Number) Time range from which to choose a random value to subtract from rekey times.
-- **ike_rekey_time** (Number) IKE tunnel rekey time.
-- **ike_version** (String) IKE version, either `IKEv1` or `IKEv2`
-- **initiator** (String)
-- **local_auth_type** (String) Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
-- **local_auth_value** (String) Local-ID value.
-- **remote_auth_type** (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
-- **remote_auth_value** (String) Remote-ID value.
-- **replay_window_size** (Number) IPsec replay window for the IPsec SA.
+- `dpd_delay` (String) Interval to check the liveness of a peer.
+- `dpd_timeout` (String) Timeouts to check the liveness of a peer. IKEv1 only.
+- `esp_dh_group_numbers` (String)
+- `esp_encryption_algorithms` (String)
+- `esp_integrity_algorithms` (String)
+- `esp_life_time` (Number) Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.
+- `esp_random_time` (String)
+- `esp_rekey_time` (String)
+- `ike_dh_group_numbers` (String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`
+- `ike_encryption_algorithms` (String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
+- `ike_integrity_algorithms` (String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
+- `ike_over_time` (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
+- `ike_random_time` (Number) Time range from which to choose a random value to subtract from rekey times.
+- `ike_rekey_time` (Number) IKE tunnel rekey time.
+- `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
+- `initiator` (String)
+- `local_auth_type` (String) Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
+- `local_auth_value` (String) Local-ID value.
+- `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
+- `remote_auth_value` (String) Remote-ID value.
+- `replay_window_size` (Number) IPsec replay window for the IPsec SA.
 
 
 
@@ -107,8 +110,8 @@ Required:
 
 Required:
 
-- **cxp_prefix_list_ids** (List of Number) CXP Prefix List IDs.
-- **on_prem_prefix_list_ids** (List of Number) On Prem Prefix List IDs.
+- `cxp_prefix_list_ids` (List of Number) CXP Prefix List IDs.
+- `on_prem_prefix_list_ids` (List of Number) On Prem Prefix List IDs.
 
 
 <a id="nestedblock--routing_options"></a>
@@ -116,14 +119,14 @@ Required:
 
 Required:
 
-- **type** (String) Routing type, one of `STATIC`, `DYNAMIC`, or `BOTH`.
+- `type` (String) Routing type, one of `STATIC`, `DYNAMIC`, or `BOTH`.
 
 Optional:
 
-- **availability** (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
-- **bgp_auth_key** (String) BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).
-- **customer_gateway_asn** (String) The customer gateway ASN to use for dynamic route propagation.
-- **prefix_list_id** (Number) The ID of prefix list to use for static route propagation.
+- `availability` (String) The method to determine the availability of static route. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
+- `bgp_auth_key` (String) BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).
+- `customer_gateway_asn` (String) The customer gateway ASN to use for dynamic route propagation.
+- `prefix_list_id` (Number) The ID of prefix list to use for static route propagation.
 
 
 <a id="nestedblock--segment_options"></a>
@@ -131,11 +134,11 @@ Optional:
 
 Required:
 
-- **name** (String) Segment Name.
+- `name` (String) Segment Name.
 
 Optional:
 
-- **advertise_on_prem_routes** (Boolean) Additional options for each segment associated with the connector. Default is `false`.
-- **allow_nat_exit** (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.
+- `advertise_on_prem_routes` (Boolean) Additional options for each segment associated with the connector. Default is `false`.
+- `allow_nat_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.
 
 

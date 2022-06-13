@@ -41,33 +41,33 @@ resource "alkira_internet_application" "test" {
 
 ### Required
 
-- **connector_id** (Number) Connector ID.
-- **connector_type** (String) Connector Type.
-- **fqdn_prefix** (String) User provided FQDN prefix that will be published on route53.
-- **name** (String) The name of the internet application.
-- **segment_id** (Number) The ID of segment associated with the internet application.
-- **size** (String) The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.
-- **target** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--target))
+- `connector_id` (Number) Connector ID.
+- `connector_type` (String) Connector Type.
+- `fqdn_prefix` (String) User provided FQDN prefix that will be published on route53.
+- `name` (String) The name of the internet application.
+- `segment_id` (Number) The ID of segment associated with the internet application.
+- `size` (String) The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.
+- `target` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--target))
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) IDs of billing tags.
-- **id** (String) The ID of this resource.
-- **inbound_connector_id** (String) Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, it could be left empty.
-- **inbound_connector_type** (String) The inbound connector type specifies how the internet application is to be opened up to the external world. By `DEFAULT` the native cloud internet connector is used. In this scenario, Alkira takes care of creating this inbound internet connector implicitly. If instead inbound access is via the `AKAMAI_PROLEXIC` connector, then you need to create and configure that connector and use it with the internet application.
-- **public_ips** (List of String) This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. The public IPs are to be used to access the internet application. These public IPs must belong to one of the BYOIP ranges configured for the Akamai Prolexic Connector.
+- `billing_tag_ids` (List of Number) IDs of billing tags.
+- `inbound_connector_id` (String) Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, it could be left empty.
+- `inbound_connector_type` (String) The inbound connector type specifies how the internet application is to be opened up to the external world. By `DEFAULT` the native cloud internet connector is used. In this scenario, Alkira takes care of creating this inbound internet connector implicitly. If instead inbound access is via the `AKAMAI_PROLEXIC` connector, then you need to create and configure that connector and use it with the internet application.
+- `public_ips` (List of String) This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. The public IPs are to be used to access the internet application. These public IPs must belong to one of the BYOIP ranges configured for the Akamai Prolexic Connector.
 
 ### Read-Only
 
-- **group_id** (Number) ID of the auto generated system group.
+- `group_id` (Number) ID of the auto generated system group.
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--target"></a>
 ### Nested Schema for `target`
 
 Required:
 
-- **ports** (List of Number) list of internet application ports.
-- **type** (String) The type of the target, one of `IP` or `ILB_NAME`.
-- **value** (String) IFA ILB name or private IP.
+- `ports` (List of Number) list of internet application ports.
+- `type` (String) The type of the target, one of `IP` or `ILB_NAME`.
+- `value` (String) IFA ILB name or private IP.
 
 

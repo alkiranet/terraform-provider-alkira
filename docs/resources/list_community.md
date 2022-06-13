@@ -25,12 +25,15 @@ resource "alkira_list_community" "test" {
 
 ### Required
 
-- **name** (String) Name of the list.
-- **values** (List of String) A list of communities to match on routes. Each community in the list is a tag value in the format of `AA:NN` format (where AA and NN are `0-65535`). AA denotes a AS number.
+- `name` (String) Name of the list.
+- `values` (List of String) A list of communities to match on routes. Each community in the list is a tag value in the format of `AA:NN` format (where AA and NN are `0-65535`). AA denotes a AS number.
 
 ### Optional
 
-- **description** (String) Description for the list.
-- **id** (String) The ID of this resource.
+- `description` (String) Description for the list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -25,12 +25,15 @@ resource "alkira_list_as_path" "test" {
 
 ### Required
 
-- **name** (String) Name of the list.
-- **values** (List of String) Value can be regular expression of AS PATH or space sparated AS numbers. BGP regular expressionsare based on POSIX 1003.2 regular expressions.
+- `name` (String) Name of the list.
+- `values` (List of String) Value can be regular expression of AS PATH or space sparated AS numbers. BGP regular expressionsare based on POSIX 1003.2 regular expressions.
 
 ### Optional
 
-- **description** (String) Description for the list.
-- **id** (String) The ID of this resource.
+- `description` (String) Description for the list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

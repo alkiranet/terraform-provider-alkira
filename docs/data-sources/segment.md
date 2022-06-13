@@ -23,11 +23,14 @@ data "alkira_segment" "segment" {
 
 ### Required
 
-- **name** (String) The name of the segment.
+- `name` (String) The name of the segment.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **segment_id** (Number) The ID of the segment.
+- `segment_id` (Number) The ID of the segment.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

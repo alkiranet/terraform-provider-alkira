@@ -53,33 +53,36 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 ### Required
 
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **gateway_gbp_asn** (Number) The gateway BGP ASN.
-- **instances** (Block Set, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
-- **name** (String) The name of the connector.
-- **segment_ids** (List of String) The IDs of the segments associated with the Aruba Edge connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
-- **version** (String) The version of the Aruba Edge connector.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `gateway_gbp_asn` (Number) The gateway BGP ASN.
+- `instances` (Block Set, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
+- `name` (String) The name of the connector.
+- `segment_ids` (List of String) The IDs of the segments associated with the Aruba Edge connector.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
+- `version` (String) The version of the Aruba Edge connector.
 
 ### Optional
 
-- **aruba_edge_vrf_mapping** (Block Set) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
-- **billing_tag_ids** (List of Number) Tags for billing.
-- **boost_mode** (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **tunnel_protocol** (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
+- `aruba_edge_vrf_mapping` (Block Set) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
+- `billing_tag_ids` (List of Number) Tags for billing.
+- `boost_mode` (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
+- `group` (String) The group of the connector.
+- `tunnel_protocol` (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
 
 Required:
 
-- **account_key** (String) The account key generated in Silver Peak orchestrator account.
-- **account_name** (String) The account name given in Silver Peak orchestrator registration.
-- **host_name** (String) The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.
-- **name** (String) The instance name associated with aruba edge connect instance.
-- **site_tag** (String) The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator
+- `account_key` (String) The account key generated in Silver Peak orchestrator account.
+- `account_name` (String) The account name given in Silver Peak orchestrator registration.
+- `host_name` (String) The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.
+- `name` (String) The instance name associated with aruba edge connect instance.
+- `site_tag` (String) The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator
 
 
 <a id="nestedblock--aruba_edge_vrf_mapping"></a>
@@ -87,13 +90,13 @@ Required:
 
 Required:
 
-- **aruba_edge_connect_segment_id** (String) The segment ID of the Aruba Edge connector.
-- **gateway_gbp_asn** (Number) The gateway BGP ASN.
-- **segment_id** (String) The segment ID associated with the Aruba Edge connector.
+- `aruba_edge_connect_segment_id` (String) The segment ID of the Aruba Edge connector.
+- `gateway_gbp_asn` (Number) The gateway BGP ASN.
+- `segment_id` (String) The segment ID associated with the Aruba Edge connector.
 
 Optional:
 
-- **advertise_on_prem_routes** (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
-- **disable_internet_exit** (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is False.
+- `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
+- `disable_internet_exit` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is False.
 
 

@@ -17,9 +17,12 @@ description: |-
 
 ### Optional
 
-- **connectors** (List of String)
-- **id** (String) The ID of this resource.
-- **segments** (List of String)
-- **services** (List of String)
+- `connectors` (List of String)
+- `segments` (List of String)
+- `services` (List of String)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 
