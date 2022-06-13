@@ -23,11 +23,14 @@ data "alkira_credential" "cred1" {
 
 ### Required
 
-- **name** (String) The name of the credentials.
+- `name` (String) The name of the credentials.
 
 ### Optional
 
-- **credential_id** (String) The ID of the credentials.
-- **id** (String) The ID of this resource.
+- `credential_id` (String) The ID of the credentials.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

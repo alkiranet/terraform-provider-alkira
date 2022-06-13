@@ -17,16 +17,19 @@ Manage NAT policy.
 
 ### Required
 
-- **included_group_ids** (List of Number) Defines the scope for the policy. Connector associatedwith group IDs metioned here is where this policy would be applied.Group IDs that associated with branch/on-premise connectors can beused here. These group should not contain any cloud connector.
-- **name** (String) The name of the policy.
-- **nat_rule_ids** (List of Number) The list of NAT rules to be applied by the policy.
-- **segment_id** (Number) IDs of segments that will define the policy scope.
-- **type** (String) The type of NAT policy, currently only `INTER_SEGMENT`is supported.
+- `included_group_ids` (List of Number) Defines the scope for the policy. Connector associatedwith group IDs metioned here is where this policy would be applied.Group IDs that associated with branch/on-premise connectors can beused here. These group should not contain any cloud connector.
+- `name` (String) The name of the policy.
+- `nat_rule_ids` (List of Number) The list of NAT rules to be applied by the policy.
+- `segment_id` (Number) IDs of segments that will define the policy scope.
+- `type` (String) The type of NAT policy, currently only `INTER_SEGMENT`is supported.
 
 ### Optional
 
-- **description** (String) The description of the policy.
-- **excluded_group_ids** (List of Number) Excludes given associated connector from `included_groups`.Implicit group ID of a branch/on-premise connector for which a userdefined group is used in `included_groups` can be used here.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the policy.
+- `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`.Implicit group ID of a branch/on-premise connector for which a userdefined group is used in `included_groups` can be used here.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

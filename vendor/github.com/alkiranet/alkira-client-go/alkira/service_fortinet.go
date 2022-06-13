@@ -9,25 +9,28 @@ import (
 )
 
 type Fortinet struct {
-	AutoScale        string                          `json:"autoScale,omitempty"`
-	BillingTags      []int                           `json:"billingTags"`
-	CredentialId     string                          `json:"credentialId"`
-	Cxp              string                          `json:"cxp"`
-	Id               int                             `json:"id"`
-	Instances        []FortinetInstance              `json:"instances"`
-	InternalName     string                          `json:"internalName"`
-	LicenseType      string                          `json:"licenseType"`
-	ManagementServer *FortinetManagmentServer        `json:"managementServer"`
-	MaxInstanceCount int                             `json:"maxInstanceCount"`
-	MinInstanceCount int                             `json:"minInstanceCount"`
-	Name             string                          `json:"name"`
-	Segments         []string                        `json:"segments"`
-	SegmentOptions   map[string]*FortinetSegmentName `json:"segmentOptions"`
-	Size             string                          `json:"size"`
-	State            string                          `json:"state,omitempty"`
-	TunnelProtocol   string                          `json:"tunnelProtocol"`
-	Version          string                          `json:"version"`
+	AutoScale        string                         `json:"autoScale,omitempty"`
+	BillingTags      []int                          `json:"billingTags"`
+	CredentialId     string                         `json:"credentialId"`
+	Cxp              string                         `json:"cxp"`
+	Id               int                            `json:"id"`
+	Instances        []FortinetInstance             `json:"instances"`
+	InternalName     string                         `json:"internalName"`
+	LicenseType      string                         `json:"licenseType"`
+	ManagementServer *FortinetManagmentServer       `json:"managementServer"`
+	MaxInstanceCount int                            `json:"maxInstanceCount"`
+	MinInstanceCount int                            `json:"minInstanceCount"`
+	Name             string                         `json:"name"`
+	Segments         []string                       `json:"segments"`
+	SegmentOptions   map[string]FortinetSegmentName `json:"segmentOptions"`
+	Size             string                         `json:"size"`
+	State            string                         `json:"state,omitempty"`
+	TunnelProtocol   string                         `json:"tunnelProtocol"`
+	Version          string                         `json:"version"`
 }
+
+type FortinetSegmentNameToZone map[string]OuterZoneToGroups
+type FortinetZoneToGroups map[string][]string
 
 type FortinetInstance struct {
 	Name         string `json:"name"`

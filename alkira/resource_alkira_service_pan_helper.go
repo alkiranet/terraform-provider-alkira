@@ -142,6 +142,9 @@ func expandPanInstances(in *schema.Set, m interface{}) ([]alkira.ServicePanInsta
 	for i, instance := range in.List() {
 		r := alkira.ServicePanInstance{}
 		instanceCfg := instance.(map[string]interface{})
+		if v, ok := instanceCfg["id"].(int); ok {
+			r.Id = v
+		}
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
 		}

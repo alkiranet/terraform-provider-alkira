@@ -59,6 +59,7 @@ type GlobalProtectSegmentNameInstance struct {
 
 type ServicePanInstance struct {
 	CredentialId                string                                       `json:"credentialId"`
+	Id                          int                                          `json:"id,omitempty"`
 	Name                        string                                       `json:"name"`
 	GlobalProtectSegmentOptions map[string]*GlobalProtectSegmentNameInstance `json:"globalProtectSegmentOptions,omitempty"`
 }

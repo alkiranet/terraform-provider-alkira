@@ -26,14 +26,17 @@ resource "alkira_cloudvisor_account" "test" {
 
 ### Required
 
-- **auto_sync** (String) The interval at which the account should be auto synced. The value could be `NONE`, `DAILY`, `WEEKLY` and `MONTHLY`.
-- **cloud_provider** (String) Cloud provider of the account, currently, `AWS` and `AZURE` are supported.
-- **credential_id** (String) Credential Id to be used for the account.
-- **name** (String) The name of the account.
+- `auto_sync` (String) The interval at which the account should be auto synced. The value could be `NONE`, `DAILY`, `WEEKLY` and `MONTHLY`.
+- `cloud_provider` (String) Cloud provider of the account, currently, `AWS` and `AZURE` are supported.
+- `credential_id` (String) Credential Id to be used for the account.
+- `name` (String) The name of the account.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **native_id** (String) The native cloud provider account Id.
+- `native_id` (String) The native cloud provider account Id.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

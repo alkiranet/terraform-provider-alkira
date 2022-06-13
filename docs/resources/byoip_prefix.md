@@ -28,16 +28,19 @@ resource "alkira_byoip" "test" {
 
 ### Required
 
-- **cxp** (String) CXP region.
-- **message** (String) Message from AWS BYOIP.
-- **prefix** (String) Prefix for BYOIP.
-- **public_key** (String) Public Key from AWS BYOIP.
-- **signature** (String) Signautre from AWS BYOIP.
+- `cxp` (String) CXP region.
+- `message` (String) Message from AWS BYOIP.
+- `prefix` (String) Prefix for BYOIP.
+- `public_key` (String) Public Key from AWS BYOIP.
+- `signature` (String) Signautre from AWS BYOIP.
 
 ### Optional
 
-- **description** (String) Description for the list.
-- **do_not_advertise** (Boolean) Do not advertise.
-- **id** (String) The ID of this resource.
+- `description` (String) Description for the list.
+- `do_not_advertise` (Boolean) Do not advertise.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -43,20 +43,23 @@ resource "alkira_segment_resource" "test" {
 
 ### Required
 
-- **group_prefix** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--group_prefix))
-- **name** (String) The name of the segment resource.
+- `group_prefix` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--group_prefix))
+- `name` (String) The name of the segment resource.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **segment_id** (Number) The segment ID.
+- `segment_id` (Number) The segment ID.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--group_prefix"></a>
 ### Nested Schema for `group_prefix`
 
 Optional:
 
-- **group_id** (Number) The connector group ID associated with segment resource.
-- **prefix_list_id** (Number) The Prefix List ID associated with segment resource.
+- `group_id` (Number) The connector group ID associated with segment resource.
+- `prefix_list_id` (Number) The Prefix List ID associated with segment resource.
 
 

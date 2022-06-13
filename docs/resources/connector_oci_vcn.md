@@ -44,33 +44,36 @@ resource "alkira_connector_oci_vcn" "test" {
 
 ### Required
 
-- **credential_id** (String) ID of OCI-VCN credential.
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **oci_region** (String) OCI region of the VCN.
-- **primary** (Boolean) Wether the connector is primary.
-- **segment_id** (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
-- **vcn_id** (String) The OCID of the VCN.
+- `credential_id` (String) ID of OCI-VCN credential.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `oci_region` (String) OCI region of the VCN.
+- `primary` (Boolean) Wether the connector is primary.
+- `segment_id` (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `vcn_id` (String) The OCID of the VCN.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) IDs of billing tags.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **vcn_cidr** (List of String) The list of CIDR attached to the target VCN for routing purpose. It could be only specified if `vcn_subnet` is not specified.
-- **vcn_route_table** (Block Set) VCN route table. (see [below for nested schema](#nestedblock--vcn_route_table))
-- **vcn_subnet** (Block Set) The list of subnets of the target VCN for routing purpose. It could only specified if `vcn_cidr` is not specified. (see [below for nested schema](#nestedblock--vcn_subnet))
+- `billing_tag_ids` (List of Number) IDs of billing tags.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `group` (String) The group of the connector.
+- `vcn_cidr` (List of String) The list of CIDR attached to the target VCN for routing purpose. It could be only specified if `vcn_subnet` is not specified.
+- `vcn_route_table` (Block Set) VCN route table. (see [below for nested schema](#nestedblock--vcn_route_table))
+- `vcn_subnet` (Block Set) The list of subnets of the target VCN for routing purpose. It could only specified if `vcn_cidr` is not specified. (see [below for nested schema](#nestedblock--vcn_subnet))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--vcn_route_table"></a>
 ### Nested Schema for `vcn_route_table`
 
 Optional:
 
-- **id** (String) The ID of the route table.
-- **options** (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
-- **prefix_list_ids** (List of Number) Prefix List IDs.
+- `id` (String) The ID of the route table.
+- `options` (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
+- `prefix_list_ids` (List of Number) Prefix List IDs.
 
 
 <a id="nestedblock--vcn_subnet"></a>
@@ -78,7 +81,7 @@ Optional:
 
 Optional:
 
-- **cidr** (String) The CIDR of the subnet.
-- **id** (String) The Id of the subnet.
+- `cidr` (String) The CIDR of the subnet.
+- `id` (String) The Id of the subnet.
 
 

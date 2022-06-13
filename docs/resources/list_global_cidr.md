@@ -26,13 +26,16 @@ resource "alkira_list_global_cidr" "test" {
 
 ### Required
 
-- **cxp** (String) CXP the list belongs to.
-- **name** (String) Name of the list.
-- **values** (List of String) A list of CIDRs, The CIDR must be `/24` and a subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, `192.168.0.0/16`, `100.64.0.0/10`.
+- `cxp` (String) CXP the list belongs to.
+- `name` (String) Name of the list.
+- `values` (List of String) A list of CIDRs, The CIDR must be `/24` and a subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, `192.168.0.0/16`, `100.64.0.0/10`.
 
 ### Optional
 
-- **description** (String) Description for the list.
-- **id** (String) The ID of this resource.
+- `description` (String) Description for the list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

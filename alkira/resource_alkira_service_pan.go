@@ -97,6 +97,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"id": {
+							Description: "The ID of the PAN instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"credential_id": {
 							Description: "ID of PAN instance credential managed by credential resource.",
 							Type:        schema.TypeString,
@@ -302,6 +307,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 		i := map[string]interface{}{
 			"name":          instance.Name,
 			"credential_id": instance.CredentialId,
+			"id":            instance.Id,
 		}
 		instances = append(instances, i)
 	}

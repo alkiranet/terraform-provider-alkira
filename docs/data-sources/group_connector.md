@@ -23,10 +23,10 @@ data "alkira_group_connector" "test" {
 
 ### Required
 
-- **name** (String) The name of the group.
+- `name` (String) The name of the group.
 
-### Optional
+### Read-Only
 
-- **id** (String) The ID of this resource.
+- `id` (String) The ID of this resource.
 
 

@@ -61,15 +61,18 @@ resource "alkira_credential_aws_vpc" "account1" {
 
 ### Required
 
-- **name** (String) Name of the credential.
-- **type** (String) Type of AWS-VPC credential.
+- `name` (String) Name of the credential.
+- `type` (String) Type of AWS-VPC credential.
 
 ### Optional
 
-- **aws_access_key** (String) AWS access key.
-- **aws_external_id** (String) AWS Role External ID.
-- **aws_role_arn** (String) AWS Role ARN.
-- **aws_secret_key** (String) AWS secret key.
-- **id** (String) The ID of this resource.
+- `aws_access_key` (String) AWS access key.
+- `aws_external_id` (String) AWS Role External ID.
+- `aws_role_arn` (String) AWS Role ARN.
+- `aws_secret_key` (String) AWS secret key.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

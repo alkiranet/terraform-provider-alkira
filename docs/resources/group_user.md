@@ -24,11 +24,14 @@ resource "alkira_group_user" "test" {
 
 ### Required
 
-- **name** (String) The name of the user group.
+- `name` (String) The name of the user group.
 
 ### Optional
 
-- **description** (String) The description of the user group.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the user group.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -25,12 +25,12 @@ resource "alkira_credential_fortinet" "tf_test_fortinet" {
 
 ### Required
 
-- **name** (String) The name of the credential.
-- **password** (String) Fortinet password.
-- **username** (String) Fortinet username.
+- `name` (String) The name of the credential.
+- `password` (String) Fortinet password.
+- `username` (String) Fortinet username.
 
-### Optional
+### Read-Only
 
-- **id** (String) The ID of this resource.
+- `id` (String) The ID of this resource.
 
 

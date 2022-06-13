@@ -34,17 +34,20 @@ resource "alkira_segment_resource_share" "test" {
 
 ### Required
 
-- **designated_segment_id** (Number) The designated segment ID.
-- **end_a_segment_resource_ids** (List of Number) The End-A segment resource IDs. All segment resources must be on the same segment.
-- **end_b_segment_resource_ids** (List of Number) The End-B segment resource IDs. All segment resources must be on the same segment.
-- **name** (String) The name of the segment resource share.
-- **service_ids** (List of Number) The list of service IDs.
+- `designated_segment_id` (Number) The designated segment ID.
+- `end_a_segment_resource_ids` (List of Number) The End-A segment resource IDs. All segment resources must be on the same segment.
+- `end_b_segment_resource_ids` (List of Number) The End-B segment resource IDs. All segment resources must be on the same segment.
+- `name` (String) The name of the segment resource share.
+- `service_ids` (List of Number) The list of service IDs.
 
 ### Optional
 
-- **end_a_route_limit** (Number) The End-A route limit. The default value is `100`.
-- **end_b_route_limit** (Number) The End-B route limit. The default value is `100`.
-- **id** (String) The ID of this resource.
-- **traffic_direction** (String) Specify the direction in which traffic is orignated at both Resource End-A and Resource End-B. The default value is `BIDIRECTIONAL`.
+- `end_a_route_limit` (Number) The End-A route limit. The default value is `100`.
+- `end_b_route_limit` (Number) The End-B route limit. The default value is `100`.
+- `traffic_direction` (String) Specify the direction in which traffic is orignated at both Resource End-A and Resource End-B. The default value is `BIDIRECTIONAL`.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

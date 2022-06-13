@@ -62,29 +62,32 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 
 ### Required
 
-- **credential_id** (String) ID of credential managed by Credential Manager.
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **gcp_region** (String) GCP region where VPC resides.
-- **gcp_vpc_id** (String) GCP VPC ID.
-- **gcp_vpc_name** (String) GCP VPC name.
-- **name** (String) The name of the connector.
-- **segment_id** (Number) The ID of the segment associated with the connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `credential_id` (String) ID of credential managed by Credential Manager.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `gcp_region` (String) GCP region where VPC resides.
+- `gcp_vpc_id` (String) GCP VPC ID.
+- `gcp_vpc_name` (String) GCP VPC name.
+- `name` (String) The name of the connector.
+- `segment_id` (Number) The ID of the segment associated with the connector.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) Tags for billing.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **gcp_routing** (Block Set) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. gcpRouting provides a customized routing specification. When gcpRouting is not provided i.e when gcpRouting is null/empty then all traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
+- `billing_tag_ids` (List of Number) Tags for billing.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `gcp_routing` (Block Set) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. gcpRouting provides a customized routing specification. When gcpRouting is not provided i.e when gcpRouting is null/empty then all traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
+- `group` (String) The group of the connector.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--gcp_routing"></a>
 ### Nested Schema for `gcp_routing`
 
 Required:
 
-- **custom_prefix** (String) custom_prefix is an instruction which specifies the source of the routes that need to be imported. Only `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.
-- **prefix_list_ids** (List of Number) Ids of prefix lists defined on the network.
+- `custom_prefix` (String) custom_prefix is an instruction which specifies the source of the routes that need to be imported. Only `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.
+- `prefix_list_ids` (List of Number) Ids of prefix lists defined on the network.
 
 

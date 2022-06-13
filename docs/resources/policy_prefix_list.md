@@ -25,12 +25,15 @@ resource "alkira_policy_prefix_list" "test" {
 
 ### Required
 
-- **name** (String) The name of the prefix list.
-- **prefixes** (List of String) A list of prefixes.
+- `name` (String) The name of the prefix list.
+- `prefixes` (List of String) A list of prefixes.
 
 ### Optional
 
-- **description** (String) The description of the prefix list.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the prefix list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -20,32 +20,35 @@ This resource is usually used along with policy resources:`policy_nat_policy`.
 
 ### Required
 
-- **action** (Block Set, Min: 1) The action of the rule. (see [below for nested schema](#nestedblock--action))
-- **enabled** (Boolean) Enable the rule or not.
-- **match** (Block Set, Min: 1) Match condition for the rule. (see [below for nested schema](#nestedblock--match))
-- **name** (String) The name of the policy rule.
+- `action` (Block Set, Min: 1) The action of the rule. (see [below for nested schema](#nestedblock--action))
+- `enabled` (Boolean) Enable the rule or not.
+- `match` (Block Set, Min: 1) Match condition for the rule. (see [below for nested schema](#nestedblock--match))
+- `name` (String) The name of the policy rule.
 
 ### Optional
 
-- **description** (String) The description of the policy rule.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the policy rule.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--action"></a>
 ### Nested Schema for `action`
 
 Optional:
 
-- **dst_addr_translation_advertise_to_connector** (Boolean) Whether the destination address should be advertised to connector.
-- **dst_addr_translation_bidirectional** (Boolean) Is the translation bidirectional.
-- **dst_addr_translation_ports** (List of String) The port list to translate the destination prefixes to.
-- **dst_addr_translation_prefix_list_ids** (List of Number) The list of prefix list IDs.
-- **dst_addr_translation_prefixes** (List of String) The list of prefixes.
-- **dst_addr_translation_type** (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
-- **src_addr_translation_bidirectional** (Boolean) Is the translation bidirectional.
-- **src_addr_translation_match_and_invalidate** (Boolean) Whether the translation match and invalidate.
-- **src_addr_translation_prefix_list_ids** (List of Number) The list of prefix list IDs.
-- **src_addr_translation_prefixes** (List of String) The list of prefixes.
-- **src_addr_translation_type** (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
+- `dst_addr_translation_advertise_to_connector` (Boolean) Whether the destination address should be advertised to connector.
+- `dst_addr_translation_bidirectional` (Boolean) Is the translation bidirectional.
+- `dst_addr_translation_ports` (List of String) The port list to translate the destination prefixes to.
+- `dst_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
+- `dst_addr_translation_prefixes` (List of String) The list of prefixes.
+- `dst_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
+- `src_addr_translation_bidirectional` (Boolean) Is the translation bidirectional.
+- `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate.
+- `src_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
+- `src_addr_translation_prefixes` (List of String) The list of prefixes.
+- `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
 
 
 <a id="nestedblock--match"></a>
@@ -53,15 +56,15 @@ Optional:
 
 Required:
 
-- **protocol** (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
+- `protocol` (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
 
 Optional:
 
-- **dst_ports** (List of String) The list of ports for destination.
-- **dst_prefix_list_ids** (List of Number) The list of prefix IDs as destination.
-- **dst_prefixes** (List of String) The list of prefixes for destination.
-- **src_ports** (List of String) The list of ports for source.
-- **src_prefix_list_ids** (List of Number) The list of prefix IDs as source.
-- **src_prefixes** (List of String) The list of prefixes for source.
+- `dst_ports` (List of String) The list of ports for destination.
+- `dst_prefix_list_ids` (List of Number) The list of prefix IDs as destination.
+- `dst_prefixes` (List of String) The list of prefixes for destination.
+- `src_ports` (List of String) The list of ports for source.
+- `src_prefix_list_ids` (List of Number) The list of prefix IDs as source.
+- `src_prefixes` (List of String) The list of prefixes for source.
 
 

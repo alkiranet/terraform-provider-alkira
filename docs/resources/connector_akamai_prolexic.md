@@ -64,33 +64,33 @@ resource "alkira_connector_akamai_prolexic" "test" {
 
 ### Required
 
-- **akamai_bgp_asn** (Number) The Akamai BGP ASN.
-- **akamai_bgp_authentication_key** (String) The Akamai BGP Authentication Key.
-- **byoip_options** (Block Set, Min: 1) BYOIP options. (see [below for nested schema](#nestedblock--byoip_options))
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **segment_id** (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
-- **tunnel_configuration** (Block Set, Min: 1) Tunnel Configurations. (see [below for nested schema](#nestedblock--tunnel_configuration))
+- `akamai_bgp_asn` (Number) The Akamai BGP ASN.
+- `akamai_bgp_authentication_key` (String) The Akamai BGP Authentication Key.
+- `byoip_options` (Block Set, Min: 1) BYOIP options. (see [below for nested schema](#nestedblock--byoip_options))
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `segment_id` (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `tunnel_configuration` (Block Set, Min: 1) Tunnel Configurations. (see [below for nested schema](#nestedblock--tunnel_configuration))
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
+- `billing_tag_ids` (List of Number) A list of Billing Tag by ID associated with the connector.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `group` (String) The group of the connector.
 
 ### Read-Only
 
-- **credential_id** (String) The credential ID for storing Akamai BGP authentication key.
+- `credential_id` (String) The credential ID for storing Akamai BGP authentication key.
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--byoip_options"></a>
 ### Nested Schema for `byoip_options`
 
 Required:
 
-- **byoip_prefix_id** (Number) BYOIP prefix ID.
-- **enable_route_advertisement** (Boolean) Whether enabling route advertisement.
+- `byoip_prefix_id` (Number) BYOIP prefix ID.
+- `enable_route_advertisement` (Boolean) Whether enabling route advertisement.
 
 
 <a id="nestedblock--tunnel_configuration"></a>
@@ -98,16 +98,16 @@ Required:
 
 Required:
 
-- **alkira_public_ip** (String) Alkira public IP.
-- **tunnel_ips** (Block Set, Min: 1) Tunnel IPs. (see [below for nested schema](#nestedblock--tunnel_configuration--tunnel_ips))
+- `alkira_public_ip` (String) Alkira public IP.
+- `tunnel_ips` (Block Set, Min: 1) Tunnel IPs. (see [below for nested schema](#nestedblock--tunnel_configuration--tunnel_ips))
 
 <a id="nestedblock--tunnel_configuration--tunnel_ips"></a>
 ### Nested Schema for `tunnel_configuration.tunnel_ips`
 
 Required:
 
-- **akamai_overlay_tunnel_ip** (String) The overlay IP of the GRE tunnel on the Alkira side.
-- **alkira_overlay_tunnel_ip** (String) The overlay IP of the GRE tunnel on the Alkira side.
-- **ran_tunnel_ip** (String) The underlay tunnel IP on the Akamai side to be used to configure tunnels between the Alkira CXP and the Akamai Prolexic service. A RAN (Routed Access Network) is the unit of availability for the Route GRE 3.0 service.
+- `akamai_overlay_tunnel_ip` (String) The overlay IP of the GRE tunnel on the Alkira side.
+- `alkira_overlay_tunnel_ip` (String) The overlay IP of the GRE tunnel on the Alkira side.
+- `ran_tunnel_ip` (String) The underlay tunnel IP on the Akamai side to be used to configure tunnels between the Alkira CXP and the Akamai Prolexic service. A RAN (Routed Access Network) is the unit of availability for the Route GRE 3.0 service.
 
 

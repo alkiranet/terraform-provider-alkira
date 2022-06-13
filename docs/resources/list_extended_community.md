@@ -25,12 +25,15 @@ resource "alkira_list_extended_community" "test" {
 
 ### Required
 
-- **name** (String) name of the list.
-- **values** (List of String) extended-community values to match on routes. Each extended-community in this set is a structured tag value in the format of `type:AA:NN` format (where AA is `0-65535` and NN is `0-4294967295`) `AA` denotes a AS number or it could be in the format of `IPaddr:nn` where IPaddr is a `x.x.x.x` IPv4 address and nn is a 2 byte value `0-65535`. Type will only be`soo` for now.
+- `name` (String) name of the list.
+- `values` (List of String) extended-community values to match on routes. Each extended-community in this set is a structured tag value in the format of `type:AA:NN` format (where AA is `0-65535` and NN is `0-4294967295`) `AA` denotes a AS number or it could be in the format of `IPaddr:nn` where IPaddr is a `x.x.x.x` IPv4 address and nn is a 2 byte value `0-65535`. Type will only be`soo` for now.
 
 ### Optional
 
-- **description** (String) description for the list.
-- **id** (String) The ID of this resource.
+- `description` (String) description for the list.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

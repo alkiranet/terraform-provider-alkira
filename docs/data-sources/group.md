@@ -23,11 +23,14 @@ data "alkira_group" "group" {
 
 ### Required
 
-- **name** (String) The name of the group.
+- `name` (String) The name of the group.
 
 ### Optional
 
-- **group_id** (Number) The ID of the group.
-- **id** (String) The ID of this resource.
+- `group_id` (Number) The ID of the group.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -48,11 +48,14 @@ resource "alkira_connector_aws_vpc" "connector-aws-vpc1" {
 
 ### Required
 
-- **name** (String) Billing Tag Name.
+- `name` (String) Billing Tag Name.
 
 ### Optional
 
-- **description** (String) Billing Tag Description.
-- **id** (String) The ID of this resource.
+- `description` (String) Billing Tag Description.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 
