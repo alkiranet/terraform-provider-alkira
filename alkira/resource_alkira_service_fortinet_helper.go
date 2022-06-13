@@ -1,7 +1,9 @@
 package alkira
 
 import (
+	"errors"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,4 +33,73 @@ func expandFortinetInstances(in *schema.Set) []alkira.FortinetInstance {
 	}
 
 	return instances
+}
+
+func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.FortinetSegmentName, error) {
+	if in == nil || in.Len() == 0 {
+		//At the time of this writing segment options is optional we don't care if they don't submit anything.
+		return nil, nil
+	}
+
+	if in.Len() > 1 || in.Len() < 1 {
+		return nil, errors.New("Fortinet segment options must be exactly 1 in length")
+	}
+
+	client := m.(*alkira.AlkiraClient)
+
+	zonesToGroups := make(alkira.FortinetZoneToGroups)
+	segmentOptions := make(map[string]alkira.FortinetSegmentName)
+
+	for _, options := range in.List() {
+		optionsCfg := options.(map[string]interface{})
+		z := alkira.FortinetSegmentName{}
+
+		var zoneName *string
+		var segment *alkira.Segment
+		var groups []string
+
+		if v, ok := optionsCfg["zone_name"].(string); ok {
+			zoneName = &v
+		}
+
+		if v, ok := optionsCfg["segment_id"].(int); ok {
+			sg, err := client.GetSegmentById(strconv.Itoa(v))
+			if err != nil {
+				return nil, err
+			}
+			segment = &sg
+		}
+
+		if v, ok := optionsCfg["groups"].([]interface{}); ok {
+			groups = convertTypeListToStringList(v)
+		}
+
+		if zoneName == nil || segment == nil || groups == nil {
+			return nil, errors.New("segment_option fields cannot be nil")
+		}
+
+		zonesToGroups[*zoneName] = groups
+		z.SegmentId = segment.Id
+		z.ZonesToGroups = zonesToGroups
+		segmentOptions[segment.Name] = z
+	}
+
+	return segmentOptions, nil
+}
+
+func deflateFortinetSegmentOptions(c map[string]alkira.FortinetSegmentName) []map[string]interface{} {
+	var options []map[string]interface{}
+
+	for _, outerZoneToGroups := range c {
+		for zone, groups := range outerZoneToGroups.ZonesToGroups {
+			i := map[string]interface{}{
+				"segment_id": outerZoneToGroups.SegmentId,
+				"zone_name":  zone,
+				"groups":     groups,
+			}
+			options = append(options, i)
+		}
+	}
+
+	return options
 }
