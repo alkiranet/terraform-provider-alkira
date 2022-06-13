@@ -59,31 +59,34 @@ resource "alkira_service_infoblox" "test" {
 
 ### Required
 
-- **anycast** (Block Set, Min: 1) Defines the AnyCast policy to be used with the Infoblox Service. Based on this AnyCast policy some implicit route policies and prefix lists get generated. These route policies and prefix lists will have the prefix ALK-SYSTEM-GENERATED-INFOBLOX. These route policies and prefix lists cannot be deleted or modified directly their lifecycle is bound by the Infoblox services that are configured on the network. AnyCast may be enabled/disabled at the instance level as well. For AnyCast to be enabled for an instance it MUST be enabled both at the service and the instance level. If AnyCast is NOT enabled at the service level it will stay disabled for all instances. (see [below for nested schema](#nestedblock--anycast))
-- **cxp** (String) The CXP where the service should be provisioned.
-- **global_cidr_list_id** (Number) The ID of the global cidr list to be associated with the Infoblox service.
-- **grid_master** (Block Set, Min: 1) Defines the properties of the Infoblox grid master. The Infoblox grid master needs to exist before other instances of a the grid can be added. The grid master can either be provisioned by Alkira or could already be provisioned externally. Some of these properties only need to be provided when the grid master is external. If the grid master needs to be provisioned internally by Alkira then an instance needs to be added to Infoblox service configuration with type = MASTER (see [below for nested schema](#nestedblock--grid_master))
-- **instance** (Block Set, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
-- **license_type** (String) Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- **name** (String) Name of the Infoblox service.
-- **segment_ids** (List of String) IDs of segments associated with the service.
-- **service_group_name** (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
-- **shared_secret** (String) Shared Secret of the InfoBlox grid. This cannot be empty.
+- `anycast` (Block Set, Min: 1) Defines the AnyCast policy to be used with the Infoblox Service. Based on this AnyCast policy some implicit route policies and prefix lists get generated. These route policies and prefix lists will have the prefix ALK-SYSTEM-GENERATED-INFOBLOX. These route policies and prefix lists cannot be deleted or modified directly their lifecycle is bound by the Infoblox services that are configured on the network. AnyCast may be enabled/disabled at the instance level as well. For AnyCast to be enabled for an instance it MUST be enabled both at the service and the instance level. If AnyCast is NOT enabled at the service level it will stay disabled for all instances. (see [below for nested schema](#nestedblock--anycast))
+- `cxp` (String) The CXP where the service should be provisioned.
+- `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Infoblox service.
+- `grid_master` (Block Set, Min: 1) Defines the properties of the Infoblox grid master. The Infoblox grid master needs to exist before other instances of a the grid can be added. The grid master can either be provisioned by Alkira or could already be provisioned externally. Some of these properties only need to be provided when the grid master is external. If the grid master needs to be provisioned internally by Alkira then an instance needs to be added to Infoblox service configuration with type = MASTER (see [below for nested schema](#nestedblock--grid_master))
+- `instance` (Block Set, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
+- `license_type` (String) Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
+- `name` (String) Name of the Infoblox service.
+- `segment_ids` (List of String) IDs of segments associated with the service.
+- `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
+- `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
-- **description** (String) The description of the Infoblox service.
-- **id** (String) The ID of this resource.
+- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `description` (String) The description of the Infoblox service.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--anycast"></a>
 ### Nested Schema for `anycast`
 
 Optional:
 
-- **backup_cxps** (List of String) The `backup_cxps` to be used when the current Infoblox service is not available. The backup_cxps also need to have a configured Infoblox service inorder to take advantage of this feature. It is NOT required that the backup_cxps should have a configured Infoblox service before it can be designated as a backup.
-- **enabled** (Boolean) Defines if AnyCast should be enabled. Default is `false`
-- **ips** (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR used for the segment IP block associated with the service
+- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Infoblox service is not available. The backup_cxps also need to have a configured Infoblox service inorder to take advantage of this feature. It is NOT required that the backup_cxps should have a configured Infoblox service before it can be designated as a backup.
+- `enabled` (Boolean) Defines if AnyCast should be enabled. Default is `false`
+- `ips` (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR used for the segment IP block associated with the service
 
 
 <a id="nestedblock--grid_master"></a>
@@ -91,14 +94,14 @@ Optional:
 
 Required:
 
-- **ip** (String) The ip address of the grid master.
-- **name** (String) Name of the grid master.
-- **password** (String) The Grid Master password.
-- **username** (String) The Grid Master user name.
+- `ip` (String) The ip address of the grid master.
+- `name` (String) Name of the grid master.
+- `password` (String) The Grid Master password.
+- `username` (String) The Grid Master user name.
 
 Optional:
 
-- **external** (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. NOTE: creation of new external grid masters is not supported at this time, but will be supported in future releases.
+- `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. NOTE: creation of new external grid masters is not supported at this time, but will be supported in future releases.
 
 
 <a id="nestedblock--instance"></a>
@@ -106,14 +109,14 @@ Optional:
 
 Required:
 
-- **hostname** (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
-- **model** (String) The model of the Infoblox instance.
-- **password** (String) The password associated with the infoblox instance.
-- **type** (String) The type of the Infoblox instance that is to be provisioned. There can only be one MASTER ever provisioned. When the grid master is provisioned by Alkira, provisioning needs to happen in two steps. First the Infoblox service must be provisioned with only 1 instance of type MASTER. Subsequently other instances of the grid may be added to the instances list and provisioned. When the grid master is external (i.e not provisioned by Alkira) then no instances of type MASTER should be configured.
-- **version** (String) The version of the Infoblox instance to be used.
+- `hostname` (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
+- `model` (String) The model of the Infoblox instance.
+- `password` (String) The password associated with the infoblox instance.
+- `type` (String) The type of the Infoblox instance that is to be provisioned. There can only be one MASTER ever provisioned. When the grid master is provisioned by Alkira, provisioning needs to happen in two steps. First the Infoblox service must be provisioned with only 1 instance of type MASTER. Subsequently other instances of the grid may be added to the instances list and provisioned. When the grid master is external (i.e not provisioned by Alkira) then no instances of type MASTER should be configured.
+- `version` (String) The version of the Infoblox instance to be used.
 
 Optional:
 
-- **anycast_enabled** (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service.
+- `anycast_enabled` (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service.
 
 

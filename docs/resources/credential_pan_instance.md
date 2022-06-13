@@ -17,15 +17,15 @@ description: |-
 
 ### Required
 
-- **auth_code** (String) PAN instance auth code.
-- **auth_key** (String) PAN instance auth key.
-- **license_key** (String) PAN license key.
-- **name** (String) The name of the credential.
-- **password** (String) PAN password.
-- **username** (String) PAN username.
+- `auth_code` (String) PAN instance auth code.
+- `auth_key` (String) PAN instance auth key.
+- `license_key` (String) PAN license key.
+- `name` (String) The name of the credential.
+- `password` (String) PAN password.
+- `username` (String) PAN username.
 
-### Optional
+### Read-Only
 
-- **id** (String) The ID of this resource.
+- `id` (String) The ID of this resource.
 
 

@@ -34,25 +34,28 @@ resource "alkira_policy_rule" "rule" {
 
 ### Required
 
-- **dscp** (String) The dscp value can be `any` or between `0` to `63` inclusive.
-- **name** (String) The name of the policy rule.
-- **protocol** (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
+- `dscp` (String) The dscp value can be `any` or between `0` to `63` inclusive.
+- `name` (String) The name of the policy rule.
+- `protocol` (String) The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.
 
 ### Optional
 
-- **application_family_ids** (List of Number)
-- **application_ids** (List of Number)
-- **description** (String) The description of the policy rule.
-- **dst_ip** (String) A single destination IP as The match condition of the rule.
-- **dst_ports** (List of String) Destination ports that can take values: `any` or `1` to `65535`.
-- **dst_prefix_list_id** (Number) The ID of prefix list as destination associated with the rule.
-- **id** (String) The ID of this resource.
-- **internet_application_id** (Number) The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.
-- **rule_action** (String) The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.
-- **rule_action_service_ids** (List of Number) Based on the service IDs, traffic is routed to the specified services.
-- **rule_action_service_types** (List of String) Based on the service type, traffic is routed to service of the given type.
-- **src_ip** (String) A single source IP as The match condition of the rule.
-- **src_ports** (List of String) Source ports that can take values: `any` or `1` to `65535`.
-- **src_prefix_list_id** (Number) The ID of prefix list as source associated with the rule.
+- `application_family_ids` (List of Number)
+- `application_ids` (List of Number)
+- `description` (String) The description of the policy rule.
+- `dst_ip` (String) A single destination IP as The match condition of the rule.
+- `dst_ports` (List of String) Destination ports that can take values: `any` or `1` to `65535`.
+- `dst_prefix_list_id` (Number) The ID of prefix list as destination associated with the rule.
+- `internet_application_id` (Number) The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.
+- `rule_action` (String) The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.
+- `rule_action_service_ids` (List of Number) Based on the service IDs, traffic is routed to the specified services.
+- `rule_action_service_types` (List of String) Based on the service type, traffic is routed to service of the given type.
+- `src_ip` (String) A single source IP as The match condition of the rule.
+- `src_ports` (List of String) Source ports that can take values: `any` or `1` to `65535`.
+- `src_prefix_list_id` (Number) The ID of prefix list as source associated with the rule.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

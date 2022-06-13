@@ -27,11 +27,14 @@ resource "alkira_group" "test" {
 
 ### Required
 
-- **name** (String) The name of the group.
+- `name` (String) The name of the group.
 
 ### Optional
 
-- **description** (String) The description of the group.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the group.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -61,54 +61,61 @@ resource "alkira_service_pan" "test1" {
 
 ### Required
 
-- **credential_id** (String) ID of PAN credential managed by credential resource.
-- **cxp** (String) The CXP where the service should be provisioned.
-- **instance** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
-- **license_type** (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- **management_segment_id** (Number) Management Segment ID.
-- **max_instance_count** (Number) Max number of Panorama instances for auto scale.
-- **name** (String) Name of the PAN service.
-- **segment_ids** (List of Number) IDs of segments associated with the service.
-- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
-- **type** (String) The type of the PAN firewall.
-- **version** (String) The version of the PAN firewall.
+- `credential_id` (String) ID of PAN credential managed by credential resource.
+- `cxp` (String) The CXP where the service should be provisioned.
+- `instance` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
+- `license_type` (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
+- `management_segment_id` (Number) Management Segment ID.
+- `max_instance_count` (Number) Max number of Panorama instances for auto scale.
+- `name` (String) Name of the PAN service.
+- `segment_ids` (List of Number) IDs of segments associated with the service.
+- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `type` (String) The type of the PAN firewall.
+- `version` (String) The version of the PAN firewall.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
-- **bundle** (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
-- **global_protect_enabled** (Boolean) Enable global protect option or not. Default is `false`
-- **global_protect_segment_options** (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
-- **id** (String) The ID of this resource.
-- **min_instance_count** (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
-- **panorama_device_group** (String) Panorama device group.
-- **panorama_enabled** (Boolean) Enable Panorama or not. Default value is `false`.
-- **panorama_ip_addresses** (List of String) Panorama IP addresses.
-- **panorama_template** (String) Panorama Template.
-- **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
-- **zones_to_groups** (Block Set) (see [below for nested schema](#nestedblock--zones_to_groups))
+- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
+- `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
+- `global_protect_segment_options` (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
+- `panorama_device_group` (String) Panorama device group.
+- `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
+- `panorama_ip_addresses` (List of String) Panorama IP addresses.
+- `panorama_template` (String) Panorama Template.
+- `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- `zones_to_groups` (Block Set) (see [below for nested schema](#nestedblock--zones_to_groups))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`
 
 Required:
 
-- **credential_id** (String) ID of PAN instance credential managed by credential resource.
-- **name** (String) The name of the PAN instance.
+- `credential_id` (String) ID of PAN instance credential managed by credential resource.
+- `name` (String) The name of the PAN instance.
 
 Optional:
 
-- **global_protect_segment_options** (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
+- `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
+
+Read-Only:
+
+- `id` (Number) The ID of the PAN instance.
 
 <a id="nestedblock--instance--global_protect_segment_options"></a>
 ### Nested Schema for `instance.global_protect_segment_options`
 
 Required:
 
-- **gateway_enabled** (Boolean) indicates if the Global Protect Gateway is enabled on this PAN instance
-- **portal_enabled** (Boolean) indicates if the Global Protect Portal is enabled on this PAN instance
-- **prefix_list_id** (Number) Prefix List with Client IP Pool.
-- **segment_id** (String) The segment ID for Global Protect options.
+- `gateway_enabled` (Boolean) indicates if the Global Protect Gateway is enabled on this PAN instance
+- `portal_enabled` (Boolean) indicates if the Global Protect Portal is enabled on this PAN instance
+- `prefix_list_id` (Number) Prefix List with Client IP Pool.
+- `segment_id` (String) The segment ID for Global Protect options.
 
 
 
@@ -117,10 +124,10 @@ Required:
 
 Required:
 
-- **portal_fqdn_prefix** (String) Prefix for the global protect portal FQDN, this would be prepended to customer specific alkira domain For Example: if prefix is abc and tenant name is example then the FQDN would be abc.example.gpportal.alkira.com
-- **remote_user_zone_name** (String) Firewall security zone is created using the zone name for remote user sessions.
-- **segment_id** (String) The name of the segment to which the global protect options should apply
-- **service_group_name** (String) The name of the service group. A group with the same name will be created.
+- `portal_fqdn_prefix` (String) Prefix for the global protect portal FQDN, this would be prepended to customer specific alkira domain For Example: if prefix is abc and tenant name is example then the FQDN would be abc.example.gpportal.alkira.com
+- `remote_user_zone_name` (String) Firewall security zone is created using the zone name for remote user sessions.
+- `segment_id` (String) The name of the segment to which the global protect options should apply
+- `service_group_name` (String) The name of the service group. A group with the same name will be created.
 
 
 <a id="nestedblock--zones_to_groups"></a>
@@ -128,11 +135,11 @@ Required:
 
 Required:
 
-- **segment_id** (String) The ID of the segment.
-- **zone_name** (String) The name of the zone.
+- `segment_id` (String) The ID of the segment.
+- `zone_name` (String) The name of the zone.
 
 Optional:
 
-- **groups** (List of String) The name of the group.
+- `groups` (List of String) The name of the group.
 
 

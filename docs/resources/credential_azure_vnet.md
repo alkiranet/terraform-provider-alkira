@@ -35,14 +35,17 @@ resource "alkira_credential_azure_vnet" "test" {
 
 ### Required
 
-- **application_id** (String) Azure Application ID.
-- **name** (String) The name of the credential.
-- **secret_key** (String) Azure Secret Key.
-- **tenant_id** (String) Azure Tenant ID.
+- `application_id` (String) Azure Application ID.
+- `name` (String) The name of the credential.
+- `secret_key` (String) Azure Secret Key.
+- `tenant_id` (String) Azure Tenant ID.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **subscription_id** (String) Azure subscription ID.
+- `subscription_id` (String) Azure subscription ID.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -46,10 +46,10 @@ resource "alkira_connector_aws_vpc" "test_connector" {
 
 ### Required
 
-- **name** (String) The name of the billing tag.
+- `name` (String) The name of the billing tag.
 
-### Optional
+### Read-Only
 
-- **id** (String) The ID of this resource.
+- `id` (String) The ID of this resource.
 
 

@@ -27,11 +27,14 @@ resource "alkira_group_connector" "test" {
 
 ### Required
 
-- **name** (String) The name of the connector group.
+- `name` (String) The name of the connector group.
 
 ### Optional
 
-- **description** (String) The description of the connector group.
-- **id** (String) The ID of this resource.
+- `description` (String) The description of the connector group.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

@@ -30,20 +30,23 @@ resource "alkira_connector_internet_exit" "test1" {
 
 ### Required
 
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **segment_id** (String) ID of segment associated with the connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, or `LARGE`.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `segment_id` (String) ID of segment associated with the connector.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, or `LARGE`.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) The list of billing tag IDs.
-- **description** (String) The description of the connector.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **public_ip_number** (Number) The number of the public IPs to the connector. Default is `2`.
-- **traffic_distribution_algorithm** (String) The type of the algorithm to be used for traffic distribution.Currently, only `HASHING` is supported.
-- **traffic_distribution_algorithm_attribute** (String) The attributes depends on the algorithm. For now, it's either `DEFAULT` or `SRC_IP`.
+- `billing_tag_ids` (List of Number) The list of billing tag IDs.
+- `description` (String) The description of the connector.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `group` (String) The group of the connector.
+- `public_ip_number` (Number) The number of the public IPs to the connector. Default is `2`.
+- `traffic_distribution_algorithm` (String) The type of the algorithm to be used for traffic distribution.Currently, only `HASHING` is supported.
+- `traffic_distribution_algorithm_attribute` (String) The attributes depends on the algorithm. For now, it's either `DEFAULT` or `SRC_IP`.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 

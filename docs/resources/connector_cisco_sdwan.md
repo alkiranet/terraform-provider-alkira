@@ -49,29 +49,32 @@ resource "alkira_connector_cisco_sdwan" "test" {
 
 ### Required
 
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
-- **vedge** (Block Set, Min: 1) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
-- **version** (String) The version of Cisco SD-WAN.
-- **vrf_segment_mapping** (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+- `vedge` (Block Set, Min: 1) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
+- `version` (String) The version of Cisco SD-WAN.
+- `vrf_segment_mapping` (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) A list of Billing Tag by ID associated with the connector.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **type** (String) The type of Cisco SD-WAN. Default value is `VEDGE`.
+- `billing_tag_ids` (List of Number) A list of Billing Tag by ID associated with the connector.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `group` (String) The group of the connector.
+- `type` (String) The type of Cisco SD-WAN. Default value is `VEDGE`.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--vedge"></a>
 ### Nested Schema for `vedge`
 
 Required:
 
-- **cloud_init_file** (String) The cloud-init file for the vEdge.
-- **credential_id** (String) The ID of the credential for Cisco SD-WAN.
-- **hostname** (String) The hostname of the vEdge.
+- `cloud_init_file` (String) The cloud-init file for the vEdge.
+- `credential_id` (String) The ID of the credential for Cisco SD-WAN.
+- `hostname` (String) The hostname of the vEdge.
 
 
 <a id="nestedblock--vrf_segment_mapping"></a>
@@ -79,13 +82,13 @@ Required:
 
 Required:
 
-- **segment_id** (Number) Segment ID.
-- **vrf_id** (Number) VRF ID.
+- `segment_id` (Number) Segment ID.
+- `vrf_id` (Number) VRF ID.
 
 Optional:
 
-- **advertise_on_prem_routes** (Boolean) Advertise On Prem Routes.
-- **allow_nat_exit** (Boolean) Allow NAT exit.
-- **customer_asn** (Number) BGP ASN on the customer premise side.
+- `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes.
+- `allow_nat_exit` (Boolean) Allow NAT exit.
+- `customer_asn` (Number) BGP ASN on the customer premise side.
 
 
