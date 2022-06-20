@@ -76,7 +76,7 @@ func (ac *AlkiraClient) CreatePolicyPrefixList(p *PolicyPrefixList) (string, err
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -96,7 +96,7 @@ func (ac *AlkiraClient) CreatePolicyPrefixList(p *PolicyPrefixList) (string, err
 func (ac *AlkiraClient) DeletePolicyPrefixList(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdatePolicyPrefixList update a PolicyPrefixList by id
@@ -110,5 +110,5 @@ func (ac *AlkiraClient) UpdatePolicyPrefixList(id string, p *PolicyPrefixList) e
 		return fmt.Errorf("UpdatePolicyPrefixList: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }

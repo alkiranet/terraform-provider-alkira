@@ -45,7 +45,7 @@ func (ac *AlkiraClient) CreateZscaler(z *Zscaler) (string, error) {
 		return "", fmt.Errorf("CreateZscaler: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -102,11 +102,11 @@ func (ac *AlkiraClient) UpdateZscaler(id string, z *Zscaler) error {
 		return fmt.Errorf("UpdateZscaler: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 func (ac *AlkiraClient) DeleteZscaler(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/zscaler-internet-access-services/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }

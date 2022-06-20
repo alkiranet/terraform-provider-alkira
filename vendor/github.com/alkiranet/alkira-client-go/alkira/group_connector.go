@@ -35,7 +35,7 @@ func (ac *AlkiraClient) CreateConnectorGroup(name string, description string) (s
 		return "", fmt.Errorf("CreateConnectorGroup: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -100,7 +100,7 @@ func (ac *AlkiraClient) GetConnectorGroupByName(name string) (ConnectorGroup, er
 // DeleteConnectorGroup delete a connector group
 func (ac *AlkiraClient) DeleteConnectorGroup(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorGroup update a connector group by its ID
@@ -116,5 +116,5 @@ func (ac *AlkiraClient) UpdateConnectorGroup(id string, name string, description
 		return fmt.Errorf("UpdateConnectorGroup: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }

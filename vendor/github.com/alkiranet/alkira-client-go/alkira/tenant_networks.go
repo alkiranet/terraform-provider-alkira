@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -24,6 +24,11 @@ type TenantNetworkConnectorState struct {
 type TenantNetworkServiceState struct {
 	State    string `json:"state"`
 	DocState string `json:"docState"`
+}
+
+type TenantNetworkProvisionRequest struct {
+	Id    string `json:"id"`
+	State string `json:"state"`
 }
 
 // GetTenantNetworks get the tenant networks of the current tenant
@@ -120,11 +125,31 @@ func (ac *AlkiraClient) GetTenantNetworkServiceState(id string) (string, error) 
 	return result.State, nil
 }
 
+// GetTenantNetworkProvisionRequest get the tenant network provision request
+func (ac *AlkiraClient) GetTenantNetworkProvisionRequest(id string) (*TenantNetworkProvisionRequest, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/provision-requests/%s", ac.URI, ac.TenantNetworkId, id)
+
+	data, err := ac.get(uri)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result TenantNetworkProvisionRequest
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return nil, fmt.Errorf("GetTenantNetworkProvisionRequest: failed to unmarshal: %v", err)
+	}
+
+	return &result, nil
+}
+
 // ProvisionTenantNetwork provisioning the current tenant network by its Id
 func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/provision", ac.URI, ac.TenantNetworkId)
 
-	data, err := ac.create(uri, nil)
+	data, err := ac.create(uri, nil, false)
 
 	if err != nil {
 		return "", err

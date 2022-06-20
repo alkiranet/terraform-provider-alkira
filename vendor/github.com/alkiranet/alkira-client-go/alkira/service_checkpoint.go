@@ -70,7 +70,7 @@ func (ac *AlkiraClient) CreateCheckpoint(c *Checkpoint) (string, error) {
 		return "", fmt.Errorf("CreateCheckpoint: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -140,11 +140,11 @@ func (ac *AlkiraClient) UpdateCheckpoint(id string, c *Checkpoint) error {
 		return fmt.Errorf("UpdateCheckpoint: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 func (ac *AlkiraClient) DeleteCheckpoint(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/chkp-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -22,6 +22,8 @@ type ServicePan struct {
 	ManagementSegmentId         int                                  `json:"managementSegment"`
 	MaxInstanceCount            int                                  `json:"maxInstanceCount"`
 	MinInstanceCount            int                                  `json:"minInstanceCount"`
+	MasterKeyEnabled            bool                                 `json:"masterKeyEnabled,omitempty"`
+	MasterKeyCredentialId       string                               `json:"masterKeyCredentialId,omitempty"`
 	Name                        string                               `json:"name"`
 	PanoramaEnabled             bool                                 `json:"panoramaEnabled"`
 	PanoramaDeviceGroup         *string                              `json:"panoramaDeviceGroup,omitempty"`
@@ -29,6 +31,7 @@ type ServicePan struct {
 	PanoramaIpAddresses         []string                             `json:"panoramaIPAddresses,omitempty"`
 	PanoramaTemplate            *string                              `json:"panoramaTemplate,omitempty"`
 	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
+	RegistrationCredentialId    string                               `json:"registrationCredentialId,omitempty"`
 	SegmentIds                  []int                                `json:"segments"`
 	SegmentOptions              interface{}                          `json:"segmentOptions,omitempty"`
 	Size                        string                               `json:"size"`
@@ -59,9 +62,10 @@ type GlobalProtectSegmentNameInstance struct {
 
 type ServicePanInstance struct {
 	CredentialId                string                                       `json:"credentialId"`
-	Id                          int                                          `json:"id,omitempty"`
-	Name                        string                                       `json:"name"`
 	GlobalProtectSegmentOptions map[string]*GlobalProtectSegmentNameInstance `json:"globalProtectSegmentOptions,omitempty"`
+	Id                          int                                          `json:"id,omitempty"`
+	MasterKeyEnabled            bool                                         `json:"masterKeyEnabled,omitempty"`
+	Name                        string                                       `json:"name"`
 }
 
 // CreateServicePan create service PAN
@@ -75,7 +79,7 @@ func (ac *AlkiraClient) CreateServicePan(service *ServicePan) (string, error) {
 		return "", fmt.Errorf("CreateServicePan: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -95,7 +99,7 @@ func (ac *AlkiraClient) CreateServicePan(service *ServicePan) (string, error) {
 func (ac *AlkiraClient) DeleteServicePan(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateServicePan Update a Service PAN by Id
@@ -108,7 +112,7 @@ func (ac *AlkiraClient) UpdateServicePan(id string, service *ServicePan) error {
 		return fmt.Errorf("UpdateServicePan: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetServicePanById get an service-pan by Id

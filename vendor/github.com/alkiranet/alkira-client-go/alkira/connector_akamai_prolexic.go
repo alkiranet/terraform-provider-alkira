@@ -49,7 +49,7 @@ func (ac *AlkiraClient) CreateConnectorAkamaiProlexic(c *ConnectorAkamaiProlexic
 		return "", fmt.Errorf("CreateConnectorAkamaiProlexic: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -69,7 +69,7 @@ func (ac *AlkiraClient) CreateConnectorAkamaiProlexic(c *ConnectorAkamaiProlexic
 func (ac *AlkiraClient) DeleteConnectorAkamaiProlexic(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/akamai-prolexic-connectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorAkamaiProlexic update an Akamai Prolexic connector
@@ -83,7 +83,7 @@ func (ac *AlkiraClient) UpdateConnectorAkamaiProlexic(id string, c *ConnectorAka
 		return fmt.Errorf("UpdateConnectorAkamaiProlexic: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorAkamaiProlexic get a Akamai Prolexic connector by ID

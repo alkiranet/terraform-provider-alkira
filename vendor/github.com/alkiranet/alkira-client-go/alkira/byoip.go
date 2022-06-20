@@ -32,7 +32,7 @@ func (ac *AlkiraClient) CreateByoip(byoip *Byoip) (string, error) {
 		return "", fmt.Errorf("CreateByoip: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func (ac *AlkiraClient) CreateByoip(byoip *Byoip) (string, error) {
 // DeleteByoip delete a BYOIP by ID
 func (ac *AlkiraClient) DeleteByoip(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/byoips/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateByoip update a BYOIP by ID
@@ -64,7 +64,7 @@ func (ac *AlkiraClient) UpdateByoip(id string, byoip *Byoip) error {
 		return fmt.Errorf("UpdateByoip: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
 
 // GetByoips get all BYOIP from the given tenant network

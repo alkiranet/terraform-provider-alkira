@@ -88,7 +88,7 @@ func (ac *AlkiraClient) CreateList(list *List, t ListType) (string, error) {
 	// Construct the request
 	body, err := json.Marshal(list)
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -108,7 +108,7 @@ func (ac *AlkiraClient) CreateList(list *List, t ListType) (string, error) {
 func (ac *AlkiraClient) DeleteList(id string, t ListType) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/%s/%s", ac.URI, ac.TenantNetworkId, t, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateList update a list by Id
@@ -121,5 +121,5 @@ func (ac *AlkiraClient) UpdateList(id string, list *List, t ListType) error {
 		return fmt.Errorf("UpdateList: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
