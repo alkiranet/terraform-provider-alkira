@@ -60,7 +60,7 @@ func (ac *AlkiraClient) CreateConnectorOciVcn(connector *ConnectorOciVcn) (strin
 		return "", fmt.Errorf("CreateConnectorOciVcn: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -80,7 +80,7 @@ func (ac *AlkiraClient) CreateConnectorOciVcn(connector *ConnectorOciVcn) (strin
 func (ac *AlkiraClient) DeleteConnectorOciVcn(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/oci-vcn-connectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorOciVcn update an OCI-VCN connector
@@ -94,7 +94,7 @@ func (ac *AlkiraClient) UpdateConnectorOciVcn(id string, connector *ConnectorOci
 		return fmt.Errorf("UpdateConnectorOciVcn: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorOciVcn get one OCI-VCN connector by Id

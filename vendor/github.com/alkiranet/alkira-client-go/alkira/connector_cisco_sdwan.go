@@ -49,7 +49,7 @@ func (ac *AlkiraClient) CreateConnectorCiscoSdwan(connector *ConnectorCiscoSdwan
 		return "", fmt.Errorf("CreateConnectorCiscoSdwan: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -69,7 +69,7 @@ func (ac *AlkiraClient) CreateConnectorCiscoSdwan(connector *ConnectorCiscoSdwan
 func (ac *AlkiraClient) DeleteConnectorCiscoSdwan(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ciscosdwaningresses/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorCiscoSdwan update an existing Cisco SDWAN connector by its ID
@@ -83,7 +83,7 @@ func (ac *AlkiraClient) UpdateConnectorCiscoSdwan(id string, connector *Connecto
 		return fmt.Errorf("UpdateConnectorCiscoSdwan: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorCiscoSdwan get an existing Cisco SDWAN connector by its Id

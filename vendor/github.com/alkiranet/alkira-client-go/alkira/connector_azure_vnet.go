@@ -83,7 +83,7 @@ func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnet) 
 		return "", fmt.Errorf("CreateConnectorAzureVnet: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -123,7 +123,7 @@ func (ac *AlkiraClient) GetConnectorAzureVnet(id string) (*ConnectorAzureVnet, e
 func (ac *AlkiraClient) DeleteConnectorAzureVnet(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorAzureVnet update an AZURE-VNET connector
@@ -137,5 +137,5 @@ func (ac *AlkiraClient) UpdateConnectorAzureVnet(id string, connector *Connector
 		return fmt.Errorf("UpdateConnectorAzureVnet: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }

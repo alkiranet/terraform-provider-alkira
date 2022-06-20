@@ -63,7 +63,7 @@ func (ac *AlkiraClient) CreateInfoblox(in *Infoblox) (string, error) {
 		return "", fmt.Errorf("CreateInfoblox: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -119,11 +119,11 @@ func (ac *AlkiraClient) UpdateInfoblox(id string, in *Infoblox) error {
 		return fmt.Errorf("UpdateInfoblox: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 func (ac *AlkiraClient) DeleteInfoblox(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }

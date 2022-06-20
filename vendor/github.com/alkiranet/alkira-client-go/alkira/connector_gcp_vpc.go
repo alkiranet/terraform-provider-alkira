@@ -44,7 +44,7 @@ func (ac *AlkiraClient) CreateConnectorGcpVpc(c *ConnectorGcpVpc) (string, error
 		return "", fmt.Errorf("CreateConnectorGcpVpc: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -64,7 +64,7 @@ func (ac *AlkiraClient) CreateConnectorGcpVpc(c *ConnectorGcpVpc) (string, error
 func (ac *AlkiraClient) DeleteConnectorGcpVpc(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/gcpvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorGcpVpc update an GCP-VPC connector
@@ -78,7 +78,7 @@ func (ac *AlkiraClient) UpdateConnectorGcpVpc(id string, c *ConnectorGcpVpc) err
 		return fmt.Errorf("UpdateConnectorGcpVpc: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorGcpVpc get a GCP-VPC connector by Id

@@ -88,7 +88,7 @@ func (ac *AlkiraClient) CreateCXP(cxpRequest *InventoryCXP) (string, error) {
 		return "", fmt.Errorf("CreateCXP: failed to marshal payload: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 	if err != nil {
 		return "", err
 	}
@@ -105,7 +105,7 @@ func (ac *AlkiraClient) CreateCXP(cxpRequest *InventoryCXP) (string, error) {
 // DeleteCXP delete a cxp by id.
 func (ac *AlkiraClient) DeleteCXP(cxpId string) error {
 	uri := fmt.Sprintf("%s/inventory/cxps/%s", ac.URI, cxpId)
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateCXP update cxp by id.
@@ -120,5 +120,5 @@ func (ac *AlkiraClient) UpdateCXP(cxpId string, state string) error {
 		return fmt.Errorf("UpdateCxp: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }

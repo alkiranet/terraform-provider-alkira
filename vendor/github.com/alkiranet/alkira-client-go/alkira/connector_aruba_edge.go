@@ -53,7 +53,7 @@ func (ac *AlkiraClient) CreateConnectorArubaEdge(c *ConnectorArubaEdge) (string,
 		return "", fmt.Errorf("CreateConnectorArubaEdge: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -123,11 +123,11 @@ func (ac *AlkiraClient) UpdateConnectorArubaEdge(id string, c *ConnectorArubaEdg
 		return fmt.Errorf("UpdateConnectorArubaEdge: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 func (ac *AlkiraClient) DeleteConnectorArubaEdge(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/aruba-edge-connectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }

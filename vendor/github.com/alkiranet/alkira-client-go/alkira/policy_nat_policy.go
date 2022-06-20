@@ -29,7 +29,7 @@ func (ac *AlkiraClient) CreateNatPolicy(p *NatPolicy) (string, error) {
 		return "", err
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateNatPolicy: request failed: %v", err)
@@ -49,7 +49,7 @@ func (ac *AlkiraClient) CreateNatPolicy(p *NatPolicy) (string, error) {
 func (ac *AlkiraClient) DeleteNatPolicy(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-policies/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateNatPolicy update a nat policy by Id
@@ -63,7 +63,7 @@ func (ac *AlkiraClient) UpdateNatPolicy(id string, p *NatPolicy) error {
 		return fmt.Errorf("UpdateNatPolicy: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
 
 // GetNatPolicy get a nat policy by Id

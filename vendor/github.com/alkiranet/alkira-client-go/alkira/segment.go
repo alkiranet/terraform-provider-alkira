@@ -8,14 +8,18 @@ import (
 	"strconv"
 )
 
+type SegmentIpBlocks struct {
+	Values []string `json:"values"`
+}
+
 type Segment struct {
-	Asn                                        int      `json:"asn"`
-	EnterpriseDNSServerIP                      string   `json:"enterpriseDNSServerIP,omitempty"`
-	Id                                         int      `json:"id,omitempty"` // only for response
-	IpBlock                                    string   `json:"ipBlock"`
-	IpBlocks                                   []string `json:"ipBlocks,omitempty"`
-	Name                                       string   `json:"name"`
-	ReservePublicIPsForUserAndSiteConnectivity bool     `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
+	Asn                                        int             `json:"asn"`
+	EnterpriseDNSServerIP                      string          `json:"enterpriseDNSServerIP,omitempty"`
+	Id                                         int             `json:"id,omitempty"` // only for response
+	IpBlock                                    string          `json:"ipBlock"`
+	IpBlocks                                   SegmentIpBlocks `json:"ipBlocks,omitempty"`
+	Name                                       string          `json:"name"`
+	ReservePublicIPsForUserAndSiteConnectivity bool            `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
 }
 
 // Get all segments from the given tenant network
@@ -85,7 +89,7 @@ func (ac *AlkiraClient) CreateSegment(segment *Segment) (string, error) {
 		return "", fmt.Errorf("CreateSegment: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -104,7 +108,7 @@ func (ac *AlkiraClient) CreateSegment(segment *Segment) (string, error) {
 // DeleteSegment delete a segment by given segment ID
 func (ac *AlkiraClient) DeleteSegment(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateSegment update a segment by segment ID
@@ -119,5 +123,5 @@ func (ac *AlkiraClient) UpdateSegment(id string, segment *Segment) error {
 		return fmt.Errorf("UpdateSegment: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }

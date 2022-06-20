@@ -24,25 +24,13 @@ const (
 	CredentialTypeOciVcn                                  = "ocivcn"
 	CredentialTypePan                                     = "pan"
 	CredentialTypePanInstance                             = "paninstance"
+	CredentialTypePanRegistration                         = "pan-registration"
 	CredentialTypeFortinet                                = "ftntfw"
 	CredentialTypeFortinetInstance                        = "ftntfw-instance"
 	CredentialTypeInfoblox                                = "infoblox"
 	CredentialTypeInfobloxInstance                        = "infoblox-instance"
 	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
 )
-
-type CredentialInfoblox struct {
-	SharedSecret string `json:"sharedSecret"`
-}
-
-type CredentialInfobloxInstance struct {
-	Password string `json:"password"`
-}
-
-type CredentialInfobloxGridMaster struct {
-	Username string `json:"userName"`
-	Password string `json:"password"`
-}
 
 type CredentialAkamaiProlexic struct {
 	BgpAuthenticationKey string `json:"bgpAuthenticationKey"`
@@ -111,6 +99,19 @@ type CredentialFortinetInstance struct {
 	LicenseKey  string `json:"licenseKey"`
 }
 
+type CredentialInfoblox struct {
+	SharedSecret string `json:"sharedSecret"`
+}
+
+type CredentialInfobloxInstance struct {
+	Password string `json:"password"`
+}
+
+type CredentialInfobloxGridMaster struct {
+	Username string `json:"userName"`
+	Password string `json:"password"`
+}
+
 type CredentialKeyPair struct {
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
@@ -143,6 +144,11 @@ type CredentialPanInstance struct {
 	Username   string `json:"userName"`
 }
 
+type CredentialPanRegistration struct {
+	RegistrationPinId    string `json:"registrationPinId"`
+	RegistrationPinValue string `json:"registrationPinValue"`
+}
+
 type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
@@ -173,7 +179,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -188,7 +194,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 // DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateCredential update a given credential by its Id
@@ -209,7 +215,7 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
 
 // GetCredentials get all credentials

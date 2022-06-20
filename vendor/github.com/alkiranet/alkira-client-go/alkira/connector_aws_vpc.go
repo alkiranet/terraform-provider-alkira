@@ -68,7 +68,7 @@ func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpc) (strin
 		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -88,7 +88,7 @@ func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpc) (strin
 func (ac *AlkiraClient) DeleteConnectorAwsVpc(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorAwsVPC update an AWS-VPC connector
@@ -102,7 +102,7 @@ func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAws
 		return fmt.Errorf("UpdateConnectorAwsVpc: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorAwsVpc get one AWS-VPC connector by Id

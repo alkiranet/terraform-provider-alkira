@@ -82,7 +82,7 @@ func (ac *AlkiraClient) CreateCloudProviderAccount(account CloudProviderAccount)
 		return "", fmt.Errorf("CreateCloudProviderAccount: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -101,7 +101,7 @@ func (ac *AlkiraClient) CreateCloudProviderAccount(account CloudProviderAccount)
 // DeleteCloudProviderAccount delete a cloud provider account by Id
 func (ac *AlkiraClient) DeleteCloudProviderAccount(id string) error {
 	uri := fmt.Sprintf("%s/cloud-provider-accounts/%s", ac.URI, id)
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateCloudProviderAccount update a cloud provider account by Id
@@ -115,5 +115,5 @@ func (ac *AlkiraClient) UpdateCloudProviderAccount(id string, account CloudProvi
 		return fmt.Errorf("UpdateCloudProviderAccount: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }

@@ -104,7 +104,7 @@ func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSec) (string,
 		return "", fmt.Errorf("CreateConnectorIPSec: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -124,7 +124,7 @@ func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSec) (string,
 func (ac *AlkiraClient) DeleteConnectorIPSec(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateConnectorIPSec update an IPSEC connector by Id
@@ -137,7 +137,7 @@ func (ac *AlkiraClient) UpdateConnectorIPSec(id string, connector *ConnectorIPSe
 		return fmt.Errorf("UpdateConnectorIPSec: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetConnectorIPSec get an IPSEC connector by Id

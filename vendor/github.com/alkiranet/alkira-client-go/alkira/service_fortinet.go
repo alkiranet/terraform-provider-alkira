@@ -63,7 +63,7 @@ func (ac *AlkiraClient) CreateFortinet(f *Fortinet) (string, error) {
 		return "", fmt.Errorf("CreateFortinet: marshal failed: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -141,11 +141,11 @@ func (ac *AlkiraClient) UpdateFortinet(id string, f *Fortinet) error {
 		return fmt.Errorf("UpdateFortinet: failed to marshal request: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 func (ac *AlkiraClient) DeleteFortinet(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }

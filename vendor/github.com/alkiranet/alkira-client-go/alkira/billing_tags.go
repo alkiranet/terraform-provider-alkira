@@ -27,7 +27,7 @@ func (ac *AlkiraClient) CreateBillingTag(name string, description string) (strin
 		return "", fmt.Errorf("CreateBillingTag: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -46,7 +46,7 @@ func (ac *AlkiraClient) CreateBillingTag(name string, description string) (strin
 // DeleteBillingTag delete a billing tag by Id
 func (ac *AlkiraClient) DeleteBillingTag(id string) error {
 	uri := fmt.Sprintf("%s/tags/%s", ac.URI, id)
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateBillingTag update a billing tag by Id
@@ -62,7 +62,7 @@ func (ac *AlkiraClient) UpdateBillingTag(id string, name string, description str
 		return fmt.Errorf("UpdateBillingTag: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
 
 // GetBillingTags get all billing tags from the given tenant network

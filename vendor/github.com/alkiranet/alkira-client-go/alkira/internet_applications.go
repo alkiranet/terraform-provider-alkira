@@ -41,7 +41,7 @@ func (ac *AlkiraClient) CreateInternetApplication(app *InternetApplication) (str
 		return "", "", fmt.Errorf("CreateInternetApplication: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", "", err
@@ -61,7 +61,7 @@ func (ac *AlkiraClient) CreateInternetApplication(app *InternetApplication) (str
 func (ac *AlkiraClient) DeleteInternetApplication(id string) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, true)
 }
 
 // UpdateInternetApplication update a given internet application by ID
@@ -75,7 +75,7 @@ func (ac *AlkiraClient) UpdateInternetApplication(id string, app *InternetApplic
 		return fmt.Errorf("UpdateInternetApplication: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, true)
 }
 
 // GetInternetApplication get internet application by ID

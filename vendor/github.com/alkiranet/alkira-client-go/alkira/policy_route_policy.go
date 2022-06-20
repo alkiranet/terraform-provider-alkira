@@ -62,7 +62,7 @@ func (ac *AlkiraClient) CreateRoutePolicy(p *RoutePolicy) (string, error) {
 		return "", err
 	}
 
-	data, err := ac.create(uri, body)
+	data, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateRoutePolicy: request failed: %v", err)
@@ -82,7 +82,7 @@ func (ac *AlkiraClient) CreateRoutePolicy(p *RoutePolicy) (string, error) {
 func (ac *AlkiraClient) DeleteRoutePolicy(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri)
+	return ac.delete(uri, false)
 }
 
 // UpdateRoutePolicy update a route policy by Id
@@ -96,7 +96,7 @@ func (ac *AlkiraClient) UpdateRoutePolicy(id string, p *RoutePolicy) error {
 		return fmt.Errorf("UpdateRoutePolicy: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body)
+	return ac.update(uri, body, false)
 }
 
 // GetRoutePolicy get a route policy by Id
