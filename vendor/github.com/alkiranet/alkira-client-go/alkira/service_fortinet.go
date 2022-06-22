@@ -34,10 +34,10 @@ type FortinetZoneToGroups map[string][]string
 
 type FortinetInstance struct {
 	Name         string `json:"name"`
+	Id           int    `json:"id,omitempty"`
 	HostName     string `json:"hostName"`
 	SerialNumber string `json:"serialNumber"`
 	CredentialId string `json:"credentialId"`
-	Id           int    `json:"id,omitempty"`
 }
 
 type FortinetManagmentServer struct {
