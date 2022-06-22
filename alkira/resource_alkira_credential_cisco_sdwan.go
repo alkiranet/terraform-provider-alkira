@@ -59,7 +59,7 @@ func resourceCredentialCiscoSdwanCreate(d *schema.ResourceData, meta interface{}
 		Password: d.Get("password").(string),
 	}
 
-	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c, 0)
 
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func resourceCredentialCiscoSdwanUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[INFO] Updating Credential (ciscosdwan)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeCiscoSdwan, c, 0)
 
 	if err != nil {
 		return err

@@ -276,7 +276,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret})
+	infobloxCredentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret}, 0)
 	if err != nil {
 		return nil, err
 	}

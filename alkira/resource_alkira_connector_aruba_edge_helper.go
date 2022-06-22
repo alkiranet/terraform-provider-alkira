@@ -150,7 +150,7 @@ func findArubaEdgeInstanceResponseDetailByName(credentials []alkira.CredentialRe
 }
 
 func createArubaEdgeInstanceCredential(client *alkira.AlkiraClient, name, accountKey string) (string, error) {
-	return client.CreateCredential(name, alkira.CredentialTypeArubaEdgeConnectInstance, alkira.CredentialArubaEdgeConnectInstance{AccountKey: accountKey})
+	return client.CreateCredential(name, alkira.CredentialTypeArubaEdgeConnectInstance, alkira.CredentialArubaEdgeConnectInstance{AccountKey: accountKey}, 0)
 }
 
 func findOrCreateArubaEdgeInstanceCredentialByName(client *alkira.AlkiraClient, credentials []alkira.CredentialResponseDetail, name, accountKey string) (string, error) {

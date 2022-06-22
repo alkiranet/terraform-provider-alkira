@@ -187,6 +187,21 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:    true,
 				Default:     0,
 			},
+			"registration_pin_id": {
+				Description: "PAN Registration PIN ID.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"registration_pin_value": {
+				Description: "PAN Registration PIN Value.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"registration_pin_expiry": {
+				Description: "PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
 			"name": {
 				Description: "Name of the PAN service.",
 				Type:        schema.TypeString,
@@ -340,6 +355,8 @@ func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
@@ -359,6 +376,27 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		return nil, err
 	}
 
+	// PAN Registration PIN saved as credential
+	regCredentialName := d.Get("name").(string) + randomNameSuffix()
+	regCredential := alkira.CredentialPanRegistration{
+		RegistrationPinId:    d.Get("registration_pin_id").(string),
+		RegistrationPinValue: d.Get("registration_pin_value").(string),
+	}
+
+	regCredentialExpiry, err := convertInputTimeToEpoch(d.Get("registration_pin_expiry").(string))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to parse 'registration_pin_exiry', %v", err)
+		return nil, err
+	}
+
+	regCredentialId, err := client.CreateCredential(regCredentialName, alkira.CredentialTypePanRegistration, regCredential, regCredentialExpiry)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to process PAN registration pin, %v", err)
+		return nil, err
+	}
+
 	service := &alkira.ServicePan{
 		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:                         d.Get("cxp").(string),
@@ -375,6 +413,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaDeviceGroup:         &panoramaDeviceGroup,
 		PanoramaIpAddresses:         panoramaIpAddresses,
 		PanoramaTemplate:            &panoramaTemplate,
+		RegistrationCredentialId:    regCredentialId,
 		SegmentOptions:              segmentOptions,
 		SegmentIds:                  convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),

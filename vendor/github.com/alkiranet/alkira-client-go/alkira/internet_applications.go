@@ -8,15 +8,18 @@ import (
 )
 
 type InternetApplicationTargets struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-	Ports []int  `json:"ports"`
+	Type       string   `json:"type"`
+	Value      string   `json:"value"`
+	Ports      []int    `json:"ports"`
+	PortRanges []string `json:"portRanges,omitempty"`
 }
 
 type InternetApplication struct {
 	BillingTags            []int                        `json:"billingTags"`
+	ByoipId                int                          `json:"byoipId,omitempty"`
 	ConnectorId            int                          `json:"connectorId"`
 	ConnectorType          string                       `json:"connectorType"`
+	Description            string                       `json:"description,omitempty"`
 	FqdnPrefix             string                       `json:"fqdnPrefix"`
 	Group                  string                       `json:"group"`
 	Id                     json.Number                  `json:"id,omitempty"` // response only

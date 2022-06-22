@@ -67,7 +67,7 @@ func resourceCredentialOciVcn(d *schema.ResourceData, meta interface{}) error {
 	c := generateCredentialOciVcnRequest(d)
 
 	log.Printf("[INFO] Creating Credential (OCI-VCN)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeOciVcn, c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeOciVcn, c, 0)
 
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func resourceCredentialOciVcnUpdate(d *schema.ResourceData, meta interface{}) er
 	c := generateCredentialOciVcnRequest(d)
 
 	log.Printf("[INFO] Updating Credential (OCI-VCN)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeOciVcn, c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeOciVcn, c, 0)
 
 	if err != nil {
 		return err

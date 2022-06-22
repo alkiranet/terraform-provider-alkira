@@ -96,7 +96,7 @@ func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating Credential (GCP-VPC)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c, 0)
 
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[INFO] Updating Credential (GCP-VPC)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "gcpvpc", c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "gcpvpc", c, 0)
 
 	if err != nil {
 		return err

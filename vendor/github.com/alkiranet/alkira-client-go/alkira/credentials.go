@@ -24,6 +24,7 @@ const (
 	CredentialTypeOciVcn                                  = "ocivcn"
 	CredentialTypePan                                     = "pan"
 	CredentialTypePanInstance                             = "paninstance"
+	CredentialTypePanMasterKey                            = "pan-masterkey"
 	CredentialTypePanRegistration                         = "pan-registration"
 	CredentialTypeFortinet                                = "ftntfw"
 	CredentialTypeFortinetInstance                        = "ftntfw-instance"
@@ -144,6 +145,10 @@ type CredentialPanInstance struct {
 	Username   string `json:"userName"`
 }
 
+type CredentialPanMasterKey struct {
+	MasterKey string `json:"masterKey"`
+}
+
 type CredentialPanRegistration struct {
 	RegistrationPinId    string `json:"registrationPinId"`
 	RegistrationPinValue string `json:"registrationPinValue"`
@@ -152,6 +157,7 @@ type CredentialPanRegistration struct {
 type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
+	Expires     int64       `json:"expires,omitempty"`
 }
 
 type CredentialResponse struct {
@@ -166,13 +172,14 @@ type CredentialResponseDetail struct {
 }
 
 // CreateCredential create new credential
-func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, credential interface{}) (string, error) {
+func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, credential interface{}, expires int64) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
 
 	// This body is not the normal JSON format...
 	body, err := json.Marshal(Credentials{
 		Name:        name,
 		Credentials: credential,
+		Expires:     expires,
 	})
 
 	if err != nil {
@@ -198,7 +205,7 @@ func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error 
 }
 
 // UpdateCredential update a given credential by its Id
-func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype CredentialType, credential interface{}) error {
+func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype CredentialType, credential interface{}, expires int64) error {
 	if ctype == CredentialTypeKeyPair || ctype == CredentialTypeArubaEdgeConnectInstance {
 		return fmt.Errorf("UpdateCredential: not supported for the credential type")
 	}
@@ -209,6 +216,7 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 	body, err := json.Marshal(Credentials{
 		Name:        name,
 		Credentials: credential,
+		Expires:     expires,
 	})
 
 	if err != nil {

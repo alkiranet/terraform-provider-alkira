@@ -72,7 +72,7 @@ func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[INFO] Creating Credential (AZURE-VNET)")
-	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAzureVnet, c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
 
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[INFO] Updating Credential (AZURE-VNET)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
 
 	if err != nil {
 		return err
