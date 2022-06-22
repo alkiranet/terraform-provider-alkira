@@ -61,10 +61,15 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 							Optional: true,
 						},
 						"credential_id": {
-							Description: "The id of the Fortinet Firewall instance credentials. " +
+							Description: "The ID of the Fortinet Firewall instance credentials. " +
 								"Required only when licenseType is BRING_YOUR_OWN.",
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"id": {
+							Description: "The ID of the Fortinet Firewall instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 					},
 				},
@@ -209,6 +214,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 
 	for _, instance := range f.Instances {
 		i := map[string]interface{}{
+			"id":            instance.Id,
 			"name":          instance.Name,
 			"serial_number": instance.SerialNumber,
 			"credential_id": instance.CredentialId,

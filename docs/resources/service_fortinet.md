@@ -13,7 +13,7 @@ Manage Fortinet firewall.
 ## Example Usage
 
 ```terraform
-resource "alkira_fortinet" "test1" {
+resource "alkira_service_fortinet" "test1" {
   credential_id             = alkira_credential_fortinet.tf_test_fortinet.id
   cxp                       = "US-WEST"
   license_type              = "PAY_AS_YOU_GO"
