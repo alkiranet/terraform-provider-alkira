@@ -14,7 +14,7 @@ func createCheckpointCredential(name, password string, client *alkira.AlkiraClie
 	c := &alkira.CredentialCheckPointFwService{AdminPassword: password}
 
 	log.Printf("[INFO] Creating Credential (Checkpoint)")
-	return client.CreateCredential(name, alkira.CredentialTypeChkpFw, c)
+	return client.CreateCredential(name, alkira.CredentialTypeChkpFw, c, 0)
 }
 
 func createCheckpointCredentialInstances(sicKeys []string, client *alkira.AlkiraClient) error {
@@ -25,7 +25,7 @@ func createCheckpointCredentialInstances(sicKeys []string, client *alkira.Alkira
 		log.Printf("[INFO] Creating Credential (CheckpointInstance)")
 
 		name := "checkpoint-instance-credential-" + strconv.Itoa(i)
-		_, credentialErr := client.CreateCredential(name, alkira.CredentialTypeChkpFwInstance, cInstance)
+		_, credentialErr := client.CreateCredential(name, alkira.CredentialTypeChkpFwInstance, cInstance, 0)
 
 		if credentialErr != nil {
 			err = fmt.Errorf("%w:", err)
@@ -39,7 +39,7 @@ func createCheckpointCredentialManagementServer(name, password string, client *a
 	c := &alkira.CredentialCheckPointFwManagementServer{Password: password}
 
 	log.Printf("[INFO] Creating Credential (Checkpoint Management Server)")
-	_, err := client.CreateCredential(name, alkira.CredentialTypeChkpFwManagement, c)
+	_, err := client.CreateCredential(name, alkira.CredentialTypeChkpFwManagement, c, 0)
 
 	return err
 }
@@ -49,7 +49,7 @@ func updateCheckpointCredential(cid, name, password string, client *alkira.Alkir
 
 	log.Printf("[INFO] Updating Credential (Checkpoint)")
 
-	return client.UpdateCredential(cid, name, alkira.CredentialTypeChkpFw, c)
+	return client.UpdateCredential(cid, name, alkira.CredentialTypeChkpFw, c, 0)
 }
 
 func updateCheckpointCredentialManagementServerByName(name, password string, client *alkira.AlkiraClient) error {
@@ -61,7 +61,7 @@ func updateCheckpointCredentialManagementServerByName(name, password string, cli
 	c := &alkira.CredentialCheckPointFwManagementServer{Password: password}
 	log.Printf("[INFO] Updating Credential (Checkpoint Management Server)")
 
-	return client.UpdateCredential(respDetail.Id, name, alkira.CredentialTypeChkpFwManagement, c)
+	return client.UpdateCredential(respDetail.Id, name, alkira.CredentialTypeChkpFwManagement, c, 0)
 }
 
 func deleteCheckpointCredential(cid string, client *alkira.AlkiraClient) error {

@@ -251,7 +251,7 @@ func generateConnectorAkamaiProlexicRequest(ac *alkira.AlkiraClient, d *schema.R
 	}
 
 	log.Printf("[INFO] Creating Credential (akamai-prolexic)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
 
 	if err != nil {
 		return nil, err
