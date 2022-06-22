@@ -44,7 +44,7 @@ func resourceCredentialFortinet(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[INFO] Creating Credential (Fortinet)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, c, 0)
 
 	if err != nil {
 		return err
@@ -72,6 +72,7 @@ func resourceCredentialFortinetUpdate(d *schema.ResourceData, meta interface{}) 
 		d.Get("name").(string),
 		alkira.CredentialTypeFortinet,
 		c,
+		0,
 	)
 
 	if err != nil {

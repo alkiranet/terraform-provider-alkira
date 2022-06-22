@@ -46,7 +46,7 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 		}
 
 		credentialInstance := alkira.CredentialInfobloxInstance{password}
-		credentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance)
+		credentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -110,6 +110,7 @@ func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, m
 		im.Name+randomNameSuffix(),
 		alkira.CredentialTypeInfobloxGridMaster,
 		&alkira.CredentialInfobloxGridMaster{username, password},
+		0,
 	)
 	if err != nil {
 		return nil, err
