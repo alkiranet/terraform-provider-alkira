@@ -37,6 +37,7 @@ type FortinetInstance struct {
 	HostName     string `json:"hostName"`
 	SerialNumber string `json:"serialNumber"`
 	CredentialId string `json:"credentialId"`
+	Id           int    `json:"id,omitempty"`
 }
 
 type FortinetManagmentServer struct {

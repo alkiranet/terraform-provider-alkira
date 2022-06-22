@@ -144,6 +144,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"id": {
+							Description: "The ID of the Infoblox instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"hostname": {
 							Description: "The host name of the instance. The host name MUST always have a suffix `.localdomain`.",
 							Type:        schema.TypeString,

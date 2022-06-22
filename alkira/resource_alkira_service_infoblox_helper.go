@@ -24,6 +24,9 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
 		}
+		if v, ok := instanceCfg["id"].(int); ok {
+			r.Id = v
+		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
 			//Note: Name is required but not used in the API. So rather than make our user input an
 			//extra field that we just ignore anyway r.Name is set to hostname and the credential
@@ -68,6 +71,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"model":           v.Model,
 			"type":            v.Type,
 			"version":         v.Version,
+			"id":              v.Id,
 		}
 		m = append(m, j)
 	}
