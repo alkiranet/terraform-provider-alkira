@@ -1,8 +1,8 @@
 package alkira
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -24,7 +24,7 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
 		}
-		if v, ok := instanceCfg["id"].(int); ok {
+		if v, ok := instanceCfg["id"].(json.Number); ok {
 			r.Id = v
 		}
 		if v, ok := instanceCfg["hostname"].(string); ok {

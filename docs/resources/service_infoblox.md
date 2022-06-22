@@ -119,4 +119,8 @@ Optional:
 
 - `anycast_enabled` (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service.
 
+Read-Only:
+
+- `id` (Number) The ID of the Infoblox instance.
+
 
