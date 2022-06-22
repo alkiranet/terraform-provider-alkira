@@ -61,7 +61,7 @@ func resourceCredentialPanInstance(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Creating Credential (PAN Instance)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypePanInstance, c)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypePanInstance, c, 0)
 
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[INFO] Updating Credential (PAN Instance)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypePanInstance, c)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypePanInstance, c, 0)
 
 	if err != nil {
 		return err

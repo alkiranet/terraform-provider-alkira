@@ -146,3 +146,15 @@ func randomNameSuffix() string {
 
 	return sb.String()
 }
+
+func convertInputTimeToEpoch(t string) (int64, error) {
+	layout := "2006-01-02"
+	timeInput, err := time.Parse(layout, t)
+
+	if err != nil {
+		log.Printf("[ERROR] Failed parse the time input.")
+		return 0, err
+	}
+
+	return timeInput.Unix(), nil
+}

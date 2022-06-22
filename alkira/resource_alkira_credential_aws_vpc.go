@@ -82,7 +82,7 @@ func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAwsVpc, c)
+	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAwsVpc, c, 0)
 
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[INFO] Updating credential (AWS-VPC) %s", d.Id())
-	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAwsVpc, c)
+	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAwsVpc, c, 0)
 
 	if err != nil {
 		return err
