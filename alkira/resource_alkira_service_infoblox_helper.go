@@ -1,8 +1,8 @@
 package alkira
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,6 +23,9 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
+		}
+		if v, ok := instanceCfg["id"].(json.Number); ok {
+			r.Id = v
 		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
 			//Note: Name is required but not used in the API. So rather than make our user input an
@@ -68,6 +71,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"model":           v.Model,
 			"type":            v.Type,
 			"version":         v.Version,
+			"id":              v.Id,
 		}
 		m = append(m, j)
 	}
