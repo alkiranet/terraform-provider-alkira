@@ -26,6 +26,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
+			"byoip_id": {
+				Description: "BYOIP ID.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
 			"connector_id": {
 				Description: "Connector ID.",
 				Type:        schema.TypeInt,
@@ -103,11 +108,13 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"ports": {
-							Description: "list of internet application ports.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
-							Required:    true,
+						"port_ranges": {
+							Description: "list of ports or port ranges. Values can be " +
+								"mixed i.e. `['20', '100-200']`. An array with only the " +
+								"value '-1' means any port.",
+							Type:     schema.TypeList,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
 						},
 					},
 				},
@@ -167,9 +174,10 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 
 	for _, target := range app.Targets {
 		i := map[string]interface{}{
-			"type":  target.Type,
-			"value": target.Value,
-			"ports": target.Ports,
+			"type":       target.Type,
+			"value":      target.Value,
+			"ports":      target.Ports,
+			"portRanges": target.PortRanges,
 		}
 		targets = append(targets, i)
 	}
@@ -213,7 +221,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 

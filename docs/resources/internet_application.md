@@ -52,6 +52,7 @@ resource "alkira_internet_application" "test" {
 ### Optional
 
 - `billing_tag_ids` (List of Number) IDs of billing tags.
+- `byoip_id` (Number) BYOIP ID.
 - `inbound_connector_id` (String) Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, it could be left empty.
 - `inbound_connector_type` (String) The inbound connector type specifies how the internet application is to be opened up to the external world. By `DEFAULT` the native cloud internet connector is used. In this scenario, Alkira takes care of creating this inbound internet connector implicitly. If instead inbound access is via the `AKAMAI_PROLEXIC` connector, then you need to create and configure that connector and use it with the internet application.
 - `public_ips` (List of String) This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. The public IPs are to be used to access the internet application. These public IPs must belong to one of the BYOIP ranges configured for the Akamai Prolexic Connector.
@@ -66,7 +67,7 @@ resource "alkira_internet_application" "test" {
 
 Required:
 
-- `ports` (List of Number) list of internet application ports.
+- `port_ranges` (List of String) list of ports or port ranges. Values can be mixed i.e. `['20', '100-200']`. An array with only the value '-1' means any port.
 - `type` (String) The type of the target, one of `IP` or `ILB_NAME`.
 - `value` (String) IFA ILB name or private IP.
 
