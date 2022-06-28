@@ -176,6 +176,22 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
+			"master_key": {
+				Description: "Master Key for PAN instances.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"master_key_enabled": {
+				Description: "Enable Master Key for PAN instances or not. It's default to `false`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+			"master_key_expiry": {
+				Description: "PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"max_instance_count": {
 				Description: "Max number of Panorama instances for auto scale.",
 				Type:        schema.TypeInt,
@@ -298,6 +314,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", pan.CXP)
 	d.Set("license_type", pan.LicenseType)
 	d.Set("management_segment_id", pan.ManagementSegmentId)
+	d.Set("master_key_enabled", pan.MasterKeyEnabled)
 	d.Set("max_instance_count", pan.MaxInstanceCount)
 	d.Set("min_instance_count", pan.MinInstanceCount)
 	d.Set("name", pan.Name)
@@ -397,6 +414,34 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		return nil, err
 	}
 
+	// PAN Master Key saved as credential
+	var masterKeyCredentialId string
+	if d.Get("master_key_enabled").(bool) == true {
+		masterKeyCredentialName := d.Get("name").(string) + randomNameSuffix()
+		masterKeyCredential := alkira.CredentialPanMasterKey{
+			MasterKey: d.Get("master_key").(string),
+		}
+
+		masterKeyCredentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
+
+		if err != nil {
+			log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
+			return nil, err
+		}
+
+		if masterKeyCredentialExpiry == 0 {
+			log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
+			return nil, err
+		}
+
+		masterKeyCredentialId, err = client.CreateCredential(masterKeyCredentialName, alkira.CredentialTypePanMasterKey, masterKeyCredential, masterKeyCredentialExpiry)
+
+		if err != nil {
+			log.Printf("[ERROR] failed to process PAN master key, %v", err)
+			return nil, err
+		}
+	}
+
 	service := &alkira.ServicePan{
 		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:                         d.Get("cxp").(string),
@@ -405,6 +450,8 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
 		Instances:                   instances,
 		LicenseType:                 d.Get("license_type").(string),
+		MasterKeyCredentialId:       masterKeyCredentialId,
+		MasterKeyEnabled:            d.Get("master_key_enabled").(bool),
 		MaxInstanceCount:            d.Get("max_instance_count").(int),
 		MinInstanceCount:            d.Get("min_instance_count").(int),
 		ManagementSegmentId:         d.Get("management_segment_id").(int),

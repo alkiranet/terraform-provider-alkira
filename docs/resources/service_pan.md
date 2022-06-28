@@ -68,6 +68,9 @@ resource "alkira_service_pan" "test1" {
 - `management_segment_id` (Number) Management Segment ID.
 - `max_instance_count` (Number) Max number of Panorama instances for auto scale.
 - `name` (String) Name of the PAN service.
+- `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
+- `registration_pin_id` (String) PAN Registration PIN ID.
+- `registration_pin_value` (String) PAN Registration PIN Value.
 - `segment_ids` (List of Number) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 - `type` (String) The type of the PAN firewall.
@@ -79,6 +82,9 @@ resource "alkira_service_pan" "test1" {
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
 - `global_protect_segment_options` (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- `master_key` (String) Master Key for PAN instances.
+- `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
+- `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
