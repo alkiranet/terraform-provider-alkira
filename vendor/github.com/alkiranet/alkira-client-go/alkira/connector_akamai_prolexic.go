@@ -9,7 +9,7 @@ import (
 
 type ConnectorAkamaiProlexic struct {
 	Size                 string                                        `json:"size"`
-	Enabled              bool                                          `json:"enabled,omitempty"`
+	Enabled              bool                                          `json:"enabled"`
 	CredentialId         string                                        `json:"credentialId"`
 	Segments             []string                                      `json:"segments"`
 	OverlayConfiguration []ConnectorAkamaiProlexicOverlayConfiguration `json:"overlayConfiguration,omitempty"`
