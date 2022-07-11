@@ -21,7 +21,7 @@ type ConnectorGcpVpc struct {
 	CXP            string                  `json:"cxp"`
 	CredentialId   string                  `json:"credentialId"`
 	CustomerRegion string                  `json:"customerRegion"`
-	Enabled        bool                    `json:"enabled,omitempty"`
+	Enabled        bool                    `json:"enabled"`
 	GcpRouting     *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
 	Group          string                  `json:"group"`
 	Id             json.Number             `json:"id,omitempty"`

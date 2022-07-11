@@ -44,8 +44,8 @@ type ConnectorAwsVpc struct {
 	CredentialId                       string          `json:"credentialId"`
 	CustomerName                       string          `json:"customerName"`
 	CustomerRegion                     string          `json:"customerRegion"`
-	DirectInterVPCCommunicationEnabled bool            `json:"directInterVPCCommunicationEnabled,omitempty"`
-	Enabled                            bool            `json:"enabled,omitempty"`
+	DirectInterVPCCommunicationEnabled bool            `json:"directInterVPCCommunicationEnabled"`
+	Enabled                            bool            `json:"enabled"`
 	Group                              string          `json:"group"`
 	Id                                 json.Number     `json:"id,omitempty"`
 	Name                               string          `json:"name"`

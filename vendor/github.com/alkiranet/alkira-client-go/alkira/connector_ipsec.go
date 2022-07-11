@@ -81,7 +81,7 @@ type ConnectorIPSec struct {
 	BillingTags    []int                         `json:"billingTags"`
 	CXP            string                        `json:"cxp"`
 	Group          string                        `json:"group,omitempty"`
-	Enabled        bool                          `json:"enabled,omitempty"`
+	Enabled        bool                          `json:"enabled"`
 	Id             json.Number                   `json:"id,omitempty"`
 	Name           string                        `json:"name"`
 	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`

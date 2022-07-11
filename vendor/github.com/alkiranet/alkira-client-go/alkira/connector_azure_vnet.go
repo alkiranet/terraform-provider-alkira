@@ -60,7 +60,7 @@ type ConnectorAzureVnet struct {
 	CXP               string                `json:"cxp"`
 	CredentialId      string                `json:"credentialId"`
 	Group             string                `json:"group"`
-	Enabled           bool                  `json:"enabled,omitempty"`
+	Enabled           bool                  `json:"enabled"`
 	Id                json.Number           `json:"id,omitempty"`
 	Name              string                `json:"name"`
 	NativeServices    []string              `json:"nativeServices,omitempty"`
