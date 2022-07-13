@@ -45,7 +45,7 @@ func (ac *AlkiraClient) CreatePolicyRule(p *PolicyRule) (string, error) {
 		return "", err
 	}
 
-	data, err := ac.create(uri, body, false)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", fmt.Errorf("CreatePolicyRule: request failed: %v", err)
@@ -64,7 +64,7 @@ func (ac *AlkiraClient) CreatePolicyRule(p *PolicyRule) (string, error) {
 // DeletePolicyRule delete a policy rule
 func (ac *AlkiraClient) DeletePolicyRule(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri, false)
+	return ac.delete(uri, true)
 }
 
 // UpdatePolicyRule update a policy rule list
@@ -78,7 +78,7 @@ func (ac *AlkiraClient) UpdatePolicyRule(id string, p *PolicyRule) error {
 		return fmt.Errorf("UpdatePolicyRule: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }
 
 // GetPolicyRule get a policy rule list

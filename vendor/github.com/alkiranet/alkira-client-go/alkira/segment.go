@@ -123,5 +123,5 @@ func (ac *AlkiraClient) UpdateSegment(id string, segment *Segment) error {
 		return fmt.Errorf("UpdateSegment: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }

@@ -34,7 +34,7 @@ func (ac *AlkiraClient) CreateUserGroup(name string, description string) (string
 		return "", fmt.Errorf("CreateUserGroup: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body, false)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -99,7 +99,7 @@ func (ac *AlkiraClient) GetUserGroupByName(name string) (UserGroup, error) {
 // DeleteUserGroup delete an user group
 func (ac *AlkiraClient) DeleteUserGroup(id string) error {
 	uri := fmt.Sprintf("%s/user-groups/%s", ac.URI, id)
-	return ac.delete(uri, false)
+	return ac.delete(uri, true)
 }
 
 // UpdateUserGroup update an user group by its ID
@@ -115,5 +115,5 @@ func (ac *AlkiraClient) UpdateUserGroup(id string, name string, description stri
 		return fmt.Errorf("UpdateUserGroup: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }
