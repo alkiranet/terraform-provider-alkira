@@ -32,7 +32,7 @@ func (ac *AlkiraClient) CreateSegmentResourceShare(resource *SegmentResourceShar
 		return "", fmt.Errorf("CreateSegmentResourceShare: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body, false)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func (ac *AlkiraClient) CreateSegmentResourceShare(resource *SegmentResourceShar
 // DeleteSegmentResourceShare delete a segment resource share by ID
 func (ac *AlkiraClient) DeleteSegmentResourceShare(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segment-resource-shares/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri, false)
+	return ac.delete(uri, true)
 }
 
 // UpdateSegmentResourceShare update a segment resource share by ID
@@ -64,7 +64,7 @@ func (ac *AlkiraClient) UpdateSegmentResourceShare(id string, resource *SegmentR
 		return fmt.Errorf("UpdateSegmentResourceShare: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }
 
 // GetSegmentResourceShares get all segment resource shares from the given tenant network

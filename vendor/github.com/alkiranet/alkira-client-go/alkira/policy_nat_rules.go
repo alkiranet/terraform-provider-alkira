@@ -59,7 +59,7 @@ func (ac *AlkiraClient) CreateNatRule(rule *NatRule) (string, error) {
 		return "", err
 	}
 
-	data, err := ac.create(uri, body, false)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateNatRule: request failed: %v", err)
@@ -78,7 +78,7 @@ func (ac *AlkiraClient) CreateNatRule(rule *NatRule) (string, error) {
 // DeleteNatRule delete a policy rule
 func (ac *AlkiraClient) DeleteNatRule(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules/%s", ac.URI, ac.TenantNetworkId, id)
-	return ac.delete(uri, false)
+	return ac.delete(uri, true)
 }
 
 // UpdateNatRule update a policy rule list
@@ -92,7 +92,7 @@ func (ac *AlkiraClient) UpdateNatRule(id string, rule *NatRule) error {
 		return fmt.Errorf("UpdateNatRule: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }
 
 // GetNatRule get a policy rule list

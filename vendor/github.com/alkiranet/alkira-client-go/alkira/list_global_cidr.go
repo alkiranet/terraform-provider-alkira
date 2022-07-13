@@ -77,7 +77,7 @@ func (ac *AlkiraClient) CreateGlobalCidrList(p *GlobalCidrList) (string, error) 
 	// Construct the request
 	body, err := json.Marshal(p)
 
-	data, err := ac.create(uri, body, false)
+	data, err := ac.create(uri, body, true)
 
 	if err != nil {
 		return "", err
@@ -97,7 +97,7 @@ func (ac *AlkiraClient) CreateGlobalCidrList(p *GlobalCidrList) (string, error) 
 func (ac *AlkiraClient) DeleteGlobalCidrList(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/global-cidr-lists/%s", ac.URI, ac.TenantNetworkId, id)
 
-	return ac.delete(uri, false)
+	return ac.delete(uri, true)
 }
 
 // UpdateGlobalCidrList update a global CIDR list by Id
@@ -111,5 +111,5 @@ func (ac *AlkiraClient) UpdateGlobalCidrList(id string, l *GlobalCidrList) error
 		return fmt.Errorf("UpdateGlobalCidrList: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	return ac.update(uri, body, true)
 }
