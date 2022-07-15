@@ -14,6 +14,9 @@ func resourceAlkiraBillingTag() *schema.Resource {
 		Read:        resourceBillingTagRead,
 		Update:      resourceBillingTagUpdate,
 		Delete:      resourceBillingTagDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

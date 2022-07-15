@@ -17,6 +17,9 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 		Read:   resourcePolicyNatRuleRead,
 		Update: resourcePolicyNatRuleUpdate,
 		Delete: resourcePolicyNatRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -14,6 +14,9 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 		Read:        resourcePolicyPrefixListRead,
 		Update:      resourcePolicyPrefixListUpdate,
 		Delete:      resourcePolicyPrefixListDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

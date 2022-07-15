@@ -13,6 +13,9 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 		Read:   resourcePolicyRuleListRead,
 		Update: resourcePolicyRuleListUpdate,
 		Delete: resourcePolicyRuleListDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

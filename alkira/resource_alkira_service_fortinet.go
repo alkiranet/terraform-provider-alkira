@@ -15,6 +15,9 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 		Read:        resourceFortinetRead,
 		Update:      resourceFortinetUpdate,
 		Delete:      resourceFortinetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"auto_scale": {

@@ -12,6 +12,9 @@ func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 		Read:   resourceCredentialCheckpointRead,
 		Update: resourceCredentialCheckpointUpdate,
 		Delete: resourceCredentialCheckpointDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

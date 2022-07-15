@@ -14,6 +14,9 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 		Read:        resourceCredentialGcpVpcRead,
 		Update:      resourceCredentialGcpVpcUpdate,
 		Delete:      resourceCredentialGcpVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

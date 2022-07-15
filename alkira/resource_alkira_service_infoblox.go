@@ -15,6 +15,9 @@ func resourceAlkiraInfoblox() *schema.Resource {
 		Read:        resourceInfobloxRead,
 		Update:      resourceInfobloxUpdate,
 		Delete:      resourceInfobloxDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"anycast": {

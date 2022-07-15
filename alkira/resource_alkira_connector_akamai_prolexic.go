@@ -20,6 +20,9 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 		Read:   resourceConnectorAkamaiProlexicRead,
 		Update: resourceConnectorAkamaiProlexicUpdate,
 		Delete: resourceConnectorAkamaiProlexicDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -15,6 +15,9 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 		Read:        resourceConnectorCiscoSdwanRead,
 		Update:      resourceConnectorCiscoSdwanUpdate,
 		Delete:      resourceConnectorCiscoSdwanDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

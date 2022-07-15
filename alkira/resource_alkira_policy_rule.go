@@ -18,6 +18,9 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 		Read:   resourcePolicyRuleRead,
 		Update: resourcePolicyRuleUpdate,
 		Delete: resourcePolicyRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"application_ids": {

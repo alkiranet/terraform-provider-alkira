@@ -16,6 +16,9 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Read:        resourceConnectorAwsVpcRead,
 		Update:      resourceConnectorAwsVpcUpdate,
 		Delete:      resourceConnectorAwsVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"aws_account_id": {

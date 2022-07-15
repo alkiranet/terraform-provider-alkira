@@ -16,6 +16,9 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 		Read:        resourceConnectorOciVcnRead,
 		Update:      resourceConnectorOciVcnUpdate,
 		Delete:      resourceConnectorOciVcnDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

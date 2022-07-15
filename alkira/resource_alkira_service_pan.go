@@ -16,6 +16,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 		Read:        resourceServicePanRead,
 		Update:      resourceServicePanUpdate,
 		Delete:      resourceServicePanDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {

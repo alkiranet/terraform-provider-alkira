@@ -16,6 +16,9 @@ func resourceAlkiraListAsPath() *schema.Resource {
 		Read:   resourceListAsPathRead,
 		Update: resourceListAsPathUpdate,
 		Delete: resourceListAsPathDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
