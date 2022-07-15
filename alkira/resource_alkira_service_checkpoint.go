@@ -15,6 +15,9 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 		Read:        resourceCheckpointRead,
 		Update:      resourceCheckpointUpdate,
 		Delete:      resourceCheckpointDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"auto_scale": {

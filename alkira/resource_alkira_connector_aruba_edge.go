@@ -14,6 +14,9 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 		Read:   resourceConnectorArubaEdgeRead,
 		Update: resourceConnectorArubaEdgeUpdate,
 		Delete: resourceConnectorArubaEdgeDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"aruba_edge_vrf_mapping": {

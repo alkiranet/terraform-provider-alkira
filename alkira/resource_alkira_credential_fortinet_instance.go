@@ -14,6 +14,9 @@ func resourceAlkiraCredentialFortinetInstance() *schema.Resource {
 		Read:   resourceCredentialFortinetInstanceRead,
 		Update: resourceCredentialFortinetInstanceUpdate,
 		Delete: resourceCredentialFortinetInstanceDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

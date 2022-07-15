@@ -19,6 +19,9 @@ func resourceAlkiraSegment() *schema.Resource {
 		Read:   resourceSegmentRead,
 		Update: resourceSegmentUpdate,
 		Delete: resourceSegmentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

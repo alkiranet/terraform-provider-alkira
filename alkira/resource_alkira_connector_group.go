@@ -19,6 +19,9 @@ func resourceAlkiraGroupConnector() *schema.Resource {
 		Read:   resourceGroupConnectorRead,
 		Update: resourceGroupConnectorUpdate,
 		Delete: resourceGroupConnectorDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -15,6 +15,9 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 		Read:        resourceZscalerRead,
 		Update:      resourceZscalerUpdate,
 		Delete:      resourceZscalerDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"connector_internet_exit_id": {

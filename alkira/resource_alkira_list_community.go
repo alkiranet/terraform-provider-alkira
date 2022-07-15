@@ -16,6 +16,9 @@ func resourceAlkiraListCommunity() *schema.Resource {
 		Read:   resourceListCommunityRead,
 		Update: resourceListCommunityUpdate,
 		Delete: resourceListCommunityDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

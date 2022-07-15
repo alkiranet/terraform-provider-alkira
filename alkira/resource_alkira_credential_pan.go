@@ -13,6 +13,9 @@ func resourceAlkiraCredentialPan() *schema.Resource {
 		Read:   resourceCredentialPanRead,
 		Update: resourceCredentialPanUpdate,
 		Delete: resourceCredentialPanDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
