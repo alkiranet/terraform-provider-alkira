@@ -25,6 +25,9 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 		Read:   resourceCredentialAwsVpcRead,
 		Update: resourceCredentialAwsVpcUpdate,
 		Delete: resourceCredentialAwsVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

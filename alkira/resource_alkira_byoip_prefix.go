@@ -15,6 +15,9 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 		Read:        resourceByoipPrefixRead,
 		Update:      resourceByoipPrefixUpdate,
 		Delete:      resourceByoipPrefixDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"prefix": {

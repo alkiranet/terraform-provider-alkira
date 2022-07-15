@@ -18,6 +18,9 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 		Read:   resourceCredentialOciVcnRead,
 		Update: resourceCredentialOciVcnUpdate,
 		Delete: resourceCredentialOciVcnDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

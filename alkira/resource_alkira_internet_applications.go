@@ -18,6 +18,9 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 		Read:   resourceInternetApplicationRead,
 		Update: resourceInternetApplicationUpdate,
 		Delete: resourceInternetApplicationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {

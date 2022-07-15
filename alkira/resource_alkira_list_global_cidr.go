@@ -14,6 +14,9 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 		Read:        resourceListGlobalCidrRead,
 		Update:      resourceListGlobalCidrUpdate,
 		Delete:      resourceListGlobalCidrDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

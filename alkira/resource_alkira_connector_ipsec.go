@@ -20,6 +20,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 		Read:   resourceConnectorIPSecRead,
 		Update: resourceConnectorIPSecUpdate,
 		Delete: resourceConnectorIPSecDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

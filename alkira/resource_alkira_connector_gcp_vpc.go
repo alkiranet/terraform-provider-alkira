@@ -17,6 +17,9 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Read:   resourceConnectorGcpVpcRead,
 		Update: resourceConnectorGcpVpcUpdate,
 		Delete: resourceConnectorGcpVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
