@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -36,9 +37,18 @@ func resourceAlkiraSegment() *schema.Resource {
 				Default:     "65514",
 			},
 			"cidr": {
-				Description: "The CIDR block.",
+				Description: "The primary CIDR block.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"secondary_cidr_blocks": {
+				Description: "The secondary_cidr_blocks field should be used when attempting to create " +
+					"a segment resource with multiple IP blocks. Place your first IP block in " +
+					"the cidr field above. This is required. Any additional IP blocks should " +
+					"be included here in the field secondary_cidr_blocks.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
@@ -85,6 +95,7 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("asn", segment.Asn)
 	d.Set("cidr", segment.IpBlock)
+	d.Set("secondary_cidr_blocks", segment.IpBlocks.Values)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
 
@@ -116,12 +127,25 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
+	primaryIpBlock := d.Get("cidr").(string)
+
+	secondaryIpBlocks := alkira.SegmentIpBlocks{
+		Values: convertTypeListToStringList(d.Get("secondary_cidr_blocks").([]interface{})),
+	}
+
+	if found := stringInSlice(primaryIpBlock, secondaryIpBlocks.Values); !found {
+		secondaryIpBlocks.Values = append(secondaryIpBlocks.Values, primaryIpBlock)
+	}
+
 	seg := &alkira.Segment{
-		Asn:     d.Get("asn").(int),
-		IpBlock: d.Get("cidr").(string),
-		Name:    d.Get("name").(string),
+		Asn:      d.Get("asn").(int),
+		IpBlock:  primaryIpBlock,
+		IpBlocks: secondaryIpBlocks,
+		Name:     d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
 	}
+
+	fmt.Println("seg: ", seg.IpBlocks)
 
 	return seg, nil
 }
