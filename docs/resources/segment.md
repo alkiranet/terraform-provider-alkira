@@ -28,16 +28,14 @@ resource "alkira_segment" "test" {
 
 ### Required
 
-- `cidr` (String) The CIDR block.
-- `name` (String) The name of the segment.
+- **cidr** (String) The primary CIDR block.
+- **name** (String) The name of the segment.
 
 ### Optional
 
-- `asn` (Number) The BGP ASN for the segment. Default value is `65514`.
-- `reserve_public_ips` (Boolean) Default value is `false`. When this is set to `true`. Alkira reserves public IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved public IPs may be used to create tunnels to the Akamai Prolexic.
-
-### Read-Only
-
-- `id` (String) The ID of this resource.
+- **asn** (Number) The BGP ASN for the segment. Default value is `65514`.
+- **id** (String) The ID of this resource.
+- **reserve_public_ips** (Boolean) Default value is `false`. When this is set to `true`. Alkira reserves public IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved public IPs may be used to create tunnels to the Akamai Prolexic.
+- **secondary_cidr_blocks** (List of String) The secondary_cidr_blocks field should be used when attempting to create a segment resource with multiple IP blocks. Place your first IP block in the cidr field above. This is required. Any additional IP blocks should be included here in the field secondary_cidr_blocks.
 
 
