@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"errors"
 	"log"
 	"strconv"
 
@@ -44,26 +43,15 @@ func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alk
 		return nil, nil
 	}
 
-	if in.Len() > 1 || in.Len() < 1 {
-		return nil, errors.New("Fortinet segment options must be exactly 1 in length")
-	}
-
 	client := m.(*alkira.AlkiraClient)
 
-	zonesToGroups := make(alkira.FortinetZoneToGroups)
 	segmentOptions := make(map[string]alkira.FortinetSegmentName)
-
 	for _, options := range in.List() {
 		optionsCfg := options.(map[string]interface{})
 		z := alkira.FortinetSegmentName{}
 
-		var zoneName *string
 		var segment *alkira.Segment
-		var groups []string
-
-		if v, ok := optionsCfg["zone_name"].(string); ok {
-			zoneName = &v
-		}
+		var zonesToGroups map[string][]string
 
 		if v, ok := optionsCfg["segment_id"].(int); ok {
 			sg, err := client.GetSegmentById(strconv.Itoa(v))
@@ -73,15 +61,15 @@ func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alk
 			segment = &sg
 		}
 
-		if v, ok := optionsCfg["groups"].([]interface{}); ok {
-			groups = convertTypeListToStringList(v)
+		if v, ok := optionsCfg["zone"].(*schema.Set); ok {
+			zonesToGroups = expandFortinetZone(v)
 		}
 
-		if zoneName == nil || segment == nil || groups == nil {
-			return nil, errors.New("segment_option fields cannot be nil")
-		}
+		//TODO(mac): is this still required?
+		//if zoneName == nil || segment == nil || groups == nil {
+		//	return nil, errors.New("segment_option fields cannot be nil")
+		//}
 
-		zonesToGroups[*zoneName] = groups
 		z.SegmentId = segment.Id
 		z.ZonesToGroups = zonesToGroups
 		segmentOptions[segment.Name] = z
@@ -105,4 +93,26 @@ func deflateFortinetSegmentOptions(c map[string]alkira.FortinetSegmentName) []ma
 	}
 
 	return options
+}
+
+func expandFortinetZone(in *schema.Set) map[string][]string {
+	zonesToGroups := make(map[string][]string)
+
+	for _, zone := range in.List() {
+		zoneCfg := zone.(map[string]interface{})
+		var name *string
+		var groups []string
+
+		if v, ok := zoneCfg["name"].(string); ok {
+			name = &v
+		}
+
+		if v, ok := zoneCfg["groups"].([]interface{}); ok {
+			groups = convertTypeListToStringList(v)
+		}
+
+		zonesToGroups[*name] = groups
+	}
+
+	return zonesToGroups
 }

@@ -131,16 +131,25 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
-						"zone_name": {
-							Description: "The name of the associated zone.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"groups": {
-							Description: "The list of Groups associated with the zone.",
-							Type:        schema.TypeList,
-							Required:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+						"zone": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Description: "Zone information. You may create multiple zones per segment_id",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Description: "The name of the associated zone.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"groups": {
+										Description: "The list of groups associated with the zone.",
+										Type:        schema.TypeList,
+										Required:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
 						},
 					},
 				},
