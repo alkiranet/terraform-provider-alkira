@@ -102,13 +102,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"external": {
 							Description: "External indicates if a new grid master should be " +
-								"created or if an existing grid master should be used. NOTE: " +
-								"creation of new external grid masters is not supported at " +
-								"this time, but will be supported in future releases.",
-							Type:         schema.TypeBool,
-							Optional:     true,
-							Default:      false,
-							ValidateFunc: ExternalMustBeFalse(),
+								"created or if an existing grid master should be used.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"ip": {
 							Description: "The ip address of the grid master.",
