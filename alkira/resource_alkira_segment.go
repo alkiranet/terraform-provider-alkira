@@ -35,10 +35,11 @@ func resourceAlkiraSegment() *schema.Resource {
 				Optional:    true,
 				Default:     "65514",
 			},
-			"cidr": {
+			"cidrs": {
 				Description: "The CIDR block.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
@@ -78,15 +79,14 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	segment, err := client.GetSegmentById(d.Id())
-
 	if err != nil {
 		return err
 	}
 
 	d.Set("asn", segment.Asn)
-	d.Set("cidr", segment.IpBlock)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
+	setCidrsSegmentRead(d, segment)
 
 	return nil
 }
@@ -116,12 +116,34 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
+
 	seg := &alkira.Segment{
-		Asn:     d.Get("asn").(int),
-		IpBlock: d.Get("cidr").(string),
-		Name:    d.Get("name").(string),
+		Asn:  d.Get("asn").(int),
+		Name: d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
 	}
 
+	// User may include 1 or more cidrs. Set them accordingly
+	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
+
+	if len(cidrs) == 1 {
+		seg.IpBlock = cidrs[0]
+	}
+
+	if len(cidrs) > 1 {
+		seg.IpBlocks.Values = cidrs
+	}
+
 	return seg, nil
+}
+
+func setCidrsSegmentRead(d *schema.ResourceData, segment alkira.Segment) {
+	if segment.IpBlock == "" || stringInSlice(segment.IpBlock, segment.IpBlocks.Values) {
+		d.Set("cidrs", segment.IpBlocks.Values)
+	} else {
+		// segment.IpBlocks.Values could be empty doesn't matter we just get an empty slice to append to
+		c := segment.IpBlocks.Values[0:]
+		c = append(c, segment.IpBlock)
+		d.Set("cidrs", c)
+	}
 }

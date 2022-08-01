@@ -28,7 +28,7 @@ resource "alkira_segment" "test" {
 
 ### Required
 
-- `cidr` (String) The CIDR block.
+- `cidrs` (List of String) The CIDR block.
 - `name` (String) The name of the segment.
 
 ### Optional
