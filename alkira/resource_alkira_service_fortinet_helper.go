@@ -65,11 +65,6 @@ func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alk
 			zonesToGroups = expandFortinetZone(v)
 		}
 
-		//TODO(mac): is this still required?
-		//if zoneName == nil || segment == nil || groups == nil {
-		//	return nil, errors.New("segment_option fields cannot be nil")
-		//}
-
 		z.SegmentId = segment.Id
 		z.ZonesToGroups = zonesToGroups
 		segmentOptions[segment.Name] = z

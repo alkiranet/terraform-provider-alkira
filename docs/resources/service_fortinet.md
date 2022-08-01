@@ -47,42 +47,45 @@ resource "alkira_fortinet" "test1" {
 
 ### Required
 
-- **credential_id** (String) ID of Fortinet Firewall credential managed by credential resource.
-- **cxp** (String) The CXP where the service should be provisioned.
-- **instances** (Block Set, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to max_instance_count. (see [below for nested schema](#nestedblock--instances))
-- **license_type** (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- **management_server_ip** (String) The IP addresses used to access the management server.
-- **management_server_segment** (String) The segment used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
-- **max_instance_count** (Number) The maximum number of Fortinet Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Fortinet at this time. max_instance_count must be greater than or equal to min_instance_count.
-- **name** (String) Name of the Fortinet Firewall service.
-- **segment_ids** (List of String) IDs of segments associated with the service.
-- **size** (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
-- **version** (String) The version of the Fortinet Firewall.
+- `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
+- `cxp` (String) The CXP where the service should be provisioned.
+- `instances` (Block Set, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to max_instance_count. (see [below for nested schema](#nestedblock--instances))
+- `license_type` (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
+- `management_server_ip` (String) The IP addresses used to access the management server.
+- `management_server_segment` (String) The segment used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
+- `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Fortinet at this time. max_instance_count must be greater than or equal to min_instance_count.
+- `name` (String) Name of the Fortinet Firewall service.
+- `segment_ids` (List of String) IDs of segments associated with the service.
+- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
+- `version` (String) The version of the Fortinet Firewall.
 
 ### Optional
 
-- **auto_scale** (String) Indicate if auto_scale should be enabled for your Fortinet firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
-- **billing_tag_ids** (List of Number) Billing tag IDs to associate with the service.
-- **id** (String) The ID of this resource.
-- **min_instance_count** (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
-- **segment_options** (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
-- **tunnel_protocol** (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- `auto_scale` (String) Indicate if auto_scale should be enabled for your Fortinet firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
+- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
+- `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
+- `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
 
 Required:
 
-- **name** (String) The name of the Fortinet Firewall instance.
+- `name` (String) The name of the Fortinet Firewall instance.
 
 Optional:
 
-- **credential_id** (String) The ID of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
-- **serial_number** (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
+- `credential_id` (String) The ID of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
+- `serial_number` (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
 
 Read-Only:
 
-- **id** (Number) The ID of the Fortinet Firewall instance.
+- `id` (Number) The ID of the Fortinet Firewall instance.
 
 
 <a id="nestedblock--segment_options"></a>
@@ -90,18 +93,18 @@ Read-Only:
 
 Required:
 
-- **segment_id** (Number) The ID of the segment.
+- `segment_id` (Number) The ID of the segment.
 
 Optional:
 
-- **zone** (Block Set) Zone information. You may create multiple zones per segment_id (see [below for nested schema](#nestedblock--segment_options--zone))
+- `zone` (Block Set) Zone information. You may create multiple zones per segment ID. (see [below for nested schema](#nestedblock--segment_options--zone))
 
 <a id="nestedblock--segment_options--zone"></a>
 ### Nested Schema for `segment_options.zone`
 
 Required:
 
-- **groups** (List of String) The list of groups associated with the zone.
-- **name** (String) The name of the associated zone.
+- `groups` (List of String) The list of groups associated with the zone.
+- `name` (String) The name of the associated zone.
 
 

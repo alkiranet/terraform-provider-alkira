@@ -11,7 +11,6 @@ import (
 
 func TestExpandGenerateFortinetInstances(t *testing.T) {
 
-	//TODO(mac): uncomment and fix test
 	expectedName := "testName"
 	expectedSerialNumber := "serialNumber"
 	expectedCredentialId := "credentialId"
@@ -36,7 +35,6 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 	require.Equal(t, len(actual), len(mArr))
 
 	//Sets are unordered. We need to find our comparable item
-	//mIndex := new(int)
 	var mIndex int
 	for i, v := range actual {
 		if v.Name == expectedName {

@@ -134,7 +134,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 						"zone": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Zone information. You may create multiple zones per segment_id",
+							Description: "Zone information. You may create multiple zones per segment ID.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
