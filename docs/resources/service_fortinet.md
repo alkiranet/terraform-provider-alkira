@@ -93,8 +93,18 @@ Read-Only:
 
 Required:
 
-- `groups` (List of String) The list of Groups associated with the zone.
 - `segment_id` (Number) The ID of the segment.
-- `zone_name` (String) The name of the associated zone.
+
+Optional:
+
+- `zone` (Block Set) Zone information. You may create multiple zones per segment ID. (see [below for nested schema](#nestedblock--segment_options--zone))
+
+<a id="nestedblock--segment_options--zone"></a>
+### Nested Schema for `segment_options.zone`
+
+Required:
+
+- `groups` (List of String) The list of groups associated with the zone.
+- `name` (String) The name of the associated zone.
 
 
