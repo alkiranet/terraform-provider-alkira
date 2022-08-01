@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateSegmentRequest(t *testing.T) {
+func TestSegmentGenerateSegmentRequest(t *testing.T) {
 	r := resourceAlkiraSegment()
 	d := r.TestResourceData()
 
@@ -29,7 +29,7 @@ func TestGenerateSegmentRequest(t *testing.T) {
 	require.Equal(t, s.Asn, expectedAsn)
 	require.Equal(t, s.Name, expecedName)
 	require.Equal(t, s.ReservePublicIPsForUserAndSiteConnectivity, expectedReservePublicIPs)
-	require.Equal(t, s.IpBlock, "") //should be empty because we had multiple CIDRS
+	require.Equal(t, s.IpBlock, "") // should be empty becuase IpBlocks can be used even for signle CIDR values
 	require.Equal(t, len(s.IpBlocks.Values), len(expectedCidrs))
 
 	// Test with single CIDR
@@ -39,11 +39,11 @@ func TestGenerateSegmentRequest(t *testing.T) {
 
 	s, err = generateSegmentRequest(d)
 	require.NoError(t, err)
-	require.Equal(t, s.IpBlock, expectedCidr)
-	require.Equal(t, len(s.IpBlocks.Values), 0) // should be len 0 because only 1 CIDR was set
+	require.Equal(t, s.IpBlock, "")
+	require.Equal(t, len(s.IpBlocks.Values), 1)
 }
 
-func TestSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
+func TestSegmentSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
 	r := resourceAlkiraSegment()
 	d := r.TestResourceData()
 
@@ -63,7 +63,7 @@ func TestSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
 	fmt.Println(c)
 }
 
-func TestSetCidrSegmentReadIpBlockContainedIpBlocks(t *testing.T) {
+func TestSegmentSetCidrSegmentReadIpBlockContainedIpBlocks(t *testing.T) {
 	r := resourceAlkiraSegment()
 	d := r.TestResourceData()
 

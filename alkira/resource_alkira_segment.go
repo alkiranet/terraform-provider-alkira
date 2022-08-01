@@ -116,22 +116,15 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
+	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
 	seg := &alkira.Segment{
 		Asn:  d.Get("asn").(int),
 		Name: d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
-	}
-
-	// User may include 1 or more cidrs. Set them accordingly
-	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
-
-	if len(cidrs) == 1 {
-		seg.IpBlock = cidrs[0]
-	}
-
-	if len(cidrs) > 1 {
-		seg.IpBlocks.Values = cidrs
+		IpBlocks: alkira.SegmentIpBlocks{
+			Values: cidrs,
+		},
 	}
 
 	return seg, nil
