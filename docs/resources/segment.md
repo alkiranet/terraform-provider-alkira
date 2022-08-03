@@ -17,9 +17,9 @@ A Segment is a section of a network isolated from one anotherto make it possible
 
 ```terraform
 resource "alkira_segment" "test" {
-  name = "test-segment"
-  asn  = "65513"
-  cidr = "10.16.1.0/24"
+  name  = "test-segment"
+  asn   = "65513"
+  cidrs = ["10.16.1.0/24", "10.1.1.0/24"]
 }
 ```
 
@@ -28,7 +28,7 @@ resource "alkira_segment" "test" {
 
 ### Required
 
-- `cidr` (String) The CIDR block.
+- `cidrs` (List of String) The CIDR block.
 - `name` (String) The name of the segment.
 
 ### Optional
