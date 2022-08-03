@@ -76,6 +76,10 @@ Required:
 - `credential_id` (String) The ID of the credential for Cisco SD-WAN.
 - `hostname` (String) The hostname of the vEdge.
 
+Read-Only:
+
+- `id` (Number) The ID of the vEdge instance.
+
 
 <a id="nestedblock--vrf_segment_mapping"></a>
 ### Nested Schema for `vrf_segment_mapping`

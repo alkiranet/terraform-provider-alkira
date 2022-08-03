@@ -64,11 +64,6 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"hostname": {
-							Description: "The hostname of the vEdge.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"cloud_init_file": {
 							Description: "The cloud-init file for the vEdge.",
 							Type:        schema.TypeString,
@@ -78,6 +73,16 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Description: "The ID of the credential for Cisco SD-WAN.",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"hostname": {
+							Description: "The hostname of the vEdge.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"id": {
+							Description: "The ID of the vEdge instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 					},
 				},
@@ -170,9 +175,10 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 
 	for _, info := range connector.CiscoEdgeInfo {
 		edge := map[string]interface{}{
-			"hostname":        info.HostName,
 			"cloud_init_file": info.CloudInitFile,
 			"credential_id":   info.CredentialId,
+			"hostname":        info.HostName,
+			"id":              info.Id,
 		}
 		vedge = append(vedge, edge)
 	}
