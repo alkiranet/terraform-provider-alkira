@@ -59,7 +59,7 @@ resource "alkira_connector_ipsec" "ipsec" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (Number) The ID of the IPSec connector.
 
 <a id="nestedblock--endpoint"></a>
 ### Nested Schema for `endpoint`
