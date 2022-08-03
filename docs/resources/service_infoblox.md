@@ -94,14 +94,14 @@ Optional:
 
 Required:
 
-- `ip` (String) The ip address of the grid master.
 - `name` (String) Name of the grid master.
 - `password` (String) The Grid Master password.
 - `username` (String) The Grid Master user name.
 
 Optional:
 
-- `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. NOTE: creation of new external grid masters is not supported at this time, but will be supported in future releases.
+- `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used.
+- `ip` (String) The ip address of the grid master.
 
 
 <a id="nestedblock--instance"></a>
