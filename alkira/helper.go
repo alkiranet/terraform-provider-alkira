@@ -121,6 +121,15 @@ func getAllCredentialsAsCredentialResponseDetails(client *alkira.AlkiraClient) (
 	return result, nil
 }
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 //For infoblox if there is a failed POST for infoblox the backend does not clean up the
 //credentials that were created in preparation for creating the infoblox service. This means
 //if you make the same attempt to create an infoblox there will likely already be a credential name
