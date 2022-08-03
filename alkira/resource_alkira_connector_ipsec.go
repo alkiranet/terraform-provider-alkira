@@ -56,6 +56,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"id": {
+							Description: "The ID of the endpoint.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"preshared_keys": {
 							Description: "An array of presharedKeys, one per tunnel.",
 							Type:        schema.TypeList,
@@ -341,6 +346,8 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("vpn_mode", connector.VpnMode)
 
 	if len(connector.Segments) > 0 {
 		segment, err := client.GetSegmentByName(connector.Segments[0])
@@ -351,8 +358,22 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("segment_id", segment.Id)
 	}
 
-	d.Set("size", connector.Size)
-	d.Set("vpn_mode", connector.VpnMode)
+	// Set endpoint
+	var endpoints []map[string]interface{}
+
+	for _, site := range connector.Sites {
+		endpoint := map[string]interface{}{
+			"name":                     site.Name,
+			"billing_tag_ids":          site.BillingTags,
+			"customer_gateway_ip":      site.CustomerGwIp,
+			"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
+			"preshared_keys":           site.PresharedKeys,
+			"id":                       site.Id,
+		}
+		endpoints = append(endpoints, endpoint)
+	}
+
+	d.Set("endpoint", endpoints)
 
 	return nil
 }
