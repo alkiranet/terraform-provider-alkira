@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -29,6 +30,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"id": {
+				Description: "The ID of the IPSec connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -427,6 +433,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 
 	connector := &alkira.ConnectorIPSec{
 		CXP:            d.Get("cxp").(string),
+		Id:             d.Get("id").(json.Number),
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
