@@ -26,6 +26,7 @@ type InternetApplication struct {
 	InboundConnectorId     string                       `json:"inboundConnectorId,omitempty"`
 	InboundConnectorType   string                       `json:"inboundConnectorType,omitempty"`
 	InboundInternetGroupId json.Number                  `json:"inboundInternetGroupId,omitempty"`
+	InternetProtocol       string                       `json:"internetProtocol"`
 	Name                   string                       `json:"name"`
 	PublicIps              []string                     `json:"publicIps"`
 	SegmentName            string                       `json:"segmentName"`

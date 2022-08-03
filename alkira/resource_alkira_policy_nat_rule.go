@@ -187,7 +187,7 @@ func resourcePolicyNatRule(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	rule, err := client.GetNatRule(d.Id())
+	rule, err := client.GetNatRuleById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to get policy rule %s", d.Id())

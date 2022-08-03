@@ -85,7 +85,7 @@ func resourcePolicy(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	policy, err := client.GetPolicy(d.Id())
+	policy, err := client.GetPolicyById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to read policy %s", d.Id())
