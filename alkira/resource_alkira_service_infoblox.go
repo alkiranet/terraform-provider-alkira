@@ -102,18 +102,16 @@ func resourceAlkiraInfoblox() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"external": {
 							Description: "External indicates if a new grid master should be " +
-								"created or if an existing grid master should be used. NOTE: " +
-								"creation of new external grid masters is not supported at " +
-								"this time, but will be supported in future releases.",
-							Type:         schema.TypeBool,
-							Optional:     true,
-							Default:      false,
-							ValidateFunc: ExternalMustBeFalse(),
+								"created or if an existing grid master should be used.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"ip": {
 							Description: "The ip address of the grid master.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
+							Default:     "0.0.0.0", // NOTE: the ACG API requires a valid IP address input even when a new grid master is being created. This default is included this to avoid unnecesary errors from the backend.
 						},
 						"name": {
 							Description: "Name of the grid master.",
