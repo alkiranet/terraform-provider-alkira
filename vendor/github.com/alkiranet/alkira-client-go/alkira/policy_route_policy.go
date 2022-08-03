@@ -47,8 +47,9 @@ type RoutePolicyRulesSet struct {
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
-	DistributionType string   `json:"distributionType"`
-	RestrictedCxps   []string `json:"restrictedCxps"`
+	DistributionType        string   `json:"distributionType"`
+	RedistributeAsSecondary bool     `json:"redistributeAsSecondary"`
+	RestrictedCxps          []string `json:"restrictedCxps"`
 }
 
 // CreateRoutePolicy create a route policy

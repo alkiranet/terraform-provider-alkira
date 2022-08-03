@@ -71,7 +71,7 @@ func resourcePolicyRuleList(d *schema.ResourceData, m interface{}) error {
 func resourcePolicyRuleListRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	ruleList, err := client.GetPolicyRuleList(d.Id())
+	ruleList, err := client.GetPolicyRuleListById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get policy rule list %s", d.Id())

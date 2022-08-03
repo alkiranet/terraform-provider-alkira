@@ -67,7 +67,7 @@ func (ac *AlkiraClient) DeletePolicyRule(id string) error {
 	return ac.delete(uri, true)
 }
 
-// UpdatePolicyRule update a policy rule list
+// UpdatePolicyRule update a policy rule
 func (ac *AlkiraClient) UpdatePolicyRule(id string, p *PolicyRule) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
 
@@ -81,8 +81,41 @@ func (ac *AlkiraClient) UpdatePolicyRule(id string, p *PolicyRule) error {
 	return ac.update(uri, body, true)
 }
 
-// GetPolicyRule get a policy rule list
-func (ac *AlkiraClient) GetPolicyRule(id string) (*PolicyRule, error) {
+// GetPolicyRule get all policy rules from the given tenant network
+func (ac *AlkiraClient) GetPolicyRules() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
+// GetPolicyRuleByName get the policy rule by its name
+func (ac *AlkiraClient) GetPolicyRuleByName(name string) (*PolicyRule, error) {
+
+	if len(name) == 0 {
+		return nil, fmt.Errorf("GetPolicyRuleByName: Invalid list name")
+	}
+
+	rules, err := ac.GetPolicyRules()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []PolicyRule
+	json.Unmarshal([]byte(rules), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return &l, nil
+		}
+	}
+
+	return nil, fmt.Errorf("GetPolicyRuleByName: failed to find the rule by name %s", name)
+}
+
+// GetPolicyRule get a policy rule by ID
+func (ac *AlkiraClient) GetPolicyRuleById(id string) (*PolicyRule, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/rules/%s", ac.URI, ac.TenantNetworkId, id)
 
 	data, err := ac.get(uri)

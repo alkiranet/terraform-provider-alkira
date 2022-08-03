@@ -35,6 +35,7 @@ type ServicePan struct {
 	SegmentIds                  []int                                `json:"segments"`
 	SegmentOptions              interface{}                          `json:"segmentOptions,omitempty"`
 	Size                        string                               `json:"size"`
+	SubLicenseType              string                               `json:"subLicenseType,omitempty"`
 	TunnelProtocol              string                               `json:"tunnelProtocol,omitempty"`
 	Type                        string                               `json:"type"`
 	Version                     string                               `json:"version"`

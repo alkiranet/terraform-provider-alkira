@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -18,7 +18,7 @@ type Policy struct {
 	ToGroups    []int       `json:"toGroups"`
 }
 
-// CreatePolicy Create a policy
+// CreatePolicy create a policy
 func (ac *AlkiraClient) CreatePolicy(p *Policy) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies", ac.URI, ac.TenantNetworkId)
 
@@ -45,14 +45,14 @@ func (ac *AlkiraClient) CreatePolicy(p *Policy) (string, error) {
 	return string(result.Id), nil
 }
 
-// DeletePolicy delete a policy by Id
+// DeletePolicy delete a policy by ID
 func (ac *AlkiraClient) DeletePolicy(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies/%s", ac.URI, ac.TenantNetworkId, id)
 
 	return ac.delete(uri, true)
 }
 
-// UpdatePolicy update a policy by Id
+// UpdatePolicy update a policy by ID
 func (ac *AlkiraClient) UpdatePolicy(id string, p *Policy) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies/%s", ac.URI, ac.TenantNetworkId, id)
 
@@ -66,8 +66,41 @@ func (ac *AlkiraClient) UpdatePolicy(id string, p *Policy) error {
 	return ac.update(uri, body, true)
 }
 
-// GetPolicy get a policy by Id
-func (ac *AlkiraClient) GetPolicy(id string) (*Policy, error) {
+// GetPolicies get all policies from the given tenant network
+func (ac *AlkiraClient) GetPolicies() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
+// GetPolicyByName get the policy by its name
+func (ac *AlkiraClient) GetPolicyByName(name string) (*Policy, error) {
+
+	if len(name) == 0 {
+		return nil, fmt.Errorf("GetPolicyByName: Invalid policy name")
+	}
+
+	lists, err := ac.GetPolicies()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []Policy
+	json.Unmarshal([]byte(lists), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return &l, nil
+		}
+	}
+
+	return nil, fmt.Errorf("GetPolicyByName: failed to find the policy with name %s", name)
+}
+
+// GetPolicy get a policy by ID
+func (ac *AlkiraClient) GetPolicyById(id string) (*Policy, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies/%s", ac.URI, ac.TenantNetworkId, id)
 
 	data, err := ac.get(uri)

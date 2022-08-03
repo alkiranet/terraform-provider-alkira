@@ -252,6 +252,10 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
 				return true, nil
 			}
+			if request.State == "FAILED" {
+				return false, fmt.Errorf("client-create: provision request %s failed", provisionRequestId)
+			}
+
 			logf("DEBUG", "client-create: waiting for provision to finish.")
 			return false, nil
 		})
@@ -261,7 +265,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("client-create: failed to provision")
+			return nil, err
 		}
 	}
 
@@ -320,6 +324,10 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
 				return true, nil
 			}
+			if request.State == "FAILED" {
+				return false, fmt.Errorf("client-delete: provision request %s failed", provisionRequestId)
+			}
+
 			logf("DEBUG", "client-delete: waiting for provision to finish.")
 			return false, nil
 		})
@@ -328,9 +336,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 			return fmt.Errorf("client-delete: timed out waiting for provision to complete")
 		}
 
-		if err != nil {
-			return fmt.Errorf("client-delete: failed to provision")
-		}
+		return err
 	}
 
 	return nil
@@ -381,9 +387,17 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) error {
 				return false, err
 			}
 
+			// The provision states could be misleading in certain
+			// cases. For "PARTIAL_SUCCESS", provisioning of some
+			// resources actaully failed. For "FAILED" state, some
+			// resources may get provisioned successfully.
 			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
 				return true, nil
 			}
+			if request.State == "FAILED" {
+				return false, fmt.Errorf("client-update: provision request %s failed", provisionRequestId)
+			}
+
 			logf("DEBUG", "client-update: waiting for provision to finish.")
 			return false, nil
 		})
@@ -392,9 +406,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) error {
 			return fmt.Errorf("client-update: timed out waiting for provision to complete")
 		}
 
-		if err != nil {
-			return fmt.Errorf("client-update: failed to provision")
-		}
+		return err
 	}
 
 	return nil
