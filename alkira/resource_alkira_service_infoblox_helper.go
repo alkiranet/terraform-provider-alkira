@@ -3,6 +3,7 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -179,21 +180,4 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
 	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
-}
-
-func ExternalMustBeFalse() schema.SchemaValidateFunc {
-	return func(i interface{}, b string) (warnings []string, errors []error) {
-		v, ok := i.(bool)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type boolean"))
-			return warnings, errors
-		}
-
-		if !v {
-			return warnings, errors
-		}
-
-		errors = append(errors, fmt.Errorf("expected value to be false: future software updates will allow for an input value of true."))
-		return warnings, errors
-	}
 }
