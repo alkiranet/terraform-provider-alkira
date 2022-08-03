@@ -12,17 +12,24 @@ type SegmentIpBlocks struct {
 	Values []string `json:"values"`
 }
 
-type Segment struct {
-	Asn                                        int             `json:"asn"`
-	EnterpriseDNSServerIP                      string          `json:"enterpriseDNSServerIP,omitempty"`
-	Id                                         int             `json:"id,omitempty"` // only for response
-	IpBlock                                    string          `json:"ipBlock"`
-	IpBlocks                                   SegmentIpBlocks `json:"ipBlocks,omitempty"`
-	Name                                       string          `json:"name"`
-	ReservePublicIPsForUserAndSiteConnectivity bool            `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
+type SegmentSrcIpv4PoolList struct {
+	StartIp string `json:"startIp"`
+	EndIp   string `json:"endIp"`
 }
 
-// Get all segments from the given tenant network
+type Segment struct {
+	Asn                                        int                    `json:"asn"`
+	EnableIpv6ToIpv4Translation                bool                   `json:"enableIpv6ToIpv4Translation"`
+	EnterpriseDNSServerIP                      string                 `json:"enterpriseDNSServerIP,omitempty"`
+	Id                                         int                    `json:"id,omitempty"` // only for response
+	IpBlock                                    string                 `json:"ipBlock"`
+	IpBlocks                                   SegmentIpBlocks        `json:"ipBlocks,omitempty"`
+	Name                                       string                 `json:"name"`
+	ReservePublicIPsForUserAndSiteConnectivity bool                   `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
+	SrcIpv4PoolList                            SegmentSrcIpv4PoolList `json:"srcIpv4PoolList,omitempty"`
+}
+
+// GetSegments get all segments from the given tenant network
 func (ac *AlkiraClient) GetSegments() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments", ac.URI, ac.TenantNetworkId)
 
@@ -30,7 +37,7 @@ func (ac *AlkiraClient) GetSegments() (string, error) {
 	return string(data), err
 }
 
-// GetSegment get single segment by ID
+// GetSegmentById get single segment by ID
 func (ac *AlkiraClient) GetSegmentById(id string) (Segment, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments/%s", ac.URI, ac.TenantNetworkId, id)
 

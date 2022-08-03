@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -48,7 +48,7 @@ type NatRuleActionDstTranslation struct {
 	AdvertiseToConnector    bool     `json:"advertiseToConnector,omitempty"`
 }
 
-// CreateNatRule create a policy rule
+// CreateNatRule create a policy NAT rule
 func (ac *AlkiraClient) CreateNatRule(rule *NatRule) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules", ac.URI, ac.TenantNetworkId)
 
@@ -75,13 +75,13 @@ func (ac *AlkiraClient) CreateNatRule(rule *NatRule) (string, error) {
 	return string(result.Id), nil
 }
 
-// DeleteNatRule delete a policy rule
+// DeleteNatRule delete a policy NAT rule
 func (ac *AlkiraClient) DeleteNatRule(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules/%s", ac.URI, ac.TenantNetworkId, id)
 	return ac.delete(uri, true)
 }
 
-// UpdateNatRule update a policy rule list
+// UpdateNatRule update a policy NAT rule
 func (ac *AlkiraClient) UpdateNatRule(id string, rule *NatRule) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules/%s", ac.URI, ac.TenantNetworkId, id)
 
@@ -95,8 +95,41 @@ func (ac *AlkiraClient) UpdateNatRule(id string, rule *NatRule) error {
 	return ac.update(uri, body, true)
 }
 
-// GetNatRule get a policy rule list
-func (ac *AlkiraClient) GetNatRule(id string) (*NatRule, error) {
+// GetNatRule get all policy NAT rules from the given tenant network
+func (ac *AlkiraClient) GetNatRules() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
+// GetNatRuleByName get the policy NAT rule by its name
+func (ac *AlkiraClient) GetNatRuleByName(name string) (*NatRule, error) {
+
+	if len(name) == 0 {
+		return nil, fmt.Errorf("GetNatRuleByName: Invalid rule name")
+	}
+
+	rules, err := ac.GetNatRules()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []NatRule
+	json.Unmarshal([]byte(rules), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return &l, nil
+		}
+	}
+
+	return nil, fmt.Errorf("GetNatRuleByName: failed to find the rule by name %s", name)
+}
+
+// GetNatRule get a policy NAT rule by ID
+func (ac *AlkiraClient) GetNatRuleById(id string) (*NatRule, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-rules/%s", ac.URI, ac.TenantNetworkId, id)
 
 	data, err := ac.get(uri)
