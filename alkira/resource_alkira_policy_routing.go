@@ -9,32 +9,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraPolicyRoute() *schema.Resource {
+func resourceAlkiraPolicyRouting() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Route Policy.",
-		Create:      resourcePolicyRoute,
-		Read:        resourcePolicyRouteRead,
-		Update:      resourcePolicyRouteUpdate,
-		Delete:      resourcePolicyRouteDelete,
+		Description: "Manage Routing Policy.",
+		Create:      resourcePolicyRouting,
+		Read:        resourcePolicyRoutingRead,
+		Update:      resourcePolicyRoutingUpdate,
+		Delete:      resourcePolicyRoutingDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the route policy.",
+				Description: "The name of the routing policy.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"description": {
-				Description: "The description of the route policy.",
+				Description: "The description of the routing policy.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"enabled": {
-				Description: "Is the route policy enabled.",
+				Description: "Is the routing policy enabled when created. Default is set to `false`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 			},
 			"direction": {
 				Description:  "The direction of the route, `INBOUND` or `OUTBOUND`.",
@@ -92,9 +93,9 @@ func resourceAlkiraPolicyRoute() *schema.Resource {
 							Required:    true,
 						},
 						"action": {
-							Description: "Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description:  "Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`.",
+							Type:         schema.TypeString,
+							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY", "ALLOW_W_SET"}, false),
 						},
 						"match": {
@@ -106,7 +107,7 @@ func resourceAlkiraPolicyRoute() *schema.Resource {
 										Description: "This acts as match all if enabled" +
 											"and should be used as exlusive match option.",
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
 									},
 									"as_path_list_ids": {
 										Description: "IDs of a AS Path Lists.",
@@ -149,7 +150,7 @@ func resourceAlkiraPolicyRoute() *schema.Resource {
 						}, // match
 						"set": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"as_path_prepend": {
@@ -193,7 +194,8 @@ func resourceAlkiraPolicyRoute() *schema.Resource {
 											"this rule match codition to. The value could be " +
 											"`ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.",
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "ALL",
 									},
 									"restricted_cxps": {
 										Description: "List of cxps to which routes" +
@@ -222,34 +224,34 @@ func resourceAlkiraPolicyRoute() *schema.Resource {
 	}
 }
 
-func resourcePolicyRoute(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyRouting(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generatePolicyRouteRequest(d, m)
+	request, err := generatePolicyRoutingRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy")
+		log.Printf("[ERROR] Failed to generate routing policy request.")
 		return err
 	}
 
 	id, err := client.CreateRoutePolicy(request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to create route policy")
+		log.Printf("[ERROR] Failed to create routing policy.")
 		return err
 	}
 
 	d.SetId(id)
-	return resourcePolicyRouteRead(d, m)
+	return resourcePolicyRoutingRead(d, m)
 }
 
-func resourcePolicyRouteRead(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	policy, err := client.GetRoutePolicy(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to read policy %s", d.Id())
+		log.Printf("[ERROR] Failed to read routing policy %s.", d.Id())
 		return err
 	}
 
@@ -268,33 +270,33 @@ func resourcePolicyRouteRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourcePolicyRouteUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyRoutingUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	request, err := generatePolicyRouteRequest(d, m)
+	request, err := generatePolicyRoutingRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy")
+		log.Printf("[ERROR] Failed to generate routing policy request.")
 		return err
 	}
 
 	err = client.UpdateRoutePolicy(d.Id(), request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update route policy")
+		log.Printf("[ERROR] Failed to update routing policy.")
 		return err
 	}
 
-	return resourcePolicyRouteRead(d, m)
+	return resourcePolicyRoutingRead(d, m)
 }
 
-func resourcePolicyRouteDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyRoutingDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	return client.DeleteRoutePolicy(d.Id())
 }
 
-func generatePolicyRouteRequest(d *schema.ResourceData, m interface{}) (*alkira.RoutePolicy, error) {
+func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkira.RoutePolicy, error) {
 
 	client := m.(*alkira.AlkiraClient)
 
