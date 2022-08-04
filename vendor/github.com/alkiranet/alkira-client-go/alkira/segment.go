@@ -13,20 +13,20 @@ type SegmentIpBlocks struct {
 }
 
 type SegmentSrcIpv4PoolList struct {
-	StartIp string `json:"startIp"`
-	EndIp   string `json:"endIp"`
+	StartIp string `json:"startIp,omitempty"`
+	EndIp   string `json:"endIp,omitempty"`
 }
 
 type Segment struct {
-	Asn                                        int                    `json:"asn"`
-	EnableIpv6ToIpv4Translation                bool                   `json:"enableIpv6ToIpv4Translation"`
-	EnterpriseDNSServerIP                      string                 `json:"enterpriseDNSServerIP,omitempty"`
-	Id                                         int                    `json:"id,omitempty"` // only for response
-	IpBlock                                    string                 `json:"ipBlock"`
-	IpBlocks                                   SegmentIpBlocks        `json:"ipBlocks,omitempty"`
-	Name                                       string                 `json:"name"`
-	ReservePublicIPsForUserAndSiteConnectivity bool                   `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
-	SrcIpv4PoolList                            SegmentSrcIpv4PoolList `json:"srcIpv4PoolList,omitempty"`
+	Asn                                        int                      `json:"asn"`
+	EnableIpv6ToIpv4Translation                bool                     `json:"enableIpv6ToIpv4Translation"`
+	EnterpriseDNSServerIP                      string                   `json:"enterpriseDNSServerIP,omitempty"`
+	Id                                         int                      `json:"id,omitempty"` // only for response
+	IpBlock                                    string                   `json:"ipBlock,omitempty"`
+	IpBlocks                                   SegmentIpBlocks          `json:"ipBlocks,omitempty"`
+	Name                                       string                   `json:"name"`
+	ReservePublicIPsForUserAndSiteConnectivity bool                     `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
+	SrcIpv4PoolList                            []SegmentSrcIpv4PoolList `json:"srcIpv4PoolList,omitempty"`
 }
 
 // GetSegments get all segments from the given tenant network

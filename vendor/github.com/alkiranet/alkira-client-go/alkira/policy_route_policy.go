@@ -14,7 +14,7 @@ type RoutePolicy struct {
 	Direction                     string             `json:"direction"`
 	Segment                       string             `json:"segment"`
 	IncludedGroups                []int              `json:"includedGroups"`
-	ExcludedGroups                []int              `json:"excludedGroups"`
+	ExcludedGroups                []int              `json:"excludedGroups,omitempty"`
 	Id                            json.Number        `json:"id,omitempty"`
 	AdvertiseInternetExit         bool               `json:"advertiseInternetExit,omitempty"`
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
@@ -23,33 +23,33 @@ type RoutePolicy struct {
 }
 
 type RoutePolicyRules struct {
-	Action                       string                                         `json:"action"`
-	Name                         string                                         `json:"name"`
-	Match                        RoutePolicyRulesMatch                          `json:"match"`
-	Set                          RoutePolicyRulesSet                            `json:"set"`
-	InterCxpRoutesRedistribution []RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution"`
+	Action                       string                                        `json:"action"`
+	Name                         string                                        `json:"name"`
+	Match                        RoutePolicyRulesMatch                         `json:"match"`
+	Set                          *RoutePolicyRulesSet                          `json:"set,omitempty"`
+	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution"`
 }
 
 type RoutePolicyRulesMatch struct {
 	All                      bool     `json:"all"`
-	AsPathListIds            []int    `json:"asPathListIds"`
-	CommunityListIds         []int    `json:"communityListIds"`
-	ExtendedCommunityListIds []int    `json:"extendedCommunityListIds"`
-	PrefixListIds            []int    `json:"prefixListIds"`
-	Cxps                     []string `json:"cxps"`
-	ConnectorGroupIds        []int    `json:"connectorGroupIds"`
+	AsPathListIds            []int    `json:"asPathListIds,omitempty"`
+	CommunityListIds         []int    `json:"communityListIds,omitempty"`
+	ExtendedCommunityListIds []int    `json:"extendedCommunityListIds,omitempty"`
+	PrefixListIds            []int    `json:"prefixListIds,omitempty"`
+	Cxps                     []string `json:"cxps,omitempty"`
+	ConnectorGroupIds        []int    `json:"connectorGroupIds,omitempty"`
 }
 
 type RoutePolicyRulesSet struct {
-	AsPathPrepend   string `json:"asPathPrepend"`
-	Community       string `json:"community"`
-	ExtendCommunity string `json:"extendCommunity"`
+	AsPathPrepend     string `json:"asPathPrepend"`
+	Community         string `json:"community"`
+	ExtendedCommunity string `json:"extendedCommunity"`
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
 	DistributionType        string   `json:"distributionType"`
-	RedistributeAsSecondary bool     `json:"redistributeAsSecondary"`
-	RestrictedCxps          []string `json:"restrictedCxps"`
+	RedistributeAsSecondary bool     `json:"redistributeAsSecondary,omitempty"`
+	RestrictedCxps          []string `json:"restrictedCxps,omitempty"`
 }
 
 // CreateRoutePolicy create a route policy
