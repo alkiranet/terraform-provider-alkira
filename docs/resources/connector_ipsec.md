@@ -76,6 +76,10 @@ Optional:
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
 - `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
 
+Read-Only:
+
+- `id` (Number) The ID of the endpoint.
+
 <a id="nestedblock--endpoint--advanced"></a>
 ### Nested Schema for `endpoint.advanced`
 
