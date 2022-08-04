@@ -31,13 +31,16 @@ type ConnectorIPSecSiteAdvanced struct {
 }
 
 type ConnectorIPSecSite struct {
-	Name                   string                      `json:"name"`
-	BillingTags            []int                       `json:"billingTags,omitempty"`
-	CustomerGwAsn          string                      `json:"customerGwAsn"`
-	CustomerGwIp           string                      `json:"customerGwIp"`
-	PresharedKeys          []string                    `json:"presharedKeys"`
-	EnableTunnelRedundancy bool                        `json:"enableTunnelRedundancy,omitempty"`
 	Advanced               *ConnectorIPSecSiteAdvanced `json:"advanced,omitempty"`
+	BillingTags            []int                       `json:"billingTags,omitempty"`
+	CustomerGwAsn          string                      `json:"customerGwAsn,omitempty"`
+	CustomerGwIp           string                      `json:"customerGwIp"`
+	EnableTunnelRedundancy bool                        `json:"enableTunnelRedundancy"`
+	GatewayIpType          string                      `json:"gatewayIpType,omitempty"`
+	HaMode                 string                      `json:"haMode,omitempty"`
+	Id                     int                         `json:"id,omitempty"`
+	Name                   string                      `json:"name"`
+	PresharedKeys          []string                    `json:"presharedKeys"`
 }
 
 type ConnectorIPSecPolicyOptions struct {
