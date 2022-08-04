@@ -306,16 +306,28 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
+		return nil, err
+	}
+
+	rules, err := expandPolicyRoutingRule(d.Get("rule").(*schema.Set))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to expand routing policy rules.")
 		return nil, err
 	}
 
 	policy := &alkira.RoutePolicy{
-		Name:           d.Get("name").(string),
-		Description:    d.Get("description").(string),
-		Segment:        segment.Name,
-		IncludedGroups: inGroups,
-		ExcludedGroups: exGroups,
+		Name:                          d.Get("name").(string),
+		Description:                   d.Get("description").(string),
+		Direction:                     d.Get("direction").(string),
+		Segment:                       segment.Name,
+		IncludedGroups:                inGroups,
+		ExcludedGroups:                exGroups,
+		AdvertiseInternetExit:         d.Get("advertise_internet_exit").(bool),
+		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
+		AdvertiseCustomRoutesPrefixId: d.Get("advertise_custom_routes_prefix_id").(int),
+		Rules:                         rules,
 	}
 
 	return policy, nil
