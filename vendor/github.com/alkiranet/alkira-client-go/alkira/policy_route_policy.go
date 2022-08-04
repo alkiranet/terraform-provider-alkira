@@ -41,15 +41,15 @@ type RoutePolicyRulesMatch struct {
 }
 
 type RoutePolicyRulesSet struct {
-	AsPathPrepend   string `json:"asPathPrepend"`
-	Community       string `json:"community"`
-	ExtendCommunity string `json:"extendCommunity"`
+	AsPathPrepend     string `json:"asPathPrepend"`
+	Community         string `json:"community"`
+	ExtendedCommunity string `json:"extendedCommunity"`
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
 	DistributionType        string   `json:"distributionType"`
-	RedistributeAsSecondary bool     `json:"redistributeAsSecondary"`
-	RestrictedCxps          []string `json:"restrictedCxps"`
+	RedistributeAsSecondary bool     `json:"redistributeAsSecondary,omitempty"`
+	RestrictedCxps          []string `json:"restrictedCxps, omitempty"`
 }
 
 // CreateRoutePolicy create a route policy
