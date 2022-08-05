@@ -256,9 +256,42 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 
 	for _, rule := range policy.Rules {
 		i := map[string]interface{}{
-			"name":   rule.Name,
-			"action": rule.Action,
+			"name":      rule.Name,
+			"action":    rule.Action,
+			"match_all": rule.Match.All,
 		}
+
+		if rule.Match.AsPathListIds != nil {
+			i["match_as_path_list_ids"] = rule.Match.AsPathListIds
+		}
+		if rule.Match.CommunityListIds != nil {
+			i["match_community_list_ids"] = rule.Match.CommunityListIds
+		}
+		if rule.Match.ExtendedCommunityListIds != nil {
+			i["match_extended_community_list_ids"] = rule.Match.ExtendedCommunityListIds
+		}
+		if rule.Match.PrefixListIds != nil {
+			i["match_prefix_list_ids"] = rule.Match.PrefixListIds
+		}
+		if rule.Match.ConnectorGroupIds != nil {
+			i["match_group_ids"] = rule.Match.ConnectorGroupIds
+		}
+		if rule.Match.Cxps != nil {
+			i["cxps"] = rule.Match.Cxps
+		}
+
+		if rule.Set != nil {
+			i["set_as_path_prepend"] = rule.Set.AsPathPrepend
+			i["set_community"] = rule.Set.Community
+			i["set_extended_community"] = rule.Set.ExtendedCommunity
+		}
+
+		if rule.InterCxpRoutesRedistribution != nil {
+			i["routes_distribution_restricted_cxps"] = rule.InterCxpRoutesRedistribution.RestrictedCxps
+			i["routes_distribution_type"] = rule.InterCxpRoutesRedistribution.DistributionType
+			i["routes_distribution_as_secondary"] = rule.InterCxpRoutesRedistribution.RedistributeAsSecondary
+		}
+
 		rules = append(rules, i)
 	}
 
