@@ -28,6 +28,9 @@ func expandConnectorIPSecEndpoint(in *schema.Set) []*alkira.ConnectorIPSecSite {
 		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
 			r.CustomerGwIp = v
 		}
+		if v, ok := siteCfg["id"].(int); ok {
+			r.Id = v
+		}
 
 		r.BillingTags = convertTypeListToIntList(siteCfg["billing_tag_ids"].([]interface{}))
 		r.PresharedKeys = convertTypeListToStringList(siteCfg["preshared_keys"].([]interface{}))

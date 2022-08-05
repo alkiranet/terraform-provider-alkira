@@ -313,6 +313,9 @@ func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in *schema.Set) []alkira.Ci
 		if v, ok := t["credential_id"].(string); ok {
 			r.CredentialId = v
 		}
+		if v, ok := t["id"].(int); ok {
+			r.Id = v
+		}
 
 		mappings[i] = r
 	}
