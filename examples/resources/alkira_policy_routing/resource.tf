@@ -10,15 +10,9 @@ resource "alkira_policy_routing" "test" {
   segment_id          = alkira_segment.seg1.id
 
   rule {
-    name   = "test"
-    action = "ALLOW"
-
-    match {
-      all = true
-    }
-
-    inter_cxp_routes_redistribution {
-      distribution_type = "ALL"
-    }
+    name                       = "test"
+    action                     = "ALLOW"
+    match_all                  = true
+    routes_redistribution_type = "ALL"
   }
 }

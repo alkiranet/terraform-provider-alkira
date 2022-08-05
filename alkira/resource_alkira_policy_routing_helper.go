@@ -11,26 +11,40 @@ func expandPolicyRoutingRuleMatch(in map[string]interface{}) (*alkira.RoutePolic
 
 	match := alkira.RoutePolicyRulesMatch{}
 
-	if v, ok := in["all"].(bool); ok {
+	if v, ok := in["match_all"].(bool); ok {
 		match.All = v
 	}
-	if v, ok := in["as_path_list_ids"].([]interface{}); ok {
+	if v, ok := in["match_as_path_list_ids"].([]interface{}); ok {
 		match.AsPathListIds = convertTypeListToIntList(v)
 	}
-	if v, ok := in["community_list_ids"].([]interface{}); ok {
+	if v, ok := in["match_community_list_ids"].([]interface{}); ok {
 		match.CommunityListIds = convertTypeListToIntList(v)
 	}
-	if v, ok := in["extended_community_list_ids"].([]interface{}); ok {
+	if v, ok := in["match_extended_community_list_ids"].([]interface{}); ok {
 		match.ExtendedCommunityListIds = convertTypeListToIntList(v)
+
+		if len(match.ExtendedCommunityListIds) == 0 {
+			match.ExtendedCommunityListIds = nil
+		}
 	}
-	if v, ok := in["prefix_list_ids"].([]interface{}); ok {
+	if v, ok := in["match_prefix_list_ids"].([]interface{}); ok {
 		match.PrefixListIds = convertTypeListToIntList(v)
+
+		if len(match.PrefixListIds) == 0 {
+			match.PrefixListIds = nil
+		}
 	}
-	if v, ok := in["cxps"].([]interface{}); ok {
+	if v, ok := in["match_cxps"].([]interface{}); ok {
 		match.Cxps = convertTypeListToStringList(v)
+		if len(match.Cxps) == 0 {
+			match.Cxps = nil
+		}
 	}
-	if v, ok := in["group_ids"].([]interface{}); ok {
+	if v, ok := in["match_group_ids"].([]interface{}); ok {
 		match.ConnectorGroupIds = convertTypeListToIntList(v)
+		if len(match.ConnectorGroupIds) == 0 {
+			match.ConnectorGroupIds = nil
+		}
 	}
 
 	return &match, nil
@@ -41,13 +55,13 @@ func expandPolicyRoutingRuleSet(in map[string]interface{}) (*alkira.RoutePolicyR
 
 	set := alkira.RoutePolicyRulesSet{}
 
-	if v, ok := in["as_path_prepend"].(string); ok {
+	if v, ok := in["set_as_path_prepend"].(string); ok {
 		set.AsPathPrepend = v
 	}
-	if v, ok := in["community"].(string); ok {
+	if v, ok := in["set_community"].(string); ok {
 		set.Community = v
 	}
-	if v, ok := in["extended_community"].(string); ok {
+	if v, ok := in["set_extended_community"].(string); ok {
 		set.ExtendedCommunity = v
 	}
 
@@ -60,13 +74,13 @@ func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface
 
 	distrib := alkira.RoutePolicyRulesInterCxpRoutesRedistribution{}
 
-	if v, ok := in["distribution_type"].(string); ok {
+	if v, ok := in["routes_distribution_type"].(string); ok {
 		distrib.DistributionType = v
 	}
-	if v, ok := in["redistribute_as_secondary"].(bool); ok {
+	if v, ok := in["routes_distribution_as_secondary"].(bool); ok {
 		distrib.RedistributeAsSecondary = v
 	}
-	if v, ok := in["restricted_cxps"].([]interface{}); ok {
+	if v, ok := in["routes_distribution_restricted_cxps"].([]interface{}); ok {
 		distrib.RestrictedCxps = convertTypeListToStringList(v)
 
 		if len(distrib.RestrictedCxps) == 0 {

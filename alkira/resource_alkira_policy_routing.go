@@ -150,7 +150,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"can be a value from 0 through 65535. " +
 								"Example - 100 100 100.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"set_community": {
 							Description: "Allows to add one or more community " +
@@ -160,7 +160,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"and community-value can be a value from `0` through " +
 								"`65535`. Example: `65512:20 65512:21`.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"set_extended_community": {
 							Description: "Allows to add one or more extended " +
@@ -170,7 +170,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"`type:administrator:assigned-number`. Currently " +
 								"only type origin(soo) is supported.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"routes_distribution_type": {
 							Description: "Redistribute routes that match with " +

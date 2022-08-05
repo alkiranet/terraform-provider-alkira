@@ -28,16 +28,10 @@ resource "alkira_policy_routing" "test" {
   segment_id          = alkira_segment.seg1.id
 
   rule {
-    name   = "test"
-    action = "ALLOW"
-
-    match {
-      all = true
-    }
-
-    inter_cxp_routes_redistribution {
-      distribution_type = "ALL"
-    }
+    name                       = "test"
+    action                     = "ALLOW"
+    match_all                  = true
+    routes_redistribution_type = "ALL"
   }
 }
 ```
@@ -72,45 +66,22 @@ resource "alkira_policy_routing" "test" {
 Required:
 
 - `action` (String) Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`.
-- `inter_cxp_routes_redistribution` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rule--inter_cxp_routes_redistribution))
-- `match` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rule--match))
 - `name` (String) The name of the rule.
 
 Optional:
 
-- `set` (Block Set) (see [below for nested schema](#nestedblock--rule--set))
-
-<a id="nestedblock--rule--inter_cxp_routes_redistribution"></a>
-### Nested Schema for `rule.inter_cxp_routes_redistribution`
-
-Optional:
-
-- `distribution_type` (String) Redistribute routes that match with this rule match codition to. The value could be `ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.
-- `redistribute_as_secondary` (Boolean) This allows to redistribute routes with lower preference to the restrictedCxps. Hence, this option can only be used with `RESTRICTED_CXPS` distribution_type. Also only 1 CXP is allowed in restricted_cxps, when this is set to `true`.
-- `restricted_cxps` (List of String) List of cxps to which routes distribution is restricted. Should be used only with distributionType `RESTRICTED_CXPS`.
-
-
-<a id="nestedblock--rule--match"></a>
-### Nested Schema for `rule.match`
-
-Optional:
-
-- `all` (Boolean) This acts as match all if enabledand should be used as exlusive match option.
-- `as_path_list_ids` (List of Number) IDs of a AS Path Lists.
-- `community_list_ids` (List of Number) IDs of Community Lists.
-- `cxps` (List of String) List of CXPs.
-- `extended_community_list_ids` (List of Number) IDs of Extended Community Lists.
-- `group_ids` (List of Number) IDs of groups.
-- `prefix_list_ids` (List of Number) IDs of Prefix Lists.
-
-
-<a id="nestedblock--rule--set"></a>
-### Nested Schema for `rule.set`
-
-Required:
-
-- `as_path_prepend` (String) Allows to prepend one or more AS numbers to the current AS PATH. Each AS number can be a value from 0 through 65535. Example - 100 100 100.
-- `community` (String) Allows to add one or more community attributes to the existing communities on the route. Community attribute is specified in this format: `as-number:community-value`. as-number and community-value can be a value from `0` through `65535`. Example: `65512:20 65512:21`.
-- `extended_community` (String) Allows to add one or more extended community attributes to the existing extended communities on the route. Extended community attribute is specified in this format: `type:administrator:assigned-number`. Currently only type origin(soo) is supported.
+- `match_all` (Boolean) This acts as match all if enabledand should be used as exlusive match option.
+- `match_as_path_list_ids` (List of Number) IDs of a AS Path Lists.
+- `match_community_list_ids` (List of Number) IDs of Community Lists.
+- `match_cxps` (List of String) List of CXPs.
+- `match_extended_community_list_ids` (List of Number) IDs of Extended Community Lists.
+- `match_group_ids` (List of Number) IDs of groups.
+- `match_prefix_list_ids` (List of Number) IDs of Prefix Lists.
+- `routes_distribution_as_secondary` (Boolean) This allows to redistribute routes with lower preference to the restrictedCxps. Hence, this option can only be used with `RESTRICTED_CXPS` distribution_type. Also only 1 CXP is allowed in restricted_cxps, when this is set to `true`.
+- `routes_distribution_restricted_cxps` (List of String) List of cxps to which routes distribution is restricted. Should be used only with distributionType `RESTRICTED_CXPS`.
+- `routes_distribution_type` (String) Redistribute routes that match with this rule match codition to. The value could be `ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.
+- `set_as_path_prepend` (String) Allows to prepend one or more AS numbers to the current AS PATH. Each AS number can be a value from 0 through 65535. Example - 100 100 100.
+- `set_community` (String) Allows to add one or more community attributes to the existing communities on the route. Community attribute is specified in this format: `as-number:community-value`. as-number and community-value can be a value from `0` through `65535`. Example: `65512:20 65512:21`.
+- `set_extended_community` (String) Allows to add one or more extended community attributes to the existing extended communities on the route. Extended community attribute is specified in this format: `type:administrator:assigned-number`. Currently only type origin(soo) is supported.
 
 
