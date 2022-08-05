@@ -102,125 +102,101 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY", "ALLOW_W_SET"}, false),
 						},
-						"match": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"all": {
-										Description: "This acts as match all if enabled" +
-											"and should be used as exlusive match option.",
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"as_path_list_ids": {
-										Description: "IDs of a AS Path Lists.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeInt},
-										Optional:    true,
-									},
-									"community_list_ids": {
-										Description: "IDs of Community Lists.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeInt},
-										Optional:    true,
-									},
-									"extended_community_list_ids": {
-										Description: "IDs of Extended Community Lists.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeInt},
-										Optional:    true,
-									},
-									"prefix_list_ids": {
-										Description: "IDs of Prefix Lists.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeInt},
-										Optional:    true,
-									},
-									"group_ids": {
-										Description: "IDs of groups.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeInt},
-										Optional:    true,
-									},
-									"cxps": {
-										Description: "List of CXPs.",
-										Type:        schema.TypeList,
-										Elem:        &schema.Schema{Type: schema.TypeString},
-										Optional:    true,
-									},
-								},
-							},
-						}, // match
-						"set": {
-							Type:     schema.TypeSet,
+						"match_all": {
+							Description: "This acts as match all if enabled" +
+								"and should be used as exlusive match option.",
+							Type:     schema.TypeBool,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"as_path_prepend": {
-										Description: "Allows to prepend one or more AS " +
-											"numbers to the current AS PATH. Each AS number " +
-											"can be a value from 0 through 65535. " +
-											"Example - 100 100 100.",
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"community": {
-										Description: "Allows to add one or more community " +
-											"attributes to the existing communities on the " +
-											"route. Community attribute is specified in this " +
-											"format: `as-number:community-value`. as-number " +
-											"and community-value can be a value from `0` through " +
-											"`65535`. Example: `65512:20 65512:21`.",
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"extended_community": {
-										Description: "Allows to add one or more extended " +
-											"community attributes to the existing extended " +
-											"communities on the route. Extended community " +
-											"attribute is specified in this format: " +
-											"`type:administrator:assigned-number`. Currently " +
-											"only type origin(soo) is supported.",
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						}, // set
-						"inter_cxp_routes_redistribution": {
-							Type:     schema.TypeSet,
+						},
+						"match_as_path_list_ids": {
+							Description: "IDs of a AS Path Lists.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_community_list_ids": {
+							Description: "IDs of Community Lists.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_extended_community_list_ids": {
+							Description: "IDs of Extended Community Lists.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_prefix_list_ids": {
+							Description: "IDs of Prefix Lists.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_group_ids": {
+							Description: "IDs of groups.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_cxps": {
+							Description: "List of CXPs.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"set_as_path_prepend": {
+							Description: "Allows to prepend one or more AS " +
+								"numbers to the current AS PATH. Each AS number " +
+								"can be a value from 0 through 65535. " +
+								"Example - 100 100 100.",
+							Type:     schema.TypeString,
 							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"distribution_type": {
-										Description: "Redistribute routes that match with " +
-											"this rule match codition to. The value could be " +
-											"`ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.",
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "ALL",
-									},
-									"restricted_cxps": {
-										Description: "List of cxps to which routes " +
-											"distribution is restricted. Should be used " +
-											"only with distributionType `RESTRICTED_CXPS`.",
-										Type:     schema.TypeList,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										Optional: true,
-									},
-									"redistribute_as_secondary": {
-										Description: "This allows to redistribute routes with " +
-											"lower preference to the restrictedCxps. Hence, " +
-											"this option can only be used with `RESTRICTED_CXPS` " +
-											"distribution_type. Also only 1 CXP is allowed in " +
-											"restricted_cxps, when this is set to `true`.",
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-								},
-							},
-						}, // inter_cxp_routes_redistribution
+						},
+						"set_community": {
+							Description: "Allows to add one or more community " +
+								"attributes to the existing communities on the " +
+								"route. Community attribute is specified in this " +
+								"format: `as-number:community-value`. as-number " +
+								"and community-value can be a value from `0` through " +
+								"`65535`. Example: `65512:20 65512:21`.",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"set_extended_community": {
+							Description: "Allows to add one or more extended " +
+								"community attributes to the existing extended " +
+								"communities on the route. Extended community " +
+								"attribute is specified in this format: " +
+								"`type:administrator:assigned-number`. Currently " +
+								"only type origin(soo) is supported.",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"routes_distribution_type": {
+							Description: "Redistribute routes that match with " +
+								"this rule match codition to. The value could be " +
+								"`ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "ALL",
+						},
+						"routes_distribution_restricted_cxps": {
+							Description: "List of cxps to which routes " +
+								"distribution is restricted. Should be used " +
+								"only with distributionType `RESTRICTED_CXPS`.",
+							Type:     schema.TypeList,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+						},
+						"routes_distribution_as_secondary": {
+							Description: "This allows to redistribute routes with " +
+								"lower preference to the restrictedCxps. Hence, " +
+								"this option can only be used with `RESTRICTED_CXPS` " +
+								"distribution_type. Also only 1 CXP is allowed in " +
+								"restricted_cxps, when this is set to `true`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			}, // rule

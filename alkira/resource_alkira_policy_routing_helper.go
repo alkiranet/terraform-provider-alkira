@@ -7,74 +7,48 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandPolicyRoutingRuleMatch(in *schema.Set) (*alkira.RoutePolicyRulesMatch, error) {
-
-	if in == nil || in.Len() == 0 {
-		return nil, nil
-	}
-
-	if in.Len() > 1 {
-		return nil, fmt.Errorf("Only one match block should be defined in routing policy.")
-	}
+func expandPolicyRoutingRuleMatch(in map[string]interface{}) (*alkira.RoutePolicyRulesMatch, error) {
 
 	match := alkira.RoutePolicyRulesMatch{}
 
-	for _, matchInput := range in.List() {
-
-		input := matchInput.(map[string]interface{})
-
-		if v, ok := input["all"].(bool); ok {
-			match.All = v
-		}
-		if v, ok := input["as_path_list_ids"].([]interface{}); ok {
-			match.AsPathListIds = convertTypeListToIntList(v)
-		}
-		if v, ok := input["community_list_ids"].([]interface{}); ok {
-			match.CommunityListIds = convertTypeListToIntList(v)
-		}
-		if v, ok := input["extended_community_list_ids"].([]interface{}); ok {
-			match.ExtendedCommunityListIds = convertTypeListToIntList(v)
-		}
-		if v, ok := input["prefix_list_ids"].([]interface{}); ok {
-			match.PrefixListIds = convertTypeListToIntList(v)
-		}
-		if v, ok := input["cxps"].([]interface{}); ok {
-			match.Cxps = convertTypeListToStringList(v)
-		}
-		if v, ok := input["group_ids"].([]interface{}); ok {
-			match.ConnectorGroupIds = convertTypeListToIntList(v)
-		}
+	if v, ok := in["all"].(bool); ok {
+		match.All = v
+	}
+	if v, ok := in["as_path_list_ids"].([]interface{}); ok {
+		match.AsPathListIds = convertTypeListToIntList(v)
+	}
+	if v, ok := in["community_list_ids"].([]interface{}); ok {
+		match.CommunityListIds = convertTypeListToIntList(v)
+	}
+	if v, ok := in["extended_community_list_ids"].([]interface{}); ok {
+		match.ExtendedCommunityListIds = convertTypeListToIntList(v)
+	}
+	if v, ok := in["prefix_list_ids"].([]interface{}); ok {
+		match.PrefixListIds = convertTypeListToIntList(v)
+	}
+	if v, ok := in["cxps"].([]interface{}); ok {
+		match.Cxps = convertTypeListToStringList(v)
+	}
+	if v, ok := in["group_ids"].([]interface{}); ok {
+		match.ConnectorGroupIds = convertTypeListToIntList(v)
 	}
 
 	return &match, nil
 }
 
 // expandPolicyRoutingRuleSet expand the "set" section of the policy routing rule
-func expandPolicyRoutingRuleSet(in *schema.Set) (*alkira.RoutePolicyRulesSet, error) {
-
-	if in == nil || in.Len() == 0 {
-		return nil, nil
-	}
-
-	if in.Len() > 1 {
-		return nil, fmt.Errorf("Only one match block should be defined in routing policy.")
-	}
+func expandPolicyRoutingRuleSet(in map[string]interface{}) (*alkira.RoutePolicyRulesSet, error) {
 
 	set := alkira.RoutePolicyRulesSet{}
 
-	for _, setInput := range in.List() {
-
-		input := setInput.(map[string]interface{})
-
-		if v, ok := input["as_path_prepend"].(string); ok {
-			set.AsPathPrepend = v
-		}
-		if v, ok := input["community"].(string); ok {
-			set.Community = v
-		}
-		if v, ok := input["extended_community"].(string); ok {
-			set.ExtendedCommunity = v
-		}
+	if v, ok := in["as_path_prepend"].(string); ok {
+		set.AsPathPrepend = v
+	}
+	if v, ok := in["community"].(string); ok {
+		set.Community = v
+	}
+	if v, ok := in["extended_community"].(string); ok {
+		set.ExtendedCommunity = v
 	}
 
 	return &set, nil
@@ -82,30 +56,21 @@ func expandPolicyRoutingRuleSet(in *schema.Set) (*alkira.RoutePolicyRulesSet, er
 
 // expandPolicyRoutingRuleInterCxpRoutesRedistribution expand the
 //   "inter_cxp_routes_redistribution" section of the policy routing rule
-func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in *schema.Set) (*alkira.RoutePolicyRulesInterCxpRoutesRedistribution, error) {
-
-	if in == nil || in.Len() == 0 {
-		return nil, nil
-	}
+func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface{}) (*alkira.RoutePolicyRulesInterCxpRoutesRedistribution, error) {
 
 	distrib := alkira.RoutePolicyRulesInterCxpRoutesRedistribution{}
 
-	for _, disInput := range in.List() {
+	if v, ok := in["distribution_type"].(string); ok {
+		distrib.DistributionType = v
+	}
+	if v, ok := in["redistribute_as_secondary"].(bool); ok {
+		distrib.RedistributeAsSecondary = v
+	}
+	if v, ok := in["restricted_cxps"].([]interface{}); ok {
+		distrib.RestrictedCxps = convertTypeListToStringList(v)
 
-		input := disInput.(map[string]interface{})
-
-		if v, ok := input["distribution_type"].(string); ok {
-			distrib.DistributionType = v
-		}
-		if v, ok := input["redistribute_as_secondary"].(bool); ok {
-			distrib.RedistributeAsSecondary = v
-		}
-		if v, ok := input["restricted_cxps"].([]interface{}); ok {
-			distrib.RestrictedCxps = convertTypeListToStringList(v)
-
-			if len(distrib.RestrictedCxps) == 0 {
-				distrib.RestrictedCxps = nil
-			}
+		if len(distrib.RestrictedCxps) == 0 {
+			distrib.RestrictedCxps = nil
 		}
 	}
 
@@ -121,43 +86,41 @@ func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) 
 
 	rules := make([]alkira.RoutePolicyRules, in.Len())
 
-	for i, rule := range in.List() {
+	for i, ruleInput := range in.List() {
 
-		r := alkira.RoutePolicyRules{}
-		ruleCfg := rule.(map[string]interface{})
+		rule := alkira.RoutePolicyRules{}
+		input := ruleInput.(map[string]interface{})
 
-		if v, ok := ruleCfg["action"].(string); ok {
-			r.Action = v
+		if v, ok := input["action"].(string); ok {
+			rule.Action = v
 		}
-		if v, ok := ruleCfg["name"].(string); ok {
-			r.Name = v
+		if v, ok := input["name"].(string); ok {
+			rule.Name = v
 		}
-		if v, ok := ruleCfg["match"].(*schema.Set); ok {
-			match, err := expandPolicyRoutingRuleMatch(v)
 
-			if err != nil {
-				return nil, err
-			}
+		match, err := expandPolicyRoutingRuleMatch(input)
 
-			r.Match = *match
+		if err != nil {
+			return nil, err
 		}
-		if v, ok := ruleCfg["set"].(*schema.Set); ok {
-			set, err := expandPolicyRoutingRuleSet(v)
-			if err != nil {
-				return nil, err
-			}
 
-			r.Set = set
-		}
-		if v, ok := ruleCfg["inter_cxp_routes_redistribution"].(*schema.Set); ok {
-			distribution, err := expandPolicyRoutingRuleInterCxpRoutesRedistribution(v)
-			if err != nil {
-				return nil, err
-			}
+		rule.Match = *match
 
-			r.InterCxpRoutesRedistribution = distribution
+		set, err := expandPolicyRoutingRuleSet(input)
+		if err != nil {
+			return nil, err
 		}
-		rules[i] = r
+
+		rule.Set = set
+
+		distribution, err := expandPolicyRoutingRuleInterCxpRoutesRedistribution(input)
+		if err != nil {
+			return nil, err
+		}
+
+		rule.InterCxpRoutesRedistribution = distribution
+
+		rules[i] = rule
 	}
 
 	return rules, nil
