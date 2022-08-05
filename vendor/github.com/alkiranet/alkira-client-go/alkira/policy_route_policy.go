@@ -23,11 +23,11 @@ type RoutePolicy struct {
 }
 
 type RoutePolicyRules struct {
-	Action                       string                                         `json:"action"`
-	Name                         string                                         `json:"name"`
-	Match                        RoutePolicyRulesMatch                          `json:"match"`
-	Set                          *RoutePolicyRulesSet                           `json:"set,omitempty"`
-	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution   `json:"interCxpRoutesRedistribution"`
+	Action                       string                                        `json:"action"`
+	Name                         string                                        `json:"name"`
+	Match                        RoutePolicyRulesMatch                         `json:"match"`
+	Set                          *RoutePolicyRulesSet                          `json:"set,omitempty"`
+	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution"`
 }
 
 type RoutePolicyRulesMatch struct {
