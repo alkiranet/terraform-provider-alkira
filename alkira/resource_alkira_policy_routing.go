@@ -11,11 +11,13 @@ import (
 
 func resourceAlkiraPolicyRouting() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Routing Policy.",
-		Create:      resourcePolicyRouting,
-		Read:        resourcePolicyRoutingRead,
-		Update:      resourcePolicyRoutingUpdate,
-		Delete:      resourcePolicyRoutingDelete,
+		Description: "Manage Routing Policy.\n\n" +
+			"Configure a routing policy between the Alkira " +
+			"CSX and a selected scope with custom rules",
+		Create: resourcePolicyRouting,
+		Read:   resourcePolicyRoutingRead,
+		Update: resourcePolicyRoutingUpdate,
+		Delete: resourcePolicyRoutingDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,7 +34,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Optional:    true,
 			},
 			"enabled": {
-				Description: "Is the routing policy enabled when created. Default is set to `false`.",
+				Description: "Whether the routing policy is enabled. By default, it is set to `false`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -49,33 +51,35 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Required:    true,
 			},
 			"included_group_ids": {
-				Description: "Defines the scope for the policy. Connector associated" +
-					"with group IDs metioned here is where this policy would be applied." +
-					"Group IDs that associated with branch/on-premise connectors can be" +
+				Description: "Defines the scope for the policy. Connector associated " +
+					"with group IDs metioned here is where this policy would be applied. " +
+					"Group IDs that associated with branch/on-premise connectors can be " +
 					"used here. These group should not contain any cloud connector.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"excluded_group_ids": {
-				Description: "Excludes given associated connector from `included_groups`." +
-					"Implicit group ID of a branch/on-premise connector for which a user" +
+				Description: "Excludes given associated connector from `included_groups`. " +
+					"Implicit group ID of a branch/on-premise connector for which a user " +
 					"defined group is used in `included_groups` can be used here.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
 			"advertise_internet_exit": {
-				Description: "Advertise Alkira’s Internet Connector to selected scope. Default value is `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Advertise Alkira’s Internet Connector to selected scope. Default " +
+					"value is `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"advertise_on_prem_routes": {
-				Description: "Advertise routes from other on premise connectors to selected scope. Default value is `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Advertise routes from other on premise connectors to selected scope. " +
+					"Default value is `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"advertise_custom_routes_prefix_id": {
 				Description: "Prefix list ID to send aggregates out towards on-prem connectors.",
@@ -198,8 +202,8 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 										Default:  "ALL",
 									},
 									"restricted_cxps": {
-										Description: "List of cxps to which routes" +
-											"distribution is restricted. Should be used" +
+										Description: "List of cxps to which routes " +
+											"distribution is restricted. Should be used " +
 											"only with distributionType `RESTRICTED_CXPS`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -255,10 +259,15 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("name", policy.Name)
+	d.Set("advertise_custom_routes_prefix_id", policy.AdvertiseCustomRoutesPrefixId)
+	d.Set("advertise_internet_exit", policy.AdvertiseInternetExit)
+	d.Set("advertise_on_prem_routes", policy.AdvertiseOnPremRoutes)
 	d.Set("description", policy.Description)
-	d.Set("included_group_ids", policy.IncludedGroups)
+	d.Set("direction", policy.Direction)
+	d.Set("enabled", policy.Enabled)
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
+	d.Set("included_group_ids", policy.IncludedGroups)
+	d.Set("name", policy.Name)
 
 	segment, err := client.GetSegmentByName(policy.Segment)
 
@@ -266,6 +275,42 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	d.Set("segment_id", segment.Id)
+
+	var rules []map[string]interface{}
+
+	for _, rule := range policy.Rules {
+		// Each rule will only have one match block
+		match := map[string]interface{}{
+			"all":                         rule.Match.All,
+			"as_path_list_ids":            rule.Match.AsPathListIds,
+			"community_list_ids":          rule.Match.CommunityListIds,
+			"extended_community_list_ids": rule.Match.ExtendedCommunityListIds,
+			"prefix_list_ids":             rule.Match.PrefixListIds,
+			"group_ids":                   rule.Match.ConnectorGroupIds,
+			"cxps":                        rule.Match.Cxps,
+		}
+		set := map[string]interface{}{
+			"as_path_prepend":    rule.Set.AsPathPrepend,
+			"community":          rule.Set.Community,
+			"extended_community": rule.Set.ExtendedCommunity,
+		}
+		distribution := map[string]interface{}{
+			"distribution_type":  rule.InterCxpRoutesRedistribution.DistributionType,
+			"restricted_cxps":    rule.InterCxpRoutesRedistribution.RestrictedCxps,
+			"extended_community": rule.InterCxpRoutesRedistribution.RedistributeAsSecondary,
+		}
+
+		i := map[string]interface{}{
+			"name":                            rule.Name,
+			"action":                          rule.Action,
+			"match":                           match,
+			"set":                             set,
+			"inter_cxp_routes_redistribution": distribution,
+		}
+		rules = append(rules, i)
+	}
+
+	d.Set("rule", rules)
 
 	return nil
 }
