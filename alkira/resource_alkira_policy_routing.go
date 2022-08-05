@@ -279,33 +279,9 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 	var rules []map[string]interface{}
 
 	for _, rule := range policy.Rules {
-		// Each rule will only have one match block
-		match := map[string]interface{}{
-			"all":                         rule.Match.All,
-			"as_path_list_ids":            rule.Match.AsPathListIds,
-			"community_list_ids":          rule.Match.CommunityListIds,
-			"extended_community_list_ids": rule.Match.ExtendedCommunityListIds,
-			"prefix_list_ids":             rule.Match.PrefixListIds,
-			"group_ids":                   rule.Match.ConnectorGroupIds,
-			"cxps":                        rule.Match.Cxps,
-		}
-		set := map[string]interface{}{
-			"as_path_prepend":    rule.Set.AsPathPrepend,
-			"community":          rule.Set.Community,
-			"extended_community": rule.Set.ExtendedCommunity,
-		}
-		distribution := map[string]interface{}{
-			"distribution_type":  rule.InterCxpRoutesRedistribution.DistributionType,
-			"restricted_cxps":    rule.InterCxpRoutesRedistribution.RestrictedCxps,
-			"extended_community": rule.InterCxpRoutesRedistribution.RedistributeAsSecondary,
-		}
-
 		i := map[string]interface{}{
-			"name":                            rule.Name,
-			"action":                          rule.Action,
-			"match":                           match,
-			"set":                             set,
-			"inter_cxp_routes_redistribution": distribution,
+			"name":   rule.Name,
+			"action": rule.Action,
 		}
 		rules = append(rules, i)
 	}
