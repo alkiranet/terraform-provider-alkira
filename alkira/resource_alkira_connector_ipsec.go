@@ -43,7 +43,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			},
 			"endpoint": &schema.Schema{
 				Description: "The endpoint.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -405,7 +405,7 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSec, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").(*schema.Set))
+	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").([]interface{}))
 
 	// For now, IPSec connector only support single segment
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))

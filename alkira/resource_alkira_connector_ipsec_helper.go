@@ -9,35 +9,27 @@ import (
 )
 
 // expandIPSecEndpoint expand IPSEC endpoint section
-func expandConnectorIPSecEndpoint(in *schema.Set) []*alkira.ConnectorIPSecSite {
-	if in == nil || in.Len() == 0 {
+func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite {
+	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty IPSec endpoint input")
 		return nil
 	}
 
-	sites := make([]*alkira.ConnectorIPSecSite, in.Len())
+	sites := make([]*alkira.ConnectorIPSecSite, len(in))
 
-	for i, site := range in.List() {
+	for i, site := range in {
+		siteConfig := site.(map[string]interface{})
 
 		r := alkira.ConnectorIPSecSite{}
-		siteCfg := site.(map[string]interface{})
 
-		if v, ok := siteCfg["name"].(string); ok {
-			r.Name = v
-		}
-		if v, ok := siteCfg["customer_gateway_ip"].(string); ok {
-			r.CustomerGwIp = v
-		}
-		if v, ok := siteCfg["id"].(int); ok {
-			r.Id = v
-		}
-
-		r.BillingTags = convertTypeListToIntList(siteCfg["billing_tag_ids"].([]interface{}))
-		r.PresharedKeys = convertTypeListToStringList(siteCfg["preshared_keys"].([]interface{}))
+		r.Name = siteConfig["name"].(string)
+		r.CustomerGwIp = siteConfig["customer_gateway_ip"].(string)
+		r.Id = siteConfig["id"].(int)
+		r.BillingTags = convertTypeListToIntList(siteConfig["billing_tag_ids"].([]interface{}))
+		r.PresharedKeys = convertTypeListToStringList(siteConfig["preshared_keys"].([]interface{}))
 
 		sites[i] = &r
 	}
-
 	return sites
 }
 
