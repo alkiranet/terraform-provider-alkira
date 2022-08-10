@@ -36,10 +36,17 @@ func resourceAlkiraSegment() *schema.Resource {
 				Default:     "65514",
 			},
 			"cidrs": {
-				Description: "The CIDR block.",
+				Description: "The list of CIDR blocks.",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"enable_ipv6_to_ipv4_translation": {
+				Description: "Enable IPv6 to IPv4 translation in the " +
+					"segment for internet application traffic.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
@@ -50,6 +57,16 @@ func resourceAlkiraSegment() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"src_ipv4_pool_start_ip": {
+				Description: "The start IP address of IPv4 pool.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"src_ipv4_pool_end_ip": {
+				Description: "The end IP address of IPv4 pool.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}
@@ -84,8 +101,15 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("asn", segment.Asn)
+	d.Set("enable_ipv6_to_ipv4_translation", segment.EnableIpv6ToIpv4Translation)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
+
+	if segment.SrcIpv4PoolList != nil && len(segment.SrcIpv4PoolList) > 0 {
+		d.Set("src_ipv4_pool_start_ip", segment.SrcIpv4PoolList[0].StartIp)
+		d.Set("src_ipv4_pool_end_ip", segment.SrcIpv4PoolList[0].EndIp)
+	}
+
 	setCidrsSegmentRead(d, segment)
 
 	return nil
@@ -119,11 +143,18 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
 	seg := &alkira.Segment{
-		Asn:  d.Get("asn").(int),
-		Name: d.Get("name").(string),
+		Asn:                         d.Get("asn").(int),
+		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
+		Name:                        d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
 		IpBlocks: alkira.SegmentIpBlocks{
 			Values: cidrs,
+		},
+		SrcIpv4PoolList: []alkira.SegmentSrcIpv4PoolList{
+			alkira.SegmentSrcIpv4PoolList{
+				StartIp: d.Get("src_ipv4_pool_start_ip").(string),
+				EndIp:   d.Get("src_ipv4_pool_end_ip").(string),
+			},
 		},
 	}
 
