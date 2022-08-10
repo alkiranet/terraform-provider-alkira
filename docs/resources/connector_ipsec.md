@@ -51,7 +51,7 @@ resource "alkira_connector_ipsec" "ipsec" {
 ### Optional
 
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
-- `endpoint` (Block Set) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
+- `endpoint` (Block List) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - `group` (String) The group of the connector.
 - `policy_options` (Block Set) Policy options, both on-prem and cxp prefixlist ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
 - `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
