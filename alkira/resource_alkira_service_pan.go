@@ -153,6 +153,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
+			"license_sub_type": {
+				Description:  "PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"CREDIT_BASED", "MODEL_BASED"}, false),
+			},
 			"panorama_enabled": {
 				Description: "Enable Panorama or not. Default value is `false`.",
 				Type:        schema.TypeBool,
@@ -316,6 +322,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
 	d.Set("license_type", pan.LicenseType)
+	d.Set("license_sub_type", pan.SubLicenseType)
 	d.Set("management_segment_id", pan.ManagementSegmentId)
 	d.Set("master_key_enabled", pan.MasterKeyEnabled)
 	d.Set("max_instance_count", pan.MaxInstanceCount)
@@ -453,6 +460,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
 		Instances:                   instances,
 		LicenseType:                 d.Get("license_type").(string),
+		SubLicenseType:              d.Get("license_sub_type").(string),
 		MasterKeyCredentialId:       masterKeyCredentialId,
 		MasterKeyEnabled:            d.Get("master_key_enabled").(bool),
 		MaxInstanceCount:            d.Get("max_instance_count").(int),
