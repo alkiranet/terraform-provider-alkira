@@ -82,6 +82,7 @@ resource "alkira_service_pan" "test1" {
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
 - `global_protect_segment_options` (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- `license_sub_type` (String) PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)
 - `master_key` (String) Master Key for PAN instances.
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
