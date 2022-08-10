@@ -28,13 +28,16 @@ resource "alkira_segment" "test" {
 
 ### Required
 
-- `cidrs` (List of String) The CIDR block.
+- `cidrs` (List of String) The list of CIDR blocks.
 - `name` (String) The name of the segment.
 
 ### Optional
 
 - `asn` (Number) The BGP ASN for the segment. Default value is `65514`.
+- `enable_ipv6_to_ipv4_translation` (Boolean) Enable IPv6 to IPv4 translation in the segment for internet application traffic.
 - `reserve_public_ips` (Boolean) Default value is `false`. When this is set to `true`. Alkira reserves public IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved public IPs may be used to create tunnels to the Akamai Prolexic.
+- `src_ipv4_pool_end_ip` (String) The end IP address of IPv4 pool.
+- `src_ipv4_pool_start_ip` (String) The start IP address of IPv4 pool.
 
 ### Read-Only
 

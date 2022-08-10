@@ -72,6 +72,17 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Default:      "DEFAULT",
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "AKAMAI_PROLEXIC"}, false),
 			},
+			"internet_protocol": {
+				Description: "Internet Protocol to be associated with the internet application. " +
+					"The value could be: `IPV4`, `IPV6` or `BOTH`. " +
+					"In order to use the option IPV6 or BOTH, `enable_ipv6_to_ipv4_translation` " +
+					"should be enabled on the associated segment and a valid IP pool range should " +
+					"be provided. `IPV6` and `BOTH` options are only available to Internet " +
+					"Applications on AWS CXPs.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"IPV4", "IPV6", "BOTH"}, false),
+			},
 			"name": {
 				Description: "The name of the internet application.",
 				Type:        schema.TypeString,
