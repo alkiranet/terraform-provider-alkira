@@ -49,7 +49,7 @@ resource "alkira_fortinet" "test1" {
 
 - `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `cxp` (String) The CXP where the service should be provisioned.
-- `instances` (Block Set, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to max_instance_count. (see [below for nested schema](#nestedblock--instances))
+- `instances` (Block List, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `license_type` (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `management_server_segment` (String) The segment used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.

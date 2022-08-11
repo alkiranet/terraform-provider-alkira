@@ -91,7 +91,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"instance": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -388,7 +388,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
-	instances, err := expandPanInstances(d.Get("instance").(*schema.Set), m)
+	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

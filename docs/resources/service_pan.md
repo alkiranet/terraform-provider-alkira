@@ -63,7 +63,7 @@ resource "alkira_service_pan" "test1" {
 
 - `credential_id` (String) ID of PAN credential managed by credential resource.
 - `cxp` (String) The CXP where the service should be provisioned.
-- `instance` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--instance))
+- `instance` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_segment_id` (Number) Management Segment ID.
 - `max_instance_count` (Number) Max number of Panorama instances for auto scale.
