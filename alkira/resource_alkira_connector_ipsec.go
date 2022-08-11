@@ -87,13 +87,13 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type: schema.TypeSet,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dpd_timeout": {
-										Description: "Timeouts to check the liveness of a peer. IKEv1 only.",
+									"dpd_delay": {
+										Description: "Interval to check the liveness of a peer.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
-									"dpd_delay": {
-										Description: "Interval to check the liveness of a peer.",
+									"dpd_timeout": {
+										Description: "Timeouts to check the liveness of a peer. IKEv1 only.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
@@ -102,28 +102,42 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required: true,
 									},
 									"esp_life_time": {
-										Description: "Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Maximum IPsec ESP lifetime if the IPsec " +
+											"ESP does not rekey.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"esp_random_time": {
+										Description: "Time range from which to choose " +
+											"a random value to subtract from rekey times in seconds.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"esp_encryption_algorithms": {
+										Description: "Encryption algorithms to use for IPsec SA. Value " +
+											"could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` " +
+											"`3DESCBC`, or `NULL`.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"esp_integrity_algorithms": {
+										Description: "Integrity algorithms to use for IPsec SA. Value could " +
+											"`SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"esp_dh_group_numbers": {
+										Description: "Diffie Hellman groups to use for IPsec SA. Value could " +
+											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
+											"`MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"initiator": {
-										Type:     schema.TypeString,
+										Description: "When true CXP will initiate the IKE connection " +
+											"and if false then the customer gateway should initiate IKE. " +
+											"When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.",
+										Type:     schema.TypeBool,
 										Required: true,
 									},
 									"ike_version": {
@@ -143,30 +157,37 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:    true,
 									},
 									"ike_random_time": {
-										Description: "Time range from which to choose a random value to subtract from rekey times.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Time range from which to choose a random value to " +
+											"subtract from rekey times.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"ike_encryption_algorithms": {
-										Description:  "Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.",
+										Description: "Encryption algorithms to use for IKE SA, one of " +
+											"`AES256CBC`, `AES192CBC`, `AES128CBC`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"AES256CBC", "AES192CBC", "AES128CBC"}, false),
 									},
 									"ike_integrity_algorithms": {
-										Description:  "Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.",
+										Description: "Integrity algorithms to use for IKE SA, one of " +
+											"`SHA1`, `SHA256`, `SHA384`, `SHA512`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"SHA1", "SHA256", "SHA384", "SHA512"}, false),
 									},
 									"ike_dh_group_numbers": {
-										Description:  "Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`",
+										Description: "Diffie Hellman groups to use for IKE SA, one of " +
+											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
+											"`MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048", "MODP3072", "MODP4096", "MODP6144", "MODP8192", "ECP256", "ECP384", "ECP521", "CURVE25519"}, false),
 									},
 									"local_auth_type": {
-										Description:  "Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.",
+										Description: "Local-ID type - IKE identity to use for " +
+											"authentication round, one of `FQDN`, `USER_FQDN`, " +
+											"`KEYID`, `IP_ADDR`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
@@ -177,7 +198,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:    true,
 									},
 									"remote_auth_type": {
-										Description:  "Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.",
+										Description: "Remote-ID type - IKE identity to use for " +
+											"authentication round, one of `FQDN`, `USER_FQDN`, " +
+											"`KEYID`, `IP_ADDR`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
