@@ -142,6 +142,19 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
+	// Special handle for pool list, otherwise, request will simply fail
+	srcIpv4PoolList := []alkira.SegmentSrcIpv4PoolList{}
+	list := alkira.SegmentSrcIpv4PoolList{}
+
+	if d.Get("src_ipv4_pool_start_ip") != "" && d.Get("src_ipv4_pool_end_ip") != "" {
+		list.StartIp = d.Get("src_ipv4_pool_start_ip").(string)
+		list.EndIp = d.Get("src_ipv4_pool_end_ip").(string)
+
+		srcIpv4PoolList = []alkira.SegmentSrcIpv4PoolList{list}
+	} else {
+		srcIpv4PoolList = nil
+	}
+
 	seg := &alkira.Segment{
 		Asn:                         d.Get("asn").(int),
 		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
@@ -150,12 +163,7 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 		IpBlocks: alkira.SegmentIpBlocks{
 			Values: cidrs,
 		},
-		SrcIpv4PoolList: []alkira.SegmentSrcIpv4PoolList{
-			alkira.SegmentSrcIpv4PoolList{
-				StartIp: d.Get("src_ipv4_pool_start_ip").(string),
-				EndIp:   d.Get("src_ipv4_pool_end_ip").(string),
-			},
-		},
+		SrcIpv4PoolList: srcIpv4PoolList,
 	}
 
 	return seg, nil
