@@ -111,7 +111,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Description: "The ip address of the grid master.",
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "0.0.0.0", // NOTE: the ACG API requires a valid IP address input even when a new grid master is being created. This default is included this to avoid unnecesary errors from the backend.
 						},
 						"name": {
 							Description: "Name of the grid master.",
@@ -132,7 +131,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				},
 			},
 			"instance": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				Description: "The properties pertaining to each individual instance of the Infoblox service.",
 				Elem: &schema.Resource{
@@ -282,7 +281,13 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfoblox, &alkira.CredentialInfoblox{shared_secret}, 0)
+	infobloxCredentialId, err := client.CreateCredential(
+		nameWithSuffix,
+		alkira.CredentialTypeInfoblox,
+		&alkira.CredentialInfoblox{SharedSecret: shared_secret},
+		0,
+	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +300,8 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 	}
 
 	//Parse Instances
-	instancesSet := d.Get("instance").(*schema.Set)
-	instances, err := expandInfobloxInstances(instancesSet, m)
+	instanceList := d.Get("instance").([]interface{})
+	instances, err := expandInfobloxInstances(instanceList, m)
 	if err != nil {
 		return nil, err
 	}

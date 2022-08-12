@@ -3,20 +3,22 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
+//func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
+func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || in.Len() == 0 {
-		return nil, fmt.Errorf("invalid infoblox instance input")
+	if in == nil || len(in) == 0 {
+		return nil, fmt.Errorf("infoblox instances cannot be nil or empty")
 	}
 
-	instances := make([]alkira.InfobloxInstance, in.Len())
-	for i, instance := range in.List() {
+	instances := make([]alkira.InfobloxInstance, len(in))
+	for i, instance := range in {
 		var r alkira.InfobloxInstance
 		var nameWithSuffix string
 		var password string
@@ -25,8 +27,10 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
 		}
-		if v, ok := instanceCfg["id"].(json.Number); ok {
-			r.Id = v
+		if v, ok := instanceCfg["id"].(int); ok {
+			if v != 0 {
+				r.Id = json.Number(strconv.Itoa(v))
+			}
 		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
 			//Note: Name is required but not used in the API. So rather than make our user input an
@@ -49,8 +53,17 @@ func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxIn
 			r.Version = v
 		}
 
-		credentialInstance := alkira.CredentialInfobloxInstance{password}
-		credentialId, err := client.CreateCredential(nameWithSuffix, alkira.CredentialTypeInfobloxInstance, credentialInstance, 0)
+		credentialInstance := alkira.CredentialInfobloxInstance{
+			Password: password,
+		}
+
+		credentialId, err := client.CreateCredential(
+			nameWithSuffix,
+			alkira.CredentialTypeInfobloxInstance,
+			credentialInstance,
+			0,
+		)
+
 		if err != nil {
 			return nil, err
 		}
