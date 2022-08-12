@@ -25,6 +25,7 @@ func expandConnectorIPSecEndpointAdvanced(in *schema.Set) (*alkira.ConnectorIPSe
 
 	for _, input := range in.List() {
 		config := input.(map[string]interface{})
+		log.Printf("[DEBUG] SPIKE %v", config["esp_life_time"])
 
 		if v, ok := config["dpd_delay"].(int); ok {
 			advanced.DPDDelay = v

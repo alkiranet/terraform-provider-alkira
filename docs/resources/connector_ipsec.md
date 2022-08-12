@@ -85,17 +85,17 @@ Read-Only:
 
 Required:
 
-- `dpd_delay` (String) Interval to check the liveness of a peer.
-- `dpd_timeout` (String) Timeouts to check the liveness of a peer. IKEv1 only.
-- `esp_dh_group_numbers` (String) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.
+- `dpd_delay` (Number) Interval to check the liveness of a peer.
+- `dpd_timeout` (Number) Timeouts to check the liveness of a peer. IKEv1 only.
+- `esp_dh_group_numbers` (List of Number) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.
 - `esp_encryption_algorithms` (String) Encryption algorithms to use for IPsec SA. Value could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` `3DESCBC`, or `NULL`.
-- `esp_integrity_algorithms` (String) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
+- `esp_integrity_algorithms` (List of Number) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
 - `esp_life_time` (Number) Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.
-- `esp_random_time` (String) Time range from which to choose a random value to subtract from rekey times in seconds.
-- `esp_rekey_time` (String)
-- `ike_dh_group_numbers` (String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
-- `ike_encryption_algorithms` (String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
-- `ike_integrity_algorithms` (String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
+- `esp_random_time` (Number) Time range from which to choose a random value to subtract from rekey times in seconds.
+- `esp_rekey_time` (Number) IPsec SA rekey time in seconds.
+- `ike_dh_group_numbers` (List of Number) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
+- `ike_encryption_algorithms` (List of Number) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
+- `ike_integrity_algorithms` (List of Number) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 - `ike_over_time` (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
 - `ike_random_time` (Number) Time range from which to choose a random value to subtract from rekey times.
 - `ike_rekey_time` (Number) IKE tunnel rekey time.
