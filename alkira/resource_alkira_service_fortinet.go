@@ -45,11 +45,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Required:    true,
 			},
 			"instances": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Description: "An array containing properties for each Fortinet Firewall instance " +
 					"that needs to be deployed. The number of instances should be equal to " +
-					"max_instance_count.",
+					"`max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -267,7 +267,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		IpAddress: d.Get("management_server_ip").(string),
 		Segment:   d.Get("management_server_segment").(string),
 	}
-	instances := expandFortinetInstances(d.Get("instances").(*schema.Set))
+	instances := expandFortinetInstances(d.Get("instances").([]interface{}))
 
 	// convert segment ids to segment names
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))

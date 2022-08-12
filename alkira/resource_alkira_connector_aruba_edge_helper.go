@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 
@@ -25,7 +26,7 @@ func deflateArubaEdgeInstances(ins []alkira.ArubaEdgeInstance) []map[string]inte
 	return instances
 }
 
-func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]alkira.ArubaEdgeInstance, error) {
+func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]alkira.ArubaEdgeInstance, error) {
 
 	var instances []alkira.ArubaEdgeInstance
 
@@ -34,8 +35,8 @@ func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]al
 		return nil, err
 	}
 
-	for _, v := range in.List() {
-		var name, accountKey, accountName, hostName, siteTag string
+	for _, v := range in {
+		var name, accountKey, accountName, hostName, id, siteTag string
 		m := v.(map[string]interface{})
 
 		if v, ok := m["account_key"].(string); ok {
@@ -46,6 +47,9 @@ func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]al
 		}
 		if v, ok := m["host_name"].(string); ok {
 			hostName = v
+		}
+		if v, ok := m["id"].(string); ok {
+			id = v
 		}
 		if v, ok := m["account_name"].(string); ok {
 			accountName = v
@@ -63,6 +67,7 @@ func expandArubaEdgeInstances(in *schema.Set, client *alkira.AlkiraClient) ([]al
 			AccountName:  accountName,
 			CredentialId: credId,
 			HostName:     hostName,
+			Id:           json.Number(id),
 			Name:         name,
 			SiteTag:      siteTag,
 		}

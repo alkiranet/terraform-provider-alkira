@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandFortinetInstances(in *schema.Set) []alkira.FortinetInstance {
-	if in == nil || in.Len() == 0 {
+func expandFortinetInstances(in []interface{}) []alkira.FortinetInstance {
+	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] invalid Fortinet instance input")
 		return nil
 	}
 
-	instances := make([]alkira.FortinetInstance, in.Len())
-	for i, instance := range in.List() {
+	instances := make([]alkira.FortinetInstance, len(in))
+	for i, instance := range in {
 		r := alkira.FortinetInstance{}
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {

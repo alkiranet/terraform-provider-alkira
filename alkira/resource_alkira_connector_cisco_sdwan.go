@@ -61,7 +61,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloud_init_file": {
@@ -239,7 +239,7 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	mappings := expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set))
-	vedges := expandCiscoSdwanVedges(ac, d.Get("vedge").(*schema.Set))
+	vedges := expandCiscoSdwanVedges(ac, d.Get("vedge").([]interface{}))
 
 	connector := &alkira.ConnectorCiscoSdwan{
 		BillingTags:          billingTags,
@@ -292,15 +292,15 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 }
 
 // expandCiscoSdwanVedges expand Cisco SD-WAN Edge
-func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in *schema.Set) []alkira.CiscoSdwanEdgeInfo {
-	if in == nil || in.Len() == 0 {
+func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) []alkira.CiscoSdwanEdgeInfo {
+	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] Empty vedges")
 		return []alkira.CiscoSdwanEdgeInfo{}
 	}
 
-	mappings := make([]alkira.CiscoSdwanEdgeInfo, in.Len())
+	mappings := make([]alkira.CiscoSdwanEdgeInfo, len(in))
 
-	for i, mapping := range in.List() {
+	for i, mapping := range in {
 		r := alkira.CiscoSdwanEdgeInfo{}
 		t := mapping.(map[string]interface{})
 

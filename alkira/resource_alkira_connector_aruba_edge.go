@@ -85,7 +85,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			},
 			"instances": {
 				Description: "The Aruba Edge connector instances.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -103,6 +103,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Description: "The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"id": {
+							Description: "The ID of the endpoint.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 						"name": {
 							Description: "The instance name associated with aruba edge connect instance.",
@@ -236,7 +241,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
-	instances, err := expandArubaEdgeInstances(d.Get("instances").(*schema.Set), client)
+	instances, err := expandArubaEdgeInstances(d.Get("instances").([]interface{}), client)
 	if err != nil {
 		return nil, err
 	}
