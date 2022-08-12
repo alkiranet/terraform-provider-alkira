@@ -8,6 +8,89 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// expandConnectorIPSecEndpointAdvanced
+func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIPSecSiteAdvanced, error) {
+
+	if in == nil || len(in) == 0 {
+		log.Printf("[DEBUG] empty IPSec endpoint advanced")
+		return nil, nil
+	}
+
+	if in == nil || len(in) > 1 {
+		log.Printf("[DEBUG] invalid IPSec endpoint advanced")
+		return nil, nil
+	}
+
+	advanced := &alkira.ConnectorIPSecSiteAdvanced{}
+
+	for _, input := range in {
+		config := input.(map[string]interface{})
+
+		if v, ok := config["dpd_delay"].(int); ok {
+			advanced.DPDDelay = v
+		}
+		if v, ok := config["dpd_timeout"].(int); ok {
+			advanced.DPDTimeout = v
+		}
+		if v, ok := config["esp_dh_group_numbers"].([]interface{}); ok {
+			advanced.EspDHGroupNumbers = convertTypeListToStringList(v)
+		}
+		if v, ok := config["esp_encryption_algorithms"].([]interface{}); ok {
+			advanced.EspEncryptionAlgorithms = convertTypeListToStringList(v)
+		}
+		if v, ok := config["esp_integrity_algorithms"].([]interface{}); ok {
+			advanced.EspIntegrityAlgorithms = convertTypeListToStringList(v)
+		}
+		if v, ok := config["esp_life_time"].(int); ok {
+			advanced.EspLifeTime = v
+		}
+		if v, ok := config["esp_random_time"].(int); ok {
+			advanced.EspRandomTime = v
+		}
+		if v, ok := config["esp_rekey_time"].(int); ok {
+			advanced.EspRekeyTime = v
+		}
+		if v, ok := config["ike_dh_group_numbers"].([]interface{}); ok {
+			advanced.IkeDHGroupNumbers = convertTypeListToStringList(v)
+		}
+		if v, ok := config["ike_encryption_algorithms"].([]interface{}); ok {
+			advanced.IkeEncryptionAlgorithms = convertTypeListToStringList(v)
+		}
+		if v, ok := config["ike_integrity_algorithms"].([]interface{}); ok {
+			advanced.IkeIntegrityAlgorithms = convertTypeListToStringList(v)
+		}
+		if v, ok := config["ike_over_time"].(int); ok {
+			advanced.IkeOverTime = v
+		}
+		if v, ok := config["ike_random_time"].(int); ok {
+			advanced.IkeRandomTime = v
+		}
+		if v, ok := config["ike_rekey_time"].(int); ok {
+			advanced.IkeRekeyTime = v
+		}
+		if v, ok := config["ike_version"].(string); ok {
+			advanced.IkeVersion = v
+		}
+		if v, ok := config["local_auth_type"].(string); ok {
+			advanced.LocalAuthType = v
+		}
+		if v, ok := config["local_auth_value"].(string); ok {
+			advanced.LocalAuthValue = v
+		}
+		if v, ok := config["remote_auth_type"].(string); ok {
+			advanced.RemoteAuthType = v
+		}
+		if v, ok := config["remote_auth_value"].(string); ok {
+			advanced.RemoteAuthValue = v
+		}
+		if v, ok := config["replay_window_size"].(int); ok {
+			advanced.ReplayWindowSize = v
+		}
+	}
+
+	return advanced, nil
+}
+
 // expandIPSecEndpoint expand IPSEC endpoint section
 func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite {
 	if in == nil || len(in) == 0 {
@@ -19,7 +102,6 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 
 	for i, site := range in {
 		siteConfig := site.(map[string]interface{})
-
 		r := alkira.ConnectorIPSecSite{}
 
 		r.Name = siteConfig["name"].(string)
@@ -27,6 +109,17 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 		r.Id = siteConfig["id"].(int)
 		r.BillingTags = convertTypeListToIntList(siteConfig["billing_tag_ids"].([]interface{}))
 		r.PresharedKeys = convertTypeListToStringList(siteConfig["preshared_keys"].([]interface{}))
+
+		if v, ok := siteConfig["advanced_options"].([]interface{}); ok {
+
+			var err error
+			r.Advanced, err = expandConnectorIPSecEndpointAdvanced(v)
+
+			if err != nil {
+				log.Printf("[ERROR] failed to parse advanced block of endpoint.")
+				break
+			}
+		}
 
 		sites[i] = &r
 	}
