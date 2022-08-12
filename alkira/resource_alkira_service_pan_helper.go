@@ -133,13 +133,13 @@ func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interfac
 
 	return segmentOptions, nil
 }
-func expandPanInstances(in *schema.Set, m interface{}) ([]alkira.ServicePanInstance, error) {
-	if in == nil || in.Len() == 0 {
-		return nil, errors.New("invalid PAN instance input")
+func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
+	if in == nil || len(in) == 0 {
+		return nil, errors.New("Invalid PAN instance input")
 	}
 
-	instances := make([]alkira.ServicePanInstance, in.Len())
-	for i, instance := range in.List() {
+	instances := make([]alkira.ServicePanInstance, len(in))
+	for i, instance := range in {
 		r := alkira.ServicePanInstance{}
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {

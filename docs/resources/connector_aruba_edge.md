@@ -55,7 +55,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `gateway_gbp_asn` (Number) The gateway BGP ASN.
-- `instances` (Block Set, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
+- `instances` (Block List, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
 - `name` (String) The name of the connector.
 - `segment_ids` (List of String) The IDs of the segments associated with the Aruba Edge connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
@@ -83,6 +83,10 @@ Required:
 - `host_name` (String) The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.
 - `name` (String) The instance name associated with aruba edge connect instance.
 - `site_tag` (String) The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator
+
+Read-Only:
+
+- `id` (Number) The ID of the endpoint.
 
 
 <a id="nestedblock--aruba_edge_vrf_mapping"></a>
