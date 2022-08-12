@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"reflect"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -83,47 +84,66 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
-						"advanced": {
-							Type: schema.TypeSet,
+						"advanced_options": {
+							Description: "Advanced options for IPSec endpoint.",
+							Type:        schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dpd_timeout": {
-										Description: "Timeouts to check the liveness of a peer. IKEv1 only.",
-										Type:        schema.TypeString,
-										Required:    true,
-									},
 									"dpd_delay": {
 										Description: "Interval to check the liveness of a peer.",
-										Type:        schema.TypeString,
-										Required:    true,
-									},
-									"esp_rekey_time": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"esp_life_time": {
-										Description: "Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.",
 										Type:        schema.TypeInt,
 										Required:    true,
 									},
+									"dpd_timeout": {
+										Description: "Timeouts to check the liveness of a peer. IKEv1 only.",
+										Type:        schema.TypeInt,
+										Required:    true,
+									},
+									"esp_rekey_time": {
+										Description: "IPsec SA rekey time in seconds.",
+										Type:        schema.TypeInt,
+										Required:    true,
+									},
+									"esp_life_time": {
+										Description: "Maximum IPsec ESP lifetime if the IPsec " +
+											"ESP does not rekey.",
+										Type:     schema.TypeInt,
+										Required: true,
+									},
 									"esp_random_time": {
-										Type:     schema.TypeString,
+										Description: "Time range from which to choose " +
+											"a random value to subtract from rekey times in seconds.",
+										Type:     schema.TypeInt,
 										Required: true,
 									},
 									"esp_encryption_algorithms": {
-										Type:     schema.TypeString,
+										Description: "Encryption algorithms to use for IPsec SA. Value " +
+											"could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` " +
+											"`3DESCBC`, or `NULL`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"esp_integrity_algorithms": {
-										Type:     schema.TypeString,
+										Description: "Integrity algorithms to use for IPsec SA. Value could " +
+											"`SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"esp_dh_group_numbers": {
-										Type:     schema.TypeString,
+										Description: "Diffie Hellman groups to use for IPsec SA. Value could " +
+											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
+											"`MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"initiator": {
-										Type:     schema.TypeString,
+										Description: "When true CXP will initiate the IKE connection " +
+											"and if false then the customer gateway should initiate IKE. " +
+											"When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.",
+										Type:     schema.TypeBool,
 										Required: true,
 									},
 									"ike_version": {
@@ -143,30 +163,37 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:    true,
 									},
 									"ike_random_time": {
-										Description: "Time range from which to choose a random value to subtract from rekey times.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Time range from which to choose a random value to " +
+											"subtract from rekey times.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"ike_encryption_algorithms": {
-										Description:  "Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"AES256CBC", "AES192CBC", "AES128CBC"}, false),
+										Description: "Encryption algorithms to use for IKE SA, one of " +
+											"`AES256CBC`, `AES192CBC`, `AES128CBC`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Required: true,
 									},
 									"ike_integrity_algorithms": {
-										Description:  "Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"SHA1", "SHA256", "SHA384", "SHA512"}, false),
+										Description: "Integrity algorithms to use for IKE SA, one of " +
+											"`SHA1`, `SHA256`, `SHA384`, `SHA512`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Required: true,
 									},
 									"ike_dh_group_numbers": {
-										Description:  "Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048", "MODP3072", "MODP4096", "MODP6144", "MODP8192", "ECP256", "ECP384", "ECP521", "CURVE25519"}, false),
+										Description: "Diffie Hellman groups to use for IKE SA, one of " +
+											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
+											"`MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.",
+										Type:     schema.TypeList,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Required: true,
 									},
 									"local_auth_type": {
-										Description:  "Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.",
+										Description: "Local-ID type - IKE identity to use for " +
+											"authentication round, one of `FQDN`, `USER_FQDN`, " +
+											"`KEYID`, `IP_ADDR`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
@@ -177,7 +204,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:    true,
 									},
 									"remote_auth_type": {
-										Description:  "Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.",
+										Description: "Remote-ID type - IKE identity to use for " +
+											"authentication round, one of `FQDN`, `USER_FQDN`, " +
+											"`KEYID`, `IP_ADDR`.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
@@ -362,6 +391,37 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	var endpoints []map[string]interface{}
 
 	for _, site := range connector.Sites {
+
+		var advanced []map[string]interface{}
+
+		siteValue := reflect.ValueOf(site).Elem()
+		siteAdvanced := siteValue.FieldByName("Advanced")
+
+		if siteAdvanced == (reflect.Value{}) {
+			advancedConfig := map[string]interface{}{
+				"dpd_delay":                 site.Advanced.DPDDelay,
+				"dpd_timeout":               site.Advanced.DPDTimeout,
+				"esp_dh_group_numbers":      site.Advanced.EspDHGroupNumbers,
+				"esp_encryption_algorithms": site.Advanced.EspEncryptionAlgorithms,
+				"esp_integrity_algorithms":  site.Advanced.EspIntegrityAlgorithms,
+				"esp_life_time":             site.Advanced.EspLifeTime,
+				"esp_random_time":           site.Advanced.EspRandomTime,
+				"esp_rekey_time":            site.Advanced.EspRekeyTime,
+				"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
+				"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
+				"ike_over_time":             site.Advanced.IkeOverTime,
+				"ike_random_time":           site.Advanced.IkeRandomTime,
+				"ike_rekey_time":            site.Advanced.IkeRekeyTime,
+				"ike_version":               site.Advanced.IkeVersion,
+				"local_auth_type":           site.Advanced.LocalAuthType,
+				"local_auth_value":          site.Advanced.LocalAuthValue,
+				"remote_auth_type":          site.Advanced.RemoteAuthType,
+				"remote_auth_value":         site.Advanced.RemoteAuthValue,
+				"replay_window_size":        site.Advanced.ReplayWindowSize,
+			}
+			advanced = append(advanced, advancedConfig)
+		}
+
 		endpoint := map[string]interface{}{
 			"name":                     site.Name,
 			"billing_tag_ids":          site.BillingTags,
@@ -369,6 +429,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 			"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
 			"preshared_keys":           site.PresharedKeys,
 			"id":                       site.Id,
+			"advanced_options":         advanced,
 		}
 		endpoints = append(endpoints, endpoint)
 	}

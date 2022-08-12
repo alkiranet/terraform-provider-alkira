@@ -34,6 +34,53 @@ resource "alkira_connector_ipsec" "ipsec" {
     type = "DYNAMIC"
     customer_gateway_asn = "65310"
   }
+
+  # There could be multiple endpoints defined.
+  endpoint {
+    name                     = "Site1"
+    customer_gateway_ip      = "8.8.8.8"
+    preshared_keys           = ["1234", "1235"]
+    billing_tag_ids          = [alkira_billing_tag.tag1.id]
+    enable_tunnel_redundancy = false
+
+    # Optional advanced options could be specified per endpoint.
+    advanced_options {
+      dpd_delay   = 30
+      dpd_timeout = 150
+
+      esp_dh_group_numbers      = ["MODP3072"]
+      esp_encryption_algorithms = ["AES256CBC"]
+      esp_integrity_algorithms  = ["SHA256"]
+      esp_life_time             = 3960
+      esp_random_time           = 360
+      esp_rekey_time            = 3600
+
+      ike_dh_group_numbers      = ["MODP3072"]
+      ike_encryption_algorithms = ["AES256CBC"]
+      ike_integrity_algorithms  = ["SHA256"]
+      ike_over_time             = 2880
+      ike_random_time           = 2880
+      ike_rekey_time            = 28800
+      ike_version               = "IKEv2"
+
+      initiator          = true
+
+      local_auth_type    = "IP_ADDR"
+      local_auth_value   = "172.16.1.1"
+
+      remote_auth_type   = "IP_ADDR"
+      remote_auth_value  = "54.70.233.220"
+
+      replay_window_size = 32
+    }
+  }
+
+  endpoint {
+      name                 = "Site2"
+      customer_gateway_ip  = "9.9.9.9"
+      preshared_keys       = ["1234", "1235"]
+      billing_tag_ids      = [alkira_billing_tag.tag1.id]
+  }
 }
 ```
 
@@ -71,7 +118,7 @@ Required:
 
 Optional:
 
-- `advanced` (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
+- `advanced_options` (Block List) Advanced options for IPSec endpoint. (see [below for nested schema](#nestedblock--endpoint--advanced_options))
 - `billing_tag_ids` (List of Number) A list of IDs of billing tag associated with the endpoint.
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
 - `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
@@ -80,27 +127,27 @@ Read-Only:
 
 - `id` (Number) The ID of the endpoint.
 
-<a id="nestedblock--endpoint--advanced"></a>
-### Nested Schema for `endpoint.advanced`
+<a id="nestedblock--endpoint--advanced_options"></a>
+### Nested Schema for `endpoint.advanced_options`
 
 Required:
 
-- `dpd_delay` (String) Interval to check the liveness of a peer.
-- `dpd_timeout` (String) Timeouts to check the liveness of a peer. IKEv1 only.
-- `esp_dh_group_numbers` (String)
-- `esp_encryption_algorithms` (String)
-- `esp_integrity_algorithms` (String)
+- `dpd_delay` (Number) Interval to check the liveness of a peer.
+- `dpd_timeout` (Number) Timeouts to check the liveness of a peer. IKEv1 only.
+- `esp_dh_group_numbers` (List of String) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.
+- `esp_encryption_algorithms` (List of String) Encryption algorithms to use for IPsec SA. Value could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` `3DESCBC`, or `NULL`.
+- `esp_integrity_algorithms` (List of String) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
 - `esp_life_time` (Number) Maximum IPsec ESP lifetime if the IPsec ESP does not rekey.
-- `esp_random_time` (String)
-- `esp_rekey_time` (String)
-- `ike_dh_group_numbers` (String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`
-- `ike_encryption_algorithms` (String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
-- `ike_integrity_algorithms` (String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
+- `esp_random_time` (Number) Time range from which to choose a random value to subtract from rekey times in seconds.
+- `esp_rekey_time` (Number) IPsec SA rekey time in seconds.
+- `ike_dh_group_numbers` (List of String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
+- `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
+- `ike_integrity_algorithms` (List of String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 - `ike_over_time` (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
 - `ike_random_time` (Number) Time range from which to choose a random value to subtract from rekey times.
 - `ike_rekey_time` (Number) IKE tunnel rekey time.
 - `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
-- `initiator` (String)
+- `initiator` (Boolean) When true CXP will initiate the IKE connection and if false then the customer gateway should initiate IKE. When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.
 - `local_auth_type` (String) Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
 - `local_auth_value` (String) Local-ID value.
 - `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
