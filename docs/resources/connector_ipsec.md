@@ -34,6 +34,53 @@ resource "alkira_connector_ipsec" "ipsec" {
     type = "DYNAMIC"
     customer_gateway_asn = "65310"
   }
+
+  # There could be multiple endpoints defined.
+  endpoint {
+    name                     = "Site1"
+    customer_gateway_ip      = "8.8.8.8"
+    preshared_keys           = ["1234", "1235"]
+    billing_tag_ids          = [alkira_billing_tag.tag1.id]
+    enable_tunnel_redundancy = false
+
+    # Optional advanced options could be specified per endpoint.
+    advanced_options {
+      dpd_delay   = 30
+      dpd_timeout = 150
+
+      esp_dh_group_numbers      = ["MODP3072"]
+      esp_encryption_algorithms = ["AES256CBC"]
+      esp_integrity_algorithms  = ["SHA256"]
+      esp_life_time             = 3960
+      esp_random_time           = 360
+      esp_rekey_time            = 3600
+
+      ike_dh_group_numbers      = ["MODP3072"]
+      ike_encryption_algorithms = ["AES256CBC"]
+      ike_integrity_algorithms  = ["SHA256"]
+      ike_over_time             = 2880
+      ike_random_time           = 2880
+      ike_rekey_time            = 28800
+      ike_version               = "IKEv2"
+
+      initiator          = true
+
+      local_auth_type    = "IP_ADDR"
+      local_auth_value   = "172.16.1.1"
+
+      remote_auth_type   = "IP_ADDR"
+      remote_auth_value  = "54.70.233.220"
+
+      replay_window_size = 32
+    }
+  }
+
+  endpoint {
+      name                 = "Site2"
+      customer_gateway_ip  = "9.9.9.9"
+      preshared_keys       = ["1234", "1235"]
+      billing_tag_ids      = [alkira_billing_tag.tag1.id]
+  }
 }
 ```
 
@@ -71,7 +118,7 @@ Required:
 
 Optional:
 
-- `advanced` (Block Set) (see [below for nested schema](#nestedblock--endpoint--advanced))
+- `advanced_options` (Block List) Advanced options for IPSec endpoint. (see [below for nested schema](#nestedblock--endpoint--advanced_options))
 - `billing_tag_ids` (List of Number) A list of IDs of billing tag associated with the endpoint.
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
 - `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
@@ -80,8 +127,8 @@ Read-Only:
 
 - `id` (Number) The ID of the endpoint.
 
-<a id="nestedblock--endpoint--advanced"></a>
-### Nested Schema for `endpoint.advanced`
+<a id="nestedblock--endpoint--advanced_options"></a>
+### Nested Schema for `endpoint.advanced_options`
 
 Required:
 

@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"reflect"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -83,8 +84,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
-						"advanced": {
-							Type: schema.TypeSet,
+						"advanced_options": {
+							Description: "Advanced options for IPSec endpoint.",
+							Type:        schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dpd_delay": {
@@ -389,6 +391,37 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	var endpoints []map[string]interface{}
 
 	for _, site := range connector.Sites {
+
+		var advanced []map[string]interface{}
+
+		siteValue := reflect.ValueOf(site).Elem()
+		siteAdvanced := siteValue.FieldByName("Advanced")
+
+		if siteAdvanced == (reflect.Value{}) {
+			advancedConfig := map[string]interface{}{
+				"dpd_delay":                 site.Advanced.DPDDelay,
+				"dpd_timeout":               site.Advanced.DPDTimeout,
+				"esp_dh_group_numbers":      site.Advanced.EspDHGroupNumbers,
+				"esp_encryption_algorithms": site.Advanced.EspEncryptionAlgorithms,
+				"esp_integrity_algorithms":  site.Advanced.EspIntegrityAlgorithms,
+				"esp_life_time":             site.Advanced.EspLifeTime,
+				"esp_random_time":           site.Advanced.EspRandomTime,
+				"esp_rekey_time":            site.Advanced.EspRekeyTime,
+				"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
+				"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
+				"ike_over_time":             site.Advanced.IkeOverTime,
+				"ike_random_time":           site.Advanced.IkeRandomTime,
+				"ike_rekey_time":            site.Advanced.IkeRekeyTime,
+				"ike_version":               site.Advanced.IkeVersion,
+				"local_auth_type":           site.Advanced.LocalAuthType,
+				"local_auth_value":          site.Advanced.LocalAuthValue,
+				"remote_auth_type":          site.Advanced.RemoteAuthType,
+				"remote_auth_value":         site.Advanced.RemoteAuthValue,
+				"replay_window_size":        site.Advanced.ReplayWindowSize,
+			}
+			advanced = append(advanced, advancedConfig)
+		}
+
 		endpoint := map[string]interface{}{
 			"name":                     site.Name,
 			"billing_tag_ids":          site.BillingTags,
@@ -396,6 +429,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 			"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
 			"preshared_keys":           site.PresharedKeys,
 			"id":                       site.Id,
+			"advanced_options":         advanced,
 		}
 		endpoints = append(endpoints, endpoint)
 	}

@@ -9,23 +9,22 @@ import (
 )
 
 // expandConnectorIPSecEndpointAdvanced
-func expandConnectorIPSecEndpointAdvanced(in *schema.Set) (*alkira.ConnectorIPSecSiteAdvanced, error) {
+func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIPSecSiteAdvanced, error) {
 
-	if in == nil || in.Len() == 0 {
+	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty IPSec endpoint advanced")
 		return nil, nil
 	}
 
-	if in == nil || in.Len() > 1 {
+	if in == nil || len(in) > 1 {
 		log.Printf("[DEBUG] invalid IPSec endpoint advanced")
 		return nil, nil
 	}
 
 	advanced := &alkira.ConnectorIPSecSiteAdvanced{}
 
-	for _, input := range in.List() {
+	for _, input := range in {
 		config := input.(map[string]interface{})
-		log.Printf("[DEBUG] SPIKE %v", config["esp_life_time"])
 
 		if v, ok := config["dpd_delay"].(int); ok {
 			advanced.DPDDelay = v
@@ -111,7 +110,7 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 		r.BillingTags = convertTypeListToIntList(siteConfig["billing_tag_ids"].([]interface{}))
 		r.PresharedKeys = convertTypeListToStringList(siteConfig["preshared_keys"].([]interface{}))
 
-		if v, ok := siteConfig["advanced"].(*schema.Set); ok {
+		if v, ok := siteConfig["advanced_options"].([]interface{}); ok {
 
 			var err error
 			r.Advanced, err = expandConnectorIPSecEndpointAdvanced(v)
