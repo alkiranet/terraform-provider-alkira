@@ -319,6 +319,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
+	d.Set("bundle", pan.Bundle)
 	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
 	d.Set("license_type", pan.LicenseType)
