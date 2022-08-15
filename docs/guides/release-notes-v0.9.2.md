@@ -60,5 +60,5 @@ mandatory for newer versions of PAN.
 ## Fixes
 
     * Retain the instance ID of `alkira_service_pan` to avoid creating instance again during `terraform update`.
-    * Retain the instance iF of `alkira_service_fortinet` to avoid issue when doing `terraform update`.
+    * Retain the instance ID of `alkira_service_fortinet` to avoid issue when doing `terraform update`.
     * Fix the routing options problem in `alkira_connector_azure_vnet`.
