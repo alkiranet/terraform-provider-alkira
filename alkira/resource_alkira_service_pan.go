@@ -55,7 +55,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 					"allowed are the segments that are already associated with the service." +
 					"options should apply. If global_protect_enabled is set to false, " +
 					"global_protect_segment_options shound not be included in your request.",
-				Type: schema.TypeSet,
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -83,7 +84,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
@@ -262,7 +262,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"zones_to_groups": {
-				Type: schema.TypeSet,
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -283,7 +284,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
 			},
 		},
 	}
@@ -319,6 +319,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
+	d.Set("bundle", pan.Bundle)
 	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
 	d.Set("license_type", pan.LicenseType)
@@ -454,6 +455,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	service := &alkira.ServicePan{
 		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		Bundle:                      d.Get("bundle").(string),
 		CXP:                         d.Get("cxp").(string),
 		CredentialId:                d.Get("credential_id").(string),
 		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),

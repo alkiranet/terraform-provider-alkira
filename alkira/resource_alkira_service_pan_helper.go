@@ -88,7 +88,7 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || in.Len() == 0 {
+	if in == nil {
 		return nil, errors.New("invalid SegmentOptions input")
 	}
 
