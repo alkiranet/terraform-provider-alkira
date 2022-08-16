@@ -22,7 +22,7 @@ jobs:
         name: Add .terraformrc
         run: echo 'provider_installation {
                     dev_overrides {
-                    "alkiranet/alkira" = "~/work/terraform-provider-alkira/terraform-provider-alkira/bin"
+                    "alkiranet/alkira" = "/home/runner/work/terraform-provider-alkira/terraform-provider-alkira/bin"
                     }
                     direct {}
                   }' > ~/.terraformrc
@@ -38,7 +38,8 @@ jobs:
         name: Build Terraform Provider
         run: |
           pwd
-          cd ~/work/terraform-provider-alkira/terraform-provider-alkira
+          cd /home/runner/work/terraform-provider-alkira/terraform-provider-alkira
+          ls -la
           make
       -
         name: Run Terraform Apply
