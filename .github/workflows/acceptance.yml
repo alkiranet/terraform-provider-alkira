@@ -22,6 +22,14 @@ jobs:
         name: Pull Terraform CLI
         uses: hashicorp/setup-terraform@v2
       -
+        name: Add .terraformrc
+        run: echo 'provider_installation {
+                    dev_overrides {
+                    "alkiranet/alkira" = "/home/runner/work/terraform-provider-alkira/terraform-provider-alkira/bin"
+                    }
+                    direct {}
+                  }' > ~/.terraformrc
+      - 
         name: Checkout Repo
         uses: actions/checkout@v3
       -
