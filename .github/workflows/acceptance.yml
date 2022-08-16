@@ -47,6 +47,5 @@ jobs:
       -
         name: Run Terraform Destroy
         run: |
-          pwd
-          ls -la
+          cd acceptance
           terraform destroy --auto-approve
