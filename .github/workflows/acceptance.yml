@@ -37,9 +37,7 @@ jobs:
       -
         name: Build Terraform Provider
         run: |
-          pwd
           cd /home/runner/work/terraform-provider-alkira/terraform-provider-alkira
-          ls -la
           make
       -
         name: Run Terraform Apply
@@ -48,4 +46,7 @@ jobs:
           terraform apply --auto-approve
       -
         name: Run Terraform Destroy
-        run: terraform destroy --auto-approve
+        run: |
+          pwd
+          ls -la
+          terraform destroy --auto-approve
