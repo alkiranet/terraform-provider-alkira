@@ -1,3 +1,6 @@
+![test](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance.yml/badge.svg)
+
+
 # Terraform Provider for Alkira
 
 * Website: http://www.alkira.com
