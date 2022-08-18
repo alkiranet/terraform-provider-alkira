@@ -1,4 +1,4 @@
-name: Acceptance Test CI
+name: Acceptance Test
 
 on:
   workflow_dispatch:
