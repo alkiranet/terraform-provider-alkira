@@ -1,3 +1,5 @@
+# Create BYOIP resource Management/BYOIP
+
 resource "alkira_byoip_prefix" "test" {
   prefix      = "172.16.1.2"
   cxp         = "US-WEST-1"

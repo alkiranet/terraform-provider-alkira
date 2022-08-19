@@ -1,3 +1,5 @@
+# Create groups under Management/Groups
+
 resource "alkira_group" "tftest1" {
   name = "tftest-group1"
 }
@@ -20,5 +22,10 @@ resource "alkira_group" "tftest5" {
 
 resource "alkira_group" "test" {
   name = "tftest-nat-policy"
+  description = "test policy"
+}
+
+resource "alkira_group" "group1" {
+  name = "tf-test-policy"
   description = "test policy"
 }

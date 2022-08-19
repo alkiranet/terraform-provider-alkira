@@ -1,3 +1,5 @@
+# Create resources under Management/Segments
+
 resource "alkira_segment" "test1" {
   name  = "tftest-basic"
   asn   = "65514"
@@ -10,7 +12,6 @@ resource "alkira_segment" "test2" {
   cidrs               = ["10.16.1.0/24"]
   reserve_public_ips = true
 }
-
 
 resource "alkira_segment" "seg1" {
   name  = "tftest-segment1"
