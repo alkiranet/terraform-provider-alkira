@@ -23,4 +23,3 @@ resource "alkira_segment" "seg2" {
   asn   = "65513"
   cidrs = ["10.2.1.0/24"]
 }
-
