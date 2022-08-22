@@ -24,14 +24,16 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 				Required:    true,
 			},
 			"auth_key": &schema.Schema{
-				Description: "PAN instance auth key.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "PAN instance auth key. This is only required " +
+					"when `panorama_enabled` is set to `true`.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"auth_code": &schema.Schema{
-				Description: "PAN instance auth code.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "PAN instance auth code. Only required when `license_type` " +
+					"is `BRING_YOUR_OWN`.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"license_key": &schema.Schema{
 				Description: "PAN license key.",
