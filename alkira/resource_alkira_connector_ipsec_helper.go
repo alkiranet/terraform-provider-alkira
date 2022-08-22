@@ -107,8 +107,14 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 		r.Name = siteConfig["name"].(string)
 		r.CustomerGwIp = siteConfig["customer_gateway_ip"].(string)
 		r.Id = siteConfig["id"].(int)
-		r.BillingTags = convertTypeListToIntList(siteConfig["billing_tag_ids"].([]interface{}))
-		r.PresharedKeys = convertTypeListToStringList(siteConfig["preshared_keys"].([]interface{}))
+
+		if v, ok := siteConfig["billing_tag_ids"].([]interface{}); ok {
+			r.BillingTags = convertTypeListToIntList(v)
+		}
+
+		if v, ok := siteConfig["preshared_keys"].([]interface{}); ok {
+			r.PresharedKeys = convertTypeListToStringList(v)
+		}
 
 		if v, ok := siteConfig["advanced_options"].([]interface{}); ok {
 
