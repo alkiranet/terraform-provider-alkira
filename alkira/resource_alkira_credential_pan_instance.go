@@ -31,7 +31,7 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 			"auth_code": &schema.Schema{
 				Description: "PAN instance auth code.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"license_key": &schema.Schema{
 				Description: "PAN license key.",
