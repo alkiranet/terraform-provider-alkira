@@ -52,23 +52,30 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		if v, ok := instanceCfg["version"].(string); ok {
 			r.Version = v
 		}
+		if v, ok := instanceCfg["credential_id"].(string); ok {
+			if v == "" {
+				credentialInstance := alkira.CredentialInfobloxInstance{
+					Password: password,
+				}
 
-		credentialInstance := alkira.CredentialInfobloxInstance{
-			Password: password,
+				credentialId, err := client.CreateCredential(
+					nameWithSuffix,
+					alkira.CredentialTypeInfobloxInstance,
+					credentialInstance,
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				r.CredentialId = credentialId
+			}
+
+			if v != "" {
+				r.CredentialId = v
+			}
 		}
-
-		credentialId, err := client.CreateCredential(
-			nameWithSuffix,
-			alkira.CredentialTypeInfobloxInstance,
-			credentialInstance,
-			0,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		r.CredentialId = credentialId
 
 		instances[i] = r
 	}
@@ -86,6 +93,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"type":            v.Type,
 			"version":         v.Version,
 			"id":              v.Id,
+			"credential_id":   v.CredentialId,
 		}
 		m = append(m, j)
 	}
