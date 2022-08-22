@@ -6,6 +6,7 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/kr/pretty"
 )
 
 func resourceAlkiraInfoblox() *schema.Resource {
@@ -149,6 +150,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
+						"credential_id": {
+							Description: "The credential ID of the Infoblox instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"hostname": {
 							Description: "The host name of the instance. The host name MUST always have a suffix `.localdomain`.",
 							Type:        schema.TypeString,
@@ -246,6 +252,8 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[ERROR] failed to get infoblox %s", d.Id())
 		return err
 	}
+
+	pretty.Println("GETINFOBLOXBYID: ", infoblox)
 
 	setAllInfobloxResourceFields(d, infoblox)
 
