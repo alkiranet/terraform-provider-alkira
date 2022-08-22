@@ -6,7 +6,6 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/kr/pretty"
 )
 
 func resourceAlkiraInfoblox() *schema.Resource {
@@ -252,8 +251,6 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[ERROR] failed to get infoblox %s", d.Id())
 		return err
 	}
-
-	pretty.Println("GETINFOBLOXBYID: ", infoblox)
 
 	setAllInfobloxResourceFields(d, infoblox)
 

@@ -77,23 +77,6 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 			}
 		}
 
-		//credentialInstance := alkira.CredentialInfobloxInstance{
-		//	Password: password,
-		//}
-
-		//credentialId, err := client.CreateCredential(
-		//	nameWithSuffix,
-		//	alkira.CredentialTypeInfobloxInstance,
-		//	credentialInstance,
-		//	0,
-		//)
-
-		//if err != nil {
-		//	return nil, err
-		//}
-
-		//r.CredentialId = credentialId
-
 		instances[i] = r
 	}
 
