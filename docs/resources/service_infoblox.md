@@ -121,6 +121,7 @@ Optional:
 
 Read-Only:
 
+- `credential_id` (String) The credential ID of the Infoblox instance.
 - `id` (Number) The ID of the Infoblox instance.
 
 
