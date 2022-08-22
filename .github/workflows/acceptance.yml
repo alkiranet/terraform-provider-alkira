@@ -46,6 +46,7 @@ jobs:
           terraform apply --auto-approve
       -
         name: Run Terraform Destroy
+        if: ${{ always() }}
         run: |
           cd acceptance
           terraform destroy --auto-approve
