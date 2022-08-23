@@ -121,7 +121,7 @@ Optional:
 - `advanced_options` (Block List) Advanced options for IPSec endpoint. (see [below for nested schema](#nestedblock--endpoint--advanced_options))
 - `billing_tag_ids` (List of Number) A list of IDs of billing tag associated with the endpoint.
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
-- `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
+- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explictly unlike portal.
 
 Read-Only:
 
