@@ -13,7 +13,7 @@ func dataSourceAlkiraOciVcnConnector() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the group.",
+				Description: "The name of the OCI VCN connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
