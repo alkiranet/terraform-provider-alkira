@@ -24,7 +24,7 @@ func dataSourceAlkiraOciVcnConnector() *schema.Resource {
 func dataSourceAlkiraOciVcnConnectorRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
-	group, err := client.GetConnectorOciVcn(d.Get("name").(string))
+	group, err := client.GetConnectorOciVcnByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
