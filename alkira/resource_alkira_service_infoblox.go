@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -89,7 +90,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			//infoblox service. Future releases will allow for this. At taht time this comment
 			//should be removed.
 			"grid_master": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Description: "Defines the properties of the Infoblox grid master. The Infoblox " +
 					"grid master needs to exist before other instances of a the grid can be added. " +
@@ -110,6 +111,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"ip": {
 							Description: "The ip address of the grid master.",
 							Type:        schema.TypeString,
+							Computed:    true,
 							Optional:    true,
 						},
 						"name": {
@@ -126,6 +128,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Description: "The Grid Master password.",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"credential_id": {
+							Description: "The credential ID of the Grid Master.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -215,9 +222,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Required: true,
 			},
 			"shared_secret": {
-				Description: "Shared Secret of the InfoBlox grid. This cannot be empty.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "Shared Secret of the InfoBlox grid. This cannot be empty.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -286,19 +294,23 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
-	infobloxCredentialId, err := client.CreateCredential(
-		nameWithSuffix,
-		alkira.CredentialTypeInfoblox,
-		&alkira.CredentialInfoblox{SharedSecret: shared_secret},
-		0,
-	)
 
-	if err != nil {
-		return nil, err
+	var infobloxCredentialId string
+	if shared_secret != "" {
+		err := errors.New("")
+		infobloxCredentialId, err = client.CreateCredential(
+			nameWithSuffix,
+			alkira.CredentialTypeInfoblox,
+			&alkira.CredentialInfoblox{SharedSecret: shared_secret},
+			0,
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//Parse Grid Master
-	gmSet := d.Get("grid_master").(*schema.Set)
+	gmSet := d.Get("grid_master").([]interface{})
 	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
 	if err != nil {
 		return nil, err
