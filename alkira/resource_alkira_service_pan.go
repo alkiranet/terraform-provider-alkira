@@ -52,6 +52,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"credential_id": {
 				Description: "ID of PAN credential managed by credential resource.",
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 			},
 			"global_protect_enabled": {
@@ -416,6 +417,24 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
+	// panCredtoUpdate := d.Get("credential_id").(string)
+	// if 0 != len(panCredtoUpdate) {
+	// 	allCreds, err := client.GetCredentials()
+
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	var result []alkira.CredentialResponseDetail
+	// 	json.Unmarshal([]byte(allCreds), &result)
+
+	// 	for _, g := range result {
+	// 		if g.Name == name {
+	// 			return g, nil
+	// 		}
+	// 	}
+	// }
+
 	panCredName := d.Get("name").(string) + randomNameSuffix()
 	panCredential := alkira.CredentialPan{
 		Username: d.Get("username").(string),
@@ -434,27 +453,11 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		return nil, err
 	}
 
-	for i, instance := range instances {
-		panInstanceCredential := alkira.CredentialPanInstance{
-			AuthCode: instance.AuthCode,
-			AuthKey:  instance.AuthKey,
-		}
-		panInstanceExpiry, err := convertInputTimeToEpoch(instance.Expiry)
-		if err != nil {
-			log.Printf("[ERROR] failed to parse 'pan_instance_exiry', %v", err)
-			return nil, err
-		}
-		panInstanceId, err := client.CreateCredential(
-			instance.Name,
-			alkira.CredentialTypePanInstance,
-			panInstanceCredential,
-			panInstanceExpiry,
-		)
-		if err != nil {
-			log.Printf("[ERROR] failed to process PAN instance credentials, %v", err)
-			return nil, err
-		}
-		instances[i].CredentialId = panInstanceId
+	instances, err = createPanInstanceCreds(client, instances)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to create Pan Instance Credentials, %v", err)
+		return nil, err
 	}
 
 	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)

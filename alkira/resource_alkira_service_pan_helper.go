@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -172,4 +173,31 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 	}
 
 	return instances, nil
+}
+
+// Creates all Pan instance credentials
+func createPanInstanceCreds(client *alkira.AlkiraClient, in []alkira.ServicePanInstance) ([]alkira.ServicePanInstance, error) {
+	for i, instance := range in {
+		panInstanceCredential := alkira.CredentialPanInstance{
+			AuthCode: instance.AuthCode,
+			AuthKey:  instance.AuthKey,
+		}
+		panInstanceExpiry, err := convertInputTimeToEpoch(instance.Expiry)
+		if err != nil {
+			log.Printf("[ERROR] failed to parse 'pan_instance_exiry', %v", err)
+			return nil, err
+		}
+		panInstanceId, err := client.CreateCredential(
+			instance.Name,
+			alkira.CredentialTypePanInstance,
+			panInstanceCredential,
+			panInstanceExpiry,
+		)
+		if err != nil {
+			log.Printf("[ERROR] failed to process PAN instance credentials, %v", err)
+			return nil, err
+		}
+		in[i].CredentialId = panInstanceId
+	}
+	return in, nil
 }
