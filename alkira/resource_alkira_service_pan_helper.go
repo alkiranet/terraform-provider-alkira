@@ -148,6 +148,15 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
 		}
+		if v, ok := instanceCfg["auth_code"].(string); ok {
+			r.AuthCode = v
+		}
+		if v, ok := instanceCfg["auth_key"].(string); ok {
+			r.AuthKey = v
+		}
+		if v, ok := instanceCfg["pan_instance_expiry"].(string); ok {
+			r.Expiry = v
+		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			r.CredentialId = v
 		}

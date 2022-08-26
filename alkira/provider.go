@@ -53,8 +53,6 @@ func Provider() *schema.Provider {
 			"alkira_credential_fortinet_instance": resourceAlkiraCredentialFortinetInstance(),
 			"alkira_credential_gcp_vpc":           resourceAlkiraCredentialGcpVpc(),
 			"alkira_credential_oci_vcn":           resourceAlkiraCredentialOciVcn(),
-			"alkira_credential_pan":               resourceAlkiraCredentialPan(),
-			"alkira_credential_pan_instance":      resourceAlkiraCredentialPanInstance(),
 			"alkira_group":                        resourceAlkiraGroup(),
 			"alkira_group_connector":              resourceAlkiraGroupConnector(),
 			"alkira_group_user":                   resourceAlkiraGroupUser(),

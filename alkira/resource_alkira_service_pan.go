@@ -39,10 +39,20 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
+			"password": {
+				Description: "PAN password.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"username": {
+				Description: "PAN username.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
 			"credential_id": {
 				Description: "ID of PAN credential managed by credential resource.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
 			"global_protect_enabled": {
 				Description: "Enable global protect option or not. Default is `false`",
@@ -105,10 +115,27 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
+						"auth_key": {
+							Description: "PAN instance auth key. This is only required " +
+								"when `panorama_enabled` is set to `true`.",
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"auth_code": {
+							Description: "PAN instance auth code. Only required when `license_type` " +
+								"is `BRING_YOUR_OWN`.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"credential_id": {
 							Description: "ID of PAN instance credential managed by credential resource.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Computed:    true,
+						},
+						"pan_instance_expiry": {
+							Description: "PAN Instance Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"global_protect_segment_options": {
 							Description: "These options should be set only when global protect is " +
@@ -389,9 +416,45 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
+	panCredName := d.Get("name").(string) + randomNameSuffix()
+	panCredential := alkira.CredentialPan{
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
+	}
+
+	panCredentialId, err := client.CreateCredential(panCredName, alkira.CredentialTypePan, panCredential, 0)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to process PAN firewall credentials, %v", err)
+		return nil, err
+	}
+
 	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, instance := range instances {
+		panInstanceCredential := alkira.CredentialPanInstance{
+			AuthCode: instance.AuthCode,
+			AuthKey:  instance.AuthKey,
+		}
+		panInstanceExpiry, err := convertInputTimeToEpoch(instance.Expiry)
+		if err != nil {
+			log.Printf("[ERROR] failed to parse 'pan_instance_exiry', %v", err)
+			return nil, err
+		}
+		panInstanceId, err := client.CreateCredential(
+			instance.Name,
+			alkira.CredentialTypePanInstance,
+			panInstanceCredential,
+			panInstanceExpiry,
+		)
+		if err != nil {
+			log.Printf("[ERROR] failed to process PAN instance credentials, %v", err)
+			return nil, err
+		}
+		instances[i].CredentialId = panInstanceId
 	}
 
 	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)
@@ -427,7 +490,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	// PAN Master Key saved as credential
 	var masterKeyCredentialId string
-	if d.Get("master_key_enabled").(bool) == true {
+	if d.Get("master_key_enabled").(bool) {
 		masterKeyCredentialName := d.Get("name").(string) + randomNameSuffix()
 		masterKeyCredential := alkira.CredentialPanMasterKey{
 			MasterKey: d.Get("master_key").(string),
@@ -451,13 +514,14 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 			log.Printf("[ERROR] failed to process PAN master key, %v", err)
 			return nil, err
 		}
+
 	}
 
 	service := &alkira.ServicePan{
 		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Bundle:                      d.Get("bundle").(string),
 		CXP:                         d.Get("cxp").(string),
-		CredentialId:                d.Get("credential_id").(string),
+		CredentialId:                panCredentialId,
 		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
 		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
 		Instances:                   instances,
