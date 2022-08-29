@@ -86,7 +86,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeInt,
+								Type: schema.TypeInt,
 							},
 						},
 						"advanced_options": {
