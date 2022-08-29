@@ -15,9 +15,9 @@ Manage GCP Cloud Connector.
 ```terraform
 # segment
 resource "alkira_segment" "segment1" {
-  name = "seg1"
-  asn  = "65513"
-  cidr = "10.16.1.0/24"
+  name  = "seg1"
+  asn   = "65513"
+  cidrs = ["10.16.1.0/24"]
 }
 
 # group
