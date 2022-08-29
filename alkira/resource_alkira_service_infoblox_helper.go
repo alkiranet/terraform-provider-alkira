@@ -101,10 +101,10 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	return m
 }
 
-func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
+func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || in.Len() > 1 || in.Len() < 1 {
+	if in == nil || len(in) > 1 || len(in) < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
 	}
 
@@ -112,7 +112,7 @@ func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, m
 
 	var username string
 	var password string
-	for _, option := range in.List() {
+	for _, option := range in {
 
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["external"].(bool); ok {
@@ -130,19 +130,31 @@ func expandInfobloxGridMaster(in *schema.Set, sharedSecretCredentialId string, m
 		if v, ok := cfg["name"].(string); ok {
 			im.Name = v
 		}
+		if v, ok := cfg["credential_id"].(string); ok {
+			if v == "" {
+				gridMasterCredentialId, err := client.CreateCredential(
+					im.Name+randomNameSuffix(),
+					alkira.CredentialTypeInfobloxGridMaster,
+					&alkira.CredentialInfobloxGridMaster{
+						Username: username,
+						Password: password,
+					},
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				im.GridMasterCredentialId = gridMasterCredentialId
+			}
+
+			if v != "" {
+				im.GridMasterCredentialId = v
+			}
+		}
 	}
 
-	gridMasterCredentialId, err := client.CreateCredential(
-		im.Name+randomNameSuffix(),
-		alkira.CredentialTypeInfobloxGridMaster,
-		&alkira.CredentialInfobloxGridMaster{username, password},
-		0,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	im.GridMasterCredentialId = gridMasterCredentialId
 	im.SharedSecretCredentialId = sharedSecretCredentialId
 
 	return im, nil
@@ -153,6 +165,7 @@ func deflateInfobloxGridMaster(im alkira.InfobloxGridMaster) []map[string]interf
 	m["external"] = im.External
 	m["ip"] = im.Ip
 	m["name"] = im.Name
+	m["credential_id"] = im.GridMasterCredentialId
 
 	return []map[string]interface{}{m}
 }

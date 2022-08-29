@@ -62,7 +62,7 @@ resource "alkira_service_infoblox" "test" {
 - `anycast` (Block Set, Min: 1) Defines the AnyCast policy to be used with the Infoblox Service. Based on this AnyCast policy some implicit route policies and prefix lists get generated. These route policies and prefix lists will have the prefix ALK-SYSTEM-GENERATED-INFOBLOX. These route policies and prefix lists cannot be deleted or modified directly their lifecycle is bound by the Infoblox services that are configured on the network. AnyCast may be enabled/disabled at the instance level as well. For AnyCast to be enabled for an instance it MUST be enabled both at the service and the instance level. If AnyCast is NOT enabled at the service level it will stay disabled for all instances. (see [below for nested schema](#nestedblock--anycast))
 - `cxp` (String) The CXP where the service should be provisioned.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Infoblox service.
-- `grid_master` (Block Set, Min: 1) Defines the properties of the Infoblox grid master. The Infoblox grid master needs to exist before other instances of a the grid can be added. The grid master can either be provisioned by Alkira or could already be provisioned externally. Some of these properties only need to be provided when the grid master is external. If the grid master needs to be provisioned internally by Alkira then an instance needs to be added to Infoblox service configuration with type = MASTER (see [below for nested schema](#nestedblock--grid_master))
+- `grid_master` (Block List, Min: 1) Defines the properties of the Infoblox grid master. The Infoblox grid master needs to exist before other instances of a the grid can be added. The grid master can either be provisioned by Alkira or could already be provisioned externally. Some of these properties only need to be provided when the grid master is external. If the grid master needs to be provisioned internally by Alkira then an instance needs to be added to Infoblox service configuration with type = MASTER (see [below for nested schema](#nestedblock--grid_master))
 - `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `name` (String) Name of the Infoblox service.
@@ -102,6 +102,10 @@ Optional:
 
 - `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used.
 - `ip` (String) The ip address of the grid master.
+
+Read-Only:
+
+- `credential_id` (String) The credential ID of the Grid Master.
 
 
 <a id="nestedblock--instance"></a>
