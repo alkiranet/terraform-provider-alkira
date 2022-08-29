@@ -87,7 +87,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Optional:    true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeInt,
-								ValidateFunc: validation.StringIsNotWhiteSpace,
 							},
 						},
 						"advanced_options": {
