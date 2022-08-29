@@ -66,8 +66,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Description: "An array of preshared keys, one per " +
 								"tunnel. The value needs to be provided explictly " +
 								"unlike portal.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{
+							Type: schema.TypeList,
+							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
 							},
@@ -85,7 +85,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Description: "A list of IDs of billing tag associated with the endpoint.",
 							Type:        schema.TypeList,
 							Optional:    true,
-							Elem:        &schema.Schema{
+							Elem: &schema.Schema{
 								Type:         schema.TypeInt,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
 							},

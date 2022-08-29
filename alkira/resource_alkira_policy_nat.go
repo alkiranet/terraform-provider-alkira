@@ -32,10 +32,10 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Optional:    true,
 			},
 			"type": {
-				Description:  "The type of NAT policy, currently only `INTER_SEGMENT`is supported.",
+				Description:  "The type of NAT policy, currently only `INTRA_SEGMENT`is supported.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"INTER_SEGMENT"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"INTRA_SEGMENT"}, false),
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define the policy scope.",
