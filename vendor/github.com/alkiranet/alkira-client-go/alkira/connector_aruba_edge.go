@@ -44,6 +44,14 @@ type ArubaEdgeInstanceConfig struct {
 	Data string //The response is string data. The entire body of the response should be interpreted together. There is no json structure.
 }
 
+// getArubaEdgeConnectors get all aruba edge connectors from the given tenant network
+func (ac *AlkiraClient) getArubaEdgeConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/aruba-edge-connectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 func (ac *AlkiraClient) CreateConnectorArubaEdge(c *ConnectorArubaEdge) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/aruba-edge-connectors", ac.URI, ac.TenantNetworkId)
 
@@ -130,4 +138,30 @@ func (ac *AlkiraClient) DeleteConnectorArubaEdge(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/aruba-edge-connectors/%s", ac.URI, ac.TenantNetworkId, id)
 
 	return ac.delete(uri, true)
+}
+
+// GetConnectorArubaEdgeByName get an Aruba Edge connector by Name
+func (ac *AlkiraClient) GetConnectorArubaEdgeByName(name string) (ConnectorArubaEdge, error) {
+	var arubaConnector ConnectorArubaEdge
+
+	if len(name) == 0 {
+		return arubaConnector, fmt.Errorf("GetConnectorArubaEdgeByName: Invalid Connector name")
+	}
+
+	arubaConnectors, err := ac.getArubaEdgeConnectors()
+
+	if err != nil {
+		return arubaConnector, err
+	}
+
+	var result []ConnectorArubaEdge
+	json.Unmarshal([]byte(arubaConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return arubaConnector, fmt.Errorf("GetConnectorArubaEdgeByName: failed to find the connector by %s", name)
 }

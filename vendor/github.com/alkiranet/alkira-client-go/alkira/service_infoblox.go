@@ -32,7 +32,7 @@ type InfobloxAnycast struct {
 type InfobloxGridMaster struct {
 	External                 bool   `json:"external,omitempty"`
 	GridMasterCredentialId   string `json:"gridMasterCredentialId"`
-	Ip                       string `json:"ip"`
+	Ip                       string `json:"ip,omitempty"`
 	Name                     string `json:"name"`
 	SharedSecretCredentialId string `json:"sharedSecretCredentialId"`
 }

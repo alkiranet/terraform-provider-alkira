@@ -23,6 +23,7 @@ type ConnectorIPSecSiteAdvanced struct {
 	IkeRandomTime           int      `json:"ikeRandomTime,omitempty"`
 	IkeRekeyTime            int      `json:"ikeRekeyTime,omitempty"`
 	IkeVersion              string   `json:"ikeVersion,omitempty"`
+	Initiator               bool     `json:"initiator,omitempty"`
 	LocalAuthType           string   `json:"localAuthType,omitempty"`
 	LocalAuthValue          string   `json:"localAuthValue,omitempty"`
 	RemoteAuthType          string   `json:"remoteAuthType,omitempty"`
@@ -96,6 +97,14 @@ type ConnectorIPSec struct {
 	VpnMode        string                        `json:"vpnMode"`
 }
 
+// getIpsecConnectors get all ipsec connectors from the given tenant network
+func (ac *AlkiraClient) getIpsecConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorIPSec create an IPSEC connector
 func (ac *AlkiraClient) CreateConnectorIPSec(connector *ConnectorIPSec) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
@@ -162,4 +171,30 @@ func (ac *AlkiraClient) GetConnectorIPSec(id string) (*ConnectorIPSec, error) {
 	}
 
 	return &connector, nil
+}
+
+// GetConnectorIpsecByName get an internet connector by name
+func (ac *AlkiraClient) GetConnectorIpsecByName(name string) (ConnectorIPSec, error) {
+	var ipsecConnector ConnectorIPSec
+
+	if len(name) == 0 {
+		return ipsecConnector, fmt.Errorf("GetConnectorIpsecByName: Invalid Connector name")
+	}
+
+	ipsecConnectors, err := ac.getIpsecConnectors()
+
+	if err != nil {
+		return ipsecConnector, err
+	}
+
+	var result []ConnectorIPSec
+	json.Unmarshal([]byte(ipsecConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return ipsecConnector, fmt.Errorf("GetConnectorIpsecByName: failed to find the connector by %s", name)
 }

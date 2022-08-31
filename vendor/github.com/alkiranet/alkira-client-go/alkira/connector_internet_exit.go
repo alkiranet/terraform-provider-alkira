@@ -32,6 +32,14 @@ type ConnectorInternet struct {
 	TrafficDistribution *TrafficDistribution `json:"trafficDistribution,omitempty"`
 }
 
+// getInternetConnectors get all Internet Connectors from the given tenant network
+func (ac *AlkiraClient) getInternetConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/internetconnectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorInternetExit create an internet connector
 func (ac *AlkiraClient) CreateConnectorInternetExit(connector *ConnectorInternet) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internetconnectors", ac.URI, ac.TenantNetworkId)
@@ -96,4 +104,30 @@ func (ac *AlkiraClient) UpdateConnectorInternetExit(id string, connector *Connec
 	}
 
 	return ac.update(uri, body, true)
+}
+
+// GetConnectorInternetByName get internet connector by name
+func (ac *AlkiraClient) GetConnectorInternetByName(name string) (ConnectorInternet, error) {
+	var internetConnector ConnectorInternet
+
+	if len(name) == 0 {
+		return internetConnector, fmt.Errorf("GetConnectorInternetByName: Invalid Connector name")
+	}
+
+	internetConnectors, err := ac.getInternetConnectors()
+
+	if err != nil {
+		return internetConnector, err
+	}
+
+	var result []ConnectorInternet
+	json.Unmarshal([]byte(internetConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return internetConnector, fmt.Errorf("GetConnectorInternetByName: failed to find the connector by %s", name)
 }

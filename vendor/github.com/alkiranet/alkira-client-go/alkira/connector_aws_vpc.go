@@ -57,6 +57,14 @@ type ConnectorAwsVpc struct {
 	VpcRouting                         interface{}     `json:"vpcRouting"`
 }
 
+// getAwsVpcConnectors get all aws vpc connectors from the given tenant network
+func (ac *AlkiraClient) getAwsVpcConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorAwsVPC create an AWS-VPC connector
 func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpc) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
@@ -123,4 +131,30 @@ func (ac *AlkiraClient) GetConnectorAwsVpc(id string) (*ConnectorAwsVpc, error) 
 	}
 
 	return &result, nil
+}
+
+// GetConnectorAwsVpcByName get an Aws Vpc connector by name
+func (ac *AlkiraClient) GetConnectorAwsVpcByName(name string) (ConnectorAwsVpc, error) {
+	var awsVpcConnector ConnectorAwsVpc
+
+	if len(name) == 0 {
+		return awsVpcConnector, fmt.Errorf("GetConnectorAwsVpcByName: Invalid Connector name")
+	}
+
+	awsVpcConnectors, err := ac.getAwsVpcConnectors()
+
+	if err != nil {
+		return awsVpcConnector, err
+	}
+
+	var result []ConnectorAwsVpc
+	json.Unmarshal([]byte(awsVpcConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return awsVpcConnector, fmt.Errorf("GetConnectorAwsVpcByName: failed to find the connector by %s", name)
 }
