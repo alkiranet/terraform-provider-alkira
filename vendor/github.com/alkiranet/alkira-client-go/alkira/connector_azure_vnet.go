@@ -72,6 +72,14 @@ type ConnectorAzureVnet struct {
 	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
 }
 
+// getAzureVnetConnectors get all Azure Vnet connectors from the given tenant network
+func (ac *AlkiraClient) getAzureVnetConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorAzureVnet create a AZURE-VNET connector
 func (ac *AlkiraClient) CreateConnectorAzureVnet(connector *ConnectorAzureVnet) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors", ac.URI, ac.TenantNetworkId)
@@ -138,4 +146,30 @@ func (ac *AlkiraClient) UpdateConnectorAzureVnet(id string, connector *Connector
 	}
 
 	return ac.update(uri, body, true)
+}
+
+// GetConnectorAzureVnetByName get an Azure VNET connector by name
+func (ac *AlkiraClient) GetConnectorAzureVnetByName(name string) (ConnectorAzureVnet, error) {
+	var azureVnetConnector ConnectorAzureVnet
+
+	if len(name) == 0 {
+		return azureVnetConnector, fmt.Errorf("GetConnectorAzureVnetByName: Invalid Connector name")
+	}
+
+	azureVnetConnectors, err := ac.getAzureVnetConnectors()
+
+	if err != nil {
+		return azureVnetConnector, err
+	}
+
+	var result []ConnectorAzureVnet
+	json.Unmarshal([]byte(azureVnetConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return azureVnetConnector, fmt.Errorf("GetConnectorAzureVnetByName: failed to find the connector by %s", name)
 }
