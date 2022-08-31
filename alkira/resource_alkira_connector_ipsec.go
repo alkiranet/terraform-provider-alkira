@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"reflect"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -71,7 +70,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
 							},
-							Optional: true,
+							Required: true,
 						},
 						"enable_tunnel_redundancy": {
 							Description: "Disable this if all tunnels will not be configured or enabled " +
@@ -88,6 +87,15 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeInt,
 							},
+						},
+						"ha_mode": {
+							Description: "The value could be `ACTIVE` or `STANDBY`. A endpoint in `STANDBY` mode will not " +
+								"be used for traffic unless all other endpoints for the connector are down. There can only " +
+								"be one endpoint in `STANDBY` mode per connector and there must be at least one endpoint " +
+								"that isn't in `STANDBY` mode per connector.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ACTIVE", "STANDBY"}, false),
 						},
 						"advanced_options": {
 							Description: "Advanced options for IPSec endpoint.",
@@ -399,10 +407,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 
 		var advanced []map[string]interface{}
 
-		siteValue := reflect.ValueOf(site).Elem()
-		siteAdvanced := siteValue.FieldByName("Advanced")
-
-		if siteAdvanced == (reflect.Value{}) {
+		if site.Advanced != nil {
 			advancedConfig := map[string]interface{}{
 				"dpd_delay":                 site.Advanced.DPDDelay,
 				"dpd_timeout":               site.Advanced.DPDTimeout,
@@ -412,12 +417,14 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 				"esp_life_time":             site.Advanced.EspLifeTime,
 				"esp_random_time":           site.Advanced.EspRandomTime,
 				"esp_rekey_time":            site.Advanced.EspRekeyTime,
+				"ike_dh_group_numbers":      site.Advanced.IkeDHGroupNumbers,
 				"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
 				"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
 				"ike_over_time":             site.Advanced.IkeOverTime,
 				"ike_random_time":           site.Advanced.IkeRandomTime,
 				"ike_rekey_time":            site.Advanced.IkeRekeyTime,
 				"ike_version":               site.Advanced.IkeVersion,
+				"initiator":                 site.Advanced.Initiator,
 				"local_auth_type":           site.Advanced.LocalAuthType,
 				"local_auth_value":          site.Advanced.LocalAuthValue,
 				"remote_auth_type":          site.Advanced.RemoteAuthType,
@@ -432,6 +439,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 			"billing_tag_ids":          site.BillingTags,
 			"customer_gateway_ip":      site.CustomerGwIp,
 			"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
+			"ha_mode":                  site.HaMode,
 			"preshared_keys":           site.PresharedKeys,
 			"id":                       site.Id,
 			"advanced_options":         advanced,
