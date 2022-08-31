@@ -43,12 +43,12 @@ Optional:
 - `dst_addr_translation_ports` (List of String) The port list to translate the destination prefixes to.
 - `dst_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `dst_addr_translation_prefixes` (List of String) The list of prefixes.
-- `dst_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
+- `dst_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`.
 - `src_addr_translation_bidirectional` (Boolean) Is the translation bidirectional.
 - `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate.
 - `src_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `src_addr_translation_prefixes` (List of String) The list of prefixes.
-- `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC`, `DYNAMIC_IP_AND_PORT` and `NONE`.
+- `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`.
 
 
 <a id="nestedblock--match"></a>
