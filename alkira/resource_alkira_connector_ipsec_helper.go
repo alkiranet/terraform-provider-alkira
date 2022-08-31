@@ -71,6 +71,9 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 		if v, ok := config["ike_version"].(string); ok {
 			advanced.IkeVersion = v
 		}
+		if v, ok := config["initiator"].(bool); ok {
+			advanced.Initiator = v
+		}
 		if v, ok := config["local_auth_type"].(string); ok {
 			advanced.LocalAuthType = v
 		}
@@ -106,6 +109,7 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 
 		r.Name = siteConfig["name"].(string)
 		r.CustomerGwIp = siteConfig["customer_gateway_ip"].(string)
+		r.HaMode = siteConfig["ha_mode"].(string)
 		r.Id = siteConfig["id"].(int)
 
 		if v, ok := siteConfig["billing_tag_ids"].([]interface{}); ok {
