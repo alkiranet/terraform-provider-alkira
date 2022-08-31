@@ -49,6 +49,14 @@ type ConnectorOciVcn struct {
 	VcnRouting     interface{} `json:"vcnRouting,omitempty"`
 }
 
+// getOciVcnConnectors get all Oci Vcn connectors
+func (ac *AlkiraClient) getOciVcnConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/oci-vcn-connectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorOciVcn create an OCI-VCN connector
 func (ac *AlkiraClient) CreateConnectorOciVcn(connector *ConnectorOciVcn) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/oci-vcn-connectors", ac.URI, ac.TenantNetworkId)
@@ -115,4 +123,30 @@ func (ac *AlkiraClient) GetConnectorOciVcn(id string) (*ConnectorOciVcn, error) 
 	}
 
 	return &result, nil
+}
+
+// GetConnectorOciVcnByName get Oci Vcn connector by name
+func (ac *AlkiraClient) GetConnectorOciVcnByName(name string) (ConnectorOciVcn, error) {
+	var ociConnector ConnectorOciVcn
+
+	if len(name) == 0 {
+		return ociConnector, fmt.Errorf("GetConnectorOciVcnByName: Invalid Connector name")
+	}
+
+	ociConnectors, err := ac.getOciVcnConnectors()
+
+	if err != nil {
+		return ociConnector, err
+	}
+
+	var result []ConnectorOciVcn
+	json.Unmarshal([]byte(ociConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return ociConnector, fmt.Errorf("GetConnectorOciVcnByName: failed to find the connector by %s", name)
 }

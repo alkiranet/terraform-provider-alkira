@@ -38,6 +38,14 @@ type ConnectorCiscoSdwan struct {
 	Version              string                     `json:"version"`
 }
 
+// getCiscoSdwanConnecots get all Cisco Sdwan Connectors from the given tenant network
+func (ac *AlkiraClient) getCiscoSdwanConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/ciscosdwaningresses", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorCiscoSdwan create a Cisco SDWAN connector
 func (ac *AlkiraClient) CreateConnectorCiscoSdwan(connector *ConnectorCiscoSdwan) (string, error) {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ciscosdwaningresses", ac.URI, ac.TenantNetworkId)
@@ -105,4 +113,30 @@ func (ac *AlkiraClient) GetConnectorCiscoSdwan(id string) (*ConnectorCiscoSdwan,
 	}
 
 	return &connector, nil
+}
+
+// GetConnectorCiscoSdwanByName get a Cisco Sdwan Connector by Name
+func (ac *AlkiraClient) GetConnectorCiscoSdwanByName(name string) (ConnectorCiscoSdwan, error) {
+	var ciscoSdwanConnector ConnectorCiscoSdwan
+
+	if len(name) == 0 {
+		return ciscoSdwanConnector, fmt.Errorf("GetConnectorCiscoSdwanByName: Invalid Connector name")
+	}
+
+	ciscoSdwanConnectors, err := ac.getCiscoSdwanConnectors()
+
+	if err != nil {
+		return ciscoSdwanConnector, err
+	}
+
+	var result []ConnectorCiscoSdwan
+	json.Unmarshal([]byte(ciscoSdwanConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return ciscoSdwanConnector, fmt.Errorf("GetConnectorCiscoSdwanByName: failed to find the connector by %s", name)
 }
