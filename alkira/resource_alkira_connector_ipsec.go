@@ -400,51 +400,53 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("segment_id", segment.Id)
 	}
 
-	// Set endpoint
 	var endpoints []map[string]interface{}
 
-	for _, site := range connector.Sites {
+	//
+	// Go through all endpoints from the config firstly to find a
+	// match, either endpoint's ID or endpoint's name should be
+	// uniquely identifying an endpoint.
+	//
+	// On the first read call at the end of the create call, Terraform
+	// didn't track any endpoint IDs yet.
+	//
+	for _, endpoint := range d.Get("endpoint").([]interface{}) {
+		endpointConfig := endpoint.(map[string]interface{})
 
-		var advanced []map[string]interface{}
-
-		if site.Advanced != nil {
-			advancedConfig := map[string]interface{}{
-				"dpd_delay":                 site.Advanced.DPDDelay,
-				"dpd_timeout":               site.Advanced.DPDTimeout,
-				"esp_dh_group_numbers":      site.Advanced.EspDHGroupNumbers,
-				"esp_encryption_algorithms": site.Advanced.EspEncryptionAlgorithms,
-				"esp_integrity_algorithms":  site.Advanced.EspIntegrityAlgorithms,
-				"esp_life_time":             site.Advanced.EspLifeTime,
-				"esp_random_time":           site.Advanced.EspRandomTime,
-				"esp_rekey_time":            site.Advanced.EspRekeyTime,
-				"ike_dh_group_numbers":      site.Advanced.IkeDHGroupNumbers,
-				"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
-				"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
-				"ike_over_time":             site.Advanced.IkeOverTime,
-				"ike_random_time":           site.Advanced.IkeRandomTime,
-				"ike_rekey_time":            site.Advanced.IkeRekeyTime,
-				"ike_version":               site.Advanced.IkeVersion,
-				"initiator":                 site.Advanced.Initiator,
-				"local_auth_type":           site.Advanced.LocalAuthType,
-				"local_auth_value":          site.Advanced.LocalAuthValue,
-				"remote_auth_type":          site.Advanced.RemoteAuthType,
-				"remote_auth_value":         site.Advanced.RemoteAuthValue,
-				"replay_window_size":        site.Advanced.ReplayWindowSize,
+		for _, site := range connector.Sites {
+			if endpointConfig["id"].(int) == site.Id || endpointConfig["name"].(string) == site.Name {
+				endpoint := setConnectorIPSecEndpoint(site)
+				endpoints = append(endpoints, endpoint)
+				break
 			}
-			advanced = append(advanced, advancedConfig)
+		}
+	}
+
+	//
+	// Go through all endpoints from the API response one more time to
+	// find any endpoint that has not been tracked from Terraform
+	// config.
+	//
+	for _, site := range connector.Sites {
+		new := true
+
+		// Check if the endpoint already exists in the Terraform config
+		for _, endpoint := range d.Get("endpoint").([]interface{}) {
+			endpointConfig := endpoint.(map[string]interface{})
+
+			if endpointConfig["id"].(int) == site.Id || endpointConfig["name"].(string) == site.Name {
+				new = false
+				break
+			}
 		}
 
-		endpoint := map[string]interface{}{
-			"name":                     site.Name,
-			"billing_tag_ids":          site.BillingTags,
-			"customer_gateway_ip":      site.CustomerGwIp,
-			"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
-			"ha_mode":                  site.HaMode,
-			"preshared_keys":           site.PresharedKeys,
-			"id":                       site.Id,
-			"advanced_options":         advanced,
+		// If the endpoint is new, add it to the tail of the list,
+		// this will generate a diff
+		if new {
+			endpoint := setConnectorIPSecEndpoint(site)
+			endpoints = append(endpoints, endpoint)
+			break
 		}
-		endpoints = append(endpoints, endpoint)
 	}
 
 	d.Set("endpoint", endpoints)
