@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -131,6 +132,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 						"credential_id": {
 							Description: "ID of PAN instance credential managed by credential resource.",
 							Type:        schema.TypeString,
+							Optional:    true,
 							Computed:    true,
 						},
 						"pan_instance_expiry": {
@@ -417,47 +419,35 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
-	// panCredtoUpdate := d.Get("credential_id").(string)
-	// if 0 != len(panCredtoUpdate) {
-	// 	allCreds, err := client.GetCredentials()
-
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	var result []alkira.CredentialResponseDetail
-	// 	json.Unmarshal([]byte(allCreds), &result)
-
-	// 	for _, g := range result {
-	// 		if g.Name == name {
-	// 			return g, nil
-	// 		}
-	// 	}
-	// }
-
-	panCredName := d.Get("name").(string) + randomNameSuffix()
-	panCredential := alkira.CredentialPan{
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
+	allCreds, err := client.GetCredentials()
+	if err != nil {
+		log.Printf("[ERROR] failed to get all credentials, %v", err)
 	}
+	var result []alkira.CredentialResponseDetail
+	json.Unmarshal([]byte(allCreds), &result)
 
-	panCredentialId, err := client.CreateCredential(panCredName, alkira.CredentialTypePan, panCredential, 0)
+	panCredentialId, err := updateOrCreatePanCred(client, d, result)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to process PAN firewall credentials, %v", err)
+		log.Printf("[ERROR] failed to update or create pan credentials, %v", err)
+		return nil, err
+	}
+
+	panInstanceCreds, err := updateOrCreatePanInstanceCreds(client, d.Get("instance").([]interface{}), result)
+
+	if err != nil {
+		log.Printf("[ERROR] failed to expand PAN instance credentials, %v", err)
 		return nil, err
 	}
 
 	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
+
 	if err != nil {
 		return nil, err
 	}
 
-	instances, err = createPanInstanceCreds(client, instances)
-
-	if err != nil {
-		log.Printf("[ERROR] failed to create Pan Instance Credentials, %v", err)
-		return nil, err
+	for i, _ := range instances {
+		instances[i].CredentialId = panInstanceCreds[i]
 	}
 
 	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)
