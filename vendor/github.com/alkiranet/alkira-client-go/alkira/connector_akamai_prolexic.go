@@ -38,6 +38,14 @@ type ConnectorAkamaiProlexicTunnelIp struct {
 	AkamaiOverlayTunnelIp  string `json:"akamaiOverlayTunnelIp"`
 }
 
+// getAkamaiProlexicConnectors get all akamai prolexic connectors from the given tenant network
+func (ac *AlkiraClient) getAkamaiProlexicConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/akamai-prolexic-connectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
+}
+
 // CreateConnectorAkamaiProlexic create a Akamai Prolexic connector
 func (ac *AlkiraClient) CreateConnectorAkamaiProlexic(c *ConnectorAkamaiProlexic) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/akamai-prolexic-connectors", ac.URI, ac.TenantNetworkId)
@@ -104,4 +112,30 @@ func (ac *AlkiraClient) GetConnectorAkamaiProlexic(id string) (*ConnectorAkamaiP
 	}
 
 	return &result, nil
+}
+
+// GetConnectorAkamaiProlexicByName get a Akamai Prolexic connector by name
+func (ac *AlkiraClient) GetConnectorAkamaiProlexicByName(name string) (ConnectorAkamaiProlexic, error) {
+	var akamaiConnector ConnectorAkamaiProlexic
+
+	if len(name) == 0 {
+		return akamaiConnector, fmt.Errorf("GetConnectorAkamaiProlexicByName: Invalid Connector name")
+	}
+
+	akamaiConnectors, err := ac.getAkamaiProlexicConnectors()
+
+	if err != nil {
+		return akamaiConnector, err
+	}
+
+	var result []ConnectorAkamaiProlexic
+	json.Unmarshal([]byte(akamaiConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return akamaiConnector, fmt.Errorf("GetConnectorAkamaiProlexicByName: failed to find the connector by %s", name)
 }

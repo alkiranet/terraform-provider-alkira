@@ -14,9 +14,9 @@ Manage Cisco SD-WAN Connector.
 
 ```terraform
 resource "alkira_segment" "test" {
-  name = "test"
-  asn  = "65513"
-  cidr = "10.1.1.0/24"
+  name  = "test"
+  asn   = "65513"
+  cidrs = ["10.1.1.0/24"]
 }
 
 resource "alkira_credential_cisco_sdwan" "test" {

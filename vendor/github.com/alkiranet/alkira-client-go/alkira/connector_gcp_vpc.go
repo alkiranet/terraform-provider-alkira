@@ -26,11 +26,20 @@ type ConnectorGcpVpc struct {
 	Group          string                  `json:"group"`
 	Id             json.Number             `json:"id,omitempty"`
 	Name           string                  `json:"name"`
+	ProjectId      string                  `json:"projectId,omitempty"`
 	Segments       []string                `json:"segments"`
 	SecondaryCXPs  []string                `json:"secondaryCXPs,omitempty"`
 	Size           string                  `json:"size"`
 	VpcId          string                  `json:"vpcId"`
 	VpcName        string                  `json:"vpcName"`
+}
+
+// getGcpVpcConnectors get all GPC VPC connectors from the given tenant network
+func (ac *AlkiraClient) getGcpVpcConnectors() (string, error) {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/gcpvpcconnectors", ac.URI, ac.TenantNetworkId)
+
+	data, err := ac.get(uri)
+	return string(data), err
 }
 
 // CreateConnectorGcpVpc create a GCP-VPC connector
@@ -99,4 +108,30 @@ func (ac *AlkiraClient) GetConnectorGcpVpc(id string) (*ConnectorGcpVpc, error) 
 	}
 
 	return &result, nil
+}
+
+// GetConnectorGcpVpcByName get a GCP connector by name
+func (ac *AlkiraClient) GetConnectorGcpVpcByName(name string) (ConnectorGcpVpc, error) {
+	var gcpVpcConnector ConnectorGcpVpc
+
+	if len(name) == 0 {
+		return gcpVpcConnector, fmt.Errorf("GetConnectorGcpVpcByName: Invalid Connector name")
+	}
+
+	gcpVpcConnectors, err := ac.getGcpVpcConnectors()
+
+	if err != nil {
+		return gcpVpcConnector, err
+	}
+
+	var result []ConnectorGcpVpc
+	json.Unmarshal([]byte(gcpVpcConnectors), &result)
+
+	for _, l := range result {
+		if l.Name == name {
+			return l, nil
+		}
+	}
+
+	return gcpVpcConnector, fmt.Errorf("GetConnectorGcpVpcByName: failed to find the connector by %s", name)
 }
