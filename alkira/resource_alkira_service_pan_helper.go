@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"errors"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -136,9 +135,14 @@ func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interfac
 }
 
 func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid PAN instance input")
 	}
+	var nameWithSuffix string
+	var AuthCode string
+	var AuthKey string
 
 	instances := make([]alkira.ServicePanInstance, len(in))
 	for i, instance := range in {
@@ -149,9 +153,38 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 		}
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
+			nameWithSuffix = v + randomNameSuffix()
+		}
+		if v, ok := instanceCfg["auth_code"].(string); ok {
+			AuthCode = v
+		}
+		if v, ok := instanceCfg["auth_key"].(string); ok {
+			AuthKey = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
-			r.CredentialId = v
+			if v == "" {
+				credentialInstance := alkira.CredentialPanInstance{
+					AuthCode: AuthCode,
+					AuthKey:  AuthKey,
+				}
+
+				credentialId, err := client.CreateCredential(
+					nameWithSuffix,
+					alkira.CredentialTypePanInstance,
+					credentialInstance,
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				r.CredentialId = credentialId
+			}
+
+			if v != "" {
+				r.CredentialId = v
+			}
 		}
 		if v, ok := instanceCfg["global_protect_segment_options"].(*schema.Set); ok {
 			options, err := expandGlobalProtectSegmentOptionsInstance(v, m)
@@ -165,92 +198,4 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 	}
 
 	return instances, nil
-}
-
-// updateOrCreatePanInstanceCreds
-// updates and creates pan instance creds, checks if exists first then saves and returns credential ids created in an array of strings.
-func updateOrCreatePanInstanceCreds(client *alkira.AlkiraClient, in []interface{}, allCreds []alkira.CredentialResponseDetail) ([]string, error) {
-	if in == nil || len(in) == 0 {
-		return nil, errors.New("Invalid PAN instance input")
-	}
-	credItems := make([]string, len(in))
-	var err error
-	for i, instance := range in {
-		r := alkira.CredentialPanInstance{}
-
-		instanceCfg := instance.(map[string]interface{})
-
-		if v, ok := instanceCfg["auth_code"].(string); ok {
-			r.AuthCode = v
-		}
-		if v, ok := instanceCfg["auth_key"].(string); ok {
-			r.AuthKey = v
-		}
-
-		panCredInName := instanceCfg["name"].(string) + randomNameSuffix()
-		if v, ok := instanceCfg["credential_id"].(string); 0 != len(v) && ok {
-			var found bool
-			for _, g := range allCreds {
-				if g.Id == v {
-					found = true
-					err := client.UpdateCredential(v, panCredInName, alkira.CredentialTypePanInstance, r, 0)
-					if err != nil {
-						log.Printf("[ERROR] failed to update Pan instance credential, %v", err)
-						return nil, err
-					}
-					credItems[i] = v
-				}
-			}
-			if !found {
-				credItems[i], err = client.CreateCredential(panCredInName, alkira.CredentialTypePanInstance, r, 0)
-				if err != nil {
-					log.Printf("[ERROR] failed to create Pan Instance Credentials, %v", err)
-					return nil, err
-				}
-			}
-
-		} else {
-			credId, err := client.CreateCredential(panCredInName, alkira.CredentialTypePanInstance, r, 0)
-			if err != nil {
-				log.Printf("[ERROR] failed to create Pan Instance Credentials, %v", err)
-				return nil, err
-			}
-			credItems[i] = credId
-		}
-	}
-	return credItems, nil
-}
-
-// updateOrCreatePanCred updates or creates pan credential. Checks if exists first.
-func updateOrCreatePanCred(client *alkira.AlkiraClient, d *schema.ResourceData, allCreds []alkira.CredentialResponseDetail) (string, error) {
-
-	panCredentialId := d.Get("credential_id").(string)
-	panCredName := d.Get("name").(string) + randomNameSuffix()
-	panCredential := alkira.CredentialPan{
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-	}
-	var err error
-	if 0 != len(panCredentialId) {
-
-		for _, g := range allCreds {
-			if g.Id == panCredentialId {
-				err = client.UpdateCredential(panCredentialId, panCredName, alkira.CredentialTypePan, panCredential, 0)
-				if err != nil {
-					log.Printf("[ERROR] failed to update Pan credential, %v", err)
-					return panCredentialId, err
-				}
-				return panCredentialId, nil
-			}
-		}
-	}
-
-	panCredentialId, err = client.CreateCredential(panCredName, alkira.CredentialTypePan, panCredential, 0)
-
-	if err != nil {
-		log.Printf("[ERROR] failed to create PAN credentials, %v", err)
-		return panCredentialId, err
-	}
-
-	return panCredentialId, nil
 }
