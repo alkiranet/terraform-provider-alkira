@@ -134,6 +134,24 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Optional:    true,
 							Computed:    true,
 						},
+						"license_key": &schema.Schema{
+							Description: "PAN license key.",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Deprecated:  "Not supported anymore",
+						},
+						"password": &schema.Schema{
+							Description: "PAN password.",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Deprecated:  "Not supported anymore",
+						},
+						"username": &schema.Schema{
+							Description: "PAN username.",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Deprecated:  "Not supported anymore",
+						},
 						"global_protect_segment_options": {
 							Description: "These options should be set only when global protect is " +
 								"enabled on service. These are set per segment. It is expected that " +
