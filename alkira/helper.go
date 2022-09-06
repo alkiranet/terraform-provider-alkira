@@ -47,6 +47,8 @@ func convertTypeListToIntList(in []interface{}) []int {
 }
 
 func convertTypeListToStringList(in []interface{}) []string {
+	log.Printf("[DEBUG] Convert TypeList %v", in)
+
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty TypeList to convert to StringList")
 		return nil
@@ -55,7 +57,11 @@ func convertTypeListToStringList(in []interface{}) []string {
 	strList := make([]string, len(in))
 
 	for i, value := range in {
-		strList[i] = value.(string)
+		if value != nil {
+			strList[i] = value.(string)
+		} else {
+			strList[i] = ""
+		}
 	}
 
 	return strList

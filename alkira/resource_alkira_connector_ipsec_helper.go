@@ -71,6 +71,9 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 		if v, ok := config["ike_version"].(string); ok {
 			advanced.IkeVersion = v
 		}
+		if v, ok := config["initiator"].(bool); ok {
+			advanced.Initiator = v
+		}
 		if v, ok := config["local_auth_type"].(string); ok {
 			advanced.LocalAuthType = v
 		}
@@ -106,6 +109,7 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 
 		r.Name = siteConfig["name"].(string)
 		r.CustomerGwIp = siteConfig["customer_gateway_ip"].(string)
+		r.HaMode = siteConfig["ha_mode"].(string)
 		r.Id = siteConfig["id"].(int)
 
 		if v, ok := siteConfig["billing_tag_ids"].([]interface{}); ok {
@@ -284,4 +288,54 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 	}
 
 	return &routingOptions, nil
+}
+
+// setConnectorIPSecEndpoint
+func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]interface{} {
+	if site == nil {
+		log.Printf("[ERROR] invalid IPSec site")
+		return nil
+	}
+
+	var advanced []map[string]interface{}
+
+	if site.Advanced != nil {
+		advancedConfig := map[string]interface{}{
+			"dpd_delay":                 site.Advanced.DPDDelay,
+			"dpd_timeout":               site.Advanced.DPDTimeout,
+			"esp_dh_group_numbers":      site.Advanced.EspDHGroupNumbers,
+			"esp_encryption_algorithms": site.Advanced.EspEncryptionAlgorithms,
+			"esp_integrity_algorithms":  site.Advanced.EspIntegrityAlgorithms,
+			"esp_life_time":             site.Advanced.EspLifeTime,
+			"esp_random_time":           site.Advanced.EspRandomTime,
+			"esp_rekey_time":            site.Advanced.EspRekeyTime,
+			"ike_dh_group_numbers":      site.Advanced.IkeDHGroupNumbers,
+			"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
+			"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
+			"ike_over_time":             site.Advanced.IkeOverTime,
+			"ike_random_time":           site.Advanced.IkeRandomTime,
+			"ike_rekey_time":            site.Advanced.IkeRekeyTime,
+			"ike_version":               site.Advanced.IkeVersion,
+			"initiator":                 site.Advanced.Initiator,
+			"local_auth_type":           site.Advanced.LocalAuthType,
+			"local_auth_value":          site.Advanced.LocalAuthValue,
+			"remote_auth_type":          site.Advanced.RemoteAuthType,
+			"remote_auth_value":         site.Advanced.RemoteAuthValue,
+			"replay_window_size":        site.Advanced.ReplayWindowSize,
+		}
+		advanced = append(advanced, advancedConfig)
+	}
+
+	endpoint := map[string]interface{}{
+		"name":                     site.Name,
+		"billing_tag_ids":          site.BillingTags,
+		"customer_gateway_ip":      site.CustomerGwIp,
+		"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
+		"ha_mode":                  site.HaMode,
+		"preshared_keys":           site.PresharedKeys,
+		"id":                       site.Id,
+		"advanced_options":         advanced,
+	}
+
+	return endpoint
 }

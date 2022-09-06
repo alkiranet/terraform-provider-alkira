@@ -115,13 +115,14 @@ Required:
 
 - `customer_gateway_ip` (String) The IP address of the customer gateway.
 - `name` (String) The name of the endpoint.
+- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explictly unlike portal.
 
 Optional:
 
 - `advanced_options` (Block List) Advanced options for IPSec endpoint. (see [below for nested schema](#nestedblock--endpoint--advanced_options))
 - `billing_tag_ids` (List of Number) A list of IDs of billing tag associated with the endpoint.
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If disabled, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connector health to be shown as `UP`.
-- `preshared_keys` (List of String) An array of presharedKeys, one per tunnel.
+- `ha_mode` (String) The value could be `ACTIVE` or `STANDBY`. A endpoint in `STANDBY` mode will not be used for traffic unless all other endpoints for the connector are down. There can only be one endpoint in `STANDBY` mode per connector and there must be at least one endpoint that isn't in `STANDBY` mode per connector.
 
 Read-Only:
 
