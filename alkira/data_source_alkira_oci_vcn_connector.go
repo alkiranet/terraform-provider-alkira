@@ -7,7 +7,7 @@ import (
 
 func dataSourceAlkiraOciVcnConnector() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing connector group.",
+		Description: "Use this data source to get an existing Oci Vcn connector.",
 
 		Read: dataSourceAlkiraOciVcnConnectorRead,
 
