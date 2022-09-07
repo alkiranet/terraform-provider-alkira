@@ -5,11 +5,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAlkiraIpsecConnector() *schema.Resource {
+func dataSourceAlkiraConnectorIpsec() *schema.Resource {
 	return &schema.Resource{
 		Description: "Use this data source to get an existing ipsec connector.",
 
-		Read: dataSourceAlkiraIpsecConnectorRead,
+		Read: dataSourceAlkiraConnectorIpsecRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -21,7 +21,7 @@ func dataSourceAlkiraIpsecConnector() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraIpsecConnectorRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAlkiraConnectorIpsecRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	group, err := client.GetConnectorIpsecByName(d.Get("name").(string))
