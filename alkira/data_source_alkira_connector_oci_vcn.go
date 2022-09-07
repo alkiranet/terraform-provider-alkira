@@ -5,11 +5,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAlkiraOciVcnConnector() *schema.Resource {
+func dataSourceAlkiraConnectorOciVcn() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Oci Vcn connector.",
+		Description: "Use this data source to get an existing OCI VCN connector.",
 
-		Read: dataSourceAlkiraOciVcnConnectorRead,
+		Read: dataSourceAlkiraConnectorOciVcnRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -21,7 +21,7 @@ func dataSourceAlkiraOciVcnConnector() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraOciVcnConnectorRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAlkiraConnectorOciVcnRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*alkira.AlkiraClient)
 
 	group, err := client.GetConnectorOciVcnByName(d.Get("name").(string))

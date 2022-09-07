@@ -85,7 +85,7 @@ func Provider() *schema.Provider {
 			"alkira_credential":              dataSourceAlkiraCredential(),
 			"alkira_group":                   dataSourceAlkiraGroup(),
 			"alkira_group_connector":         dataSourceAlkiraGroupConnector(),
-			"alkira_oci_vcn_connector":       dataSourceAlkiraOciVcnConnector(),
+			"alkira_connector_oci_vcn":       dataSourceAlkiraConnectorOciVcn(),
 			"alkira_group_user":              dataSourceAlkiraGroupUser(),
 			"alkira_ipsec_connector":         dataSourceAlkiraIpsecConnector(),
 			"alkira_list_as_path":            dataSourceAlkiraListAsPath(),
