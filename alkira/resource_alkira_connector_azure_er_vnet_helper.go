@@ -6,21 +6,21 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
-func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAzureErInstance, error) {
+func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAzureErVnetInstance, error) {
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid Azure Er Instance input")
 	}
 
-	instances := make([]alkira.ConnectorAzureErInstance, len(in))
+	instances := make([]alkira.ConnectorAzureErVnetInstance, len(in))
 	for i, instance := range in {
-		r := alkira.ConnectorAzureErInstance{}
+		r := alkira.ConnectorAzureErVnetInstance{}
 		instanceCfg := instance.(map[string]interface{})
 
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
 		}
 		if v, ok := instanceCfg["express_route_circuit_id"].(string); ok {
-			r.ExpressRouterCircuitId = v
+			r.ExpressRouteCircuitId = v
 		}
 		if v, ok := instanceCfg["redundant_router"].(bool); ok {
 			r.RedundantRouter = v
@@ -43,14 +43,14 @@ func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.Connector
 	return instances, nil
 }
 
-func expandAzureErSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureErSegment, error) {
+func expandAzureErSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureErVnetSegment, error) {
 	if seg == nil || len(seg) == 0 {
 		return nil, errors.New("Invalid Azure Er Segment Options input")
 	}
 
-	segments := make([]alkira.ConnectorAzureErSegment, len(seg))
+	segments := make([]alkira.ConnectorAzureErVnetSegment, len(seg))
 	for i, segment := range seg {
-		r := alkira.ConnectorAzureErSegment{}
+		r := alkira.ConnectorAzureErVnetSegment{}
 		instanceCfg := segment.(map[string]interface{})
 		if v, ok := instanceCfg["segment_name"].(string); ok {
 			r.SegmentName = v
@@ -62,7 +62,7 @@ func expandAzureErSegments(seg []interface{}, m interface{}) ([]alkira.Connector
 			r.CustomerAsn = v
 		}
 		if v, ok := instanceCfg["disabled_internet_exit"].(bool); ok {
-			r.DisabledInternetExit = v
+			r.DisableInternetExit = v
 		}
 		if v, ok := instanceCfg["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
