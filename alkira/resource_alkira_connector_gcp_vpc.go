@@ -44,6 +44,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"gcp_project_id": {
+				Description: "GCP Project ID.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"gcp_routing": {
 				Description: "GCP Routing describes the routes that are to be imported to the VPC " +
 					"from the CXP. This essentially controls how traffic is routed between the " +
@@ -148,6 +153,7 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
+	d.Set("gcp_project_id", connector.ProjectId)
 	d.Set("gcp_vpc_id", connector.VpcId)
 	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
@@ -211,6 +217,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
+		ProjectId:      d.Get("gcp_project_id").(string),
 		Segments:       []string{segment.Name},
 		Size:           d.Get("size").(string),
 		VpcId:          d.Get("gcp_vpc_id").(string),

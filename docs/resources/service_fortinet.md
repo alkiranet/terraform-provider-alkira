@@ -51,7 +51,6 @@ resource "alkira_fortinet" "test1" {
 - `cxp` (String) The CXP where the service should be provisioned.
 - `instances` (Block List, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `license_type` (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- `management_server_ip` (String) The IP addresses used to access the management server.
 - `management_server_segment` (String) The segment used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
 - `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Fortinet at this time. max_instance_count must be greater than or equal to min_instance_count.
 - `name` (String) Name of the Fortinet Firewall service.
@@ -63,6 +62,7 @@ resource "alkira_fortinet" "test1" {
 
 - `auto_scale` (String) Indicate if auto_scale should be enabled for your Fortinet firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
 - `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.

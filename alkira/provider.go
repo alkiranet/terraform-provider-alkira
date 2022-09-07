@@ -83,8 +83,10 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":             dataSourceAlkiraBillingTag(),
 			"alkira_credential":              dataSourceAlkiraCredential(),
+			"alkira_connector_ipsec":         dataSourceAlkiraConnectorIpsec(),
 			"alkira_group":                   dataSourceAlkiraGroup(),
 			"alkira_group_connector":         dataSourceAlkiraGroupConnector(),
+			"alkira_connector_oci_vcn":       dataSourceAlkiraConnectorOciVcn(),
 			"alkira_group_user":              dataSourceAlkiraGroupUser(),
 			"alkira_list_as_path":            dataSourceAlkiraListAsPath(),
 			"alkira_list_community":          dataSourceAlkiraListCommunity(),
