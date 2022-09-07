@@ -86,7 +86,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"management_server_ip": {
 				Description: "The IP addresses used to access the management server.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"management_server_segment": {
 				Description: "The segment used to access the management server. This segment " +
