@@ -171,6 +171,24 @@ func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 // generateConnectorAzureErRequest generate request for connector-azure-vnet
-func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
+func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureErVnet, error) {
 	client := m.(*alkira.AlkiraClient)
+
+	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+
+	instances, err := expandAzureErInstances(d.Get("instances"), m)
+
+	segmentOptions, err := expandAzureErSegments(d.Get("segment_options", m))
+
+	request := &alkira.ConnectorAzureErVnet{
+		Size:		 	d.Get("size").(string),
+		BillingTags: 	billingTags,
+		Enabled: 		d.Get("enabled"),
+		TunnelProtocol: d.Get("tunnel_protocol"),
+		VhubPrefix: 	d.Get("vhub_prefix"),
+		Instances: 		instances,
+		Segmentation: 	segmentOptions,
+	}
+
+	return request, nil
 }
