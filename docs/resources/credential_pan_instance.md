@@ -17,7 +17,6 @@ description: |-
 
 ### Required
 
-- `license_key` (String) PAN license key.
 - `name` (String) The name of the credential.
 - `password` (String) PAN password.
 - `username` (String) PAN username.
@@ -26,6 +25,7 @@ description: |-
 
 - `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
 - `auth_key` (String) PAN instance auth key. This is only required when `panorama_enabled` is set to `true`.
+- `license_key` (String) PAN license key.
 
 ### Read-Only
 
