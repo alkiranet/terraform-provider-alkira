@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"log"
 	"strconv"
 
@@ -37,7 +38,7 @@ func expandFortinetInstances(in []interface{}) []alkira.FortinetInstance {
 	return instances
 }
 
-func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.FortinetSegmentName, error) {
+func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.OuterZoneToGroups, error) {
 	if in == nil || in.Len() == 0 {
 		//At the time of this writing segment options is optional we don't care if they don't submit anything.
 		return nil, nil
@@ -45,13 +46,22 @@ func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alk
 
 	client := m.(*alkira.AlkiraClient)
 
-	segmentOptions := make(map[string]alkira.FortinetSegmentName)
+	// TODO(mac): you'll need to go back to the client and rename the zones to group stuff it's
+	// confusing.
+	segmentOptions := make(map[string]alkira.OuterZoneToGroups)
+
 	for _, options := range in.List() {
 		optionsCfg := options.(map[string]interface{})
-		z := alkira.FortinetSegmentName{}
+		zonesToGroups := make(alkira.CheckpointZoneToGroups)
+		z := alkira.OuterZoneToGroups{}
 
+		var zoneName *string
 		var segment *alkira.Segment
-		var zonesToGroups map[string][]string
+		var groups []string
+
+		if v, ok := optionsCfg["zone_name"].(string); ok {
+			zoneName = &v
+		}
 
 		if v, ok := optionsCfg["segment_id"].(int); ok {
 			sg, err := client.GetSegmentById(strconv.Itoa(v))
@@ -61,19 +71,53 @@ func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alk
 			segment = &sg
 		}
 
-		if v, ok := optionsCfg["zone"].(*schema.Set); ok {
-			zonesToGroups = expandFortinetZone(v)
+		if v, ok := optionsCfg["groups"].([]interface{}); ok {
+			groups = convertTypeListToStringList(v)
 		}
 
+		if zoneName == nil || segment == nil || groups == nil {
+			return nil, errors.New("segment_option fields cannot be nil")
+		}
+
+		zonesToGroups[*zoneName] = groups
 		z.SegmentId = segment.Id
 		z.ZonesToGroups = zonesToGroups
 		segmentOptions[segment.Name] = z
 	}
 
 	return segmentOptions, nil
+
+	//client := m.(*alkira.AlkiraClient)
+
+	//segmentOptions := make(map[string]alkira.FortinetSegmentName)
+	//for _, options := range in.List() {
+	//	optionsCfg := options.(map[string]interface{})
+	//	z := alkira.FortinetSegmentName{}
+
+	//	var segment *alkira.Segment
+	//	var zonesToGroups map[string][]string
+
+	//	if v, ok := optionsCfg["segment_id"].(int); ok {
+	//		sg, err := client.GetSegmentById(strconv.Itoa(v))
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		segment = &sg
+	//	}
+
+	//	if v, ok := optionsCfg["zone"].(*schema.Set); ok {
+	//		zonesToGroups = expandFortinetZone(v)
+	//	}
+
+	//	z.SegmentId = segment.Id
+	//	z.ZonesToGroups = zonesToGroups
+	//	segmentOptions[segment.Name] = z
+	//}
+
+	//return segmentOptions, nil
 }
 
-func deflateFortinetSegmentOptions(c map[string]alkira.FortinetSegmentName) []map[string]interface{} {
+func deflateFortinetSegmentOptions(c map[string]alkira.OuterZoneToGroups) []map[string]interface{} {
 	var options []map[string]interface{}
 
 	for _, outerZoneToGroups := range c {
