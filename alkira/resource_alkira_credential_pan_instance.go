@@ -16,7 +16,7 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		DeprecationMessage: "Pan instance credentials to be moved into the alkira_service_pan resource. Only need Name, Auth_Code and Auth_Key.",
+		DeprecationMessage: "alkira_credential_pan_instance has been deprecated. Please specify name, auth_code and auth_key directly in instance block of resource service_pan. See documentation for example.",
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -58,6 +58,7 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 }
 
 func resourceCredentialPanInstance(d *schema.ResourceData, meta interface{}) error {
+	return nil
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialPanInstance{
@@ -84,6 +85,7 @@ func resourceCredentialPanInstanceRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	return nil
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialPanInstance{
@@ -105,6 +107,7 @@ func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceCredentialPanInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	return nil
 	client := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 

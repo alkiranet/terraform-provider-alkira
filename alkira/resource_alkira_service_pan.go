@@ -39,18 +39,18 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
-			"password": {
+			"pan_password": {
 				Description: "PAN password.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"username": {
+			"pan_username": {
 				Description: "PAN username.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"credential_id": {
-				Description: "ID of PAN credential managed by credential resource.",
+				Description: "ID of PAN credential.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -129,28 +129,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Optional: true,
 						},
 						"credential_id": {
-							Description: "ID of PAN instance credential managed by credential resource.",
+							Description: "ID of PAN instance credential.",
 							Type:        schema.TypeString,
 							Optional:    true,
 							Computed:    true,
-						},
-						"license_key": &schema.Schema{
-							Description: "PAN license key.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "Not supported anymore",
-						},
-						"password": &schema.Schema{
-							Description: "PAN password.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "Not supported anymore",
-						},
-						"username": &schema.Schema{
-							Description: "PAN username.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "Not supported anymore",
 						},
 						"global_protect_segment_options": {
 							Description: "These options should be set only when global protect is " +
@@ -294,9 +276,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
 			},
 			"type": {
-				Description: "The type of the PAN firewall.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"VM-300", "VM-500", "VM-700"}, false),
 			},
 			"version": {
 				Description: "The version of the PAN firewall.",
@@ -434,10 +417,11 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panCredentialId := d.Get("credential_id").(string)
 
 	if 0 == len(panCredentialId) {
+		log.Printf("[INFO] Creating PAN Credential")
 		panCredName := d.Get("name").(string) + randomNameSuffix()
 		panCredential := alkira.CredentialPan{
-			Username: d.Get("username").(string),
-			Password: d.Get("password").(string),
+			Username: d.Get("pan_username").(string),
+			Password: d.Get("pan_password").(string),
 		}
 		credentialId, err := client.CreateCredential(
 			panCredName,
@@ -513,7 +497,6 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 			log.Printf("[ERROR] failed to process PAN master key, %v", err)
 			return nil, err
 		}
-
 	}
 
 	service := &alkira.ServicePan{

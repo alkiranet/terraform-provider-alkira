@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -163,6 +164,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
+				log.Printf("[INFO] Creating PAN Instance Credential")
 				credentialInstance := alkira.CredentialPanInstance{
 					AuthCode: AuthCode,
 					AuthKey:  AuthKey,
