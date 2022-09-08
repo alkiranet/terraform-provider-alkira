@@ -167,7 +167,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Description: "The segment options as used by your checkpoint firewall.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -260,7 +260,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("pdp_ips", checkpoint.PdpIps)
 	d.Set("segment_ids", segmentIds)
 	d.Set("size", checkpoint.Size)
-	d.Set("segment_options", deflateCheckpointSegmentOptions(checkpoint.SegmentOptions))
+	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
 	d.Set("version", checkpoint.Version)
 
@@ -312,7 +312,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
 	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
 
-	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

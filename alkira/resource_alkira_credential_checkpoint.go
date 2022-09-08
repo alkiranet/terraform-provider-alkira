@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TODO(mac) you left off in the middle of testing checkpoint
 func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCredentialCheckpoint,

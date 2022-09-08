@@ -208,7 +208,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
 	d.Set("segment_ids", f.Segments)
-	d.Set("segment_options", deflateFortinetSegmentOptions(f.SegmentOptions))
+	d.Set("segment_options", deflateSegmentOptions(f.SegmentOptions))
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
@@ -267,7 +267,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
-	segmentOptions, err := expandFortinetSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
