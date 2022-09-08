@@ -17,10 +17,13 @@ description: |-
 
 ### Required
 
-- `license_key` (String) PAN license key.
 - `name` (String) The name of the credential.
 - `password` (String) PAN password.
 - `username` (String) PAN username.
+
+### Optional
+
+- `license_key` (String) PAN license key.
 
 ### Read-Only
 
