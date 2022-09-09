@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-
-	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,25 +56,6 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 
 func resourceCredentialPanInstance(d *schema.ResourceData, meta interface{}) error {
 	return nil
-	client := meta.(*alkira.AlkiraClient)
-
-	c := alkira.CredentialPanInstance{
-		AuthKey:    d.Get("auth_key").(string),
-		AuthCode:   d.Get("auth_code").(string),
-		LicenseKey: d.Get("license_key").(string),
-		Password:   d.Get("password").(string),
-		Username:   d.Get("username").(string),
-	}
-
-	log.Printf("[INFO] Creating Credential (PAN Instance)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypePanInstance, c, 0)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(credentialId)
-	return resourceCredentialPanInstanceRead(d, meta)
 }
 
 func resourceCredentialPanInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -86,37 +64,8 @@ func resourceCredentialPanInstanceRead(d *schema.ResourceData, meta interface{})
 
 func resourceCredentialPanInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
-	client := meta.(*alkira.AlkiraClient)
-
-	c := alkira.CredentialPanInstance{
-		AuthKey:    d.Get("auth_key").(string),
-		AuthCode:   d.Get("auth_code").(string),
-		LicenseKey: d.Get("license_key").(string),
-		Password:   d.Get("password").(string),
-		Username:   d.Get("username").(string),
-	}
-
-	log.Printf("[INFO] Updating Credential (PAN Instance)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypePanInstance, c, 0)
-
-	if err != nil {
-		return err
-	}
-
-	return resourceCredentialPanInstanceRead(d, meta)
 }
 
 func resourceCredentialPanInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-	client := meta.(*alkira.AlkiraClient)
-	credentialId := d.Id()
-
-	log.Printf("[INFO] Deleting Credential (PAN Instance %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypePanInstance)
-
-	if err != nil {
-		log.Printf("[INFO] Credential (PAN Instance %s) was already deleted\n", credentialId)
-	}
-
 	return nil
 }

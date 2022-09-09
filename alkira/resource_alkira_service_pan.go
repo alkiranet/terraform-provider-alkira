@@ -52,7 +52,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"credential_id": {
 				Description: "ID of PAN credential.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 			"global_protect_enabled": {
@@ -131,7 +130,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 						"credential_id": {
 							Description: "ID of PAN instance credential.",
 							Type:        schema.TypeString,
-							Optional:    true,
 							Computed:    true,
 						},
 						"global_protect_segment_options": {
