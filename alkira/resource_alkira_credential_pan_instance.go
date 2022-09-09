@@ -13,7 +13,7 @@ func resourceAlkiraCredentialPanInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		DeprecationMessage: "alkira_credential_pan_instance has been deprecated. Please specify name, auth_code and auth_key directly in instance block of resource service_pan. See documentation for example.",
+		DeprecationMessage: "alkira_credential_pan_instance has been deprecated. Please specify auth_code and auth_key directly in instance block of resource service_pan. See documentation for example.",
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

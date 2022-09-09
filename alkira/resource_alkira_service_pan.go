@@ -108,7 +108,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 						"name": {
 							Description: "The name of the PAN instance.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Default:     "",
+							Optional:    true,
 						},
 						"id": {
 							Description: "The ID of the PAN instance.",
