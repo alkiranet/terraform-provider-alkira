@@ -13,18 +13,53 @@ Manage PAN firewall.
 ## Example Usage
 
 ```terraform
-resource "alkira_service_checkpoint" "test1" {
-  auto_scale         = "OFF"
-  cxp                = "US-WEST-1"
-  credential_id      = alkira_credential_checkpoint.tf_test_checkpoint.id
-  license_type       = "PAY_AS_YOU_GO"
-  max_instance_count = 2
-  min_instance_count = 2
-  name               = "testname"
-  segment_ids        = [alkira_segment.segment.id]
-  size               = "LARGE"
-  tunnel_protocol    = "IPSEC"
-  version            = "R80.30"
+resource "alkira_service_pan" "test1" {
+  name                   = "PanFwTest"
+  pan_password           = "Ak12345678"
+  pan_username           = "admin"
+  bundle                 = "PAN_VM_300_BUNDLE_2"
+  cxp                    = "US-WEST"
+  global_protect_enabled = false
+  license_type           = "PAY_AS_YOU_GO"
+  max_instance_count     = 1
+  segment_ids            = [alkira_segment.test1.id]
+  management_segment_id  = alkira_segment.test1.id
+  size                   = "SMALL"
+  type                   = "VM-300"
+  version                = "9.1.3"
+
+  panorama_enabled      = true
+  panorama_device_group = "alkira-test"
+  panorama_ip_addresses = ["172.16.0.8"]
+  panorama_template     = "test"
+
+  registration_pin_id     = "1234567890ABCDEF"
+  registration_pin_value  = "1234567890ABCDEF"
+  registration_pin_expiry = "2023-07-30"
+
+  master_key_enabled = true
+  master_key         = "1234567890ABCDEF"
+  master_key_expiry  = "2023-08-01"
+
+  global_protect_segment_options {
+    segment_id            = (alkira_segment.test1.id)
+    remote_user_zone_name = "RandomZoneName"
+    portal_fqdn_prefix    = "randomprefix"
+    service_group_name    = "RandomServiceGroupName"
+  }
+
+  # You can add more instance blocks. Make sure to set max_instance_count.
+  instance {
+    name      = "tf-pan-instance-1"
+    auth_key  = "tenant-pan-auth-code"
+    auth_code = "tenant-pan-auth-code"
+    global_protect_segment_options {
+      segment_id      = (alkira_segment.test1.id)
+      portal_enabled  = true
+      gateway_enabled = true
+      prefix_list_id  = alkira_policy_prefix_list.tf_prefix_list.id
+    }
+  }
 
   segment_options {
     segment_id = alkira_segment.segment.id
@@ -37,16 +72,6 @@ resource "alkira_service_checkpoint" "test1" {
     zone_name  = "zonename1"
     groups     = [alkira_group.group2.name]
   }
-
-  management_server {
-    configuration_mode  = "MANUAL"
-    global_cidr_list_id = alkira_list_global_cidr.cidr.id
-    ips                 = ["10.2.0.3"]
-    reachability        = "PRIVATE"
-    segment_id          = alkira_segment.segment1.id
-    type                = "SMS"
-    user_name           = "admin"
-  }
 }
 ```
 
@@ -55,7 +80,6 @@ resource "alkira_service_checkpoint" "test1" {
 
 ### Required
 
-- `credential_id` (String) ID of PAN credential managed by credential resource.
 - `cxp` (String) The CXP where the service should be provisioned.
 - `instance` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
@@ -67,7 +91,6 @@ resource "alkira_service_checkpoint" "test1" {
 - `registration_pin_value` (String) PAN Registration PIN Value.
 - `segment_ids` (List of Number) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
-- `type` (String) The type of the PAN firewall.
 - `version` (String) The version of the PAN firewall.
 
 ### Optional
@@ -81,31 +104,34 @@ resource "alkira_service_checkpoint" "test1" {
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
+- `pan_password` (String) PAN password.
+- `pan_username` (String) PAN username.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
 - `panorama_template` (String) Panorama Template.
 - `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- `type` (String) The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'
 
 ### Read-Only
 
+- `credential_id` (String) ID of PAN credential.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`
 
-Required:
-
-- `credential_id` (String) ID of PAN instance credential managed by credential resource.
-- `name` (String) The name of the PAN instance.
-
 Optional:
 
+- `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
+- `auth_key` (String) PAN instance auth key. This is only required when `panorama_enabled` is set to `true`.
 - `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
+- `name` (String) The name of the PAN instance.
 
 Read-Only:
 
+- `credential_id` (String) ID of PAN instance credential.
 - `id` (Number) The ID of the PAN instance.
 
 <a id="nestedblock--instance--global_protect_segment_options"></a>

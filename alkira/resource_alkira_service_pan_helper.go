@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -85,10 +86,64 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 	return sgmtOptions, nil
 }
 
+func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	if in == nil {
+		return nil, errors.New("invalid SegmentOptions input")
+	}
+
+	zoneMap := make([]panZone, in.Len())
+
+	for i, option := range in.List() {
+		r := panZone{}
+		cfg := option.(map[string]interface{})
+		if v, ok := cfg["segment_id"].(string); ok {
+			segment, err := client.GetSegmentById(v)
+			if err != nil {
+				return nil, err
+			}
+			r.Segment = segment.Name
+		}
+		if v, ok := cfg["zone_name"].(string); ok {
+			r.Zone = v
+		}
+
+		r.Groups = cfg["groups"]
+
+		zoneMap[i] = r
+	}
+
+	segmentOptions := make(map[string]interface{})
+
+	for _, x := range zoneMap {
+		zone := make(map[string]interface{})
+		zone[x.Zone] = x.Groups
+
+		for _, y := range zoneMap {
+			if x.Segment == y.Segment {
+				zone[y.Zone] = y.Groups
+			}
+		}
+
+		zonesToGroups := make(map[string]interface{})
+		zonesToGroups["zonesToGroups"] = zone
+
+		segmentOptions[x.Segment] = zonesToGroups
+	}
+
+	return segmentOptions, nil
+}
+
 func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid PAN instance input")
 	}
+	// var nameWithSuffix string
+	var AuthCode string
+	var AuthKey string
 
 	instances := make([]alkira.ServicePanInstance, len(in))
 	for i, instance := range in {
@@ -98,10 +153,39 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 			r.Id = v
 		}
 		if v, ok := instanceCfg["name"].(string); ok {
-			r.Name = v
+			r.Name = v + randomNameSuffix()
+		}
+		if v, ok := instanceCfg["auth_code"].(string); ok {
+			AuthCode = v
+		}
+		if v, ok := instanceCfg["auth_key"].(string); ok {
+			AuthKey = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
-			r.CredentialId = v
+			if v == "" {
+				log.Printf("[INFO] Creating PAN Instance Credential")
+				credentialInstance := alkira.CredentialPanInstance{
+					AuthCode: AuthCode,
+					AuthKey:  AuthKey,
+				}
+
+				credentialId, err := client.CreateCredential(
+					r.Name,
+					alkira.CredentialTypePanInstance,
+					credentialInstance,
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				r.CredentialId = credentialId
+			}
+
+			if v != "" {
+				r.CredentialId = v
+			}
 		}
 		if v, ok := instanceCfg["global_protect_segment_options"].(*schema.Set); ok {
 			options, err := expandGlobalProtectSegmentOptionsInstance(v, m)
