@@ -1,41 +1,36 @@
-resource "alkira_service_pan" "test1" {
-  name                   = "test1-update"
-  credential_id          = alkira_credential_pan.tf_test_pan.id
-  cxp                    = "US-WEST"
-  global_protect_enabled = "true"
-  license_type           = "PAY_AS_YOU_GO"
-  panorama_enabled       = false
-  panorama_device_group  = "alkira-test"
-  panorama_ip_addresses  = ["172.16.0.8"]
-  panorama_template      = "test"
-  max_instance_count     = 1
-  segment_ids            = [alkira_segment.test1.id, alkira_segment.test2.id]
-  management_segment_id  = alkira_segment.test1.id
-  size                   = "SMALL"
-  type                   = "VM-300"
-  version                = "9.0.5-xfr"
+resource "alkira_service_checkpoint" "test1" {
+  auto_scale         = "OFF"
+  cxp                = "US-WEST-1"
+  credential_id      = alkira_credential_checkpoint.tf_test_checkpoint.id
+  license_type       = "PAY_AS_YOU_GO"
+  max_instance_count = 2
+  min_instance_count = 2
+  name               = "testname"
+  segment_ids        = [alkira_segment.segment.id]
+  size               = "LARGE"
+  tunnel_protocol    = "IPSEC"
+  version            = "R80.30"
 
-  global_protect_segment_options {
-    segment_id            = (alkira_segment.test1.id)
-    remote_user_zone_name = "doesn't matter"
-    portal_fqdn_prefix    = "also doesn't matter"
-    service_group_name    = "still doesn't matter"
+  segment_options {
+    segment_id = alkira_segment.segment.id
+    zone_name  = "DEFAULT"
+    groups     = [alkira_group.group.name, alkira_group.group1.name]
   }
 
-  instance {
-    name          = "tf-pan-instance-1"
-    credential_id = alkira_credential_pan_instance.tf_test_pan_instance.id
-    global_protect_segment_options {
-      segment_id      = (alkira_segment.test1.id)
-      portal_enabled  = true
-      gateway_enabled = true
-      prefix_list_id  = 548
-    }
+  segment_options {
+    segment_id = alkira_segment.segment1.id
+    zone_name  = "zonename1"
+    groups     = [alkira_group.group2.name]
   }
 
-  zones_to_groups {
-    segment_id = alkira_segment.test1.id
-    zone_name  = "Zone11"
-    groups     = [alkira_group.test.name]
+  management_server {
+    configuration_mode  = "MANUAL"
+    global_cidr_list_id = alkira_list_global_cidr.cidr.id
+    ips                 = ["10.2.0.3"]
+    reachability        = "PRIVATE"
+    segment_id          = alkira_segment.segment1.id
+    type                = "SMS"
+    user_name           = "admin"
   }
 }
+

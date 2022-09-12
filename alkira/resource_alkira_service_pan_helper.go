@@ -85,54 +85,6 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 	return sgmtOptions, nil
 }
 
-//func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
-//	client := m.(*alkira.AlkiraClient)
-//
-//	if in == nil {
-//		return nil, errors.New("invalid SegmentOptions input")
-//	}
-//
-//	zoneMap := make([]panZone, in.Len())
-//
-//	for i, option := range in.List() {
-//		r := panZone{}
-//		cfg := option.(map[string]interface{})
-//		if v, ok := cfg["segment_id"].(string); ok {
-//			segment, err := client.GetSegmentById(v)
-//			if err != nil {
-//				return nil, err
-//			}
-//			r.Segment = segment.Name
-//		}
-//		if v, ok := cfg["zone_name"].(string); ok {
-//			r.Zone = v
-//		}
-//
-//		r.Groups = cfg["groups"]
-//
-//		zoneMap[i] = r
-//	}
-//
-//	segmentOptions := make(map[string]interface{})
-//
-//	for _, x := range zoneMap {
-//		zone := make(map[string]interface{})
-//		zone[x.Zone] = x.Groups
-//
-//		for _, y := range zoneMap {
-//			if x.Segment == y.Segment {
-//				zone[y.Zone] = y.Groups
-//			}
-//		}
-//
-//		zonesToGroups := make(map[string]interface{})
-//		zonesToGroups["zonesToGroups"] = zone
-//
-//		segmentOptions[x.Segment] = zonesToGroups
-//	}
-//
-//	return segmentOptions, nil
-//}
 func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid PAN instance input")

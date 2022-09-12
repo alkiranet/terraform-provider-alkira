@@ -13,45 +13,39 @@ Manage PAN firewall.
 ## Example Usage
 
 ```terraform
-resource "alkira_service_pan" "test1" {
-  name                   = "test1-update"
-  credential_id          = alkira_credential_pan.tf_test_pan.id
-  cxp                    = "US-WEST"
-  global_protect_enabled = "true"
-  license_type           = "PAY_AS_YOU_GO"
-  panorama_enabled       = false
-  panorama_device_group  = "alkira-test"
-  panorama_ip_addresses  = ["172.16.0.8"]
-  panorama_template      = "test"
-  max_instance_count     = 1
-  segment_ids            = [alkira_segment.test1.id, alkira_segment.test2.id]
-  management_segment_id  = alkira_segment.test1.id
-  size                   = "SMALL"
-  type                   = "VM-300"
-  version                = "9.0.5-xfr"
+resource "alkira_service_checkpoint" "test1" {
+  auto_scale         = "OFF"
+  cxp                = "US-WEST-1"
+  credential_id      = alkira_credential_checkpoint.tf_test_checkpoint.id
+  license_type       = "PAY_AS_YOU_GO"
+  max_instance_count = 2
+  min_instance_count = 2
+  name               = "testname"
+  segment_ids        = [alkira_segment.segment.id]
+  size               = "LARGE"
+  tunnel_protocol    = "IPSEC"
+  version            = "R80.30"
 
-  global_protect_segment_options {
-    segment_id            = (alkira_segment.test1.id)
-    remote_user_zone_name = "doesn't matter"
-    portal_fqdn_prefix    = "also doesn't matter"
-    service_group_name    = "still doesn't matter"
+  segment_options {
+    segment_id = alkira_segment.segment.id
+    zone_name  = "DEFAULT"
+    groups     = [alkira_group.group.name, alkira_group.group1.name]
   }
 
-  instance {
-    name          = "tf-pan-instance-1"
-    credential_id = alkira_credential_pan_instance.tf_test_pan_instance.id
-    global_protect_segment_options {
-      segment_id      = (alkira_segment.test1.id)
-      portal_enabled  = true
-      gateway_enabled = true
-      prefix_list_id  = 548
-    }
+  segment_options {
+    segment_id = alkira_segment.segment1.id
+    zone_name  = "zonename1"
+    groups     = [alkira_group.group2.name]
   }
 
-  zones_to_groups {
-    segment_id = alkira_segment.test1.id
-    zone_name  = "Zone11"
-    groups     = [alkira_group.test.name]
+  management_server {
+    configuration_mode  = "MANUAL"
+    global_cidr_list_id = alkira_list_global_cidr.cidr.id
+    ips                 = ["10.2.0.3"]
+    reachability        = "PRIVATE"
+    segment_id          = alkira_segment.segment1.id
+    type                = "SMS"
+    user_name           = "admin"
   }
 }
 ```
@@ -81,7 +75,7 @@ resource "alkira_service_pan" "test1" {
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
-- `global_protect_segment_options` (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- `global_protect_segment_options` (Block Set) A mapping of segment_id -> segment_options. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
 - `license_sub_type` (String) PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)
 - `master_key` (String) Master Key for PAN instances.
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
@@ -91,8 +85,8 @@ resource "alkira_service_pan" "test1" {
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
 - `panorama_template` (String) Panorama Template.
+- `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
-- `zones_to_groups` (Block Set) (see [below for nested schema](#nestedblock--zones_to_groups))
 
 ### Read-Only
 
@@ -137,16 +131,13 @@ Required:
 - `service_group_name` (String) The name of the service group. A group with the same name will be created.
 
 
-<a id="nestedblock--zones_to_groups"></a>
-### Nested Schema for `zones_to_groups`
+<a id="nestedblock--segment_options"></a>
+### Nested Schema for `segment_options`
 
 Required:
 
-- `segment_id` (String) The ID of the segment.
-- `zone_name` (String) The name of the zone.
-
-Optional:
-
-- `groups` (List of String) The name of the group.
+- `groups` (List of String) The list of Groups associated with the zone.
+- `segment_id` (Number) The ID of the segment.
+- `zone_name` (String) The name of the associated zone.
 
 

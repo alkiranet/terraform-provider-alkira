@@ -50,7 +50,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 			},
-			// TODO(mac): don't forget to update the examples and the documentation
 			"global_protect_segment_options": {
 				Description: "A mapping of segment_id -> segment_options. The only segment names " +
 					"allowed are the segments that are already associated with the service." +
