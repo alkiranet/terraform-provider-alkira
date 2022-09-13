@@ -82,6 +82,7 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 
 <a id="nestedblock--gcp_routing"></a>
 ### Nested Schema for `gcp_routing`

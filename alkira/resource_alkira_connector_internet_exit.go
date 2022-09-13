@@ -50,7 +50,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 			"name": {

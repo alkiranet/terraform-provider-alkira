@@ -65,6 +65,7 @@ resource "alkira_connector_oci_vcn" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 
 <a id="nestedblock--vcn_route_table"></a>
 ### Nested Schema for `vcn_route_table`
