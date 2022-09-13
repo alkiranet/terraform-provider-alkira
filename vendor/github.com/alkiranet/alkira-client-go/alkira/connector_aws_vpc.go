@@ -47,7 +47,8 @@ type ConnectorAwsVpc struct {
 	DirectInterVPCCommunicationEnabled bool            `json:"directInterVPCCommunicationEnabled"`
 	Enabled                            bool            `json:"enabled"`
 	Group                              string          `json:"group"`
-	Id                                 json.Number     `json:"id,omitempty"`
+	Id                                 json.Number     `json:"id,omitempty"`              // response only
+	ImplicitGroupId                    int             `json:"implicitGroupId,omitempty"` // response only
 	Name                               string          `json:"name"`
 	Segments                           []string        `json:"segments"`
 	Size                               string          `json:"size"`

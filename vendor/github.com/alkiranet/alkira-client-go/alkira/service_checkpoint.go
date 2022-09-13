@@ -8,33 +8,25 @@ import (
 )
 
 type Checkpoint struct {
-	AutoScale        string                       `json:"autoScale"`
-	BillingTags      []int                        `json:"billingTags"`
-	Cxp              string                       `json:"cxp"`
-	CredentialId     string                       `json:"credentialId"`
-	Description      string                       `json:"description"`
-	Id               json.Number                  `json:"id,omitempty"` //filled only on response
-	Instances        []CheckpointInstance         `json:"instances"`
-	InternalName     string                       `json:"internalName"`
-	LicenseType      string                       `json:"licenseType"`
-	ManagementServer *CheckpointManagementServer  `json:"managementServer"`
-	MaxInstanceCount int                          `json:"maxInstanceCount"`
-	MinInstanceCount int                          `json:"minInstanceCount"`
-	Name             string                       `json:"name"`
-	PdpIps           []string                     `json:"pdpIps,omitempty"`
-	Segments         []string                     `json:"segments"`
-	SegmentOptions   map[string]OuterZoneToGroups `json:"segmentOptions"`
-	Size             string                       `json:"size"`
-	TunnelProtocol   string                       `json:"tunnelProtocol"`
-	Version          string                       `json:"version"`
-}
-
-type CheckpointSegmentNameToZone map[string]OuterZoneToGroups
-type CheckpointZoneToGroups map[string][]string
-
-type OuterZoneToGroups struct {
-	SegmentId     int                    `json:"segmentId"`
-	ZonesToGroups CheckpointZoneToGroups `json:"zonesToGroups"`
+	AutoScale        string                      `json:"autoScale"`
+	BillingTags      []int                       `json:"billingTags"`
+	Cxp              string                      `json:"cxp"`
+	CredentialId     string                      `json:"credentialId"`
+	Description      string                      `json:"description"`
+	Id               json.Number                 `json:"id,omitempty"` //filled only on response
+	Instances        []CheckpointInstance        `json:"instances"`
+	InternalName     string                      `json:"internalName"`
+	LicenseType      string                      `json:"licenseType"`
+	ManagementServer *CheckpointManagementServer `json:"managementServer"`
+	MaxInstanceCount int                         `json:"maxInstanceCount"`
+	MinInstanceCount int                         `json:"minInstanceCount"`
+	Name             string                      `json:"name"`
+	PdpIps           []string                    `json:"pdpIps,omitempty"`
+	Segments         []string                    `json:"segments"`
+	SegmentOptions   SegmentNameToZone           `json:"segmentOptions"`
+	Size             string                      `json:"size"`
+	TunnelProtocol   string                      `json:"tunnelProtocol"`
+	Version          string                      `json:"version"`
 }
 
 type CheckpointInstance struct {

@@ -47,6 +47,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"type": {
 				Description: "The type of Cisco SD-WAN. Default value is `VEDGE`.",
 				Type:        schema.TypeString,
@@ -164,8 +169,9 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
-	d.Set("group", connector.Group)
 	d.Set("enabled", connector.Enabled)
+	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("type", connector.Type)

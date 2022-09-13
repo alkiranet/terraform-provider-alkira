@@ -12,6 +12,7 @@ type SegmentResource struct {
 	Id            int                          `json:"id"`
 	Name          string                       `json:"name"`
 	Segment       string                       `json:"segment"`
+	GroupId       int                          `json:"groupId,omitempty"` // response only
 	GroupPrefixes []SegmentResourceGroupPrefix `json:"groupPrefixes"`
 }
 

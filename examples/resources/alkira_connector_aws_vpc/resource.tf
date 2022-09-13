@@ -1,25 +1,23 @@
 #
-# This is minimal example to show how to create an aws-vpc connector.
+# EXAMPLE 1
+#
+# This is simple example to show how to create an AWS-VPC connector.
 #
 # One segment and credential are needed for a connector and you could
 # also adjust routing preferences by specifying `vpc_cidr` or
 # `vpc_subnet` or `vpc_route_tables`.
 #
-
-# Create a segment
 resource "alkira_segment" "segment1" {
   name  = "seg1"
   asn   = "65513"
   cidrs = ["10.16.1.0/24"]
 }
 
-# Create a group
 resource "alkira_group" "group1" {
   name        = "group1"
   description = "test group"
 }
 
-# Create credential
 resource "alkira_credential_aws_vpc" "account1" {
   name           = "customer-aws-1"
   aws_access_key = "your_aws_acccess_key"
@@ -28,9 +26,10 @@ resource "alkira_credential_aws_vpc" "account1" {
 }
 
 #
-# EXAMPLE 1
+# EXAMPLE 2
 #
 # Create one connector for a VPC and attach it with segment1
+#
 resource "alkira_connector_aws_vpc" "connector1" {
   name           = "vpc1"
   vpc_id         = "your_vpc_id"
@@ -46,7 +45,7 @@ resource "alkira_connector_aws_vpc" "connector1" {
 }
 
 #
-# EXAMPLE 2
+# EXAMPLE 3
 #
 # Create a VPC and create a aws-vpc connector to connect to it.
 #
@@ -63,9 +62,13 @@ resource "aws_subnet" "vpc2_subnet1" {
   cidr_block = "10.2.0.0/24"
 }
 
-# Create another connector and adjust the routing to use the default
+#
+# EXAMPLE 4
+#
+# Create a connector and adjust the routing to use the default
 # route. There could be multiple vpc_route_table sections for
 # additional route tables.
+#
 resource "alkira_connector_aws_vpc" "connector2" {
   name           = "vpc2"
 

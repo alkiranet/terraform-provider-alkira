@@ -17,21 +17,22 @@ type ConnectorGcpVpcRouting struct {
 }
 
 type ConnectorGcpVpc struct {
-	BillingTags    []int                   `json:"billingTags"`
-	CXP            string                  `json:"cxp"`
-	CredentialId   string                  `json:"credentialId"`
-	CustomerRegion string                  `json:"customerRegion"`
-	Enabled        bool                    `json:"enabled"`
-	GcpRouting     *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
-	Group          string                  `json:"group"`
-	Id             json.Number             `json:"id,omitempty"`
-	Name           string                  `json:"name"`
-	ProjectId      string                  `json:"projectId,omitempty"`
-	Segments       []string                `json:"segments"`
-	SecondaryCXPs  []string                `json:"secondaryCXPs,omitempty"`
-	Size           string                  `json:"size"`
-	VpcId          string                  `json:"vpcId"`
-	VpcName        string                  `json:"vpcName"`
+	BillingTags     []int                   `json:"billingTags"`
+	CXP             string                  `json:"cxp"`
+	CredentialId    string                  `json:"credentialId"`
+	CustomerRegion  string                  `json:"customerRegion"`
+	Enabled         bool                    `json:"enabled"`
+	GcpRouting      *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
+	Group           string                  `json:"group"`
+	Id              json.Number             `json:"id,omitempty"`              // response only
+	ImplicitGroupId int                     `json:"implicitGroupId,omitempty"` // response only
+	Name            string                  `json:"name"`
+	ProjectId       string                  `json:"projectId,omitempty"`
+	Segments        []string                `json:"segments"`
+	SecondaryCXPs   []string                `json:"secondaryCXPs,omitempty"`
+	Size            string                  `json:"size"`
+	VpcId           string                  `json:"vpcId"`
+	VpcName         string                  `json:"vpcName"`
 }
 
 // getGcpVpcConnectors get all GPC VPC connectors from the given tenant network

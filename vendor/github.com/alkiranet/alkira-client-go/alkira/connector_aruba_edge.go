@@ -14,7 +14,8 @@ type ConnectorArubaEdge struct {
 	Cxp                 string                `json:"cxp"`
 	GatewayBgpAsn       int                   `json:"gatewayBgpAsn"`
 	Group               string                `json:"group,omitempty"`
-	Id                  json.Number           `json:"id,omitempty"`
+	Id                  json.Number           `json:"id,omitempty"`              // response only
+	ImplicitGroupId     int                   `json:"implicitGroupId,omitempty"` // response only
 	Instances           []ArubaEdgeInstance   `json:"instances"`
 	Name                string                `json:"name"`
 	Segments            []string              `json:"segments"`

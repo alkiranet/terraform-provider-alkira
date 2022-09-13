@@ -11,11 +11,32 @@ import (
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage AWS VPC Cloud Connector.",
-		Create:      resourceConnectorAwsVpcCreate,
-		Read:        resourceConnectorAwsVpcRead,
-		Update:      resourceConnectorAwsVpcUpdate,
-		Delete:      resourceConnectorAwsVpcDelete,
+		Description: "Manage AWS VPC Cloud Connector.\n\n" +
+			"This resource could be easily used along with `terraform-provider-aws`\n\n" +
+			"Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing " +
+			"purpose. If `vpc_cidr` is provided, it will automatically select all " +
+			"associated subnets of the given VPC. Otherwise, you could select " +
+			"certain subnets by specifying `vpc_subnet`.\n\n" +
+			"`vpc_route_tables` could be used to adjust the routing options against " +
+			"the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is " +
+			"specified, the existing default route will be overwritten and the " +
+			"traffic will be routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` " +
+			"is specified, you need to provide a list of prefixes for which traffic " +
+			"must be routed to Alkira CXP.\n\n" +
+			"## Limitations\n\n" +
+			"There are several limitations of AWS connector so far:\n\n" +
+			"* Changing an existing connector to a new AWS VPC is not supported at " +
+			"this point. You need to create a new connector for a new AWS VPC.\n" +
+			"* Updating an existing connector might require the tenant network to " +
+			"be re-provisioned to make the change effective, e.g. changing the " +
+			"segment the connector is associated.\n" +
+			"* When direct inter-vpc communication is enabled, several other " +
+			"functionalities won't work, like NAT policy, segment resource share, " +
+			"internet-facing applications and traffic policies.\n",
+		Create: resourceConnectorAwsVpcCreate,
+		Read:   resourceConnectorAwsVpcRead,
+		Update: resourceConnectorAwsVpcUpdate,
+		Delete: resourceConnectorAwsVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -63,6 +84,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"name": {
 				Description: "The name of the connector.",
@@ -197,6 +223,7 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("direct_inter_vpc_communication", connector.DirectInterVPCCommunicationEnabled)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vpc_id", connector.VpcId)

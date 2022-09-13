@@ -247,6 +247,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"policy_options": {
 				Description: "Policy options, both on-prem and cxp prefix" +
 					"list ids must be provided if vpnMode is `POLICY_BASED`",
@@ -387,6 +392,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vpn_mode", connector.VpnMode)

@@ -131,25 +131,16 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
-						"zone": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Description: "Zone information. You may create multiple zones per segment ID.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Description: "The name of the associated zone.",
-										Type:        schema.TypeString,
-										Required:    true,
-									},
-									"groups": {
-										Description: "The list of groups associated with the zone.",
-										Type:        schema.TypeList,
-										Required:    true,
-										Elem:        &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
+						"zone_name": {
+							Description: "The name of the associated zone.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"groups": {
+							Description: "The list of Groups associated with the zone.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -217,7 +208,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
 	d.Set("segment_ids", f.Segments)
-	d.Set("segment_options", deflateFortinetSegmentOptions(f.SegmentOptions))
+	d.Set("segment_options", deflateSegmentOptions(f.SegmentOptions))
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
@@ -276,7 +267,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
-	segmentOptions, err := expandFortinetSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

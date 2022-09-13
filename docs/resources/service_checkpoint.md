@@ -56,7 +56,6 @@ resource "alkira_service_checkpoint" "test1" {
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - `name` (String) Name of the Checkpoint Firewall service.
 - `segment_ids` (List of String) The IDs of the segments associated with the service.
-- `segment_options` (Block Set, Min: 1) The segment options as used by your checkpoint firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Checkpoint Firewall.
 
@@ -68,6 +67,7 @@ resource "alkira_service_checkpoint" "test1" {
 - `instances` (Block Set) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time.
 - `pdp_ips` (List of String) The IPs of the PDP Brokers.
+- `segment_options` (Block Set) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
 ### Read-Only
@@ -79,7 +79,7 @@ resource "alkira_service_checkpoint" "test1" {
 
 Required:
 
-- `configuration_mode` (String) The configuration_mode specifies whether the firewall is to be automatically configured by Alkira or not. To automatically configure the firewall Alkira needs access to the CheckPoint management server. If you choose to use manual configuration Alkira will provide the customer information about the checkpoint instances so that you can manually configure the firewall.
+- `configuration_mode` (String) The configuration_mode specifies whether the firewall is to be automatically configured by Alkira or not. To automatically configure the firewall Alkira needs access to the CheckPoint management server. If you choose to use manual configuration Alkira will provide the customer information about the Checkpoint instances so that you can manually configure the firewall.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the management server.
 - `ips` (List of String) Management server IPs.
 
@@ -92,6 +92,14 @@ Optional:
 - `user_name` (String) The user_name of the management server.
 
 
+<a id="nestedblock--instances"></a>
+### Nested Schema for `instances`
+
+Required:
+
+- `name` (String) The name of the Checkpoint Firewall instance.
+
+
 <a id="nestedblock--segment_options"></a>
 ### Nested Schema for `segment_options`
 
@@ -99,14 +107,6 @@ Required:
 
 - `groups` (List of String) The list of Groups associated with the zone.
 - `segment_id` (Number) The ID of the segment.
-- `zone_name` (String) The name of the associated zone.
-
-
-<a id="nestedblock--instances"></a>
-### Nested Schema for `instances`
-
-Required:
-
-- `name` (String) The name of the Checkpoint Firewall instance.
+- `zone_name` (String) The name of the associated zone. `zone_name` for Checkpoint should be `DEFAULT`.
 
 

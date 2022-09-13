@@ -100,6 +100,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
@@ -157,6 +162,7 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("gcp_vpc_id", connector.VpcId)
 	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	setGcpRoutingOptions(connector.GcpRouting, d)
