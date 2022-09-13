@@ -86,6 +86,11 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"size": &schema.Schema{
 				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
@@ -175,8 +180,9 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 	d.Set("akamai_bgp_asn", connector.AkamaiBgpAsn)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
-	d.Set("group", connector.Group)
 	d.Set("enabled", connector.Enabled)
+	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 

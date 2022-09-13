@@ -11,8 +11,10 @@ import (
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure Cloud Connector.",
-
+		Description: "Manage Azure Cloud Connector.\n\n" +
+			"This connector requires at least two other resources `alkira_segment` " +
+			"and `alkira_credential_azure_vnet` to work. Optionally, it works with " +
+			"`alkira_group`, `alkira_billing_tags` and several other resources.",
 		Create: resourceConnectorAzureVnetCreate,
 		Read:   resourceConnectorAzureVnetRead,
 		Update: resourceConnectorAzureVnetUpdate,
@@ -50,6 +52,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"name": {
 				Description: "The name of the connector.",
@@ -196,6 +203,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
 	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)

@@ -8,18 +8,19 @@ import (
 )
 
 type ConnectorAkamaiProlexic struct {
-	Size                 string                                        `json:"size"`
-	Enabled              bool                                          `json:"enabled"`
-	CredentialId         string                                        `json:"credentialId"`
-	Segments             []string                                      `json:"segments"`
-	OverlayConfiguration []ConnectorAkamaiProlexicOverlayConfiguration `json:"overlayConfiguration,omitempty"`
 	AkamaiBgpAsn         int                                           `json:"akamaiBgpAsn"`
-	ByoipOptions         []ConnectorAkamaiProlexicByoipOption          `json:"byoipOptions,omitempty"`
-	Name                 string                                        `json:"name"`
-	CXP                  string                                        `json:"cxp"`
-	Group                string                                        `json:"group"`
 	BillingTags          []int                                         `json:"billingTags,omitempty"`
-	Id                   json.Number                                   `json:"id,omitempty"` // response only
+	ByoipOptions         []ConnectorAkamaiProlexicByoipOption          `json:"byoipOptions,omitempty"`
+	CXP                  string                                        `json:"cxp"`
+	CredentialId         string                                        `json:"credentialId"`
+	Enabled              bool                                          `json:"enabled"`
+	Group                string                                        `json:"group"`
+	Id                   json.Number                                   `json:"id,omitempty"`              // response only
+	ImplicitGroupId      int                                           `json:"implicitGroupId,omitempty"` // response only
+	Name                 string                                        `json:"name"`
+	OverlayConfiguration []ConnectorAkamaiProlexicOverlayConfiguration `json:"overlayConfiguration,omitempty"`
+	Segments             []string                                      `json:"segments"`
+	Size                 string                                        `json:"size"`
 }
 
 type ConnectorAkamaiProlexicByoipOption struct {

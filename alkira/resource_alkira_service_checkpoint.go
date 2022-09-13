@@ -83,7 +83,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 								"to be automatically configured by Alkira or not. To automatically " +
 								"configure the firewall Alkira needs access to the CheckPoint " +
 								"management server. If you choose to use manual configuration " +
-								"Alkira will provide the customer information about the checkpoint " +
+								"Alkira will provide the customer information about the Checkpoint " +
 								"instances so that you can manually configure the firewall.",
 							Type:         schema.TypeString,
 							Required:     true,
@@ -167,8 +167,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "The segment options as used by your checkpoint firewall.",
+				Optional:    true,
+				Description: "The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -177,7 +177,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the associated zone.",
+							Description: "The name of the associated zone. `zone_name` for Checkpoint should be `DEFAULT`.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -260,7 +260,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("pdp_ips", checkpoint.PdpIps)
 	d.Set("segment_ids", segmentIds)
 	d.Set("size", checkpoint.Size)
-	d.Set("segment_options", deflateCheckpointSegmentOptions(checkpoint.SegmentOptions))
+	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
 	d.Set("version", checkpoint.Version)
 
@@ -312,7 +312,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
 	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
 
-	segmentOptions, err := expandCheckpointSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

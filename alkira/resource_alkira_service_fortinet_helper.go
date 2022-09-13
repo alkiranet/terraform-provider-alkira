@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,59 +34,6 @@ func expandFortinetInstances(in []interface{}) []alkira.FortinetInstance {
 	}
 
 	return instances
-}
-
-func expandFortinetSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.FortinetSegmentName, error) {
-	if in == nil || in.Len() == 0 {
-		//At the time of this writing segment options is optional we don't care if they don't submit anything.
-		return nil, nil
-	}
-
-	client := m.(*alkira.AlkiraClient)
-
-	segmentOptions := make(map[string]alkira.FortinetSegmentName)
-	for _, options := range in.List() {
-		optionsCfg := options.(map[string]interface{})
-		z := alkira.FortinetSegmentName{}
-
-		var segment *alkira.Segment
-		var zonesToGroups map[string][]string
-
-		if v, ok := optionsCfg["segment_id"].(int); ok {
-			sg, err := client.GetSegmentById(strconv.Itoa(v))
-			if err != nil {
-				return nil, err
-			}
-			segment = &sg
-		}
-
-		if v, ok := optionsCfg["zone"].(*schema.Set); ok {
-			zonesToGroups = expandFortinetZone(v)
-		}
-
-		z.SegmentId = segment.Id
-		z.ZonesToGroups = zonesToGroups
-		segmentOptions[segment.Name] = z
-	}
-
-	return segmentOptions, nil
-}
-
-func deflateFortinetSegmentOptions(c map[string]alkira.FortinetSegmentName) []map[string]interface{} {
-	var options []map[string]interface{}
-
-	for _, outerZoneToGroups := range c {
-		for zone, groups := range outerZoneToGroups.ZonesToGroups {
-			i := map[string]interface{}{
-				"segment_id": outerZoneToGroups.SegmentId,
-				"zone_name":  zone,
-				"groups":     groups,
-			}
-			options = append(options, i)
-		}
-	}
-
-	return options
 }
 
 func expandFortinetZone(in *schema.Set) map[string][]string {
