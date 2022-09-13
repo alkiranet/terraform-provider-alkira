@@ -60,7 +60,7 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"instances": {
+			"instance": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -69,6 +69,11 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 							Description: "User provided connector instance name",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"id": {
+							Description: "The ID of the connector instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 						"express_route_circuit_id": {
 							Description: "Express Route circuit id from Azure. ER Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.",
@@ -116,6 +121,11 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"segment_id": {
+							Description: "The ID of the segment",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"customer_asn": {
 							Description: "ASN on the customer premise side",
 							Type:        schema.TypeInt,
@@ -159,7 +169,44 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
-	// client := m.(*alkira.AlkiraClient)
+	client := m.(*alkira.AlkiraClient)
+
+	connector, err := client.GetConnectorAzureErVnet(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("size", connector.Size)
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.Cxp)
+	d.Set("enabled", connector.Enabled)
+	d.Set("name", connector.Name)
+	d.Set("segment_options", connector.SegmentOptions)
+	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("vhub_prefix", connector.VhubPrefix)
+
+	var instances []map[string]interface{}
+	for _, instance := range connector.Instance {
+		i := map[string]interface{}{
+			"name":          instance.Name,
+			"credential_id": instance.CredentialId,
+			"id":            instance.Id,
+		}
+		instances = append(instances, i)
+	}
+	d.Set("instance", instances)
+
+	var segments []map[string]interface{}
+	for _, seg := range connector.SegmentOptions {
+		i := map[string]interface{}{
+			"name":       seg.SegmentName,
+			"segment_id": seg.SegmentId,
+		}
+		segments = append(instances, i)
+	}
+	d.Set("segment_options", segments)
+
 	return nil
 }
 
@@ -169,7 +216,11 @@ func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceConnectorAzureErDelete(d *schema.ResourceData, m interface{}) error {
-	return nil
+	client := m.(*alkira.AlkiraClient)
+
+	err := client.DeleteConnectorAzureErVnet((d.Id()))
+
+	return err
 }
 
 // generateConnectorAzureErRequest generate request for connector-azure-vnet
@@ -178,7 +229,7 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	instances, err := expandAzureErInstances(d.Get("instances").([]interface{}), m)
+	instances, err := expandAzureErInstances(d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +237,7 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 	segmentOptions, err := expandAzureErSegments(d.Get("segment_options").([]interface{}), m)
 	if err != nil {
 		return nil, err
+	}
 
 	request := &alkira.ConnectorAzureErVnet{
 		Name:           d.Get("name").(string),
@@ -193,8 +245,9 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 		BillingTags:    billingTags,
 		Enabled:        d.Get("enabled").(bool),
 		TunnelProtocol: d.Get("tunnel_protocol").(string),
+		Cxp:            d.Get("cxp").(string),
 		VhubPrefix:     d.Get("vhub_prefix").(string),
-		Instances:      instances,
+		Instance:       instances,
 		SegmentOptions: segmentOptions,
 	}
 
