@@ -123,7 +123,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `implict_group_id` (String) The ID of implict group automaticaly created with the connector.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 
 <a id="nestedblock--vnet_cidr"></a>
 ### Nested Schema for `vnet_cidr`

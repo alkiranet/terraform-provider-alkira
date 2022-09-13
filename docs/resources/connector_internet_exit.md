@@ -48,5 +48,6 @@ resource "alkira_connector_internet_exit" "test1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 
 
