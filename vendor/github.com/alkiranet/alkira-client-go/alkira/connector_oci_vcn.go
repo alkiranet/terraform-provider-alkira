@@ -34,19 +34,20 @@ type ConnectorOciVcnRouting struct {
 }
 
 type ConnectorOciVcn struct {
-	BillingTags    []int       `json:"billingTags"`
-	CXP            string      `json:"cxp"`
-	CredentialId   string      `json:"credentialId"`
-	CustomerRegion string      `json:"customerRegion"`
-	Enabled        bool        `json:"enabled"`
-	Group          string      `json:"group"`
-	Id             json.Number `json:"id,omitempty"`
-	Name           string      `json:"name"`
-	Primary        bool        `json:"primary"`
-	Segments       []string    `json:"segments"`
-	Size           string      `json:"size"`
-	VcnId          string      `json:"vcnId"`
-	VcnRouting     interface{} `json:"vcnRouting,omitempty"`
+	BillingTags     []int       `json:"billingTags"`
+	CXP             string      `json:"cxp"`
+	CredentialId    string      `json:"credentialId"`
+	CustomerRegion  string      `json:"customerRegion"`
+	Enabled         bool        `json:"enabled"`
+	Group           string      `json:"group"`
+	Id              json.Number `json:"id,omitempty"`              // response only
+	ImplicitGroupId int         `json:"implicitGroupId,omitempty"` // response only
+	Name            string      `json:"name"`
+	Primary         bool        `json:"primary"`
+	Segments        []string    `json:"segments"`
+	Size            string      `json:"size"`
+	VcnId           string      `json:"vcnId"`
+	VcnRouting      interface{} `json:"vcnRouting,omitempty"`
 }
 
 // getOciVcnConnectors get all Oci Vcn connectors

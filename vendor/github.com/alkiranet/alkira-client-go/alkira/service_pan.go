@@ -33,7 +33,7 @@ type ServicePan struct {
 	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
 	RegistrationCredentialId    string                               `json:"registrationCredentialId,omitempty"`
 	SegmentIds                  []int                                `json:"segments"`
-	SegmentOptions              interface{}                          `json:"segmentOptions,omitempty"`
+	SegmentOptions              SegmentNameToZone                    `json:"segmentOptions,omitempty"`
 	Size                        string                               `json:"size"`
 	SubLicenseType              string                               `json:"subLicenseType,omitempty"`
 	TunnelProtocol              string                               `json:"tunnelProtocol,omitempty"`

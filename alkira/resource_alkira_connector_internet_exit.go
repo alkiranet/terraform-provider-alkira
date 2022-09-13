@@ -48,6 +48,11 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
@@ -122,6 +127,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("description", connector.Description)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("public_ip_number", connector.NumOfPublicIPs)
 
