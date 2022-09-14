@@ -36,7 +36,7 @@ type ConnectorAzureErVnet struct {
 	VhubPrefix     string                         `json:"vhubPrefix"`
 	TunnelProtocol string                         `json:"tunnelProtocol"`
 	Cxp            string                         `json:"cxp"`
-	Instance       []ConnectorAzureErVnetInstance `json:"instances,omitempty"`
+	Instances      []ConnectorAzureErVnetInstance `json:"instances,omitempty"`
 	SegmentOptions []ConnectorAzureErVnetSegment  `json:"segmentOptions,omitempty"`
 	BillingTags    []int                          `json:"billingTags"`
 }

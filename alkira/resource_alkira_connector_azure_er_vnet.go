@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -97,7 +96,7 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 							Default:     false,
 						},
 						"loopback_subnet": {
-							Description: "A /26 subnet from which loopback IPs would be used to establish underlay vXLan GPE tunnels.",
+							Description: "A `/26` subnet from which loopback IPs would be used to establish underlay vXLan GPE tunnels.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -175,16 +174,13 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 	}
 
 	d.SetId(id)
-	// return resourceConnectorAzureErRead(d, m)
-	return nil
+	return resourceConnectorAzureErRead(d, m)
 }
 
 func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	connector, err := client.GetConnectorAzureErVnet(d.Id())
-
-	log.Printf("[INFO] got connector: %v", connector)
 
 	if err != nil {
 		return err
@@ -199,43 +195,34 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("vhub_prefix", connector.VhubPrefix)
 
 	var instances []map[string]interface{}
-	for _, instance := range connector.Instance {
+	for _, instance := range connector.Instances {
 		i := map[string]interface{}{
-			"name":                  instance.Name,
-			"credential_id":         instance.CredentialId,
-			"expressRouteCircuitId": instance.ExpressRouteCircuitId,
-			"id":                    instance.Id,
-			// "redundantRouter":       instance.RedundantRouter,
-			// "loopbackSubnet":        instance.LoopbackSubnet,
-			// "credential_id":         instance.CredentialId,
-			// "gatewayMacAddress":     instance.GatewayMacAddress,
-			// "vnis":                  instance.Vnis,
+			"credential_id":            instance.CredentialId,
+			"express_route_circuit_id": instance.ExpressRouteCircuitId,
+			"gateway_mac_address":      instance.GatewayMacAddress,
+			"id":                       instance.Id,
+			"loopback_subnet":          instance.LoopbackSubnet,
+			"name":                     instance.Name,
+			"redundant_router":         instance.RedundantRouter,
+			"vnis":                     instance.Vnis,
 		}
-		log.Printf("[INFO]  id is: %s", i)
 		instances = append(instances, i)
 	}
-	log.Printf("[INFO] Got the: %v", instances)
 
-	err = d.Set("instance", instances)
-	log.Printf("[INFO] err: %v", err)
-	// if err != nil {
-	// 	// return fmt.Errorf("GOT THIS: %v", err)
-	// }
-
-	log.Printf("[INFO] here: %s", d.Get("instance"))
+	d.Set("instance", instances)
 
 	var segments []map[string]interface{}
+
 	for _, seg := range connector.SegmentOptions {
 		i := map[string]interface{}{
 			"name":       seg.SegmentName,
 			"segment_id": seg.SegmentId,
 		}
-		segments = append(instances, i)
+		segments = append(segments, i)
 	}
 	d.Set("segment_options", segments)
 
 	return nil
-	// return fmt.Errorf("this iss: %s", d.Get("instance"))
 }
 
 func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error {
@@ -289,7 +276,7 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 		TunnelProtocol: d.Get("tunnel_protocol").(string),
 		Cxp:            d.Get("cxp").(string),
 		VhubPrefix:     d.Get("vhub_prefix").(string),
-		Instance:       instances,
+		Instances:      instances,
 		SegmentOptions: segmentOptions,
 	}
 
