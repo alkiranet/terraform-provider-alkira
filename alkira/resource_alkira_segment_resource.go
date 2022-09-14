@@ -46,6 +46,11 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of automatically created implicit group.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
 			"group_prefix": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -117,6 +122,7 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("group_prefix", prefixes)
+	d.Set("implicit_group_id", resource.GroupId)
 
 	return nil
 }

@@ -53,6 +53,7 @@ resource "alkira_segment_resource" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of automatically created implicit group.
 
 <a id="nestedblock--group_prefix"></a>
 ### Nested Schema for `group_prefix`
