@@ -183,7 +183,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 									},
 									"ike_encryption_algorithms": {
 										Description: "Encryption algorithms to use for IKE SA, one of " +
-											"`AES256CBC`, `AES192CBC`, `AES128CBC`.",
+											"`AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
