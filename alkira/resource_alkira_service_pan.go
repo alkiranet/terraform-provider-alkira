@@ -11,11 +11,13 @@ import (
 
 func resourceAlkiraServicePan() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage PAN firewall.",
-		Create:      resourceServicePanCreate,
-		Read:        resourceServicePanRead,
-		Update:      resourceServicePanUpdate,
-		Delete:      resourceServicePanDelete,
+		Description: "Manage Palo Alto Firewall service.\n\n" +
+			"When `panorama_enabled` is set to `true`, `pan_username` and " +
+			"`pan_password` are required.",
+		Create: resourceServicePanCreate,
+		Read:   resourceServicePanRead,
+		Update: resourceServicePanUpdate,
+		Delete: resourceServicePanDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,12 +42,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
 			"pan_password": {
-				Description: "PAN password.",
+				Description: "PAN password. This is required when `panorama_enabled` is set to `true`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"pan_username": {
-				Description: "PAN username.",
+				Description: "PAN username. This is required when `panorama_enabled` is set to `true`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -297,12 +299,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the associated zone.",
+							Description: "The name of the associated firewall zone.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"groups": {
-							Description: "The list of Groups associated with the zone.",
+							Description: "The list of groups associated with the zone.",
 							Type:        schema.TypeList,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
