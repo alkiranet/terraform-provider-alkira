@@ -143,7 +143,7 @@ Required:
 - `esp_random_time` (Number) Time range from which to choose a random value to subtract from rekey times in seconds.
 - `esp_rekey_time` (Number) IPsec SA rekey time in seconds.
 - `ike_dh_group_numbers` (List of String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
-- `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC`.
+- `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.
 - `ike_integrity_algorithms` (List of String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 - `ike_over_time` (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
 - `ike_random_time` (Number) Time range from which to choose a random value to subtract from rekey times.
