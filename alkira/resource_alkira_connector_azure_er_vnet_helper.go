@@ -15,7 +15,9 @@ func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.Connector
 	for i, instance := range in {
 		r := alkira.ConnectorAzureErVnetInstance{}
 		instanceCfg := instance.(map[string]interface{})
-
+		if v, ok := instanceCfg["id"].(int); ok {
+			r.Id = v
+		}
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
 		}
@@ -42,6 +44,45 @@ func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.Connector
 
 	return instances, nil
 }
+
+// func expandAzureErInstancess(in []interface{}, m interface{}) ([]alkira.ConnectorAzureErVnetInstance, error) {
+// 	if in == nil || len(in) == 0 {
+// 		return nil, errors.New("Invalid Azure Er Instance input")
+// 	}
+
+// 	instances := make([]alkira.ConnectorAzureErVnetInstance, len(in))
+// 	for i, instance := range in {
+// 		r := alkira.ConnectorAzureErVnetInstance{}
+// 		instanceCfg := instance.(map[string]interface{})
+// 		if v, ok := instanceCfg["id"].(int); ok {
+// 			r.Id = v
+// 		}
+// 		if v, ok := instanceCfg["name"].(string); ok {
+// 			r.Name = v
+// 		}
+// 		if v, ok := instanceCfg["express_route_circuit_id"].(string); ok {
+// 			r.ExpressRouteCircuitId = v
+// 		}
+// 		if v, ok := instanceCfg["redundant_router"].(bool); ok {
+// 			r.RedundantRouter = v
+// 		}
+// 		if v, ok := instanceCfg["loopback_subnet"].(string); ok {
+// 			r.LoopbackSubnet = v
+// 		}
+// 		if v, ok := instanceCfg["credential_id"].(string); ok {
+// 			r.CredentialId = v
+// 		}
+// 		if v, ok := instanceCfg["gateway_mac_address"].([]string); ok {
+// 			r.GatewayMacAddress = v
+// 		}
+// 		if v, ok := instanceCfg["vnis"].([]int); ok {
+// 			r.Vnis = v
+// 		}
+// 		instances[i] = r
+// 	}
+
+// 	return instances, nil
+// }
 
 func expandAzureErSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureErVnetSegment, error) {
 	if seg == nil || len(seg) == 0 {

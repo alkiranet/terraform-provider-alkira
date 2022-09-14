@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +24,12 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"credential_id": {
+				Description: "An opaque identifier generated when storing Azure VNET credentials.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
 			"size": {
 				Description:  "The size of the connector, one of `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.",
 				Type:         schema.TypeString,
@@ -39,10 +48,11 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description: "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "VXLAN_GPE",
+				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "VXLAN_GPE",
+				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE"}, false),
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -83,8 +93,8 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 						"redundant_router": {
 							Description: "Indicates if ER Circuit terminates on redundant routers on customer side.",
 							Type:        schema.TypeBool,
-							Default:     false,
 							Optional:    true,
+							Default:     false,
 						},
 						"loopback_subnet": {
 							Description: "A /26 subnet from which loopback IPs would be used to establish underlay vXLan GPE tunnels.",
@@ -165,13 +175,16 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 	}
 
 	d.SetId(id)
-	return resourceConnectorAzureErRead(d, m)
+	// return resourceConnectorAzureErRead(d, m)
+	return nil
 }
 
 func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
 	connector, err := client.GetConnectorAzureErVnet(d.Id())
+
+	log.Printf("[INFO] got connector: %v", connector)
 
 	if err != nil {
 		return err
@@ -182,20 +195,34 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.Cxp)
 	d.Set("enabled", connector.Enabled)
 	d.Set("name", connector.Name)
-	d.Set("segment_options", connector.SegmentOptions)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("vhub_prefix", connector.VhubPrefix)
 
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instance {
 		i := map[string]interface{}{
-			"name":          instance.Name,
-			"credential_id": instance.CredentialId,
-			"id":            instance.Id,
+			"name":                  instance.Name,
+			"credential_id":         instance.CredentialId,
+			"expressRouteCircuitId": instance.ExpressRouteCircuitId,
+			"id":                    instance.Id,
+			// "redundantRouter":       instance.RedundantRouter,
+			// "loopbackSubnet":        instance.LoopbackSubnet,
+			// "credential_id":         instance.CredentialId,
+			// "gatewayMacAddress":     instance.GatewayMacAddress,
+			// "vnis":                  instance.Vnis,
 		}
+		log.Printf("[INFO]  id is: %s", i)
 		instances = append(instances, i)
 	}
-	d.Set("instance", instances)
+	log.Printf("[INFO] Got the: %v", instances)
+
+	err = d.Set("instance", instances)
+	log.Printf("[INFO] err: %v", err)
+	// if err != nil {
+	// 	// return fmt.Errorf("GOT THIS: %v", err)
+	// }
+
+	log.Printf("[INFO] here: %s", d.Get("instance"))
 
 	var segments []map[string]interface{}
 	for _, seg := range connector.SegmentOptions {
@@ -208,11 +235,25 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("segment_options", segments)
 
 	return nil
+	// return fmt.Errorf("this iss: %s", d.Get("instance"))
 }
 
 func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error {
-	// client := m.(*alkira.AlkiraClient)
-	return resourceConnectorAzureErRead(d, m)
+	client := m.(*alkira.AlkiraClient)
+	connector, err := generateConnectorAzureErRequest(d, m)
+
+	if err != nil {
+		return fmt.Errorf("UpdateConnectorAzureErVnet: failed to marshal: %v", err)
+		// return err
+	}
+
+	err = client.UpdateConnectorAzureErVnet(d.Id(), connector)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureErDelete(d *schema.ResourceData, m interface{}) error {
@@ -242,6 +283,7 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 	request := &alkira.ConnectorAzureErVnet{
 		Name:           d.Get("name").(string),
 		Size:           d.Get("size").(string),
+		CredentialId:   d.Get("credential_id").(string),
 		BillingTags:    billingTags,
 		Enabled:        d.Get("enabled").(bool),
 		TunnelProtocol: d.Get("tunnel_protocol").(string),
@@ -250,6 +292,8 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 		Instance:       instances,
 		SegmentOptions: segmentOptions,
 	}
+
+	// return request, fmt.Errorf("helloll: %s", d.Get("instance"))
 
 	return request, nil
 }
