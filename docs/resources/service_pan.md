@@ -3,20 +3,21 @@
 page_title: "alkira_service_pan Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage PAN firewall.
+  Manage Palo Alto Firewall service.
+  When panorama_enabled is set to true, pan_username and pan_password are required.
 ---
 
 # alkira_service_pan (Resource)
 
-Manage PAN firewall.
+Manage Palo Alto Firewall service.
+
+When `panorama_enabled` is set to `true`, `pan_username` and `pan_password` are required.
 
 ## Example Usage
 
 ```terraform
 resource "alkira_service_pan" "test1" {
   name                   = "PanFwTest"
-  pan_password           = "Ak12345678"
-  pan_username           = "admin"
   bundle                 = "PAN_VM_300_BUNDLE_2"
   cxp                    = "US-WEST"
   global_protect_enabled = false
@@ -33,6 +34,12 @@ resource "alkira_service_pan" "test1" {
   panorama_ip_addresses = ["172.16.0.8"]
   panorama_template     = "test"
 
+  #
+  # When panorama is enabled, username and password are required.
+  #
+  pan_password           = "Ak12345678"
+  pan_username           = "admin"
+
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"
   registration_pin_expiry = "2023-07-30"
@@ -48,7 +55,7 @@ resource "alkira_service_pan" "test1" {
     service_group_name    = "RandomServiceGroupName"
   }
 
-  # You can add more instance blocks. Make sure to set max_instance_count.
+  # You can add more instance blocks. Make sure to change "max_instance_count".
   instance {
     name      = "tf-pan-instance-1"
     auth_key  = "tenant-pan-auth-code"
@@ -104,8 +111,8 @@ resource "alkira_service_pan" "test1" {
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
-- `pan_password` (String) PAN password.
-- `pan_username` (String) PAN username.
+- `pan_password` (String) PAN password. This is required when `panorama_enabled` is set to `true`.
+- `pan_username` (String) PAN username. This is required when `panorama_enabled` is set to `true`.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
@@ -162,8 +169,8 @@ Required:
 
 Required:
 
-- `groups` (List of String) The list of Groups associated with the zone.
+- `groups` (List of String) The list of groups associated with the zone.
 - `segment_id` (Number) The ID of the segment.
-- `zone_name` (String) The name of the associated zone.
+- `zone_name` (String) The name of the associated firewall zone.
 
 

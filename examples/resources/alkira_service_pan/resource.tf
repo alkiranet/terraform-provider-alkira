@@ -1,7 +1,5 @@
 resource "alkira_service_pan" "test1" {
   name                   = "PanFwTest"
-  pan_password           = "Ak12345678"
-  pan_username           = "admin"
   bundle                 = "PAN_VM_300_BUNDLE_2"
   cxp                    = "US-WEST"
   global_protect_enabled = false
@@ -18,6 +16,12 @@ resource "alkira_service_pan" "test1" {
   panorama_ip_addresses = ["172.16.0.8"]
   panorama_template     = "test"
 
+  #
+  # When panorama is enabled, username and password are required.
+  #
+  pan_password           = "Ak12345678"
+  pan_username           = "admin"
+
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"
   registration_pin_expiry = "2023-07-30"
@@ -33,7 +37,7 @@ resource "alkira_service_pan" "test1" {
     service_group_name    = "RandomServiceGroupName"
   }
 
-  # You can add more instance blocks. Make sure to set max_instance_count.
+  # You can add more instance blocks. Make sure to change "max_instance_count".
   instance {
     name      = "tf-pan-instance-1"
     auth_key  = "tenant-pan-auth-code"
