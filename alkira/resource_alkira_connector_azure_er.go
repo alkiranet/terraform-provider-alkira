@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
+func resourceAlkiraConnectorAzureEr() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Azure Cloud Express RouterConnector.",
 
@@ -69,7 +69,7 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"instance": {
+			"instances": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -111,7 +111,7 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
-						"vnis": {
+						"virtual_network_interface": {
 							Description: "This is an optional field if the tunnel protocol is VXLAN. If not specified Alkira allocates unique VNI from the range [16773023, 16777215]",
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -159,6 +159,7 @@ func resourceAlkiraConnectorAzureErVnet() *schema.Resource {
 	}
 }
 
+// resourceConnectorAzureErCreate create an Azure Express Route connector
 func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 	connector, err := generateConnectorAzureErRequest(d, m)
@@ -167,7 +168,7 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	id, err := client.CreateConnectorAzureErVnet(connector)
+	id, err := client.CreateConnectorAzureEr(connector)
 
 	if err != nil {
 		return err
@@ -177,10 +178,11 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 	return resourceConnectorAzureErRead(d, m)
 }
 
+// resourceConnectorAzureErRead get and save an Azure Express Route connectors
 func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	connector, err := client.GetConnectorAzureErVnet(d.Id())
+	connector, err := client.GetConnectorAzureEr(d.Id())
 
 	if err != nil {
 		return err
@@ -189,6 +191,7 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", connector.Size)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
+	d.Set("group", connector.Group)
 	d.Set("enabled", connector.Enabled)
 	d.Set("name", connector.Name)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
@@ -197,26 +200,29 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instances {
 		i := map[string]interface{}{
-			"credential_id":            instance.CredentialId,
-			"express_route_circuit_id": instance.ExpressRouteCircuitId,
-			"gateway_mac_address":      instance.GatewayMacAddress,
-			"id":                       instance.Id,
-			"loopback_subnet":          instance.LoopbackSubnet,
-			"name":                     instance.Name,
-			"redundant_router":         instance.RedundantRouter,
-			"vnis":                     instance.Vnis,
+			"credential_id":             instance.CredentialId,
+			"express_route_circuit_id":  instance.ExpressRouteCircuitId,
+			"gateway_mac_address":       instance.GatewayMacAddress,
+			"id":                        instance.Id,
+			"loopback_subnet":           instance.LoopbackSubnet,
+			"name":                      instance.Name,
+			"redundant_router":          instance.RedundantRouter,
+			"virtual_network_interface": instance.Vnis,
 		}
 		instances = append(instances, i)
 	}
 
-	d.Set("instance", instances)
+	d.Set("instances", instances)
 
 	var segments []map[string]interface{}
 
 	for _, seg := range connector.SegmentOptions {
 		i := map[string]interface{}{
-			"name":       seg.SegmentName,
-			"segment_id": seg.SegmentId,
+			"segment_name":             seg.SegmentName,
+			"segment_id":               seg.SegmentId,
+			"customer_asn":             seg.CustomerAsn,
+			"disable_internet_exit":    seg.DisableInternetExit,
+			"advertise_on_prem_routes": seg.AdvertiseOnPremRoutes,
 		}
 		segments = append(segments, i)
 	}
@@ -225,39 +231,39 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+// resourceConnectorAzureErUpdate update an Azure Express Route connector
 func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 	connector, err := generateConnectorAzureErRequest(d, m)
 
 	if err != nil {
-		return fmt.Errorf("UpdateConnectorAzureErVnet: failed to marshal: %v", err)
-		// return err
+		return fmt.Errorf("UpdateConnectorAzureEr: failed to marshal: %v", err)
 	}
 
-	err = client.UpdateConnectorAzureErVnet(d.Id(), connector)
+	err = client.UpdateConnectorAzureEr(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
-	return resourceConnectorAzureVnetRead(d, m)
+	return resourceConnectorAzureErRead(d, m)
 }
 
 func resourceConnectorAzureErDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	err := client.DeleteConnectorAzureErVnet((d.Id()))
+	err := client.DeleteConnectorAzureEr((d.Id()))
 
 	return err
 }
 
-// generateConnectorAzureErRequest generate request for connector-azure-vnet
-func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureErVnet, error) {
+// generateConnectorAzureErRequest generate a request for Azure Express Route connector
+func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureEr, error) {
 	// client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	instances, err := expandAzureErInstances(d.Get("instance").([]interface{}), m)
+	instances, err := expandAzureErInstances(d.Get("instances").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +273,7 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 		return nil, err
 	}
 
-	request := &alkira.ConnectorAzureErVnet{
+	request := &alkira.ConnectorAzureEr{
 		Name:           d.Get("name").(string),
 		Size:           d.Get("size").(string),
 		CredentialId:   d.Get("credential_id").(string),
@@ -275,12 +281,11 @@ func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*al
 		Enabled:        d.Get("enabled").(bool),
 		TunnelProtocol: d.Get("tunnel_protocol").(string),
 		Cxp:            d.Get("cxp").(string),
+		Group:          d.Get("group").(string),
 		VhubPrefix:     d.Get("vhub_prefix").(string),
 		Instances:      instances,
 		SegmentOptions: segmentOptions,
 	}
-
-	// return request, fmt.Errorf("helloll: %s", d.Get("instance"))
 
 	return request, nil
 }
