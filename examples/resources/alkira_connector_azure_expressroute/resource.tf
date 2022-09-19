@@ -1,4 +1,4 @@
-resource "alkira_connector_azure_er" "test_basic" {
+resource "alkira_connector_azure_expressroute" "test_basic" {
   name            = "AzureErName"
   size            = "LARGE"
   enabled         = true
