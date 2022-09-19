@@ -10,7 +10,7 @@ import (
 
 func resourceAlkiraConnectorAzureEr() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure Cloud Express RouterConnector.",
+		Description: "Manage Azure ExpressRouter Connector.",
 
 		Create: resourceConnectorAzureErCreate,
 		Read:   resourceConnectorAzureErRead,
@@ -24,10 +24,9 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 				Required:    true,
 			},
 			"credential_id": {
-				Description: "An opaque identifier generated when storing Azure VNET credentials.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"size": {
 				Description:  "The size of the connector, one of `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.",
@@ -42,12 +41,12 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 				Default:     true,
 			},
 			"vhub_prefix": {
-				Description: "IP address prefix for VWAN Hub. This should be a /23 prefix.",
+				Description: "IP address prefix for VWAN Hub. This should be a `/23` prefix.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`",
+				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "VXLAN_GPE",
@@ -64,7 +63,7 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 				Optional:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
+				Description: "IDs of Billing Tags.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -75,28 +74,29 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "User provided connector instance name",
+							Description: "User provided connector instance name.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"id": {
-							Description: "The ID of the connector instance.",
-							Type:        schema.TypeInt,
-							Computed:    true,
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 						"express_route_circuit_id": {
-							Description: "Express Route circuit id from Azure. ER Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "ExpressRoute circuit ID from Azure. " +
+								"ExpresRoute Circuit should have a private peering connection provisioned, " +
+								"also an valid authorization key associated with it.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"redundant_router": {
-							Description: "Indicates if ER Circuit terminates on redundant routers on customer side.",
+							Description: "Indicates if ExpressRoute Circuit terminates on redundant routers on customer side.",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
 						},
 						"loopback_subnet": {
-							Description: "A `/26` subnet from which loopback IPs would be used to establish underlay vXLan GPE tunnels.",
+							Description: "A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -106,16 +106,19 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 							Required:    true,
 						},
 						"gateway_mac_address": {
-							Description: "An array containing the mac addresses of VXLAN gateways reachable through Express Route circuit. The gatewayMacAddresses is only expected if VXLAN tunnel protocol is selected and 2 gateway mac addresses are expected only if redundantRouter is enabled.",
-							Type:        schema.TypeList,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "An array containing the mac addresses of VXLAN gateways reachable through ExpressRoute circuit. " +
+								"The gatewayMacAddresses is only expected if VXLAN tunnel protocol is selected, " +
+								"and 2 gateway mac addresses are expected only if redundant_router is enabled.",
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"virtual_network_interface": {
-							Description: "This is an optional field if the tunnel protocol is VXLAN. If not specified Alkira allocates unique VNI from the range [16773023, 16777215]",
-							Type:        schema.TypeList,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Description: "This is an optional field if the tunnel protocol is VXLAN. " +
+								"If not specified Alkira allocates unique VNI from the range [16773023, 16777215].",
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 					},
 				},
@@ -126,28 +129,28 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_name": {
-							Description: "The name of an existing segment",
+							Description: "The name of an existing segment.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"segment_id": {
-							Description: "The ID of the segment",
+							Description: "The ID of the segment.",
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
 						"customer_asn": {
-							Description: "ASN on the customer premise side",
+							Description: "ASN on the customer premise side.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"disable_internet_exit": {
-							Description: "Enable or disable access to the internet when traffic arrives via this connector",
+							Description: "Enable or disable access to the internet when traffic arrives via this connector.",
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Default:     false,
+							Default:     true,
 						},
 						"advertise_on_prem_routes": {
-							Description: "Allow routes from the branch/premises to be advertised to the cloud",
+							Description: "Allow routes from the branch/premises to be advertised to the cloud.",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
@@ -159,7 +162,7 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 	}
 }
 
-// resourceConnectorAzureErCreate create an Azure Express Route connector
+// resourceConnectorAzureErCreate create an Azure ExpressRoute connector
 func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 	connector, err := generateConnectorAzureErRequest(d, m)
@@ -178,7 +181,7 @@ func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error
 	return resourceConnectorAzureErRead(d, m)
 }
 
-// resourceConnectorAzureErRead get and save an Azure Express Route connectors
+// resourceConnectorAzureErRead get and save an Azure ExpressRoute connectors
 func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
@@ -231,7 +234,7 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-// resourceConnectorAzureErUpdate update an Azure Express Route connector
+// resourceConnectorAzureErUpdate update an Azure ExpressRoute connector
 func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 	connector, err := generateConnectorAzureErRequest(d, m)
@@ -257,7 +260,7 @@ func resourceConnectorAzureErDelete(d *schema.ResourceData, m interface{}) error
 	return err
 }
 
-// generateConnectorAzureErRequest generate a request for Azure Express Route connector
+// generateConnectorAzureErRequest generate a request for Azure ExpressRoute connector
 func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureEr, error) {
 	// client := m.(*alkira.AlkiraClient)
 
