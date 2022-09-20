@@ -30,7 +30,8 @@ resource "alkira_credential_fortinet_instance" "tf_test_fortinet-instance" {
 
 ### Optional
 
-- `license_key` (String) Fortinet license key.
+- `license_key` (String) Fortinet license key is treated as a file path by default. `license_key` can also be literal file contents but `license_key_is_path` must be set to false in this instance.
+- `license_key_is_path` (Boolean) Indicates to the Alkira provider if the `license_key` should be treated as a file path or as literal file contents. Default behavior is totreat `license_key` as a path to an existing `.lic` file. If it makes more sense to enter the contents of the file directly you may use either a data source orthe built in terraform function `file` https://www.terraform.io/language/functions/fileThis field is included as a convenience.
 
 ### Read-Only
 
