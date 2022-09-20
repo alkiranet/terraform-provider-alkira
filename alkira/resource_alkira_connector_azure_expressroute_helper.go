@@ -6,14 +6,14 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
-func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAzureErInstance, error) {
+func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAzureExpressRouteInstance, error) {
 	if in == nil || len(in) == 0 {
-		return nil, errors.New("Invalid Azure Er Instance input")
+		return nil, errors.New("Invalid Azure ExpressRoute Instance input")
 	}
 
-	instances := make([]alkira.ConnectorAzureErInstance, len(in))
+	instances := make([]alkira.ConnectorAzureExpressRouteInstance, len(in))
 	for i, instance := range in {
-		r := alkira.ConnectorAzureErInstance{}
+		r := alkira.ConnectorAzureExpressRouteInstance{}
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
@@ -21,7 +21,7 @@ func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.Connector
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
 		}
-		if v, ok := instanceCfg["express_route_circuit_id"].(string); ok {
+		if v, ok := instanceCfg["expressroute_circuit_id"].(string); ok {
 			r.ExpressRouteCircuitId = v
 		}
 		if v, ok := instanceCfg["redundant_router"].(bool); ok {
@@ -45,14 +45,14 @@ func expandAzureErInstances(in []interface{}, m interface{}) ([]alkira.Connector
 	return instances, nil
 }
 
-func expandAzureErSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureErSegment, error) {
+func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureExpressRouteSegment, error) {
 	if seg == nil || len(seg) == 0 {
-		return nil, errors.New("Invalid Azure Er Segment Options input")
+		return nil, errors.New("Invalid Azure ExpresRoute Segment Options input")
 	}
 
-	segments := make([]alkira.ConnectorAzureErSegment, len(seg))
+	segments := make([]alkira.ConnectorAzureExpressRouteSegment, len(seg))
 	for i, segment := range seg {
-		r := alkira.ConnectorAzureErSegment{}
+		r := alkira.ConnectorAzureExpressRouteSegment{}
 		instanceCfg := segment.(map[string]interface{})
 		if v, ok := instanceCfg["segment_name"].(string); ok {
 			r.SegmentName = v

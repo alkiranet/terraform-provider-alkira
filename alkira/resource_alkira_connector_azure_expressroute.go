@@ -8,25 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraConnectorAzureEr() *schema.Resource {
+func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure ExpressRouter Connector.",
+		Description: "Manage Azure ExpressRoute Connector.",
 
-		Create: resourceConnectorAzureErCreate,
-		Read:   resourceConnectorAzureErRead,
-		Update: resourceConnectorAzureErUpdate,
-		Delete: resourceConnectorAzureErDelete,
+		Create: resourceConnectorAzureExpressRouteCreate,
+		Read:   resourceConnectorAzureExpressRouteRead,
+		Update: resourceConnectorAzureExpressRouteUpdate,
+		Delete: resourceConnectorAzureExpressRouteDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			"credential_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"size": {
 				Description:  "The size of the connector, one of `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.",
@@ -82,7 +77,7 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"express_route_circuit_id": {
+						"expressroute_circuit_id": {
 							Description: "ExpressRoute circuit ID from Azure. " +
 								"ExpresRoute Circuit should have a private peering connection provisioned, " +
 								"also an valid authorization key associated with it.",
@@ -162,30 +157,30 @@ func resourceAlkiraConnectorAzureEr() *schema.Resource {
 	}
 }
 
-// resourceConnectorAzureErCreate create an Azure ExpressRoute connector
-func resourceConnectorAzureErCreate(d *schema.ResourceData, m interface{}) error {
+// resourceConnectorAzureExpressRouteCreate create an Azure ExpressRoute connector
+func resourceConnectorAzureExpressRouteCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
-	connector, err := generateConnectorAzureErRequest(d, m)
+	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorAzureEr(connector)
+	id, err := client.CreateConnectorAzureExpressRoute(connector)
 
 	if err != nil {
 		return err
 	}
 
 	d.SetId(id)
-	return resourceConnectorAzureErRead(d, m)
+	return resourceConnectorAzureExpressRouteRead(d, m)
 }
 
-// resourceConnectorAzureErRead get and save an Azure ExpressRoute connectors
-func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
+// resourceConnectorAzureExpressRouteRead get and save an Azure ExpressRoute connectors
+func resourceConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	connector, err := client.GetConnectorAzureEr(d.Id())
+	connector, err := client.GetConnectorAzureExpressRoute(d.Id())
 
 	if err != nil {
 		return err
@@ -204,7 +199,7 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	for _, instance := range connector.Instances {
 		i := map[string]interface{}{
 			"credential_id":             instance.CredentialId,
-			"express_route_circuit_id":  instance.ExpressRouteCircuitId,
+			"expressroute_circuit_id":   instance.ExpressRouteCircuitId,
 			"gateway_mac_address":       instance.GatewayMacAddress,
 			"id":                        instance.Id,
 			"loopback_subnet":           instance.LoopbackSubnet,
@@ -234,52 +229,50 @@ func resourceConnectorAzureErRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-// resourceConnectorAzureErUpdate update an Azure ExpressRoute connector
-func resourceConnectorAzureErUpdate(d *schema.ResourceData, m interface{}) error {
+// resourceConnectorAzureExpressRouteUpdate update an Azure ExpressRoute connector
+func resourceConnectorAzureExpressRouteUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
-	connector, err := generateConnectorAzureErRequest(d, m)
+	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
-		return fmt.Errorf("UpdateConnectorAzureEr: failed to marshal: %v", err)
+		return fmt.Errorf("UpdateConnectorAzureExpressRoute: failed to marshal: %v", err)
 	}
 
-	err = client.UpdateConnectorAzureEr(d.Id(), connector)
+	err = client.UpdateConnectorAzureExpressRoute(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
-	return resourceConnectorAzureErRead(d, m)
+	return resourceConnectorAzureExpressRouteRead(d, m)
 }
 
-func resourceConnectorAzureErDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureExpressRouteDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*alkira.AlkiraClient)
 
-	err := client.DeleteConnectorAzureEr((d.Id()))
+	err := client.DeleteConnectorAzureExpressRoute((d.Id()))
 
 	return err
 }
 
-// generateConnectorAzureErRequest generate a request for Azure ExpressRoute connector
-func generateConnectorAzureErRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureEr, error) {
-	// client := m.(*alkira.AlkiraClient)
+// generateConnectorAzureExpressRouteRequest generate a request for Azure ExpressRoute connector
+func generateConnectorAzureExpressRouteRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureExpressRoute, error) {
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	instances, err := expandAzureErInstances(d.Get("instances").([]interface{}), m)
+	instances, err := expandAzureExpressRouteInstances(d.Get("instances").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
 
-	segmentOptions, err := expandAzureErSegments(d.Get("segment_options").([]interface{}), m)
+	segmentOptions, err := expandAzureExpressRouteSegments(d.Get("segment_options").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
 
-	request := &alkira.ConnectorAzureEr{
+	request := &alkira.ConnectorAzureExpressRoute{
 		Name:           d.Get("name").(string),
 		Size:           d.Get("size").(string),
-		CredentialId:   d.Get("credential_id").(string),
 		BillingTags:    billingTags,
 		Enabled:        d.Get("enabled").(bool),
 		TunnelProtocol: d.Get("tunnel_protocol").(string),

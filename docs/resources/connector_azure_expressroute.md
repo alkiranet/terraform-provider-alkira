@@ -3,18 +3,18 @@
 page_title: "alkira_connector_azure_expressroute Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Azure ExpressRouter Connector.
+  Manage Azure ExpressRoute Connector.
 ---
 
 # alkira_connector_azure_expressroute (Resource)
 
-Manage Azure ExpressRouter Connector.
+Manage Azure ExpressRoute Connector.
 
 ## Example Usage
 
 ```terraform
 resource "alkira_connector_azure_expressroute" "test_basic" {
-  name            = "AzureErName"
+  name            = "AzureExpressRouteName"
   size            = "LARGE"
   enabled         = true
   vhub_prefix     = "10.129.0.0/23"
@@ -24,11 +24,11 @@ resource "alkira_connector_azure_expressroute" "test_basic" {
 
   # You can add more instances blocks.
   instances {
-    name                     = "instance13"
-    express_route_circuit_id = "/subscriptions/45060700-1949-4d0f-ba2c-4241274e8fa1/resourceGroups/robin-test/providers/Microsoft.Network/expressRouteCircuits/er-automation"
-    redundant_router         = false
-    loopback_subnet          = "192.168.18.0/26"
-    credential_id            = alkira_credential_azure_vnet.tftest.id
+    name                    = "InstanceName"
+    expressroute_circuit_id = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName>"
+    redundant_router        = false
+    loopback_subnet         = "192.168.18.0/26"
+    credential_id           = alkira_credential_azure_vnet.tftest.id
   }
 
   segment_options {
@@ -55,7 +55,6 @@ resource "alkira_connector_azure_expressroute" "test_basic" {
 ### Optional
 
 - `billing_tag_ids` (List of Number) IDs of Billing Tags.
-- `credential_id` (String)
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`
@@ -70,7 +69,7 @@ resource "alkira_connector_azure_expressroute" "test_basic" {
 Required:
 
 - `credential_id` (String) An opaque identifier generated when storing Azure VNET credentials.
-- `express_route_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpresRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
+- `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpresRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
 - `loopback_subnet` (String) A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.
 - `name` (String) User provided connector instance name.
 

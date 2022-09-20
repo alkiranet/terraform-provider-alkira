@@ -1,5 +1,5 @@
 resource "alkira_connector_azure_expressroute" "test_basic" {
-  name            = "AzureErName"
+  name            = "AzureExpressRouteName"
   size            = "LARGE"
   enabled         = true
   vhub_prefix     = "10.129.0.0/23"
@@ -9,11 +9,11 @@ resource "alkira_connector_azure_expressroute" "test_basic" {
 
   # You can add more instances blocks.
   instances {
-    name                     = "instance13"
-    express_route_circuit_id = "/subscriptions/45060700-1949-4d0f-ba2c-4241274e8fa1/resourceGroups/robin-test/providers/Microsoft.Network/expressRouteCircuits/er-automation"
-    redundant_router         = false
-    loopback_subnet          = "192.168.18.0/26"
-    credential_id            = alkira_credential_azure_vnet.tftest.id
+    name                    = "InstanceName"
+    expressroute_circuit_id = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName>"
+    redundant_router        = false
+    loopback_subnet         = "192.168.18.0/26"
+    credential_id           = alkira_credential_azure_vnet.tftest.id
   }
 
   segment_options {
