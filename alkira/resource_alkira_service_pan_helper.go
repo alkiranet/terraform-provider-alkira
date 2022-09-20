@@ -153,7 +153,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 			r.Id = v
 		}
 		if v, ok := instanceCfg["name"].(string); ok {
-			r.Name = v + randomNameSuffix()
+			r.Name = v
 		}
 		if v, ok := instanceCfg["auth_code"].(string); ok {
 			AuthCode = v
@@ -163,16 +163,17 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
-				log.Printf("[INFO] Creating PAN Instance Credential")
-				credentialInstance := alkira.CredentialPanInstance{
+				credentialName := r.Name + randomNameSuffix()
+				credentialPanInstance := alkira.CredentialPanInstance{
 					AuthCode: AuthCode,
 					AuthKey:  AuthKey,
 				}
 
+				log.Printf("[INFO] Creating PAN Instance Credential %s", credentialName)
 				credentialId, err := client.CreateCredential(
-					r.Name,
+					credentialName,
 					alkira.CredentialTypePanInstance,
-					credentialInstance,
+					credentialPanInstance,
 					0,
 				)
 
