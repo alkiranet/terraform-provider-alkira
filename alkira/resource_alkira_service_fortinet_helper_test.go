@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExpandGenerateFortinetInstances(t *testing.T) {
+func TestFortinetExpandGenerateFortinetInstances(t *testing.T) {
 
 	expectedName := "testName"
 	expectedSerialNumber := "serialNumber"
@@ -27,11 +27,7 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 	m2 := makeMapFortinetInstance(expectedName+"2", expectedSerialNumber+"2", expectedCredentialId+"2")
 	mArr := []interface{}{m, m1, m2}
 
-	r := resourceAlkiraServiceFortinet()
-	f := schema.HashResource(r)
-	s := schema.NewSet(f, mArr)
-
-	actual := expandFortinetInstances(s)
+	actual := expandFortinetInstances(mArr)
 	require.Equal(t, len(actual), len(mArr))
 
 	//Sets are unordered. We need to find our comparable item
@@ -46,7 +42,7 @@ func TestExpandGenerateFortinetInstances(t *testing.T) {
 	require.Equal(t, expectedFortinetInstance, actual[mIndex])
 }
 
-func TestExpandFortinetZone(t *testing.T) {
+func TestFortinetExpandFortinetZone(t *testing.T) {
 	expectedName := "ZONE_NAME"
 	expectedGroupName := "GROUP_NAME"
 
