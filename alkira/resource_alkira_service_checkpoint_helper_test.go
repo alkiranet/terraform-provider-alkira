@@ -1,9 +1,7 @@
 package alkira
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -12,60 +10,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExpandCheckpointSegmentOptionsValid(t *testing.T) {
-	//Setup
-	expectedSegment := initCheckpointSegment()
-	expectedZoneName := "testZoneName"
-	expectedGroupName := "testGroup"
-
-	m := makeMapCheckpointSegmentOptions(expectedSegment.Id, expectedZoneName, []interface{}{expectedGroupName})
-	mArr := []interface{}{m}
-	s := newSetFromCheckpointResource(mArr)
-
-	mgs, err := expandCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	require.NoError(t, err)
-
-	//Assertions
-	expected := fmt.Sprintf(`{"%s":{"segmentId":%d,"zonesToGroups":{"%s":["%s"]}}}`, expectedSegment.Name, expectedSegment.Id, expectedZoneName, expectedGroupName)
-
-	actual, err := json.Marshal(mgs)
-	require.NoError(t, err)
-	require.JSONEq(t, expected, string(actual))
-}
-
-func TestExpandCheckpointSegmentOptionsInvalid(t *testing.T) {
+func TestCheckpointSegmentOptionsNil(t *testing.T) {
 	//test nil set
-	c, err := expandCheckpointSegmentOptions(nil, nil)
+	c, err := expandSegmentOptions(nil, nil)
 	require.Nil(t, c)
-	require.Error(t, err)
+	require.Nil(t, err)
 
 	//test empty set
 	s := newSetFromCheckpointResource(nil)
-	c, err = expandCheckpointSegmentOptions(s, nil)
+	c, err = expandSegmentOptions(s, nil)
 	require.Nil(t, c)
-	require.Error(t, err)
+	require.Nil(t, err)
 }
 
-func TestExpandCheckpointInstanceValid(t *testing.T) {
-	instanceName := "testInstanceName"
-	instanceCredentialId := "testInstanceCredentialId"
-
-	seedInstance := alkira.CheckpointInstance{
-		CredentialId: instanceCredentialId,
-		Name:         instanceName,
-	}
-
-	expectedInstances := makeNumCheckpointInstances(3, seedInstance)
-	mArr := convertCheckpointInstanceToArrayInterface(expectedInstances)
-	s := newSetFromCheckpointResource(mArr)
-
-	instances := expandCheckpointInstances(s)
-	require.NotZero(t, len(instances))
-	require.Equal(t, len(instances), len(mArr))
-	requireAllKeyValuesCheckpointInstances(t, instances, mArr)
-}
-
-func TestExpandCheckpointInstanceInvalid(t *testing.T) {
+func TestCheckpointInstanceInvalid(t *testing.T) {
 	//test nil Set
 	c := expandCheckpointInstances(nil)
 	require.Nil(t, c)
@@ -76,73 +34,7 @@ func TestExpandCheckpointInstanceInvalid(t *testing.T) {
 	require.Nil(t, c)
 }
 
-func TestConvertCheckpointSegmentOptionsValid(t *testing.T) {
-	expectedId := 0
-	expectedSegmentName := "segmentName"
-	expectedZoneName := "testZoneName"
-	expectedGroups := []string{"group1", "group2", "group3"}
-
-	mArr := makeNumCheckpointSegmentOptions(3, expectedId, expectedZoneName, expectedGroups)
-	s := newSetFromCheckpointResource(mArr)
-
-	actual, err := convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	require.NoError(t, err)
-
-	require.Contains(t, actual, expectedSegmentName)
-	require.Equal(t, actual[expectedSegmentName].SegmentId, expectedId)
-	require.Contains(t, actual[expectedSegmentName].ZonesToGroups, expectedZoneName)
-}
-
-func TestConvertCheckpointSegmentOptionsInvalid(t *testing.T) {
-	//test nil Set
-	actual, err := convertCheckpointSegmentOptions(nil, getCheckpointSegmentInTest)
-	require.Error(t, err)
-	require.Nil(t, actual)
-
-	//test empty Set
-	s := newSetFromCheckpointResource(nil)
-	actual, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentInTest)
-	require.NoError(t, err)
-	require.Empty(t, actual)
-}
-
-func TestConvertCheckpointSegmentOptionsGetError(t *testing.T) {
-	//test get Func is nil
-	mArr := makeNumCheckpointSegmentOptions(1, 0, "", []string{})
-	s := newSetFromCheckpointResource(mArr)
-	actual, err := convertCheckpointSegmentOptions(s, nil)
-	require.Error(t, err)
-	require.Empty(t, actual)
-
-	//test get Func returns error
-	s = newSetFromCheckpointResource(mArr)
-	actual, err = convertCheckpointSegmentOptions(s, getCheckpointSegmentError)
-	require.Error(t, err)
-	require.Empty(t, actual)
-}
-
-func TestExpandCheckpointManagementServerValid(t *testing.T) {
-	//Setup
-	expectedManagementServer := initCheckpointTestManagementServer()
-	m := []interface{}{deflateCheckpointManagementServer(expectedManagementServer)[0]}
-	s := newSetFromCheckpointResource(m)
-
-	//Assertions
-	actualManagementServer, err := expandCheckpointManagementServer(s, getCheckpointSegmentInTest)
-	require.NoError(t, err)
-	require.Equal(t, expectedManagementServer, *actualManagementServer)
-}
-
-func TestExpandCheckpointManagementServerGetError(t *testing.T) {
-	m := make(map[string]interface{})
-	m["segment_id"] = 0
-	s := newSetFromCheckpointResource([]interface{}{m})
-
-	_, err := expandCheckpointManagementServer(s, getCheckpointSegmentError)
-	require.Error(t, err)
-}
-
-func TestDeflateManagementServerValid(t *testing.T) {
+func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	expected := initCheckpointTestManagementServer()
 
 	m := deflateCheckpointManagementServer(expected)
@@ -159,7 +51,7 @@ func TestDeflateManagementServerValid(t *testing.T) {
 	require.Equal(t, m[0]["user_name"].(string), expected.UserName)
 }
 
-func TestDeflateCheckpointSegmentOptionsValid(t *testing.T) {
+func TestCheckpointDeflateSegmentOptionsValid(t *testing.T) {
 	expectedZoneName := "zoneName"
 	expectedGroups := []string{"1", "2", "3", "4"}
 	expectedSegment := &alkira.Segment{
@@ -169,7 +61,7 @@ func TestDeflateCheckpointSegmentOptionsValid(t *testing.T) {
 		Asn:     65001,
 	}
 
-	zonesToGroups := make(alkira.CheckpointZoneToGroups)
+	zonesToGroups := make(alkira.ZoneToGroups)
 	zonesToGroups[expectedZoneName] = expectedGroups
 
 	z := alkira.OuterZoneToGroups{
@@ -180,14 +72,14 @@ func TestDeflateCheckpointSegmentOptionsValid(t *testing.T) {
 	segmentOptions := make(map[string]alkira.OuterZoneToGroups)
 	segmentOptions[expectedSegment.Name] = z
 
-	m := deflateCheckpointSegmentOptions(segmentOptions)
+	m := deflateSegmentOptions(segmentOptions)
 	require.Len(t, m, 1)
 	require.Equal(t, m[0]["groups"], expectedGroups)
 	require.Equal(t, m[0]["zone_name"], expectedZoneName)
 	require.Equal(t, m[0]["segment_id"], expectedSegment.Id)
 }
 
-func TestDeflateCheckpointInstances(t *testing.T) {
+func TestCheckpointInstancesDeflate(t *testing.T) {
 	numInstances := 9
 	testName := "testName"
 	testCredId := "testCredId"

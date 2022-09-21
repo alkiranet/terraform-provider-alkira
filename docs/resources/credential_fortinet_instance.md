@@ -3,12 +3,16 @@
 page_title: "alkira_credential_fortinet_instance Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the license_key field or provide the file path for the license key file using the license_key_file_path. Either license_key and license_key_file_path must have an input. If both are provided, the Alkira provider will treat the license_key field with precedence.
+  You may also use terraform's built in file helper function as a literal input for license_key. Ex: license_key = file('/path/to/license/file').
 ---
 
 # alkira_credential_fortinet_instance (Resource)
 
+There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the `license_key` field or provide the file path for the license key file using the `license_key_file_path`. Either `license_key` and `license_key_file_path` must have an input. If both are provided, the Alkira provider will treat the `license_key` field with precedence. 
 
+
+ You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`.
 
 ## Example Usage
 
@@ -30,7 +34,8 @@ resource "alkira_credential_fortinet_instance" "tf_test_fortinet-instance" {
 
 ### Optional
 
-- `license_key` (String) Fortinet license key.
+- `license_key` (String) Fortinet license key. Interpreted by the Alkira provider as a literal input.
+- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. `license_key_file_path` will be if both `license_key` and `license_key_file_path` are provided in your configuration file.
 
 ### Read-Only
 
