@@ -3,12 +3,16 @@
 page_title: "alkira_credential_fortinet_instance Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the license_key field or provide the file path for the license key file using the license_key_file_path. Either license_key and license_key_file_path must have an input. If both are provided, the Alkira provider will treat the license_key field with precedence.
+  You may also use terraform's built in file helper function as a literal input for license_key. Ex: license_key = file('/path/to/license/file').
 ---
 
 # alkira_credential_fortinet_instance (Resource)
 
+There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the `license_key` field or provide the file path for the license key file using the `license_key_file_path`. Either `license_key` and `license_key_file_path` must have an input. If both are provided, the Alkira provider will treat the `license_key` field with precedence. 
 
+
+ You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`.
 
 ## Example Usage
 
@@ -30,8 +34,8 @@ resource "alkira_credential_fortinet_instance" "tf_test_fortinet-instance" {
 
 ### Optional
 
-- `license_key` (String) Fortinet license key is treated as a file path by default. `license_key` can also be literal file contents but `license_key_is_path` must be set to false in this instance.
-- `license_key_is_path` (Boolean) Indicates to the Alkira provider if the `license_key` should be treated as a file path or as literal file contents. Default behavior is totreat `license_key` as a path to an existing `.lic` file. If it makes more sense to enter the contents of the file directly you may use either a data source orthe built in terraform function `file` https://www.terraform.io/language/functions/fileThis field is included as a convenience.
+- `license_key` (String) Fortinet license key. Interpreted by the Alkira provider as a literal input.
+- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. `license_key_file_path` will be if both `license_key` and `license_key_file_path` are provided in your configuration file.
 
 ### Read-Only
 

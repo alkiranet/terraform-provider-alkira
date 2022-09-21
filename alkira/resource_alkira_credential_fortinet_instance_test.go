@@ -8,17 +8,19 @@ import (
 
 // Test invalid file path
 func TestFortinetCredentialInvalidPath(t *testing.T) {
-	isPath := true
-	_, err := setLicenseKey(isPath, "/no/file/at/this/path")
+	_, err := extractLicenseKey("", "/no/file/at/this/path")
 	require.Error(t, err)
 }
 
-// Test string is unchanged if not file path
-func TestFortinetStringUnchangedPathFalse(t *testing.T) {
-	isPath := false
+func TestFortinetLicenseKeyPriority(t *testing.T) {
 	expected := "literal_file_contents"
 
-	actual, err := setLicenseKey(isPath, expected)
+	actual, err := extractLicenseKey(expected, "/some/file/path")
 	require.NoError(t, err)
 	require.Equal(t, actual, expected)
+}
+
+func TestFortinetLicenseKeyAndPathAreEmptyStr(t *testing.T) {
+	_, err := extractLicenseKey("", "")
+	require.Error(t, err)
 }
