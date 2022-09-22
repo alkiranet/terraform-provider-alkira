@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-
-	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -25,7 +22,7 @@ func resourceAlkiraCredentialFortinetInstance() *schema.Resource {
 			"You may also use terraform's built in `file` helper function as a literal input for " +
 			"`license_key`. Ex: `license_key = file('/path/to/license/file')`.",
 		DeprecationMessage: "alkira_credential_fortinet_instance has been deprecated. " +
-			"Please specify license_key or license_key_file_path directly in resource service_fortinet. " +
+			"Please specify `license_key` or `license_key_file_path` directly in resource alkira_service_fortinet. " +
 			"See documentation for example.",
 
 		Schema: map[string]*schema.Schema{
@@ -52,34 +49,14 @@ func resourceAlkiraCredentialFortinetInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
-				Deprecated:   "Not supported anymore. Set license_type in service_fortinet",
+				Deprecated:   "Not supported anymore. Set `license_type` in alkira_service_fortinet",
 			},
 		},
 	}
 }
 
 func resourceCredentialFortinetInstance(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-
-	licenseKey, err := extractLicenseKey(
-		d.Get("license_key").(string),
-		d.Get("license_key_file_path").(string),
-	)
-
-	c := alkira.CredentialFortinetInstance{
-		LicenseKey:  licenseKey,
-		LicenseType: d.Get("license_type").(string),
-	}
-
-	log.Printf("[INFO] Creating Credential (Fortinet Instance)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinetInstance, c, 0)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(credentialId)
-	return resourceCredentialFortinetInstanceRead(d, meta)
+	return nil
 }
 
 func resourceCredentialFortinetInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -87,38 +64,9 @@ func resourceCredentialFortinetInstanceRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceCredentialFortinetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-
-	licenseKey, err := extractLicenseKey(
-		d.Get("license_key").(string),
-		d.Get("license_key_file_path").(string),
-	)
-
-	c := alkira.CredentialFortinetInstance{
-		LicenseKey:  licenseKey,
-		LicenseType: d.Get("license_type").(string),
-	}
-
-	log.Printf("[INFO] Updating Credential (Fortinet Instance)")
-	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeFortinetInstance, c, 0)
-
-	if err != nil {
-		return err
-	}
-
-	return resourceCredentialFortinetInstanceRead(d, meta)
+	return nil
 }
 
 func resourceCredentialFortinetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-	credentialId := d.Id()
-
-	log.Printf("[INFO] Deleting Credential (Fortinet Instance %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypeFortinetInstance)
-
-	if err != nil {
-		log.Printf("[INFO] Credential (Fortinet Instance %s) was already deleted\n", credentialId)
-	}
-
 	return nil
 }

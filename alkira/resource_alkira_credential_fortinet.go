@@ -2,9 +2,6 @@
 package alkira
 
 import (
-	"log"
-
-	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,7 +15,7 @@ func resourceAlkiraCredentialFortinet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		DeprecationMessage: "alkira_credential_fortinet has been deprecated. " +
-			"Please specify username and password directly in resource service_fortinet. " +
+			"Please specify `username` and `password` directly in resource alkira_service_fortinet. " +
 			"See documentation for example.",
 
 		Schema: map[string]*schema.Schema{
@@ -42,22 +39,7 @@ func resourceAlkiraCredentialFortinet() *schema.Resource {
 }
 
 func resourceCredentialFortinet(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-
-	c := &alkira.CredentialFortinet{
-		UserName: d.Get("username").(string),
-		Password: d.Get("password").(string),
-	}
-
-	log.Printf("[INFO] Creating Credential (Fortinet)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeFortinet, c, 0)
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(credentialId)
-	return resourceCredentialFortinetRead(d, meta)
+	return nil
 }
 
 func resourceCredentialFortinetRead(d *schema.ResourceData, meta interface{}) error {
@@ -65,39 +47,9 @@ func resourceCredentialFortinetRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCredentialFortinetUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-
-	c := &alkira.CredentialFortinet{
-		UserName: d.Get("username").(string),
-		Password: d.Get("password").(string),
-	}
-
-	log.Printf("[INFO] Updating Credential (Fortinet)")
-	err := client.UpdateCredential(
-		d.Id(),
-		d.Get("name").(string),
-		alkira.CredentialTypeFortinet,
-		c,
-		0,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return resourceCredentialFortinetRead(d, meta)
+	return nil
 }
 
 func resourceCredentialFortinetDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
-	credentialId := d.Id()
-
-	log.Printf("[INFO] Deleting Credential (Fortinet %s)\n", credentialId)
-	err := client.DeleteCredential(credentialId, alkira.CredentialTypeFortinet)
-
-	if err != nil {
-		log.Printf("[INFO] Credential (Fortinet %s) was already deleted\n", credentialId)
-	}
-
 	return nil
 }

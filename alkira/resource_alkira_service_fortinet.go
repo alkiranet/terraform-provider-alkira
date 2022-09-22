@@ -37,7 +37,6 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed by credential resource.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 			"cxp": {
@@ -70,22 +69,26 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 						},
 						"license_key_file_path": {
 							Description: "Fortinet license key file path. The path to the desired license key. " +
-								"`license_key_file_path` will be if both `license_key` and `license_key_file_path` " +
-								"are provided in your configuration file. ",
+								"There are two options for providing the required license key for Fortinet " +
+								"instance credentials. You can either input the value directly into the `license_key` field " +
+								"or provide the file path for the license key file using the `license_key_file_path`. " +
+								"Either `license_key` and `license_key_file_path` must have an input. If both are provided, " +
+								"the Alkira provider will treat the `license_key` field with precedence. \n\n\n " +
+								"You may also use terraform's built in `file` helper function as a literal input for " +
+								"`license_key`. Ex: `license_key = file('/path/to/license/file')`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"serial_number": {
 							Description: "The serial_number of the Fortinet Firewall instance. " +
-								"Required only when licenseType is BRING_YOUR_OWN.",
+								"Required only when `license_type` is `BRING_YOUR_OWN.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"credential_id": {
 							Description: "The ID of the Fortinet Firewall instance credentials. " +
-								"Required only when licenseType is BRING_YOUR_OWN.",
+								"Required only when `license_type` is `BRING_YOUR_OWN`.",
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"id": {

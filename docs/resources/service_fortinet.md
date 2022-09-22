@@ -67,7 +67,6 @@ resource "alkira_service_fortinet" "test1" {
 
 - `auto_scale` (String) Indicate if auto_scale should be enabled for your Fortinet firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
-- `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
 - `password` (String) Fortinet password.
@@ -77,6 +76,7 @@ resource "alkira_service_fortinet" "test1" {
 
 ### Read-Only
 
+- `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--instances"></a>
@@ -84,13 +84,16 @@ resource "alkira_service_fortinet" "test1" {
 
 Optional:
 
-- `credential_id` (String) The ID of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
-- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. `license_key_file_path` will be if both `license_key` and `license_key_file_path` are provided in your configuration file.
+- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the `license_key` field or provide the file path for the license key file using the `license_key_file_path`. Either `license_key` and `license_key_file_path` must have an input. If both are provided, the Alkira provider will treat the `license_key` field with precedence. 
+
+
+ You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`.
 - `name` (String) The name of the Fortinet Firewall instance.
-- `serial_number` (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
+- `serial_number` (String) The serial_number of the Fortinet Firewall instance. Required only when `license_type` is `BRING_YOUR_OWN.
 
 Read-Only:
 
+- `credential_id` (String) The ID of the Fortinet Firewall instance credentials. Required only when `license_type` is `BRING_YOUR_OWN`.
 - `id` (Number) The ID of the Fortinet Firewall instance.
 
 
