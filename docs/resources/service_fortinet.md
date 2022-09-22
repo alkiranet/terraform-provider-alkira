@@ -13,37 +13,37 @@ Manage Fortinet firewall.
 ## Example Usage
 
 ```terraform
-resource "alkira_service_fortinet" "fortinet" {
-
-  credential_id             = alkira_credential_fortinet.credential.id
-  cxp                       = "US-WEST-1"
-  license_type              = "PAY_AS_YOU_GO"
+resource "alkira_service_fortinet" "test1" {
+  username                  = "admin"
+  password                  = "Ak12345678"
+  cxp                       = "US-WEST"
+  license_type              = "BRING_YOUR_OWN"
   management_server_ip      = ""
-  management_server_segment = alkira_segment.segment.name
+  management_server_segment = alkira_segment.test1.name
   max_instance_count        = 1
   min_instance_count        = 1
   name                      = "test1-update"
-  segment_ids               = [alkira_segment.segment.id, alkira_segment.segment1.id]
+  segment_ids               = [alkira_segment.test1.id, alkira_segment.test2.id]
   size                      = "SMALL"
   tunnel_protocol           = "IPSEC"
   version                   = "7.0.2"
 
+  # You can add more instance blocks. Make sure to change "max_instance_count".
   instances {
-    name          = "tf-fortinet-instance-1"
-    serial_number = "mactest-instance-1"
-    credential_id = alkira_credential_fortinet.credential.id
+    name                  = "tf-fortinet-instance-1"
+    serial_number         = "licensekey"
+    license_key_file_path = "/path/to/license.lic"
   }
-
   segment_options {
-    segment_id = alkira_segment.segment.id
+    segment_id = alkira_segment.test.id
     zone_name  = "zonename"
-    groups     = [alkira_group.group.name, alkira_group.group1.name]
+    groups     = [alkira_group.test.name]
   }
 
   segment_options {
-    segment_id = alkira_segment.segment1.id
+    segment_id = alkira_segment.test.id
     zone_name  = "zonename1"
-    groups     = [alkira_group.group2.name]
+    groups     = [alkira_group.test.name]
   }
 }
 ```
@@ -53,7 +53,6 @@ resource "alkira_service_fortinet" "fortinet" {
 
 ### Required
 
-- `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `cxp` (String) The CXP where the service should be provisioned.
 - `instances` (Block List, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `license_type` (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
@@ -68,10 +67,13 @@ resource "alkira_service_fortinet" "fortinet" {
 
 - `auto_scale` (String) Indicate if auto_scale should be enabled for your Fortinet firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be  deployed at any point in time.
+- `password` (String) Fortinet password.
 - `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- `username` (String) Fortinet username.
 
 ### Read-Only
 
@@ -80,13 +82,11 @@ resource "alkira_service_fortinet" "fortinet" {
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
 
-Required:
-
-- `name` (String) The name of the Fortinet Firewall instance.
-
 Optional:
 
 - `credential_id` (String) The ID of the Fortinet Firewall instance credentials. Required only when licenseType is BRING_YOUR_OWN.
+- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. `license_key_file_path` will be if both `license_key` and `license_key_file_path` are provided in your configuration file.
+- `name` (String) The name of the Fortinet Firewall instance.
 - `serial_number` (String) The serial_number of the Fortinet Firewall instance. Required only when licenseType is BRING_YOUR_OWN.
 
 Read-Only:

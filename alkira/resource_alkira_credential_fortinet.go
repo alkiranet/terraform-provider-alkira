@@ -17,6 +17,9 @@ func resourceAlkiraCredentialFortinet() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		DeprecationMessage: "alkira_credential_fortinet has been deprecated. " +
+			"Please specify username and password directly in resource service_fortinet. " +
+			"See documentation for example.",
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

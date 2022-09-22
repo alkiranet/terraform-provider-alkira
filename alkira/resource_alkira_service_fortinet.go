@@ -37,12 +37,23 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed by credential resource.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"password": {
+				Description: "Fortinet password.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"username": {
+				Description: "Fortinet username.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"instances": {
 				Type:     schema.TypeList,
@@ -55,7 +66,14 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 						"name": {
 							Description: "The name of the Fortinet Firewall instance.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
+						},
+						"license_key_file_path": {
+							Description: "Fortinet license key file path. The path to the desired license key. " +
+								"`license_key_file_path` will be if both `license_key` and `license_key_file_path` " +
+								"are provided in your configuration file. ",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"serial_number": {
 							Description: "The serial_number of the Fortinet Firewall instance. " +
@@ -68,6 +86,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 								"Required only when licenseType is BRING_YOUR_OWN.",
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"id": {
 							Description: "The ID of the Fortinet Firewall instance.",
@@ -253,12 +272,38 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	fortinetCredId := d.Get("credential_id").(string)
+
+	if 0 == len(fortinetCredId) {
+		log.Printf("[INFO] Creating Fortinet FW Credential")
+		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
+		fortinetCred := alkira.CredentialPan{
+			Username: d.Get("username").(string),
+			Password: d.Get("password").(string),
+		}
+		credentialId, err := client.CreateCredential(
+			fortinetCredName,
+			alkira.CredentialTypeFortinet,
+			fortinetCred,
+			0,
+		)
+		if err != nil {
+			return nil, err
+		}
+		d.Set("credential_id", credentialId)
+	}
+
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	managementServer := &alkira.FortinetManagmentServer{
 		IpAddress: d.Get("management_server_ip").(string),
 		Segment:   d.Get("management_server_segment").(string),
 	}
-	instances := expandFortinetInstances(d.Get("instances").([]interface{}))
+	instances, err := expandFortinetInstances(d.Get("license_type").(string), d.Get("instances").([]interface{}), m)
+	if err != nil {
+		return nil, err
+	}
 
 	// convert segment ids to segment names
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
