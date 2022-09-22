@@ -303,7 +303,32 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 			logf("INFO", "client-delete: resource was already deleted.\n")
 			return nil
 		}
-		return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+
+		// Retry several more times and see if the delete goes through
+		err := wait.Poll(2*time.Second, 10*time.Second, func() (bool, error) {
+			response, err = ac.Client.Do(request)
+			if err != nil {
+				return false, err
+			}
+
+			data, _ = ioutil.ReadAll(response.Body)
+
+			if response.StatusCode == 200 || response.StatusCode == 202 || response.StatusCode == 404 {
+				return true, nil
+			}
+
+			logf("INFO", "client-delete: retry delete (%d).", response.StatusCode)
+			return false, nil
+		})
+
+		if err == wait.ErrWaitTimeout {
+			return fmt.Errorf("client-delete: retry timeout")
+		}
+
+		if err != nil {
+			return fmt.Errorf("(%d) %s", response.StatusCode, string(data))
+		}
+
 	}
 
 	// If provision is enabled, wait for provision to finish
