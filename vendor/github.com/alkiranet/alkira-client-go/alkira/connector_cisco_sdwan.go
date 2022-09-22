@@ -17,11 +17,12 @@ type CiscoSdwanEdgeVrfMapping struct {
 }
 
 type CiscoSdwanEdgeInfo struct {
-	CloudInitFile string `json:"cloudInitFile"`
-	CredentialId  string `json:"credentialId"`
-	HostName      string `json:"hostName"`
-	Id            int    `json:"id,omitempty"`
-	Name          string `json:"name,omitempty"`
+	CloudInitFile          string `json:"cloudInitFile"`
+	CredentialId           string `json:"credentialId"`
+	HostName               string `json:"hostName"`
+	Id                     int    `json:"id,omitempty"`
+	Name                   string `json:"name,omitempty"`
+	SshKeyPairCredentialId string `json:"sshKeyPairCredentialId,omitempty"`
 }
 
 type ConnectorCiscoSdwan struct {
