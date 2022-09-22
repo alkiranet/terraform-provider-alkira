@@ -183,7 +183,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 									},
 									"ike_encryption_algorithms": {
 										Description: "Encryption algorithms to use for IKE SA, one of " +
-											"`AES256CBC`, `AES192CBC`, `AES128CBC`.",
+											"`AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
@@ -246,6 +246,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"policy_options": {
 				Description: "Policy options, both on-prem and cxp prefix" +
@@ -387,6 +392,7 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vpn_mode", connector.VpnMode)

@@ -11,11 +11,13 @@ import (
 
 func resourceAlkiraServicePan() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage PAN firewall.",
-		Create:      resourceServicePanCreate,
-		Read:        resourceServicePanRead,
-		Update:      resourceServicePanUpdate,
-		Delete:      resourceServicePanDelete,
+		Description: "Manage Palo Alto Firewall service.\n\n" +
+			"When `panorama_enabled` is set to `true`, `pan_username` and " +
+			"`pan_password` are required.",
+		Create: resourceServicePanCreate,
+		Read:   resourceServicePanRead,
+		Update: resourceServicePanUpdate,
+		Delete: resourceServicePanDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,12 +42,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
 			"pan_password": {
-				Description: "PAN password.",
+				Description: "PAN password. This is required when `panorama_enabled` is set to `true`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"pan_username": {
-				Description: "PAN username.",
+				Description: "PAN username. This is required when `panorama_enabled` is set to `true`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -61,7 +63,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Default:     false,
 			},
 			"global_protect_segment_options": {
-				Description: "A mapping of segment_id -> zones_to_groups. The only segment names " +
+				Description: "A mapping of segment_id -> segment_options. The only segment names " +
 					"allowed are the segments that are already associated with the service." +
 					"options should apply. If global_protect_enabled is set to false, " +
 					"global_protect_segment_options shound not be included in your request.",
@@ -285,25 +287,26 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"zones_to_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
+			"segment_options": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "The segment options as used by your PAN firewall.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
 							Description: "The ID of the segment.",
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the zone.",
+							Description: "The name of the associated firewall zone.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"groups": {
-							Description: "The name of the group.",
+							Description: "The list of groups associated with the zone.",
 							Type:        schema.TypeList,
-							Optional:    true,
+							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -355,6 +358,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("name", pan.Name)
 	d.Set("panorama_enabled", pan.PanoramaEnabled)
 	d.Set("segment_ids", pan.SegmentIds)
+	d.Set("segment_options", deflateSegmentOptions(pan.SegmentOptions))
 	d.Set("size", pan.Size)
 	d.Set("tunnel_protocol", pan.TunnelProtocol)
 	d.Set("type", pan.Type)
@@ -439,7 +443,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		return nil, err
 	}
 
-	segmentOptions, err := expandPanSegmentOptions(d.Get("zones_to_groups").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

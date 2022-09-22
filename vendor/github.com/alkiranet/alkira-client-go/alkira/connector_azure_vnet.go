@@ -61,7 +61,8 @@ type ConnectorAzureVnet struct {
 	CredentialId      string                `json:"credentialId"`
 	Group             string                `json:"group"`
 	Enabled           bool                  `json:"enabled"`
-	Id                json.Number           `json:"id,omitempty"`
+	Id                json.Number           `json:"id,omitempty"`              // response only
+	ImplicitGroupId   int                   `json:"implicitGroupId,omitempty"` // response only
 	Name              string                `json:"name"`
 	NativeServices    []string              `json:"nativeServices,omitempty"`
 	ResourceGroupName string                `json:"resourceGroupName,omitempty"`

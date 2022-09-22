@@ -42,7 +42,6 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Type:        schema.TypeBool,
 				Required:    true,
 			},
-
 			"credential_id": {
 				Description: "ID of OCI-VCN credential.",
 				Type:        schema.TypeString,
@@ -57,6 +56,11 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
@@ -172,6 +176,7 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("primary", connector.Primary)
 	d.Set("oci_region", connector.CustomerRegion)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vcn_id", connector.VcnId)

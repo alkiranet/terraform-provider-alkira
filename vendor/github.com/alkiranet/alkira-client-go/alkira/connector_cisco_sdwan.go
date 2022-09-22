@@ -17,11 +17,12 @@ type CiscoSdwanEdgeVrfMapping struct {
 }
 
 type CiscoSdwanEdgeInfo struct {
-	CloudInitFile string `json:"cloudInitFile"`
-	CredentialId  string `json:"credentialId"`
-	HostName      string `json:"hostName"`
-	Id            int    `json:"id,omitempty"`
-	Name          string `json:"name,omitempty"`
+	CloudInitFile          string `json:"cloudInitFile"`
+	CredentialId           string `json:"credentialId"`
+	HostName               string `json:"hostName"`
+	Id                     int    `json:"id,omitempty"`
+	Name                   string `json:"name,omitempty"`
+	SshKeyPairCredentialId string `json:"sshKeyPairCredentialId,omitempty"`
 }
 
 type ConnectorCiscoSdwan struct {
@@ -32,7 +33,8 @@ type ConnectorCiscoSdwan struct {
 	Group                string                     `json:"group,omitempty"`
 	Enabled              bool                       `json:"enabled"`
 	Name                 string                     `json:"name"`
-	Id                   int                        `json:"id,omitempty"`
+	Id                   int                        `json:"id,omitempty"`              // response only
+	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"` // response only
 	Size                 string                     `json:"size"`
 	Type                 string                     `json:"type,omitempty"`
 	Version              string                     `json:"version"`

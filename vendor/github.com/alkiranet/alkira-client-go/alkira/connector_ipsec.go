@@ -39,7 +39,7 @@ type ConnectorIPSecSite struct {
 	EnableTunnelRedundancy bool                        `json:"enableTunnelRedundancy"`
 	GatewayIpType          string                      `json:"gatewayIpType,omitempty"`
 	HaMode                 string                      `json:"haMode,omitempty"`
-	Id                     int                         `json:"id,omitempty"`
+	Id                     int                         `json:"id,omitempty"` // response only
 	Name                   string                      `json:"name"`
 	PresharedKeys          []string                    `json:"presharedKeys"`
 }
@@ -82,19 +82,20 @@ type ConnectorIPSecSegmentOptions struct {
 }
 
 type ConnectorIPSec struct {
-	BillingTags    []int                         `json:"billingTags"`
-	CXP            string                        `json:"cxp"`
-	Group          string                        `json:"group,omitempty"`
-	Enabled        bool                          `json:"enabled"`
-	Id             json.Number                   `json:"id,omitempty"`
-	Name           string                        `json:"name"`
-	PolicyOptions  *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
-	RoutingOptions *ConnectorIPSecRoutingOptions `json:"routingOptions"`
-	SegmentOptions interface{}                   `json:"segmentOptions"`
-	Segments       []string                      `json:"segments"` // Only one segment is supported for now
-	Sites          []*ConnectorIPSecSite         `json:"sites,omitempty"`
-	Size           string                        `json:"size"`
-	VpnMode        string                        `json:"vpnMode"`
+	BillingTags     []int                         `json:"billingTags"`
+	CXP             string                        `json:"cxp"`
+	Group           string                        `json:"group,omitempty"`
+	Enabled         bool                          `json:"enabled"`
+	Id              json.Number                   `json:"id,omitempty"`              // response only
+	ImplicitGroupId int                           `json:"implicitGroupId,omitempty"` // response only
+	Name            string                        `json:"name"`
+	PolicyOptions   *ConnectorIPSecPolicyOptions  `json:"policyOptions"`
+	RoutingOptions  *ConnectorIPSecRoutingOptions `json:"routingOptions"`
+	SegmentOptions  interface{}                   `json:"segmentOptions"`
+	Segments        []string                      `json:"segments"` // Only one segment is supported for now
+	Sites           []*ConnectorIPSecSite         `json:"sites,omitempty"`
+	Size            string                        `json:"size"`
+	VpnMode         string                        `json:"vpnMode"`
 }
 
 // getIpsecConnectors get all ipsec connectors from the given tenant network

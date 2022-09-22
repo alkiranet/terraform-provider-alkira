@@ -83,6 +83,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created with the connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
 			"instances": {
 				Description: "The Aruba Edge connector instances.",
 				Type:        schema.TypeList,
@@ -198,6 +203,7 @@ func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error
 	d.Set("cxp", connector.Cxp)
 	d.Set("gateway_gbp_asn", connector.GatewayBgpAsn)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
 	d.Set("name", connector.Name)
 	d.Set("segment_ids", segmentIds)

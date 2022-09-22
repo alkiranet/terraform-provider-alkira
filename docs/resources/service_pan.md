@@ -3,43 +3,50 @@
 page_title: "alkira_service_pan Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage PAN firewall.
+  Manage Palo Alto Firewall service.
+  When panorama_enabled is set to true, pan_username and pan_password are required.
 ---
 
 # alkira_service_pan (Resource)
 
-Manage PAN firewall.
+Manage Palo Alto Firewall service.
+
+When `panorama_enabled` is set to `true`, `pan_username` and `pan_password` are required.
 
 ## Example Usage
 
 ```terraform
 resource "alkira_service_pan" "test1" {
-  name                    = "PanFwTest"
-  pan_password            = "Ak12345678"
-  pan_username            = "admin"
-  bundle                  = "PAN_VM_300_BUNDLE_2"
-  cxp                     = "US-WEST"
-  global_protect_enabled  = false
-  license_type            = "PAY_AS_YOU_GO"
-  max_instance_count      = 1
-  segment_ids             = [alkira_segment.test1.id]
-  management_segment_id   = alkira_segment.test1.id
-  size                    = "SMALL"
-  type                    = "VM-300"
-  version                 = "9.1.3"
+  name                   = "PanFwTest"
+  bundle                 = "PAN_VM_300_BUNDLE_2"
+  cxp                    = "US-WEST"
+  global_protect_enabled = false
+  license_type           = "PAY_AS_YOU_GO"
+  max_instance_count     = 1
+  segment_ids            = [alkira_segment.test1.id]
+  management_segment_id  = alkira_segment.test1.id
+  size                   = "SMALL"
+  type                   = "VM-300"
+  version                = "9.1.3"
 
-  panorama_enabled        = true
-  panorama_device_group   = "alkira-test"
-  panorama_ip_addresses   = ["172.16.0.8"]
-  panorama_template       = "test"
+  panorama_enabled      = true
+  panorama_device_group = "alkira-test"
+  panorama_ip_addresses = ["172.16.0.8"]
+  panorama_template     = "test"
+
+  #
+  # When panorama is enabled, username and password are required.
+  #
+  pan_password           = "Ak12345678"
+  pan_username           = "admin"
 
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"
   registration_pin_expiry = "2023-07-30"
 
-  master_key_enabled      = true
-  master_key              = "1234567890ABCDEF"
-  master_key_expiry       = "2023-08-01"
+  master_key_enabled = true
+  master_key         = "1234567890ABCDEF"
+  master_key_expiry  = "2023-08-01"
 
   global_protect_segment_options {
     segment_id            = (alkira_segment.test1.id)
@@ -48,10 +55,10 @@ resource "alkira_service_pan" "test1" {
     service_group_name    = "RandomServiceGroupName"
   }
 
-  # You can add more instance blocks. Make sure to set max_instance_count.
+  # You can add more instance blocks. Make sure to change "max_instance_count".
   instance {
     name      = "tf-pan-instance-1"
-    auth_key  = "tenant-pan-auth-code" 
+    auth_key  = "tenant-pan-auth-code"
     auth_code = "tenant-pan-auth-code"
     global_protect_segment_options {
       segment_id      = (alkira_segment.test1.id)
@@ -61,10 +68,16 @@ resource "alkira_service_pan" "test1" {
     }
   }
 
-  zones_to_groups {
-    segment_id  = alkira_segment.test1.id
-    zone_name   = "Zone1"
-    groups      = [alkira_group.test.name]
+  segment_options {
+    segment_id = alkira_segment.segment.id
+    zone_name  = "DEFAULT"
+    groups     = [alkira_group.group.name, alkira_group.group1.name]
+  }
+
+  segment_options {
+    segment_id = alkira_segment.segment1.id
+    zone_name  = "zonename1"
+    groups     = [alkira_group.group2.name]
   }
 }
 ```
@@ -92,21 +105,21 @@ resource "alkira_service_pan" "test1" {
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
-- `global_protect_segment_options` (Block Set) A mapping of segment_id -> zones_to_groups. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
+- `global_protect_segment_options` (Block Set) A mapping of segment_id -> segment_options. The only segment names allowed are the segments that are already associated with the service.options should apply. If global_protect_enabled is set to false, global_protect_segment_options shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
 - `license_sub_type` (String) PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)
 - `master_key` (String) Master Key for PAN instances.
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
-- `pan_password` (String) PAN password.
-- `pan_username` (String) PAN username.
+- `pan_password` (String) PAN password. This is required when `panorama_enabled` is set to `true`.
+- `pan_username` (String) PAN username. This is required when `panorama_enabled` is set to `true`.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
 - `panorama_template` (String) Panorama Template.
+- `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 - `type` (String) The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'
-- `zones_to_groups` (Block Set) (see [below for nested schema](#nestedblock--zones_to_groups))
 
 ### Read-Only
 
@@ -151,16 +164,13 @@ Required:
 - `service_group_name` (String) The name of the service group. A group with the same name will be created.
 
 
-<a id="nestedblock--zones_to_groups"></a>
-### Nested Schema for `zones_to_groups`
+<a id="nestedblock--segment_options"></a>
+### Nested Schema for `segment_options`
 
 Required:
 
-- `segment_id` (String) The ID of the segment.
-- `zone_name` (String) The name of the zone.
-
-Optional:
-
-- `groups` (List of String) The name of the group.
+- `groups` (List of String) The list of groups associated with the zone.
+- `segment_id` (Number) The ID of the segment.
+- `zone_name` (String) The name of the associated firewall zone.
 
 

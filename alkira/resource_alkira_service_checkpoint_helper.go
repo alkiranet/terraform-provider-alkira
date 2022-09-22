@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"errors"
 	"log"
 	"strconv"
 
@@ -44,65 +43,6 @@ func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
 	}
 
 	return instances
-}
-
-func expandCheckpointSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.OuterZoneToGroups, error) {
-	if in == nil || in.Len() == 0 {
-		return nil, errors.New("Checkpoint segment options cannot be null or empty")
-	}
-
-	if in.Len() < 1 {
-		return nil, errors.New("Checkpoint segment options must be exactly 1 in length")
-	}
-
-	return convertCheckpointSegmentOptions(in, m)
-}
-
-func convertCheckpointSegmentOptions(in *schema.Set, m interface{}) (map[string]alkira.OuterZoneToGroups, error) {
-	client := m.(*alkira.AlkiraClient)
-
-	if in == nil {
-		return nil, errors.New("Checkpoint segment options cannot be nil")
-	}
-
-	zonesToGroups := make(alkira.CheckpointZoneToGroups)
-	segmentOptions := make(map[string]alkira.OuterZoneToGroups)
-
-	for _, options := range in.List() {
-		optionsCfg := options.(map[string]interface{})
-		z := alkira.OuterZoneToGroups{}
-
-		var zoneName *string
-		var segment *alkira.Segment
-		var groups []string
-
-		if v, ok := optionsCfg["zone_name"].(string); ok {
-			zoneName = &v
-		}
-
-		if v, ok := optionsCfg["segment_id"].(int); ok {
-			sg, err := client.GetSegmentById(strconv.Itoa(v))
-			if err != nil {
-				return nil, err
-			}
-			segment = &sg
-		}
-
-		if v, ok := optionsCfg["groups"].([]interface{}); ok {
-			groups = convertTypeListToStringList(v)
-		}
-
-		if zoneName == nil || segment == nil || groups == nil {
-			return nil, errors.New("segment_option fields cannot be nil")
-		}
-
-		zonesToGroups[*zoneName] = groups
-		z.SegmentId = segment.Id
-		z.ZonesToGroups = zonesToGroups
-		segmentOptions[segment.Name] = z
-	}
-
-	return segmentOptions, nil
 }
 
 func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
@@ -172,23 +112,6 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []m
 	m["user_name"] = mg.UserName
 
 	return []map[string]interface{}{m}
-}
-
-func deflateCheckpointSegmentOptions(c map[string]alkira.OuterZoneToGroups) []map[string]interface{} {
-	var options []map[string]interface{}
-
-	for _, outerZoneToGroups := range c {
-		for zone, groups := range outerZoneToGroups.ZonesToGroups {
-			i := map[string]interface{}{
-				"segment_id": outerZoneToGroups.SegmentId,
-				"zone_name":  zone,
-				"groups":     groups,
-			}
-			options = append(options, i)
-		}
-	}
-
-	return options
 }
 
 func deflateCheckpointInstances(c []alkira.CheckpointInstance) []map[string]interface{} {

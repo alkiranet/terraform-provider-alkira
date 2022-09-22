@@ -3,82 +3,71 @@
 page_title: "alkira_connector_aws_vpc Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage AWS Cloud Connector.
+  Manage AWS VPC Cloud Connector.
+  This resource could be easily used along with terraform-provider-aws
+  Either vpc_cidr or vpc_subnet needs to be specified for routing purpose. If vpc_cidr is provided, it will automatically select all associated subnets of the given VPC. Otherwise, you could select certain subnets by specifying vpc_subnet.
+  vpc_route_tables could be used to adjust the routing options against the specified route tables. When OVERRIDE_DEFAULT_ROUTE is specified, the existing default route will be overwritten and the traffic will be routed to Alkira CXP. When ADVERTISE_CUSTOM_PREFIX is specified, you need to provide a list of prefixes for which traffic must be routed to Alkira CXP.
+  Limitations
+  There are several limitations of AWS connector so far:
+  Changing an existing connector to a new AWS VPC is not supported at this point. You need to create a new connector for a new AWS VPC.Updating an existing connector might require the tenant network to be re-provisioned to make the change effective, e.g. changing the segment the connector is associated.When direct inter-vpc communication is enabled, several other functionalities won't work, like NAT policy, segment resource share, internet-facing applications and traffic policies.
 ---
 
 # alkira_connector_aws_vpc (Resource)
 
 Manage AWS VPC Cloud Connector.
 
-This resource could be easily used along with AWS provider.
+This resource could be easily used along with `terraform-provider-aws`
 
-Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
-purpose. If `vpc_cidr` is provided, it will automatically select all
-associated subnets of the given VPC. Otherwise, you could select
-certain subnets by specifying `vpc_subnet`.
+Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing purpose. If `vpc_cidr` is provided, it will automatically select all associated subnets of the given VPC. Otherwise, you could select certain subnets by specifying `vpc_subnet`.
 
-`vpc_route_tables` could be used to adjust the routing options against
-the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
-specified, the existing default route will be overwritten and the
-traffic will be routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX`
-is specified, you need to provide a list of prefixes for which traffic
-must be routed to Alkira CXP.
-
+`vpc_route_tables` could be used to adjust the routing options against the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is specified, the existing default route will be overwritten and the traffic will be routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` is specified, you need to provide a list of prefixes for which traffic must be routed to Alkira CXP.
 
 ## Limitations
 
 There are several limitations of AWS connector so far:
 
-* Changing an existing connector to a new AWS VPC is not supported at
-this point. You need to create a new connector for a new AWS VPC.
-
-* Updating an existing connector might require the tenant network to
-  be re-provisioned to make the change effective, e.g. changing the
-  segment the connector is associated.
-
-* When direct inter-vpc communication is enabled, several other
-  functionalities won't work, like NAT policy, segment resource share,
-  internet-facing applications and traffic policies.
+* Changing an existing connector to a new AWS VPC is not supported at this point. You need to create a new connector for a new AWS VPC.
+* Updating an existing connector might require the tenant network to be re-provisioned to make the change effective, e.g. changing the segment the connector is associated.
+* When direct inter-vpc communication is enabled, several other functionalities won't work, like NAT policy, segment resource share, internet-facing applications and traffic policies.
 
 ## Example Usage
 
-This is a minimal example to show how to create an AWS connector.
-
-One `alkira_segment` and `alkira_credential_aws_vpc` are required for
-an AWS connector and you could also adjust routing preferences by
-specifying `vpc_cidr` or `vpc_subnet` or `vpc_route_tables`.
-
 ```terraform
-# Create a segment
+#
+# EXAMPLE 1
+#
+# This is simple example to show how to create an AWS-VPC connector.
+#
+# One segment and credential are needed for a connector and you could
+# also adjust routing preferences by specifying `vpc_cidr` or
+# `vpc_subnet` or `vpc_route_tables`.
+#
 resource "alkira_segment" "segment1" {
-  name = "seg1"
-  asn  = "65513"
-  cidr = "10.16.1.0/24"
+  name  = "seg1"
+  asn   = "65513"
+  cidrs = ["10.16.1.0/24"]
 }
 
-# Create a group
 resource "alkira_group" "group1" {
   name        = "group1"
   description = "test group"
 }
 
-# Create credential
 resource "alkira_credential_aws_vpc" "account1" {
   name           = "customer-aws-1"
   aws_access_key = "your_aws_acccess_key"
   aws_secret_key = "your_secret_key"
   type           = "ACCESS_KEY"
 }
-```
 
-To create a connector for an AWS VPC and attach it with `segment1`:
-
-```terraform
+#
+# EXAMPLE 2
+#
+# Create one connector for a VPC and attach it with segment1
+#
 resource "alkira_connector_aws_vpc" "connector1" {
   name           = "vpc1"
-
   vpc_id         = "your_vpc_id"
-  vpc_cidr       = [aws_vpc.vpc2.cidr_block]
 
   aws_account_id = "your_aws_account_id"
   aws_region     = "us-east-1"
@@ -89,13 +78,32 @@ resource "alkira_connector_aws_vpc" "connector1" {
   segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
 }
-```
 
-To create another connector and adjust the routing to use the default
-route. There could be multiple `vpc_route_table` sections for
-additional route tables.
+#
+# EXAMPLE 3
+#
+# Create a VPC and create a aws-vpc connector to connect to it.
+#
+resource "aws_vpc" "vpc2" {
+  cidr_block = "10.2.0.0/16"
 
-```terraform
+  tags = {
+    Name = "vpc2"
+  }
+}
+
+resource "aws_subnet" "vpc2_subnet1" {
+  vpc_id     = aws_vpc.vpc2.id
+  cidr_block = "10.2.0.0/24"
+}
+
+#
+# EXAMPLE 4
+#
+# Create a connector and adjust the routing to use the default
+# route. There could be multiple vpc_route_table sections for
+# additional route tables.
+#
 resource "alkira_connector_aws_vpc" "connector2" {
   name           = "vpc2"
 
@@ -118,50 +126,43 @@ resource "alkira_connector_aws_vpc" "connector2" {
 }
 ```
 
-Alkira will automatically select a subnet for linked availability
-zones in the VPC. The optional `tgw_attachment` block could be used to
-specify subnet for respective availability zones like this:
-
-```
-tgw_attachment {
-    subnet_id = aws_subnet.tftest4_subnet2.id
-    az        = "us-west-2a"
-}
-```
-
 <!-- schema generated by tfplugindocs -->
 ## Schema
 
 ### Required
 
-- **aws_account_id** (String) AWS Account ID.
-- **aws_region** (String) AWS Region where VPC resides.
-- **credential_id** (String) ID of credential managed by Credential Manager.
-- **cxp** (String) The CXP where the connector should be provisioned.
-- **name** (String) The name of the connector.
-- **segment_id** (Number) The ID of segment associated with the connector. Currently, only `1` segment is allowed.
-- **size** (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
-- **vpc_id** (String) The ID of the target VPC.
+- `aws_account_id` (String) AWS Account ID.
+- `aws_region` (String) AWS Region where VPC resides.
+- `credential_id` (String) ID of credential managed by Credential Manager.
+- `cxp` (String) The CXP where the connector should be provisioned.
+- `name` (String) The name of the connector.
+- `segment_id` (Number) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `vpc_id` (String) The ID of the target VPC.
 
 ### Optional
 
-- **billing_tag_ids** (List of Number) Tags for billing.
-- **direct_inter_vpc_communication** (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
-- **enabled** (Boolean) Is the connector enabled. Default is `true`.
-- **group** (String) The group of the connector.
-- **id** (String) The ID of this resource.
-- **tgw_attachment** (Block Set) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
-- **vpc_cidr** (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
-- **vpc_route_table** (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
-- **vpc_subnet** (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
+- `billing_tag_ids` (List of Number) Tags for billing.
+- `direct_inter_vpc_communication` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
+- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `group` (String) The group of the connector.
+- `tgw_attachment` (Block Set) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
+- `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
+- `vpc_route_table` (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
+- `vpc_subnet` (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 
 <a id="nestedblock--tgw_attachment"></a>
 ### Nested Schema for `tgw_attachment`
 
 Required:
 
-- **az** (String) The availability zone of the subnet.
-- **subnet_id** (String) The Id of the subnet.
+- `az` (String) The availability zone of the subnet.
+- `subnet_id` (String) The Id of the subnet.
 
 
 <a id="nestedblock--vpc_route_table"></a>
@@ -169,9 +170,9 @@ Required:
 
 Optional:
 
-- **id** (String) The ID of the route table
-- **options** (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
-- **prefix_list_ids** (List of Number) Prefix List IDs
+- `id` (String) The Id of the route table
+- `options` (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
+- `prefix_list_ids` (List of Number) Prefix List IDs
 
 
 <a id="nestedblock--vpc_subnet"></a>
@@ -179,5 +180,7 @@ Optional:
 
 Optional:
 
-- **cidr** (String) The CIDR of the subnet.
-- **id** (String) The ID of the subnet.
+- `cidr` (String) The CIDR of the subnet.
+- `id` (String) The Id of the subnet.
+
+
