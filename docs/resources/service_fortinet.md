@@ -57,7 +57,7 @@ resource "alkira_service_fortinet" "fortinet" {
 - `cxp` (String) The CXP where the service should be provisioned.
 - `instances` (Block List, Min: 1) An array containing properties for each Fortinet Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `license_type` (String) Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- `management_server_segment` (String) The segment used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
+- `management_server_segment` (Number) The segment ID used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
 - `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Fortinet at this time. max_instance_count must be greater than or equal to min_instance_count.
 - `name` (String) Name of the Fortinet Firewall service.
 - `segment_ids` (List of String) IDs of segments associated with the service.
