@@ -135,20 +135,23 @@ func convertTypeListToStringList(in []interface{}) []string {
 }
 
 func convertSegmentIdsToSegmentNames(ids []string, m interface{}) ([]string, error) {
-	client := m.(*alkira.AlkiraClient)
-
 	var segmentNames []string
 	for _, id := range ids {
-		seg, err := client.GetSegmentById(id)
+		segmentName, err := convertSegmentIdToSegmentName(id, m)
 		if err != nil {
 			log.Printf("[DEBUG] failed to get segment. %s does not exist: ", id)
 			return nil, err
 		}
 
-		segmentNames = append(segmentNames, seg.Name)
+		segmentNames = append(segmentNames, segmentName)
 	}
 
 	return segmentNames, nil
+}
+
+func convertSegmentIdToSegmentName(id string, m interface{}) (string, error) {
+	seg, err := m.(*alkira.AlkiraClient).GetSegmentById(id)
+	return seg.Name, err
 }
 
 func convertSegmentNamesToSegmentIds(names []string, m interface{}) ([]string, error) {
