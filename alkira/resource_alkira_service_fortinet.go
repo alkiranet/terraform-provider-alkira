@@ -90,7 +90,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"management_server_segment": {
+			"management_server_segment_id": {
 				Description: "The segment ID used to access the management server. This segment " +
 					"must be present in the list of segments assigned to this Fortinet Firewall service.",
 				Type:     schema.TypeInt,
@@ -207,7 +207,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
 	d.Set("management_server_ip", f.ManagementServer.IpAddress)
-	d.Set("management_server_segment", f.ManagementServer.Segment)
+	d.Set("management_server_segment_id", f.ManagementServer.Segment)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
@@ -259,7 +259,7 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	segmentId := strconv.Itoa(d.Get("management_server_segment").(int))
+	segmentId := strconv.Itoa(d.Get("management_server_segment_id").(int))
 	mgmtSegName, err := convertSegmentIdToSegmentName(segmentId, m)
 	if err != nil {
 		return nil, err
