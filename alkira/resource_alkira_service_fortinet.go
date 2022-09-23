@@ -39,12 +39,22 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed by credential resource.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"password": {
+				Description: "Fortinet password.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"username": {
+				Description: "Fortinet username.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"instances": {
 				Type:     schema.TypeList,
@@ -57,19 +67,31 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 						"name": {
 							Description: "The name of the Fortinet Firewall instance.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
+						},
+						"license_key_file_path": {
+							Description: "Fortinet license key file path. The path to the desired license key. " +
+								"There are two options for providing the required license key for Fortinet " +
+								"instance credentials. You can either input the value directly into the `license_key` field " +
+								"or provide the file path for the license key file using the `license_key_file_path`. " +
+								"Either `license_key` and `license_key_file_path` must have an input. If both are provided, " +
+								"the Alkira provider will treat the `license_key` field with precedence. \n\n\n " +
+								"You may also use terraform's built in `file` helper function as a literal input for " +
+								"`license_key`. Ex: `license_key = file('/path/to/license/file')`.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"serial_number": {
 							Description: "The serial_number of the Fortinet Firewall instance. " +
-								"Required only when licenseType is BRING_YOUR_OWN.",
+								"Required only when `license_type` is `BRING_YOUR_OWN.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"credential_id": {
 							Description: "The ID of the Fortinet Firewall instance credentials. " +
-								"Required only when licenseType is BRING_YOUR_OWN.",
+								"Required only when `license_type` is `BRING_YOUR_OWN`.",
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"id": {
 							Description: "The ID of the Fortinet Firewall instance.",
@@ -257,6 +279,29 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	fortinetCredId := d.Get("credential_id").(string)
+
+	if 0 == len(fortinetCredId) {
+		log.Printf("[INFO] Creating Fortinet FW Credential")
+		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
+		fortinetCred := alkira.CredentialPan{
+			Username: d.Get("username").(string),
+			Password: d.Get("password").(string),
+		}
+		credentialId, err := client.CreateCredential(
+			fortinetCredName,
+			alkira.CredentialTypeFortinet,
+			fortinetCred,
+			0,
+		)
+		if err != nil {
+			return nil, err
+		}
+		d.Set("credential_id", credentialId)
+	}
+
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
 	segmentId := strconv.Itoa(d.Get("management_server_segment_id").(int))
@@ -269,7 +314,10 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		IpAddress: d.Get("management_server_ip").(string),
 		Segment:   mgmtSegName,
 	}
-	instances := expandFortinetInstances(d.Get("instances").([]interface{}))
+	instances, err := expandFortinetInstances(d.Get("license_type").(string), d.Get("instances").([]interface{}), m)
+	if err != nil {
+		return nil, err
+	}
 
 	// convert segment ids to segment names
 	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))

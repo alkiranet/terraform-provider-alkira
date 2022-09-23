@@ -1,17 +1,25 @@
 package alkira
 
 import (
+	"errors"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandFortinetInstances(in []interface{}) []alkira.FortinetInstance {
+func expandFortinetInstances(licenseType string, in []interface{}, m interface{}) ([]alkira.FortinetInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] invalid Fortinet instance input")
-		return nil
+		return nil, errors.New("Invalid Fortinet instance input")
 	}
+
+	var licensePath string
+	var err error
 
 	instances := make([]alkira.FortinetInstance, len(in))
 	for i, instance := range in {
@@ -27,13 +35,47 @@ func expandFortinetInstances(in []interface{}) []alkira.FortinetInstance {
 		if v, ok := instanceCfg["serial_number"].(string); ok {
 			r.SerialNumber = v
 		}
+		if v, ok := instanceCfg["license_key_file_path"].(string); ok {
+			licensePath = v
+		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
-			r.CredentialId = v
+			if v == "" {
+				r.SerialNumber, err = extractLicenseKey(
+					r.SerialNumber,
+					licensePath,
+				)
+				if err != nil {
+					return nil, err
+				}
+				c := alkira.CredentialFortinetInstance{
+					LicenseKey:  r.SerialNumber,
+					LicenseType: licenseType,
+				}
+
+				credentialName := r.Name + randomNameSuffix()
+
+				log.Printf("[INFO] Creating Fortinet Instance Credential %s", credentialName)
+				credentialId, err := client.CreateCredential(
+					credentialName,
+					alkira.CredentialTypeFortinetInstance,
+					c,
+					0,
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				r.CredentialId = credentialId
+			}
+
+			if v != "" {
+				r.CredentialId = v
+			}
 		}
 		instances[i] = r
 	}
 
-	return instances
+	return instances, nil
 }
 
 func expandFortinetZone(in *schema.Set) map[string][]string {
@@ -56,4 +98,29 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 	}
 
 	return zonesToGroups
+}
+
+// extractLicenseKey takes two string values. The order of the string parameters matters. After
+// validation, if both fields have are noto empty strings extractLicenseKey will default to using
+// licenseKey as the return value. Otherwise extractLicenseKey will read from the licenseKeyPath
+// and return the output as a string
+func extractLicenseKey(licenseKey string, licenseKeyPath string) (string, error) {
+	if licenseKey == "" && licenseKeyPath == "" {
+		return "", errors.New("either license_key or license_key_file_path must be populated")
+	}
+
+	if licenseKey != "" {
+		return licenseKey, nil
+	}
+
+	if _, err := os.Stat(licenseKeyPath); errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("file not found at %s: %w", licenseKeyPath, err)
+	}
+
+	b, err := os.ReadFile(licenseKeyPath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
