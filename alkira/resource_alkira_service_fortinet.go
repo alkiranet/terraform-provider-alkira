@@ -1,7 +1,9 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -110,10 +112,10 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"management_server_segment": {
-				Description: "The segment used to access the management server. This segment " +
+			"management_server_segment_id": {
+				Description: "The segment ID used to access the management server. This segment " +
 					"must be present in the list of segments assigned to this Fortinet Firewall service.",
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"max_instance_count": {
@@ -199,6 +201,8 @@ func resourceFortinetCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating fortinet %s", d.Id())
+	fmt.Println("request: request.ManagementServer.Segment: ", request.ManagementServer.Segment)
+	fmt.Println("request: request.Segments: ", request.ManagementServer.Segment)
 	id, err := client.CreateFortinet(request)
 
 	if err != nil {
@@ -225,7 +229,7 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
 	d.Set("management_server_ip", f.ManagementServer.IpAddress)
-	d.Set("management_server_segment", f.ManagementServer.Segment)
+	d.Set("management_server_segment_id", f.ManagementServer.Segment)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
@@ -299,9 +303,16 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 	}
 
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+
+	segmentId := strconv.Itoa(d.Get("management_server_segment_id").(int))
+	mgmtSegName, err := convertSegmentIdToSegmentName(segmentId, m)
+	if err != nil {
+		return nil, err
+	}
+
 	managementServer := &alkira.FortinetManagmentServer{
 		IpAddress: d.Get("management_server_ip").(string),
-		Segment:   d.Get("management_server_segment").(string),
+		Segment:   mgmtSegName,
 	}
 	instances, err := expandFortinetInstances(d.Get("license_type").(string), d.Get("instances").([]interface{}), m)
 	if err != nil {
