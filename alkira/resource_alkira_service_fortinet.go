@@ -326,7 +326,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandSegmentOptionsFortinet(d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
