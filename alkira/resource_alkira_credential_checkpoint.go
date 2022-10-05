@@ -28,7 +28,7 @@ func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"management_server_password": &schema.Schema{
-				Description: "The password for Checkpoint Firewall Managerment Server. ",
+				Description: "The password for Checkpoint Firewall Management Server. ",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
