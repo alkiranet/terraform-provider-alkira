@@ -23,7 +23,12 @@ func resourceAlkiraCredentialCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"password": &schema.Schema{
-				Description: "The checkpoint credential password.",
+				Description: "The Checkpoint Firewall service password.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"management_server_password": &schema.Schema{
+				Description: "The password for Checkpoint Firewall Managerment Server. ",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -41,6 +46,7 @@ func resourceCredentialCheckpoint(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*alkira.AlkiraClient)
 	name := d.Get("name").(string)
 	password := d.Get("password").(string)
+	mgmtPassword := d.Get("management_server_password").(string)
 
 	credentialId, err := createCheckpointCredential(name, password, client)
 	if err != nil {
@@ -54,7 +60,7 @@ func resourceCredentialCheckpoint(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	err = createCheckpointCredentialManagementServer(name, password, client)
+	err = createCheckpointCredentialManagementServer(name, mgmtPassword, client)
 	if err != nil {
 		return err
 	}

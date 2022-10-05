@@ -13,7 +13,6 @@ Manage Fortinet firewall.
 ## Example Usage
 
 ```terraform
-
 resource "alkira_service_fortinet" "test1" {
   username                  = "admin"
   password                  = "Ak12345678"
