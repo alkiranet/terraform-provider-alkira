@@ -7,13 +7,13 @@ import (
 
 func dataSourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Aws Vpc connector.",
+		Description: "Use this data source to get an existing AWS VPC connector.",
 
 		Read: dataSourceAlkiraConnectorAwsVpcRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Aws Vpc connector.",
+				Description: "The name of the AWS VPC connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

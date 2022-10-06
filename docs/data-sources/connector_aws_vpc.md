@@ -3,12 +3,12 @@
 page_title: "alkira_connector_aws_vpc Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get an existing Aws Vpc connector.
+  Use this data source to get an existing AWS VPC connector.
 ---
 
 # alkira_connector_aws_vpc (Data Source)
 
-Use this data source to get an existing Aws Vpc connector.
+Use this data source to get an existing AWS VPC connector.
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ data "alkira_connector_aws_vpc" "test" {
 
 ### Required
 
-- `name` (String) The name of the Aws Vpc connector.
+- `name` (String) The name of the AWS VPC connector.
 
 ### Read-Only
 
