@@ -85,6 +85,7 @@ func Provider() *schema.Provider {
 			"alkira_billing_tag":             dataSourceAlkiraBillingTag(),
 			"alkira_credential":              dataSourceAlkiraCredential(),
 			"alkira_connector_aruba_edge":    dataSourceAlkiraConnectorArubaEdge(),
+			"alkira_connector_aws_vpc":       dataSourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_ipsec":         dataSourceAlkiraConnectorIpsec(),
 			"alkira_group":                   dataSourceAlkiraGroup(),
 			"alkira_group_connector":         dataSourceAlkiraGroupConnector(),
