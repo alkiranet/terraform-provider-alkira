@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//TODO(mac): this needs to be tested for checkpoint, fortinet, and pan
 func expandSegmentOptionsFortinet(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
 	// as segment options are optional we don't care if none are provided
 	if in == nil || in.Len() == 0 {
@@ -53,21 +52,15 @@ func expandSegmentOptionsFortinet(in *schema.Set, m interface{}) (alkira.Segment
 			return nil, errors.New("segment_option fields cannot be nil")
 		}
 
+		// if segmentOptions map already has an existing key add to it otherwise create new entry
 		if v, ok := segmentOptions[segment.Name]; ok {
 			v.ZonesToGroups[*zoneName] = groups
 		} else {
-			// TODO(mac): we need to adjust this so that it includes all zones to groups options for segment
 			zonesToGroups[*zoneName] = groups
 			z.ZonesToGroups = zonesToGroups
 			z.SegmentId = segment.Id
 			segmentOptions[segment.Name] = z
 		}
-
-		// TODO(mac): we need to adjust this so that it includes all zones to groups options for segment
-		//zonesToGroups[*zoneName] = groups
-		//z.ZonesToGroups = zonesToGroups
-		//z.SegmentId = segment.Id
-		//segmentOptions[segment.Name] = z
 	}
 
 	return segmentOptions, nil
@@ -112,10 +105,14 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 			return nil, errors.New("segment_option fields cannot be nil")
 		}
 
-		zonesToGroups[*zoneName] = groups
-		z.SegmentId = segment.Id
-		z.ZonesToGroups = zonesToGroups
-		segmentOptions[segment.Name] = z
+		if v, ok := segmentOptions[segment.Name]; ok {
+			v.ZonesToGroups[*zoneName] = groups
+		} else {
+			zonesToGroups[*zoneName] = groups
+			z.ZonesToGroups = zonesToGroups
+			z.SegmentId = segment.Id
+			segmentOptions[segment.Name] = z
+		}
 	}
 
 	return segmentOptions, nil
