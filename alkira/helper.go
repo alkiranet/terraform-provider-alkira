@@ -52,10 +52,14 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 			return nil, errors.New("segment_option fields cannot be nil")
 		}
 
-		zonesToGroups[*zoneName] = groups
-		z.SegmentId = segment.Id
-		z.ZonesToGroups = zonesToGroups
-		segmentOptions[segment.Name] = z
+		if v, ok := segmentOptions[segment.Name]; ok {
+			v.ZonesToGroups[*zoneName] = groups
+		} else {
+			zonesToGroups[*zoneName] = groups
+			z.ZonesToGroups = zonesToGroups
+			z.SegmentId = segment.Id
+			segmentOptions[segment.Name] = z
+		}
 	}
 
 	return segmentOptions, nil
