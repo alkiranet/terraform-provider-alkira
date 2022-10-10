@@ -83,7 +83,9 @@ func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.Ch
 
 			var sg alkira.Segment
 			var err error
-			if v != 0 { // 0 is an invalid ID but also the default value of int
+
+			// 0 is an invalid ID but also the default value of int
+			if v != 0 {
 				sg, err = client.GetSegmentById(strconv.Itoa(v))
 				if err != nil {
 					return nil, err
