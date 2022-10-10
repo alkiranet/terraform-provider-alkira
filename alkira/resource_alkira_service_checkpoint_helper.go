@@ -80,13 +80,18 @@ func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.Ch
 			mg.Reachability = v
 		}
 		if v, ok := cfg["segment_id"].(int); ok {
-			sg, err := client.GetSegmentById(strconv.Itoa(v))
-			if err != nil {
-				return nil, err
+
+			var sg alkira.Segment
+			var err error
+			if v != 0 { // 0 is an invalid ID but also the default value of int
+				sg, err = client.GetSegmentById(strconv.Itoa(v))
+				if err != nil {
+					return nil, err
+				}
+				mg.SegmentId = v
+				mg.Segment = sg.Name
 			}
 
-			mg.SegmentId = v
-			mg.Segment = sg.Name
 		}
 		if v, ok := cfg["type"].(string); ok {
 			mg.Type = v
