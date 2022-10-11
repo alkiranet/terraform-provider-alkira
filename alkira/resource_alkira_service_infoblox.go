@@ -198,10 +198,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description:  "Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+				Description:  "Infoblox license type, only `BRING_YOUR_OWN` is supported right now.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN"}, false),
 			},
 			"name": {
 				Description: "Name of the Infoblox service.",
