@@ -42,14 +42,14 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
 			"pan_password": {
-				Description: "PAN password. This is required when `panorama_enabled` is set to `true`.",
+				Description: "PAN password.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"pan_username": {
-				Description: "PAN username. This is required when `panorama_enabled` is set to `true`.",
+				Description: "PAN username.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"credential_id": {
 				Description: "ID of PAN credential.",
