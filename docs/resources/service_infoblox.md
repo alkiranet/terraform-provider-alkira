@@ -64,7 +64,7 @@ resource "alkira_service_infoblox" "test" {
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Infoblox service.
 - `grid_master` (Block List, Min: 1) Defines the properties of the Infoblox grid master. The Infoblox grid master needs to exist before other instances of a the grid can be added. The grid master can either be provisioned by Alkira or could already be provisioned externally. Some of these properties only need to be provided when the grid master is external. If the grid master needs to be provisioned internally by Alkira then an instance needs to be added to Infoblox service configuration with type = MASTER (see [below for nested schema](#nestedblock--grid_master))
 - `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
-- `license_type` (String) Infoblox license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
+- `license_type` (String) Infoblox license type, only `BRING_YOUR_OWN` is supported right now.
 - `name` (String) Name of the Infoblox service.
 - `segment_ids` (List of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
