@@ -88,6 +88,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_azure_expressroute": dataSourceAlkiraConnectorAzureExpressRoute(),
 			"alkira_connector_aws_vpc":            dataSourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_ipsec":              dataSourceAlkiraConnectorIpsec(),
+			"alkira_connector_cisco_sdwan":        dataSourceAlkiraConnectorCiscoSdwan(),
 			"alkira_group":                        dataSourceAlkiraGroup(),
 			"alkira_group_connector":              dataSourceAlkiraGroupConnector(),
 			"alkira_connector_oci_vcn":            dataSourceAlkiraConnectorOciVcn(),
