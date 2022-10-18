@@ -10,7 +10,7 @@ import (
 func dataSourceAlkiraSegment() *schema.Resource {
 	return &schema.Resource{
 		Description: "The segment data source allows a segment to be retrieved by its name.",
-		Read: dataSourceAlkiraSegmentRead,
+		Read:        dataSourceAlkiraSegmentRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the segment.",

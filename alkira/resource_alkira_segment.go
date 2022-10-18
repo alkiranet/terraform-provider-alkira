@@ -10,10 +10,10 @@ import (
 func resourceAlkiraSegment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Provides segment resource.",
-		Create: resourceSegment,
-		Read:   resourceSegmentRead,
-		Update: resourceSegmentUpdate,
-		Delete: resourceSegmentDelete,
+		Create:      resourceSegment,
+		Read:        resourceSegmentRead,
+		Update:      resourceSegmentUpdate,
+		Delete:      resourceSegmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
