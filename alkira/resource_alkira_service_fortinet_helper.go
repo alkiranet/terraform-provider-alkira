@@ -54,18 +54,6 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 					LicenseType: licenseType,
 				}
 
-				//r.SerialNumber, err = extractLicenseKey(
-				//	r.SerialNumber,
-				//	licenseKeyPath,
-				//)
-				//if err != nil {
-				//	return nil, err
-				//}
-				//c := alkira.CredentialFortinetInstance{
-				//	LicenseKey:  r.SerialNumber,
-				//	LicenseType: licenseType,
-				//}
-
 				credentialName := r.Name + randomNameSuffix()
 
 				log.Printf("[INFO] Creating Fortinet Instance Credential %s", credentialName)
@@ -118,7 +106,7 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 // extractLicenseKey takes two string values. The order of the string parameters matters. After
 // validation, if both fields have are not empty strings extractLicenseKey will default to using
 // licenseKey as the return value. Otherwise extractLicenseKey will read from the licenseKeyPath
-// and return the output as a string.
+// and return the output as a string
 func extractLicenseKey(licenseKey string, licenseKeyPath string) (string, error) {
 	// if both params are empty
 	if licenseKey == "" && licenseKeyPath == "" {
@@ -129,15 +117,12 @@ func extractLicenseKey(licenseKey string, licenseKeyPath string) (string, error)
 		return licenseKey, nil
 	}
 
-	fmt.Println("HARPO: ", licenseKeyPath)
 	if _, err := os.Stat(licenseKeyPath); errors.Is(err, os.ErrNotExist) {
-		fmt.Println("HARPOHARPO2")
 		return "", fmt.Errorf("file not found at %s: %w", licenseKeyPath, err)
 	}
 
 	b, err := os.ReadFile(licenseKeyPath)
 	if err != nil {
-		fmt.Println("HARPOHARPO1")
 		return "", err
 	}
 

@@ -76,10 +76,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 								"path for the license key file using the `license_key_file_path`. " +
 								"Either `license_key` or `license_key_file_path` must have an input. " +
 								"If both are provided, the Alkira provider will treat the `license_key` " +
-								"field with precedence. \n\n\n " +
-								"You may also use terraform's built in `file` helper function as a " +
-								"literal input for  `license_key`. Ex: `license_key = " +
-								"file('/path/to/license/file')`.",
+								"field with precedence.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
