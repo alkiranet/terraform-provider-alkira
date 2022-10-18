@@ -3,12 +3,12 @@
 page_title: "alkira_segment Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get information on an existing segment.
+  The segment data source allows a segment to be retrieved by its name.
 ---
 
 # alkira_segment (Data Source)
 
-Use this data source to get information on an existing segment.
+The segment data source allows a segment to be retrieved by its name.
 
 ## Example Usage
 
