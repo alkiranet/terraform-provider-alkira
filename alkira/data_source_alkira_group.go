@@ -9,7 +9,7 @@ import (
 
 func dataSourceAlkiraGroup() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get information on an existing group.",
+		Description: "This data source allows to retrieve an existing group by its name.",
 
 		Read: dataSourceAlkiraGroupRead,
 
