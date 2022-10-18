@@ -116,9 +116,10 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Default:     true,
 						},
 						"customer_asn": {
-							Description: "BGP ASN on the customer premise side.",
+							Description: "BGP ASN on the customer premise side. Default value is `64523`.",
 							Type:        schema.TypeInt,
 							Optional:    true,
+							Default:     64523,
 						},
 						"segment_id": {
 							Description: "Segment ID.",
@@ -177,19 +178,67 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("type", connector.Type)
 
 	// Set vedge
-	var vedge []map[string]interface{}
+	var vedges []map[string]interface{}
 
-	for _, info := range connector.CiscoEdgeInfo {
-		edge := map[string]interface{}{
-			"cloud_init_file": info.CloudInitFile,
-			"credential_id":   info.CredentialId,
-			"hostname":        info.HostName,
-			"id":              info.Id,
+	//
+	// Go through all vedge blocks from the config firstly to find a
+	// match, vedge's ID should be uniquely identifying an vedge
+	// block.
+	//
+	// On the first read call at the end of the create call, Terraform
+	// didn't track any vedge IDs yet.
+	//
+	for _, vedge := range d.Get("vedge").([]interface{}) {
+		vedgeConfig := vedge.(map[string]interface{})
+
+		for _, info := range connector.CiscoEdgeInfo {
+			if vedgeConfig["id"].(int) == info.Id || vedgeConfig["hostname"].(string) == info.HostName {
+				vedge := map[string]interface{}{
+					"cloud_init_file": info.CloudInitFile,
+					"credential_id":   info.CredentialId,
+					"hostname":        info.HostName,
+					"id":              info.Id,
+				}
+				vedges = append(vedges, vedge)
+				break
+			}
 		}
-		vedge = append(vedge, edge)
 	}
 
-	d.Set("vedge", vedge)
+	//
+	// Go through all CiscoEdgeInfo from the API response one more
+	// time to find any vedge that has not been tracked from Terraform
+	// config.
+	//
+	for _, info := range connector.CiscoEdgeInfo {
+		new := true
+
+		// Check if the vedge already exists in the Terraform config
+		for _, vedge := range d.Get("vedge").([]interface{}) {
+			vedgeConfig := vedge.(map[string]interface{})
+
+			if vedgeConfig["id"].(int) == info.Id || vedgeConfig["hostname"].(string) == info.HostName {
+				new = false
+				break
+			}
+		}
+
+		// If the vedge is new, add it to the tail of the list,
+		// this will generate a diff
+		if new {
+			vedge := map[string]interface{}{
+				"cloud_init_file": info.CloudInitFile,
+				"credential_id":   info.CredentialId,
+				"hostname":        info.HostName,
+				"id":              info.Id,
+			}
+
+			vedges = append(vedges, vedge)
+			break
+		}
+	}
+
+	d.Set("vedge", vedges)
 
 	// Set vrf_segment_mapping
 	var mappings []map[string]interface{}
@@ -205,7 +254,7 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 		mappings = append(mappings, mapping)
 	}
 
-	d.Set("vrf_segment_mapping", vedge)
+	d.Set("vrf_segment_mapping", mappings)
 	d.Set("version", connector.Version)
 
 	return nil
