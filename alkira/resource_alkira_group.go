@@ -9,16 +9,11 @@ import (
 
 func resourceAlkiraGroup() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage groups\n\n" +
-			"Groups can contain one or many connectors across different segments. " +
-			"This grouping of connectors can be for policy enforcement purposes or " +
-			"for monitoring purposes within the network. It allows for easier policy " +
-			"assignment by assigning policies to the entire group at the same time " +
-			"instead of having to assign them individually.",
-		Create: resourceGroup,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		Description: "Provide group resource.",
+		Create:      resourceGroup,
+		Read:        resourceGroupRead,
+		Update:      resourceGroupUpdate,
+		Delete:      resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
