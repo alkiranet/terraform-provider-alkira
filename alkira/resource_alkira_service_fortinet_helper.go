@@ -20,7 +20,6 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 
 	var licenseKeyPath string
 	var licenseKeyLiteral string
-	//var err error
 
 	instances := make([]alkira.FortinetInstance, len(in))
 	for i, instance := range in {
