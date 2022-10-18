@@ -1,0 +1,26 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+A Segment is a section of a network isolated from one another to make it possible
+to more effectively control who has access to what. Segmentation also allows for
+segregation of resources between segments for security and isolation purposes.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_segment/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
