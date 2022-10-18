@@ -3,12 +3,12 @@
 page_title: "alkira_group Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get information on an existing group.
+  This data source allows to retrieve an existing group by its name.
 ---
 
 # alkira_group (Data Source)
 
-Use this data source to get information on an existing group.
+This data source allows to retrieve an existing group by its name.
 
 ## Example Usage
 
