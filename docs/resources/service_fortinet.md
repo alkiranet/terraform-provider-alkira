@@ -84,10 +84,17 @@ resource "alkira_service_fortinet" "test1" {
 
 Optional:
 
-- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the `license_key` field or provide the file path for the license key file using the `license_key_file_path`. Either `license_key` and `license_key_file_path` must have an input. If both are provided, the Alkira provider will treat the `license_key` field with precedence. 
+- `license_key` (String) The Fortinet license key literal. You may copy and paste the contents of your license key here. You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`the `file` helper function will copy the contents of your file and place them as literal data into your configuration. 
 
 
- You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`.
+Instead of using this field you may also use `license_key_file_path`to simply place the path to the license key file you'd like to use.
+- `license_key_file_path` (String) Fortinet license key file path. The path to the desired license key. 
+
+
+There are two options for providing the required license key for Fortinet instance credentials. You can either input the value directly into the `license_key` field or provide the file path for the license key file using the `license_key_file_path`. Either `license_key` or `license_key_file_path` must have an input. If both are provided, the Alkira provider will treat the `license_key` field with precedence. 
+
+
+ You may also use terraform's built in `file` helper function as a literal input for  `license_key`. Ex: `license_key = file('/path/to/license/file')`.
 - `name` (String) The name of the Fortinet Firewall instance.
 - `serial_number` (String) The serial_number of the Fortinet Firewall instance. Required only when `license_type` is `BRING_YOUR_OWN.
 

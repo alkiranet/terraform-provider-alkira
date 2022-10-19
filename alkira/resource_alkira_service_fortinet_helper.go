@@ -18,8 +18,8 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 		return nil, errors.New("Invalid Fortinet instance input")
 	}
 
-	var licensePath string
-	var err error
+	var licenseKeyPath string
+	var licenseKeyLiteral string
 
 	instances := make([]alkira.FortinetInstance, len(in))
 	for i, instance := range in {
@@ -36,25 +36,27 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 			r.SerialNumber = v
 		}
 		if v, ok := instanceCfg["license_key_file_path"].(string); ok {
-			licensePath = v
+			licenseKeyPath = v
+		}
+		if v, ok := instanceCfg["license_key"].(string); ok {
+			licenseKeyLiteral = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
-				r.SerialNumber, err = extractLicenseKey(
-					r.SerialNumber,
-					licensePath,
-				)
+
+				lk, err := extractLicenseKey(licenseKeyLiteral, licenseKeyPath)
 				if err != nil {
 					return nil, err
 				}
 				c := alkira.CredentialFortinetInstance{
-					LicenseKey:  r.SerialNumber,
+					LicenseKey:  lk,
 					LicenseType: licenseType,
 				}
 
 				credentialName := r.Name + randomNameSuffix()
 
 				log.Printf("[INFO] Creating Fortinet Instance Credential %s", credentialName)
+
 				credentialId, err := client.CreateCredential(
 					credentialName,
 					alkira.CredentialTypeFortinetInstance,
@@ -101,10 +103,11 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 }
 
 // extractLicenseKey takes two string values. The order of the string parameters matters. After
-// validation, if both fields have are noto empty strings extractLicenseKey will default to using
+// validation, if both fields have are not empty strings extractLicenseKey will default to using
 // licenseKey as the return value. Otherwise extractLicenseKey will read from the licenseKeyPath
 // and return the output as a string
 func extractLicenseKey(licenseKey string, licenseKeyPath string) (string, error) {
+	// if both params are empty
 	if licenseKey == "" && licenseKeyPath == "" {
 		return "", errors.New("either license_key or license_key_file_path must be populated")
 	}
