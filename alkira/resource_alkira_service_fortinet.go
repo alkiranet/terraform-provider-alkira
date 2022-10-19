@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -70,17 +69,30 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 							Optional:    true,
 						},
 						"license_key_file_path": {
-							Description: "Fortinet license key file path. The path to the desired license key. " +
-								"There are two options for providing the required license key for Fortinet " +
-								"instance credentials. You can either input the value directly into the `license_key` field " +
-								"or provide the file path for the license key file using the `license_key_file_path`. " +
-								"Either `license_key` and `license_key_file_path` must have an input. If both are provided, " +
-								"the Alkira provider will treat the `license_key` field with precedence. \n\n\n " +
-								"You may also use terraform's built in `file` helper function as a literal input for " +
-								"`license_key`. Ex: `license_key = file('/path/to/license/file')`.",
+							Description: "Fortinet license key file path. The path to the desired " +
+								"license key. \n\n\nThere are two options for providing the required " +
+								"license key for Fortinet instance credentials. You can either input " +
+								"the value directly into the `license_key` field or provide the file " +
+								"path for the license key file using the `license_key_file_path`. " +
+								"Either `license_key` or `license_key_file_path` must have an input. " +
+								"If both are provided, the Alkira provider will treat the `license_key` " +
+								"field with precedence.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"license_key": {
+							Description: "The Fortinet license key literal. You may copy and " +
+								"paste the contents of your license key here. You may also use " +
+								"terraform's built in `file` helper function as a literal input " +
+								"for `license_key`. Ex: `license_key = file('/path/to/license/file')`" +
+								"the `file` helper function will copy the contents of your file " +
+								"and place them as literal data into your configuration. \n\n\n" +
+								"Instead of using this field you may also use `license_key_file_path`" +
+								"to simply place the path to the license key file you'd like to use. ",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"serial_number": {
 							Description: "The serial_number of the Fortinet Firewall instance. " +
 								"Required only when `license_type` is `BRING_YOUR_OWN.",
@@ -201,8 +213,6 @@ func resourceFortinetCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating fortinet %s", d.Id())
-	fmt.Println("request: request.ManagementServer.Segment: ", request.ManagementServer.Segment)
-	fmt.Println("request: request.Segments: ", request.ManagementServer.Segment)
 	id, err := client.CreateFortinet(request)
 
 	if err != nil {
