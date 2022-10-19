@@ -1,0 +1,70 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+This resource could be used along with provider
+`terraform-provider-aws`.
+
+## Routing Options
+
+Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
+purpose.  If `vpc_cidr` is provided, it will automatically select all
+associated subnets of the given VPC. Otherwise, you could select
+certain subnets by specifying `vpc_subnet`.
+
+`vpc_route_tables` could be used to adjust the routing options against
+the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
+specified, the existing default route will be overwritten and the
+traffic will be routed to Alkira CXP.  When `ADVERTISE_CUSTOM_PREFIX`
+is specified, you need to provide a list of prefixes for which traffic
+must be routed to Alkira CXP.
+
+
+## Limitations
+
+There are several limitations of AWS connector so far:
+
+* Changing an existing connector to a new AWS VPC is not supported at
+  this point.  You need to create a new connector for a new AWS VPC.
+
+* Updating an existing connector might require the tenant network to
+  be re-provisioned to make the change effective, e.g. changing the
+  segment the connector is associated.
+
+* When direct inter-vpc communication is enabled, several other
+  functionalities won't work, like NAT policy, segment resource share,
+  internet-facing applications and traffic policies.
+
+
+## Example Usage
+
+This is one minimal example to create an AWS VPC connector. One
+`alkira_segment` and `alkira_credential_aws_vpc` are always
+required. `alkira_group` is optional, but it was recommended.
+
+{{ tffile "examples/resources/alkira_connector_aws_vpc/resource.tf" }}
+
+To create an AWS VPC along with a connector:
+
+{{ tffile "examples/resources/alkira_connector_aws_vpc/resource3.tf" }}
+
+To create a connector and adjust the routing to use the default
+route. There could be multiple vpc_route_table sections for additional
+route tables:
+
+{{ tffile "examples/resources/alkira_connector_aws_vpc/resource4.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
