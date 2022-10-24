@@ -44,7 +44,7 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
 
-				lk, err := extractLicenseKey(licenseKeyLiteral, licenseKeyPath)
+				lk, err := extractLicenseKey(licenseType, licenseKeyLiteral, licenseKeyPath)
 				if err != nil {
 					return nil, err
 				}
@@ -106,9 +106,15 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 // validation, if both fields have are not empty strings extractLicenseKey will default to using
 // licenseKey as the return value. Otherwise extractLicenseKey will read from the licenseKeyPath
 // and return the output as a string
-func extractLicenseKey(licenseKey string, licenseKeyPath string) (string, error) {
+func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath string) (string, error) {
 	// if both params are empty
 	if licenseKey == "" && licenseKeyPath == "" {
+
+		// license key is optional for PAY_AS_YOU_GO
+		if licenseType == FortinetLicenseTypePAYG {
+			return "", nil
+		}
+
 		return "", errors.New("either license_key or license_key_file_path must be populated")
 	}
 

@@ -9,6 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+const (
+	FortinetLicenseTypePAYG = "PAY_AS_YOU_GO"
+	FortinetLicenseTyepBYO  = "BRING_YOUR_OWN"
+)
+
 func resourceAlkiraServiceFortinet() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Fortinet firewall.",
@@ -114,10 +119,13 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description:  "Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+				Description: "Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{FortinetLicenseTyepBYO, FortinetLicenseTypePAYG},
+					false,
+				),
 			},
 			"management_server_ip": {
 				Description: "The IP addresses used to access the management server.",
@@ -324,7 +332,12 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		IpAddress: d.Get("management_server_ip").(string),
 		Segment:   mgmtSegName,
 	}
-	instances, err := expandFortinetInstances(d.Get("license_type").(string), d.Get("instances").([]interface{}), m)
+
+	instances, err := expandFortinetInstances(
+		d.Get("license_type").(string),
+		d.Get("instances").([]interface{}),
+		m,
+	)
 	if err != nil {
 		return nil, err
 	}
