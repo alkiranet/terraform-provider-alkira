@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"log"
 	"strconv"
 
@@ -8,49 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CheckpointGetSegById func(string) (alkira.Segment, error)
-
-func checkpointRespDetailsToCheckpointInstance(details []alkira.CredentialResponseDetail) []alkira.CheckpointInstance {
-	var instances []alkira.CheckpointInstance
-
-	for _, v := range details {
-		instances = append(instances, alkira.CheckpointInstance{
-			CredentialId: v.Id,
-			Name:         v.Name,
-		})
-	}
-
-	return instances
-}
-
-func expandCheckpointInstances(in *schema.Set) []alkira.CheckpointInstance {
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid Checkpoint instance input")
-		return nil
-	}
-
-	instances := make([]alkira.CheckpointInstance, in.Len())
-	for i, instance := range in.List() {
-		r := alkira.CheckpointInstance{}
-		instanceCfg := instance.(map[string]interface{})
-		if v, ok := instanceCfg["name"].(string); ok {
-			r.Name = v
-		}
-		if v, ok := instanceCfg["credential_id"].(string); ok {
-			r.CredentialId = v
-		}
-		instances[i] = r
-	}
-
-	return instances
-}
-
-func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
+func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() > 1 {
-		log.Printf("[DEBUG] Only one object allowed in managment server options")
-		return nil, nil
+		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input.")
+		return nil, errors.New("Invalid Checkpoint Firewall Management Server input.")
 	}
 
 	if in.Len() < 1 {
@@ -58,14 +22,30 @@ func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.Ch
 	}
 
 	mg := &alkira.CheckpointManagementServer{}
+	var manServerPass string
 
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["configuration_mode"].(string); ok {
 			mg.ConfigurationMode = v
 		}
+		if v, ok := cfg["management_server_password"].(string); ok {
+			manServerPass = v
+		}
 		if v, ok := cfg["credential_id"].(string); ok {
-			mg.CredentialId = v
+			if v == "" {
+				manServerCredName := name + randomNameSuffix()
+				c := &alkira.CredentialCheckPointFwManagementServer{Password: manServerPass}
+				credentialId, err := client.CreateCredential(manServerCredName, alkira.CredentialTypeChkpFwManagement, c, 0)
+				if err != nil {
+					return nil, err
+				}
+				mg.CredentialId = credentialId
+			}
+
+			if v != "" {
+				mg.CredentialId = v
+			}
 		}
 		if v, ok := cfg["domain"].(string); ok {
 			mg.Domain = v
@@ -103,6 +83,47 @@ func expandCheckpointManagementServer(in *schema.Set, m interface{}) (*alkira.Ch
 		}
 	}
 	return mg, nil
+}
+
+func expandCheckpointInstances(in *schema.Set, m interface{}) ([]alkira.CheckpointInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	if in == nil || in.Len() == 0 {
+		log.Printf("[DEBUG] invalid Checkpoint Firewall instance input.")
+		return nil, errors.New("Invalid Checkpoint Firewall instance input.")
+	}
+
+	var chkpfwInstanceKey string
+	instances := make([]alkira.CheckpointInstance, in.Len())
+	for i, instance := range in.List() {
+		r := alkira.CheckpointInstance{}
+		instanceCfg := instance.(map[string]interface{})
+		if v, ok := instanceCfg["name"].(string); ok {
+			r.Name = v
+		}
+		if v, ok := instanceCfg["sic_key"].(string); ok {
+			chkpfwInstanceKey = v
+		}
+		if v, ok := instanceCfg["credential_id"].(string); ok {
+			if v == "" {
+				credentialName := r.Name + randomNameSuffix()
+				c := &alkira.CredentialCheckPointFwServiceInstance{SicKey: chkpfwInstanceKey}
+				log.Printf("[INFO] Creating Credential CheckpointInstance.")
+				credentialId, err := client.CreateCredential(
+					credentialName,
+					alkira.CredentialTypeChkpFwInstance,
+					c,
+					0)
+				if err != nil {
+					return nil, err
+				}
+				r.CredentialId = credentialId
+			}
+		}
+		instances[i] = r
+	}
+
+	return instances, nil
 }
 
 func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
