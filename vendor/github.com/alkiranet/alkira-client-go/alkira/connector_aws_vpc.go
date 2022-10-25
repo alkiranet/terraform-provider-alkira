@@ -50,6 +50,7 @@ type ConnectorAwsVpc struct {
 	Id                                 json.Number     `json:"id,omitempty"`              // response only
 	ImplicitGroupId                    int             `json:"implicitGroupId,omitempty"` // response only
 	Name                               string          `json:"name"`
+	SecondaryCXPs                      []string        `json:"secondaryCXPs,omitempty"`
 	Segments                           []string        `json:"segments"`
 	Size                               string          `json:"size"`
 	TgwAttachments                     []TgwAttachment `json:"tgwAttachments,omitempty"`

@@ -25,6 +25,7 @@ doc:
 
 vendor: GOPRIVATE=github.com/alkiranet
 vendor:
+	go mod tidy
 	go mod vendor
 
 superclean:

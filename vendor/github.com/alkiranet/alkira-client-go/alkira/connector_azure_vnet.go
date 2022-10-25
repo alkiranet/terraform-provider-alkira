@@ -66,6 +66,7 @@ type ConnectorAzureVnet struct {
 	Name              string                `json:"name"`
 	NativeServices    []string              `json:"nativeServices,omitempty"`
 	ResourceGroupName string                `json:"resourceGroupName,omitempty"`
+	SecondaryCXPs     []string              `json:"secondaryCXPs,omitempty"`
 	Segments          []string              `json:"segments"`
 	ServiceTags       []string              `json:"serviceTags,omitempty"`
 	Size              string                `json:"size"`

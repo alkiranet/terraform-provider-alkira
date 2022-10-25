@@ -28,8 +28,8 @@ type ConnectorGcpVpc struct {
 	ImplicitGroupId int                     `json:"implicitGroupId,omitempty"` // response only
 	Name            string                  `json:"name"`
 	ProjectId       string                  `json:"projectId,omitempty"`
-	Segments        []string                `json:"segments"`
 	SecondaryCXPs   []string                `json:"secondaryCXPs,omitempty"`
+	Segments        []string                `json:"segments"`
 	Size            string                  `json:"size"`
 	VpcId           string                  `json:"vpcId"`
 	VpcName         string                  `json:"vpcName"`
