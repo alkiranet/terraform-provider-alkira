@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -7,11 +7,19 @@ import (
 	"fmt"
 )
 
+type PolicyPrefixListRange struct {
+	Prefix string `json:"prefix"`
+	Le     int    `json:"le,omitempty"`
+	Ge     int    `json:"ge,omitempty"`
+}
+
 type PolicyPrefixList struct {
-	Description string      `json:"description"`
-	Id          json.Number `json:"id,omitempty"`
-	Name        string      `json:"name"`
-	Prefixes    []string    `json:"prefixes"`
+	Description  string                  `json:"description"`
+	Id           json.Number             `json:"id,omitempty"`
+	Name         string                  `json:"name"`
+	Prefixes     []string                `json:"prefixes"`
+	PrefixRanges []PolicyPrefixListRange `json:"prefixRanges",omitempty`
+	Type         string                  `json:"type,omitempty"`
 }
 
 // GetPolicyPrefixLists Get all prefixes from the given tenant network
