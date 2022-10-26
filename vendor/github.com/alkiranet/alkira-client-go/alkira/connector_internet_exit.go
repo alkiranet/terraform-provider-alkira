@@ -20,6 +20,7 @@ type TrafficDistribution struct {
 
 type ConnectorInternet struct {
 	BillingTags         []int                `json:"billingTags"`
+	ByoipId             int                  `json:"byoipId"`
 	CXP                 string               `json:"cxp"`
 	Description         string               `json:"description"`
 	Group               string               `json:"group,omitempty"`
@@ -29,7 +30,6 @@ type ConnectorInternet struct {
 	Name                string               `json:"name"`
 	NumOfPublicIPs      int                  `json:"numOfPublicIPs,omitempty"`
 	Segments            []string             `json:"segments"`
-	Size                string               `json:"size"`
 	TrafficDistribution *TrafficDistribution `json:"trafficDistribution,omitempty"`
 }
 

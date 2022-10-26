@@ -44,6 +44,7 @@ type ConnectorOciVcn struct {
 	ImplicitGroupId int         `json:"implicitGroupId,omitempty"` // response only
 	Name            string      `json:"name"`
 	Primary         bool        `json:"primary"`
+	SecondaryCXPs   []string    `json:"secondaryCXPs,omitempty"`
 	Segments        []string    `json:"segments"`
 	Size            string      `json:"size"`
 	VcnId           string      `json:"vcnId"`
