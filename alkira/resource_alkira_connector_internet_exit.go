@@ -11,10 +11,10 @@ import (
 func resourceAlkiraConnectorInternetExit() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Internet Exit Connector.",
-		Create: resourceConnectorInternetExitCreate,
-		Read:   resourceConnectorInternetExitRead,
-		Update: resourceConnectorInternetExitUpdate,
-		Delete: resourceConnectorInternetExitDelete,
+		Create:      resourceConnectorInternetExitCreate,
+		Read:        resourceConnectorInternetExitRead,
+		Update:      resourceConnectorInternetExitUpdate,
+		Delete:      resourceConnectorInternetExitDelete,
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {

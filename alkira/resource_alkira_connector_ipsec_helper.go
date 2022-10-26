@@ -235,6 +235,12 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 			}
 		case "DYNAMIC":
 			{
+				avail, availOk := routingOptionsInput["availability"].(string)
+
+				if availOk {
+					dynamicOption.Availability = avail
+				}
+
 				v, ok := routingOptionsInput["customer_gateway_asn"].(string)
 
 				if ok {

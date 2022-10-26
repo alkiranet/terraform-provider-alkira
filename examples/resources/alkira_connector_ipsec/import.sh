@@ -1,0 +1,1 @@
+terraform import CONNECTOR_ID

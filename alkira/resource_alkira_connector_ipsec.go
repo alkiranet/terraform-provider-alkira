@@ -11,15 +11,11 @@ import (
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage IPSec Connector.\n\n\n\n" +
-			"## VPN Mode\n\n" +
-			"`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's " +
-			"defined as `ROUTE_BASED`, `routing_options` block is required. When " +
-			"it's defined as `POLICY_BASED`, `policy_options` block is required.",
-		Create: resourceConnectorIPSecCreate,
-		Read:   resourceConnectorIPSecRead,
-		Update: resourceConnectorIPSecUpdate,
-		Delete: resourceConnectorIPSecDelete,
+		Description: "Manage IPSec Connector.",
+		Create:      resourceConnectorIPSecCreate,
+		Read:        resourceConnectorIPSecRead,
+		Update:      resourceConnectorIPSecUpdate,
+		Delete:      resourceConnectorIPSecDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -286,10 +282,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Required:    true,
 						},
 						"availability": {
-							Description: "The method to determine the availability of static route. The value could be " +
+							Description: "The method to determine the availability of the routes. The value could be " +
 								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.",
 							Type:         schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
 							Optional:     true,
 							Default:      "IPSEC_INTERFACE_PING",
 						},
