@@ -10,11 +10,7 @@ import (
 
 func resourceAlkiraConnectorInternetExit() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Internet Exit.\n\n" +
-			"An internet exit is an exit from the CXP to the" +
-			"internet and allows the traffic from" +
-			"the various Users & Sites or Cloud Connectors to" +
-			"flow towards the Internet.",
+		Description: "Manage Internet Exit Connector.",
 		Create: resourceConnectorInternetExitCreate,
 		Read:   resourceConnectorInternetExitRead,
 		Update: resourceConnectorInternetExitUpdate,
@@ -26,6 +22,11 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
+			"byoip_id": {
+				Description: "ID of the BYOIP to be associated with the connector.",
+				Type:        schema.TypeInt,
+				Optional:    true,
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -68,12 +69,6 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Description: "ID of segment associated with the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, or `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"traffic_distribution_algorithm": {
 				Description: "The type of the algorithm to be used for traffic distribution." +
@@ -123,6 +118,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("byoip_id", connector.ByoipId)
 	d.Set("cxp", connector.CXP)
 	d.Set("description", connector.Description)
 	d.Set("enabled", connector.Enabled)
@@ -140,8 +136,6 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 		}
 		d.Set("segment_id", segment.Id)
 	}
-
-	d.Set("size", connector.Size)
 
 	if connector.TrafficDistribution != nil {
 		d.Set("traffic_distribution_algorithm", connector.TrafficDistribution.Algorithm)
@@ -195,6 +189,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 
 	request := &alkira.ConnectorInternet{
 		BillingTags:         billingTags,
+		ByoipId:             d.Get("byoip_id").(int),
 		CXP:                 d.Get("cxp").(string),
 		Description:         d.Get("description").(string),
 		Group:               d.Get("group").(string),
@@ -202,7 +197,6 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		Name:                d.Get("name").(string),
 		NumOfPublicIPs:      d.Get("public_ip_number").(int),
 		Segments:            []string{segment.Name},
-		Size:                d.Get("size").(string),
 		TrafficDistribution: &trafficDistribution,
 	}
 
