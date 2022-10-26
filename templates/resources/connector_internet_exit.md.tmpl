@@ -1,0 +1,29 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+An internet exit is an exit from the CXP to the internet and allows
+the traffic from the various Users & Sites or Cloud Connectors to flow
+towards the Internet.
+
+## Example Usage
+
+To create `connector_internet_exit`, `alkira_segment` is always
+required.
+
+{{ tffile "examples/resources/alkira_connector_internet_exit/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
