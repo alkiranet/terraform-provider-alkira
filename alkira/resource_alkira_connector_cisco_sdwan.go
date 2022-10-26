@@ -79,6 +79,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"credential_ssh_key_pair_id": {
+							Description: "The ID of the credential for SSH Key Pair.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 						"hostname": {
 							Description: "The hostname of the vEdge.",
 							Type:        schema.TypeString,
