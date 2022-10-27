@@ -1,0 +1,1 @@
+terraform import CREDENTIAL_ID
