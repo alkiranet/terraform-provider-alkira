@@ -44,6 +44,12 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"failover_cxps": {
+				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"gcp_project_id": {
 				Description: "GCP Project ID.",
 				Type:        schema.TypeString,
@@ -158,6 +164,7 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("customer_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
+	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("gcp_project_id", connector.ProjectId)
 	d.Set("gcp_vpc_id", connector.VpcId)
 	d.Set("gcp_vpc_name", connector.VpcName)
@@ -205,8 +212,11 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 	client := m.(*alkira.AlkiraClient)
+
 	gcpRouting := convertGcpRouting(d.Get("gcp_routing").(*schema.Set))
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
+
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
@@ -225,6 +235,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Name:           d.Get("name").(string),
 		ProjectId:      d.Get("gcp_project_id").(string),
 		Segments:       []string{segment.Name},
+		SecondaryCXPs:  failoverCXPs,
 		Size:           d.Get("size").(string),
 		VpcId:          d.Get("gcp_vpc_id").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),

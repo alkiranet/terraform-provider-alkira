@@ -48,6 +48,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"failover_cxps": {
+				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -202,6 +208,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
+	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -252,6 +259,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
@@ -268,17 +276,18 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:  billingTags,
-		CXP:          d.Get("cxp").(string),
-		CredentialId: d.Get("credential_id").(string),
-		Enabled:      d.Get("enabled").(bool),
-		Group:        d.Get("group").(string),
-		Name:         d.Get("name").(string),
-		Segments:     []string{segment.Name},
-		Size:         d.Get("size").(string),
-		ServiceTags:  serviceTags,
-		VnetId:       d.Get("azure_vnet_id").(string),
-		VnetRouting:  routing,
+		BillingTags:   billingTags,
+		CXP:           d.Get("cxp").(string),
+		CredentialId:  d.Get("credential_id").(string),
+		Enabled:       d.Get("enabled").(bool),
+		Group:         d.Get("group").(string),
+		Name:          d.Get("name").(string),
+		SecondaryCXPs: failoverCXPs,
+		Segments:      []string{segment.Name},
+		Size:          d.Get("size").(string),
+		ServiceTags:   serviceTags,
+		VnetId:        d.Get("azure_vnet_id").(string),
+		VnetRouting:   routing,
 	}
 
 	return request, nil

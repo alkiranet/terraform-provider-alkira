@@ -57,6 +57,7 @@ resource "alkira_connector_oci_vcn" "test" {
 
 - `billing_tag_ids` (List of Number) IDs of billing tags.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `vcn_cidr` (List of String) The list of CIDR attached to the target VCN for routing purpose. It could be only specified if `vcn_subnet` is not specified.
 - `vcn_route_table` (Block Set) VCN route table. (see [below for nested schema](#nestedblock--vcn_route_table))

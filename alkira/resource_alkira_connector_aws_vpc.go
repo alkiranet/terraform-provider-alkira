@@ -80,6 +80,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"failover_cxps": {
+				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
@@ -222,6 +228,7 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("direct_inter_vpc_communication", connector.DirectInterVPCCommunicationEnabled)
 	d.Set("enabled", connector.Enabled)
+	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -269,7 +276,9 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 	client := m.(*alkira.AlkiraClient)
+
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
@@ -308,6 +317,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Group:                              d.Get("group").(string),
 		Name:                               d.Get("name").(string),
 		Segments:                           []string{segment.Name},
+		SecondaryCXPs:                      failoverCXPs,
 		Size:                               d.Get("size").(string),
 		TgwAttachments:                     tgwAttachments,
 		VpcId:                              d.Get("vpc_id").(string),
