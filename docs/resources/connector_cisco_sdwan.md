@@ -77,6 +77,10 @@ Required:
 - `credential_id` (String) The ID of the credential for Cisco SD-WAN.
 - `hostname` (String) The hostname of the vEdge.
 
+Optional:
+
+- `credential_ssh_key_pair_id` (String) The ID of the credential for SSH Key Pair.
+
 Read-Only:
 
 - `id` (Number) The ID of the vEdge instance.
