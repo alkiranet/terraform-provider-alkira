@@ -113,6 +113,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 
 - `billing_tag_ids` (List of Number) Tags for billing.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.

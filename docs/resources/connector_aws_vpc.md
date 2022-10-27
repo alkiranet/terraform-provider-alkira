@@ -145,6 +145,7 @@ resource "alkira_connector_aws_vpc" "connector2" {
 - `billing_tag_ids` (List of Number) Tags for billing.
 - `direct_inter_vpc_communication` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `tgw_attachment` (Block Set) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
