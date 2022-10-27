@@ -37,6 +37,12 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"failover_cxps": {
+				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"primary": {
 				Description: "Wether the connector is primary.",
 				Type:        schema.TypeBool,
@@ -170,14 +176,15 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("cxp", connector.CXP)
 	d.Set("credential_id", connector.CredentialId)
+	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
-	d.Set("primary", connector.Primary)
-	d.Set("oci_region", connector.CustomerRegion)
+	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
+	d.Set("oci_region", connector.CustomerRegion)
+	d.Set("primary", connector.Primary)
 	d.Set("size", connector.Size)
 	d.Set("vcn_id", connector.VcnId)
 
@@ -224,6 +231,9 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
+
+	// Segment
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
@@ -231,6 +241,7 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 		return nil, err
 	}
 
+	// Construct Routing Options
 	inputPrefixes, err := generateConnectorOciVcnUserInputPrefixes(d.Get("vcn_cidr").([]interface{}), d.Get("vcn_subnet").(*schema.Set))
 
 	if err != nil {
@@ -258,6 +269,7 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 		Primary:        d.Get("primary").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
+		SecondaryCXPs:  failoverCXPs,
 		Segments:       []string{segment.Name},
 		Size:           d.Get("size").(string),
 		VcnId:          d.Get("vcn_id").(string),
