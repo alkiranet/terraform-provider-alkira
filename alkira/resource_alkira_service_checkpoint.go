@@ -46,7 +46,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"credential_id": {
-				Description: "ID of Checkpoint Firewall.",
+				Description: "ID of Checkpoint Firewall credential.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -69,7 +69,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Required:    true,
 						},
 						"credential_id": {
-							Description: "ID of Checkpoint Firewall Instance.",
+							Description: "ID of Checkpoint Firewall Instance credential.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -110,7 +110,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Optional:    true,
 						},
 						"credential_id": {
-							Description: "ID of Checkpoint Firewall Managment server.",
+							Description: "ID of Checkpoint Firewall Managment server credential.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -265,7 +265,6 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
 		return err
 	}
-	log.Printf("[ERROR] BBBB %v", checkpoint)
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(checkpoint.Segments, m)
 	if err != nil {
@@ -324,7 +323,6 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		chkpfwName := d.Get("name").(string) + randomNameSuffix()
 		c := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
 		credentialId, err := client.CreateCredential(chkpfwName, alkira.CredentialTypeChkpFw, c, 0)
-		log.Printf("[ERROR] AAAA %v", credentialId)
 		if err != nil {
 			return nil, err
 		}

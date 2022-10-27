@@ -33,7 +33,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 			manServerPass = v
 		}
 		if v, ok := cfg["credential_id"].(string); ok {
-			if v == "" {
+			if v == "" && mg.ConfigurationMode == "AUTOMATED" {
 				manServerCredName := name + randomNameSuffix()
 				c := &alkira.CredentialCheckPointFwManagementServer{Password: manServerPass}
 				credentialId, err := client.CreateCredential(manServerCredName, alkira.CredentialTypeChkpFwManagement, c, 0)
