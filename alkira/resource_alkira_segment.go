@@ -43,6 +43,13 @@ func resourceAlkiraSegment() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"enterprise_dns_server_ip": {
+				Description: "The IP of the DNS server used within the segment. This DNS server " +
+					"may be used by the Alkira CXP to resolve the names of LDAP servers for example " +
+					"which are configured on the Remote Access Connector.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
 					"`true`. Alkira reserves public IPs " +
@@ -97,6 +104,7 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("asn", segment.Asn)
 	d.Set("enable_ipv6_to_ipv4_translation", segment.EnableIpv6ToIpv4Translation)
+	d.Set("enterprise_dns_server_ip", segment.EnterpriseDNSServerIP)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
 
@@ -153,6 +161,7 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	seg := &alkira.Segment{
 		Asn:                         d.Get("asn").(int),
 		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
+		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
 		Name:                        d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
 		IpBlocks: alkira.SegmentIpBlocks{
