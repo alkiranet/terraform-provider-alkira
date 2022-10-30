@@ -141,14 +141,15 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid PAN instance input")
 	}
-	// var nameWithSuffix string
-	var AuthCode string
-	var AuthKey string
 
 	instances := make([]alkira.ServicePanInstance, len(in))
 	for i, instance := range in {
 		r := alkira.ServicePanInstance{}
 		instanceCfg := instance.(map[string]interface{})
+
+		var AuthCode string
+		var AuthKey string
+
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
 		}
@@ -182,9 +183,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 				}
 
 				r.CredentialId = credentialId
-			}
-
-			if v != "" {
+			} else {
 				r.CredentialId = v
 			}
 		}

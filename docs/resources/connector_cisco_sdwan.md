@@ -13,18 +13,6 @@ Manage Cisco SD-WAN Connector.
 ## Example Usage
 
 ```terraform
-resource "alkira_segment" "test" {
-  name  = "test"
-  asn   = "65513"
-  cidrs = ["10.1.1.0/24"]
-}
-
-resource "alkira_credential_cisco_sdwan" "test" {
-  name           = "test"
-  username       = "xxxxx" # fill in proper username
-  password       = "xxxxx" # fill in proper password
-}
-
 resource "alkira_connector_cisco_sdwan" "test" {
   name          = "test"
   cxp           = "US-WEST"
@@ -34,7 +22,8 @@ resource "alkira_connector_cisco_sdwan" "test" {
   vedge {
     hostname        = "vedge1"
     cloud_init_file = "xxxxxxxxxxxxx"
-    credential_id   = alkira_credential_cisco_sdwan.test.id
+    username        = "username"
+    password        = "password"
   }
 
   vrf_segment_mapping {
@@ -74,8 +63,9 @@ resource "alkira_connector_cisco_sdwan" "test" {
 Required:
 
 - `cloud_init_file` (String) The cloud-init file for the vEdge.
-- `credential_id` (String) The ID of the credential for Cisco SD-WAN.
 - `hostname` (String) The hostname of the vEdge.
+- `password` (String) Cisco SD-WAN password. It could be also set by environment variable `AK_CISCO_SDWAN_PASSWORD`.
+- `username` (String) Cisco SD-WAN username. It could be also set by environment variable `AK_CISCO_SDWAN_USERNAME`.
 
 Optional:
 
@@ -83,6 +73,7 @@ Optional:
 
 Read-Only:
 
+- `credential_id` (String) The generated credential ID for Cisco SD-WAN.
 - `id` (Number) The ID of the vEdge instance.
 
 
@@ -100,4 +91,10 @@ Optional:
 - `allow_nat_exit` (Boolean) Allow NAT exit.
 - `customer_asn` (Number) BGP ASN on the customer premise side. Default value is `64523`.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import CONNECTOR_ID
+```
