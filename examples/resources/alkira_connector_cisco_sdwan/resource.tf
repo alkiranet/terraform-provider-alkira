@@ -1,15 +1,3 @@
-resource "alkira_segment" "test" {
-  name  = "test"
-  asn   = "65513"
-  cidrs = ["10.1.1.0/24"]
-}
-
-resource "alkira_credential_cisco_sdwan" "test" {
-  name           = "test"
-  username       = "xxxxx" # fill in proper username
-  password       = "xxxxx" # fill in proper password
-}
-
 resource "alkira_connector_cisco_sdwan" "test" {
   name          = "test"
   cxp           = "US-WEST"
@@ -19,7 +7,8 @@ resource "alkira_connector_cisco_sdwan" "test" {
   vedge {
     hostname        = "vedge1"
     cloud_init_file = "xxxxxxxxxxxxx"
-    credential_id   = alkira_credential_cisco_sdwan.test.id
+    username        = "username"
+    password        = "password"
   }
 
   vrf_segment_mapping {
