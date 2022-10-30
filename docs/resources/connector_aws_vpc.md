@@ -9,17 +9,16 @@ description: |-
 
 Provide AWS VPC Connector resource.
 
-This resource could be used along with provider
-`terraform-provider-aws`.
+This resource is usually used along with `terraform-provider-aws`.
 
 ## Routing Options
 
 Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
 purpose.  If `vpc_cidr` is provided, it will automatically select all
-associated subnets of the given VPC. Otherwise, you could select
+associated subnets of the given VPC. Otherwise, you can select
 certain subnets by specifying `vpc_subnet`.
 
-`vpc_route_tables` could be used to adjust the routing options against
+`vpc_route_tables` can be used to adjust the routing options against
 the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
 specified, the existing default route will be overwritten and the
 traffic will be routed to Alkira CXP.  When `ADVERTISE_CUSTOM_PREFIX`
@@ -63,7 +62,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 ```
 
 To create a connector and adjust the routing to use the default
-route. There could be multiple vpc_route_table sections for additional
+route. Multiple `vpc_route_table` blocks can be used for additional
 route tables:
 
 ```terraform
