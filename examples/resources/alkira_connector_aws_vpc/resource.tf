@@ -1,21 +1,3 @@
-resource "alkira_segment" "segment" {
-  name  = "seg-test"
-  asn   = "65513"
-  cidrs = ["10.16.1.0/24"]
-}
-
-resource "alkira_group" "group" {
-  name        = "group-test"
-  description = "test group"
-}
-
-resource "alkira_credential_aws_vpc" "account" {
-  name           = "test-aws"
-  aws_access_key = "your_aws_acccess_key"
-  aws_secret_key = "your_secret_key"
-  type           = "ACCESS_KEY"
-}
-
 resource "alkira_connector_aws_vpc" "connector" {
   name           = "connector-test"
   vpc_id         = "your_vpc_id"

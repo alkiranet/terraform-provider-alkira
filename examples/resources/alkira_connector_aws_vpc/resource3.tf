@@ -1,27 +1,3 @@
-provider "aws" {
-  region     = local.aws_region
-  access_key = local.aws_access_key
-  secret_key = local.aws_secret_key
-}
-
-resource "aws_vpc" "vpc_test" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "vpc-test"
-  }
-}
-
-resource "aws_subnet" "vpc_subnet1" {
-  vpc_id     = aws_vpc.vpc_test.id
-  cidr_block = "10.2.0.0/24"
-}
-
-resource "aws_subnet" "vpc_subnet2" {
-  vpc_id     = aws_vpc.vpc_test.id
-  cidr_block = "10.3.16.0/20"
-}
-
 resource "alkira_connector_aws_vpc" "test" {
   name           = "test"
 

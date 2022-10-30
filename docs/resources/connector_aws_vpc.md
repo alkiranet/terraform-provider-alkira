@@ -27,46 +27,26 @@ is specified, you need to provide a list of prefixes for which traffic
 must be routed to Alkira CXP.
 
 
-## Limitations
-
-There are several limitations of AWS connector so far:
+## Tips
 
 * Changing an existing connector to a new AWS VPC is not supported at
-  this point.  You need to create a new connector for a new AWS VPC.
+  this point. You need to create a new connector for a new AWS VPC.
 
-* Updating an existing connector might require the tenant network to
-  be re-provisioned to make the change effective, e.g. changing the
+* Updating an existing connector requires the tenant network to be
+  re-provisioned to make the change effective, e.g. changing the
   segment the connector is associated.
 
-* When direct inter-vpc communication is enabled, several other
+* When direct inter VPC communication is enabled, several other
   functionalities won't work, like NAT policy, segment resource share,
   internet-facing applications and traffic policies.
 
 
 ## Example Usage
 
-This is one minimal example to create an AWS VPC connector. One
+This is one simple minimal example to create an AWS VPC connector. One
 `alkira_segment` and `alkira_credential_aws_vpc` are always required.
 
 ```terraform
-resource "alkira_segment" "segment" {
-  name  = "seg-test"
-  asn   = "65513"
-  cidrs = ["10.16.1.0/24"]
-}
-
-resource "alkira_group" "group" {
-  name        = "group-test"
-  description = "test group"
-}
-
-resource "alkira_credential_aws_vpc" "account" {
-  name           = "test-aws"
-  aws_access_key = "your_aws_acccess_key"
-  aws_secret_key = "your_secret_key"
-  type           = "ACCESS_KEY"
-}
-
 resource "alkira_connector_aws_vpc" "connector" {
   name           = "connector-test"
   vpc_id         = "your_vpc_id"
@@ -79,64 +59,6 @@ resource "alkira_connector_aws_vpc" "connector" {
   group          = alkira_group.group1.name
   segment_id     = alkira_segment.segment1.id
   size           = "SMALL"
-}
-```
-
-To create an AWS VPC along with a connector:
-
-```terraform
-provider "aws" {
-  region     = local.aws_region
-  access_key = local.aws_access_key
-  secret_key = local.aws_secret_key
-}
-
-resource "aws_vpc" "vpc_test" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "vpc-test"
-  }
-}
-
-resource "aws_subnet" "vpc_subnet1" {
-  vpc_id     = aws_vpc.vpc_test.id
-  cidr_block = "10.2.0.0/24"
-}
-
-resource "aws_subnet" "vpc_subnet2" {
-  vpc_id     = aws_vpc.vpc_test.id
-  cidr_block = "10.3.16.0/20"
-}
-
-resource "alkira_connector_aws_vpc" "test" {
-  name           = "test"
-
-  aws_account_id = local.aws_account_id
-  aws_region     = local.aws_region
-  cxp            = local.cxp
-
-  vpc_id         = aws_vpc.vpc_test.id
-
-  credential_id  = alkira_credential_aws_vpc.test.id
-  group          = alkira_group.test.name
-  segment_id     = alkira_segment.test.id
-  size           = "SMALL"
-
-  vpc_route_table {
-    id              = aws_vpc.vpc_test.default_route_table_id
-    options         = "ADVERTISE_DEFAULT_ROUTE"
-  }
-
-  vpc_subnet {
-    id   = aws_subnet.vpc_subnet1.id
-    cidr = aws_subnet.vpc_subnet1.cidr_block
-  }
-
-  vpc_subnet {
-    id   = aws_subnet.vpc_subnet2.id
-    cidr = aws_subnet.vpc_subnet2.cidr_block
-  }
 }
 ```
 
