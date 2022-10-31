@@ -95,9 +95,10 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_addr_translation_type": {
-							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`.",
+							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.",
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      "NONE",
 							ValidateFunc: validation.StringInSlice([]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
 						},
 						"src_addr_translation_prefixes": {
@@ -123,9 +124,10 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"dst_addr_translation_type": {
-							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`.",
+							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.",
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      "NONE",
 							ValidateFunc: validation.StringInSlice([]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
 						},
 						"dst_addr_translation_prefixes": {
