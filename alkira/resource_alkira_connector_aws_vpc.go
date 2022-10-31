@@ -11,32 +11,11 @@ import (
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage AWS VPC Cloud Connector.\n\n" +
-			"This resource could be easily used along with `terraform-provider-aws`\n\n" +
-			"Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing " +
-			"purpose. If `vpc_cidr` is provided, it will automatically select all " +
-			"associated subnets of the given VPC. Otherwise, you could select " +
-			"certain subnets by specifying `vpc_subnet`.\n\n" +
-			"`vpc_route_tables` could be used to adjust the routing options against " +
-			"the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is " +
-			"specified, the existing default route will be overwritten and the " +
-			"traffic will be routed to Alkira CXP. When `ADVERTISE_CUSTOM_PREFIX` " +
-			"is specified, you need to provide a list of prefixes for which traffic " +
-			"must be routed to Alkira CXP.\n\n" +
-			"## Limitations\n\n" +
-			"There are several limitations of AWS connector so far:\n\n" +
-			"* Changing an existing connector to a new AWS VPC is not supported at " +
-			"this point. You need to create a new connector for a new AWS VPC.\n" +
-			"* Updating an existing connector might require the tenant network to " +
-			"be re-provisioned to make the change effective, e.g. changing the " +
-			"segment the connector is associated.\n" +
-			"* When direct inter-vpc communication is enabled, several other " +
-			"functionalities won't work, like NAT policy, segment resource share, " +
-			"internet-facing applications and traffic policies.\n",
-		Create: resourceConnectorAwsVpcCreate,
-		Read:   resourceConnectorAwsVpcRead,
-		Update: resourceConnectorAwsVpcUpdate,
-		Delete: resourceConnectorAwsVpcDelete,
+		Description: "Provide AWS VPC Connector resource.",
+		Create:      resourceConnectorAwsVpcCreate,
+		Read:        resourceConnectorAwsVpcRead,
+		Update:      resourceConnectorAwsVpcUpdate,
+		Delete:      resourceConnectorAwsVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -79,6 +58,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
+			},
+			"failover_cxps": {
+				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -222,6 +207,7 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("cxp", connector.CXP)
 	d.Set("direct_inter_vpc_communication", connector.DirectInterVPCCommunicationEnabled)
 	d.Set("enabled", connector.Enabled)
+	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -269,7 +255,9 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 	client := m.(*alkira.AlkiraClient)
+
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
 	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
 
@@ -308,6 +296,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Group:                              d.Get("group").(string),
 		Name:                               d.Get("name").(string),
 		Segments:                           []string{segment.Name},
+		SecondaryCXPs:                      failoverCXPs,
 		Size:                               d.Get("size").(string),
 		TgwAttachments:                     tgwAttachments,
 		VpcId:                              d.Get("vpc_id").(string),

@@ -75,9 +75,14 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Required:    true,
 						},
 						"credential_id": {
-							Description: "The ID of the credential for Cisco SD-WAN.",
+							Description: "The generated credential ID for Cisco SD-WAN.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Computed:    true,
+						},
+						"credential_ssh_key_pair_id": {
+							Description: "The ID of the credential for SSH Key Pair.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"hostname": {
 							Description: "The hostname of the vEdge.",
@@ -88,6 +93,24 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Description: "The ID of the vEdge instance.",
 							Type:        schema.TypeInt,
 							Computed:    true,
+						},
+						"username": &schema.Schema{
+							Description: "Cisco SD-WAN username. It could be also " +
+								"set by environment variable `AK_CISCO_SDWAN_USERNAME`.",
+							Type:     schema.TypeString,
+							Required: true,
+							DefaultFunc: schema.EnvDefaultFunc(
+								"AK_CISCO_SDWAN_USERNAME",
+								nil),
+						},
+						"password": &schema.Schema{
+							Description: "Cisco SD-WAN password. It could be also " +
+								"set by environment variable `AK_CISCO_SDWAN_PASSWORD`.",
+							Type:     schema.TypeString,
+							Required: true,
+							DefaultFunc: schema.EnvDefaultFunc(
+								"AK_CISCO_SDWAN_PASSWORD",
+								nil),
 						},
 					},
 				},
@@ -194,10 +217,13 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 		for _, info := range connector.CiscoEdgeInfo {
 			if vedgeConfig["id"].(int) == info.Id || vedgeConfig["hostname"].(string) == info.HostName {
 				vedge := map[string]interface{}{
-					"cloud_init_file": info.CloudInitFile,
-					"credential_id":   info.CredentialId,
-					"hostname":        info.HostName,
-					"id":              info.Id,
+					"cloud_init_file":            info.CloudInitFile,
+					"credential_id":              info.CredentialId,
+					"credential_ssh_key_pair_id": info.SshKeyPairCredentialId,
+					"hostname":                   info.HostName,
+					"id":                         info.Id,
+					"username":                   vedgeConfig["username"].(string),
+					"password":                   vedgeConfig["password"].(string),
 				}
 				vedges = append(vedges, vedge)
 				break
@@ -227,10 +253,11 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 		// this will generate a diff
 		if new {
 			vedge := map[string]interface{}{
-				"cloud_init_file": info.CloudInitFile,
-				"credential_id":   info.CredentialId,
-				"hostname":        info.HostName,
-				"id":              info.Id,
+				"cloud_init_file":            info.CloudInitFile,
+				"credential_id":              info.CredentialId,
+				"credential_ssh_key_pair_id": info.SshKeyPairCredentialId,
+				"hostname":                   info.HostName,
+				"id":                         info.Id,
 			}
 
 			vedges = append(vedges, vedge)
@@ -294,8 +321,15 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	mappings := expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set))
-	vedges := expandCiscoSdwanVedges(ac, d.Get("vedge").([]interface{}))
 
+	// Expand Cisco SDWAN vEdge block
+	vedges, err := expandCiscoSdwanVedges(ac, d.Get("vedge").([]interface{}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Construct the request payload
 	connector := &alkira.ConnectorCiscoSdwan{
 		BillingTags:          billingTags,
 		CiscoEdgeInfo:        vedges,
@@ -347,10 +381,10 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 }
 
 // expandCiscoSdwanVedges expand Cisco SD-WAN Edge
-func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) []alkira.CiscoSdwanEdgeInfo {
+func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.CiscoSdwanEdgeInfo, error) {
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] Empty vedges")
-		return []alkira.CiscoSdwanEdgeInfo{}
+		return []alkira.CiscoSdwanEdgeInfo{}, nil
 	}
 
 	mappings := make([]alkira.CiscoSdwanEdgeInfo, len(in))
@@ -359,14 +393,49 @@ func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) []alkira.
 		r := alkira.CiscoSdwanEdgeInfo{}
 		t := mapping.(map[string]interface{})
 
+		var username string
+		var password string
+
 		if v, ok := t["hostname"].(string); ok {
 			r.HostName = v
 		}
 		if v, ok := t["cloud_init_file"].(string); ok {
 			r.CloudInitFile = v
 		}
+		if v, ok := t["username"].(string); ok {
+			username = v
+		}
+		if v, ok := t["password"].(string); ok {
+			password = v
+		}
+		if v, ok := t["credential_ssh_key_pair_id"].(string); ok {
+			r.SshKeyPairCredentialId = v
+		}
 		if v, ok := t["credential_id"].(string); ok {
-			r.CredentialId = v
+			if v == "" {
+				log.Printf("[INFO] Creating CISCO-SDWAN Credential")
+				credentialName := r.HostName + randomNameSuffix()
+
+				credential := alkira.CredentialCiscoSdwan{
+					Username: username,
+					Password: password,
+				}
+
+				credentialId, err := ac.CreateCredential(
+					credentialName,
+					alkira.CredentialTypeCiscoSdwan,
+					credential,
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				r.CredentialId = credentialId
+			} else {
+				r.CredentialId = v
+			}
 		}
 		if v, ok := t["id"].(int); ok {
 			r.Id = v
@@ -375,5 +444,5 @@ func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) []alkira.
 		mappings[i] = r
 	}
 
-	return mappings
+	return mappings, nil
 }

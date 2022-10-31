@@ -75,6 +75,7 @@ resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
 
 - `billing_tag_ids` (List of Number) Tags for billing.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `gcp_project_id` (String) GCP Project ID.
 - `gcp_routing` (Block Set) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. gcpRouting provides a customized routing specification. When gcpRouting is not provided i.e when gcpRouting is null/empty then all traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
 - `group` (String) The group of the connector.
