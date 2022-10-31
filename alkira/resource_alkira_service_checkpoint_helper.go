@@ -34,7 +34,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 		}
 		if v, ok := cfg["credential_id"].(string); ok {
 			if v == "" && mg.ConfigurationMode == "AUTOMATED" {
-				manServerCredName := name + randomNameSuffix()
+				manServerCredName := name + "-" + randomNameSuffix()
 				c := &alkira.CredentialCheckPointFwManagementServer{Password: manServerPass}
 				credentialId, err := client.CreateCredential(manServerCredName, alkira.CredentialTypeChkpFwManagement, c, 0)
 				if err != nil {
@@ -85,7 +85,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 	return mg, nil
 }
 
-func expandCheckpointInstances(in *schema.Set, m interface{}) ([]alkira.CheckpointInstance, error) {
+func expandCheckpointInstances(name string, in *schema.Set, m interface{}) ([]alkira.CheckpointInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
@@ -98,15 +98,13 @@ func expandCheckpointInstances(in *schema.Set, m interface{}) ([]alkira.Checkpoi
 	for i, instance := range in.List() {
 		r := alkira.CheckpointInstance{}
 		instanceCfg := instance.(map[string]interface{})
-		if v, ok := instanceCfg["name"].(string); ok {
-			r.Name = v
-		}
+		r.Name = name + "-instance-" + strconv.Itoa(i+1)
 		if v, ok := instanceCfg["sic_key"].(string); ok {
 			chkpfwInstanceKey = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
-				credentialName := r.Name + randomNameSuffix()
+				credentialName := r.Name + "-" + randomNameSuffix()
 				c := &alkira.CredentialCheckPointFwServiceInstance{SicKey: chkpfwInstanceKey}
 				log.Printf("[INFO] Creating Credential CheckpointInstance.")
 				credentialId, err := client.CreateCredential(

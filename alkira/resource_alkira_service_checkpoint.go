@@ -57,17 +57,12 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"instances": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				Description: "An array containing properties for each Checkpoint Firewall instance " +
 					"that needs to be deployed. The number of instances should be equal to " +
 					"`max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Description: "The name of the Checkpoint Firewall instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"credential_id": {
 							Description: "ID of Checkpoint Firewall Instance credential.",
 							Type:        schema.TypeString,
@@ -153,7 +148,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"management_server_password": {
 							Description: "The password for Checkpoint Firewall Management Server. ",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 						},
 					},
 				},
@@ -168,7 +163,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"min_instance_count": {
 				Description: "The minimum number of Checkpoint Firewall instances that should be " +
-					"deployed at any point in time.",
+					"deployed at any point in time. If auto-scale is OFF, min_instance_count must " +
+					"equal max_instance_count.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -187,12 +183,12 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			"segment_ids": {
 				Description: "The IDs of the segments associated with the service.",
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Optional:    true,
+				Required:    true,
 				Description: "The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -320,7 +316,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 	chpfwCredId := d.Get("credential_id").(string)
 	if 0 == len(chpfwCredId) {
 		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
-		chkpfwName := d.Get("name").(string) + randomNameSuffix()
+		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
 		c := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
 		credentialId, err := client.CreateCredential(chkpfwName, alkira.CredentialTypeChkpFw, c, 0)
 		if err != nil {
@@ -335,7 +331,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		return nil, err
 	}
 
-	instances, err := expandCheckpointInstances(d.Get("instances").(*schema.Set), m)
+	instances, err := expandCheckpointInstances(d.Get("name").(string), d.Get("instances").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
