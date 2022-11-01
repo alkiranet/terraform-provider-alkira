@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,10 +41,15 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"credential_id": {
-				Description: "ID of Checkpoint Firewall credential managed by credential resource.",
+			"password": {
+				Description: "The Checkpoint Firewall service password.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"credential_id": {
+				Description: "ID of Checkpoint Firewall credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"description": {
 				Description: "The description of the checkpoint service.",
@@ -52,14 +58,19 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"instances": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				Description: "An array containing properties for each Checkpoint Firewall instance " +
 					"that needs to be deployed. The number of instances should be equal to " +
 					"`max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Description: "The name of the Checkpoint Firewall instance.",
+						"credential_id": {
+							Description: "ID of Checkpoint Firewall Instance credential.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"sic_key": {
+							Description: "The checkpoint instance sic keys.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -93,6 +104,11 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Description: "Management server domain.",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"credential_id": {
+							Description: "ID of Checkpoint Firewall Managment server credential.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"global_cidr_list_id": {
 							Description: "The ID of the global cidr list to be associated with " +
@@ -130,6 +146,11 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
+						"management_server_password": {
+							Description: "The password for Checkpoint Firewall Management Server. ",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 					},
 				},
 			},
@@ -143,7 +164,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"min_instance_count": {
 				Description: "The minimum number of Checkpoint Firewall instances that should be " +
-					"deployed at any point in time.",
+					"deployed at any point in time. If auto-scale is OFF, min_instance_count must " +
+					"equal max_instance_count.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -159,11 +181,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"segment_ids": {
-				Description: "The IDs of the segments associated with the service.",
-				Type:        schema.TypeList,
+			"segment_id": {
+				Description: "The ID of the segments associated with the service.",
+				Type:        schema.TypeInt,
 				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
@@ -241,7 +262,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(checkpoint.Segments, m)
+	segmentIds, err := convertCheckpointSegmentNameToSegmentId(checkpoint.Segments, m)
 	if err != nil {
 		return err
 	}
@@ -258,7 +279,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_ids", segmentIds)
+	d.Set("segment_id", segmentIds)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
@@ -292,33 +313,36 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	allCheckpointResponseDetails, err := getAllCheckpointCredentials(client)
+	chpfwCredId := d.Get("credential_id").(string)
+	if 0 == len(chpfwCredId) {
+		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
+		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
+		c := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
+		credentialId, err := client.CreateCredential(chkpfwName, alkira.CredentialTypeChkpFw, c, 0)
+		if err != nil {
+			return nil, err
+		}
+		d.Set("credential_id", credentialId)
+
+	}
+
+	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
-	managementServer, err := expandCheckpointManagementServer(d.Get("management_server").(*schema.Set), m)
+	instances, err := expandCheckpointInstances(d.Get("name").(string), d.Get("instances").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
-	managementServerCredential := parseCheckpointCredentialManagementServer(allCheckpointResponseDetails)
-	var managementServerCredentialId string
-	if managementServerCredential != nil {
-		managementServerCredentialId = managementServerCredential.Id
-	}
-	managementServer.CredentialId = managementServerCredentialId
-
-	instanceRespDetails := parseAllCheckpointCredentialInstances(allCheckpointResponseDetails)
-	instances := fromCheckpointCredentialRespDetailsToCheckpointInstance(instanceRespDetails)
-
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-	if err != nil {
-		return nil, err
-	}
-
-	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segmentIds := []string{strconv.Itoa(d.Get("segment_id").(int))}
 	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
+	if err != nil {
+		return nil, err
+	}
+
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentNames[0], d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
