@@ -43,11 +43,6 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"primary": {
-				Description: "Wether the connector is primary.",
-				Type:        schema.TypeBool,
-				Required:    true,
-			},
 			"credential_id": {
 				Description: "ID of OCI-VCN credential.",
 				Type:        schema.TypeString,
@@ -184,7 +179,6 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("oci_region", connector.CustomerRegion)
-	d.Set("primary", connector.Primary)
 	d.Set("size", connector.Size)
 	d.Set("vcn_id", connector.VcnId)
 
@@ -266,7 +260,6 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerRegion: d.Get("oci_region").(string),
 		Enabled:        d.Get("enabled").(bool),
-		Primary:        d.Get("primary").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
 		SecondaryCXPs:  failoverCXPs,
