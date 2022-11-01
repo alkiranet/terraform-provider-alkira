@@ -124,6 +124,47 @@ func expandCheckpointInstances(name string, in *schema.Set, m interface{}) ([]al
 	return instances, nil
 }
 
+/*
+Checkpoint expects segment_options to not be empty.
+If segment_options is not defined in the TF file, this function adds the default expected data.
+If segment_options is included, populates it normally.
+*/
+func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
+
+	if in == nil || in.Len() == 0 {
+		segmentOptions := make(alkira.SegmentNameToZone)
+		zonestoGroups := make(alkira.ZoneToGroups)
+		z := alkira.OuterZoneToGroups{}
+		j := []string{}
+
+		zonestoGroups["DEFAULT"] = j
+		z.ZonesToGroups = zonestoGroups
+
+		segmentOptions[segmentName] = z
+
+		return segmentOptions, nil
+	}
+
+	return expandSegmentOptions(in, m)
+
+}
+
+func convertCheckpointSegmentNameToSegmentId(names []string, m interface{}) (int, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	if len(names) != 1 {
+		log.Printf("[DEBUG] invalid number of segments in Checkpoint Firewall instance.")
+		return 0, errors.New("Invalid number of segments in Checkpoint Firewall instance.")
+	}
+
+	seg, err := client.GetSegmentByName(names[0])
+	if err != nil {
+		log.Printf("[DEBUG] failed to get segment. %s does not exist: ", names[0])
+		return 0, err
+	}
+	return seg.Id, nil
+}
+
 func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
 	m := make(map[string]interface{})
 	m["configuration_mode"] = mg.ConfigurationMode

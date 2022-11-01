@@ -52,12 +52,7 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
   }
 
   # only one segment allowed.    
-  segment_ids = [alkira_segment.checkpoint_seg.id]
-  segment_options {
-    segment_id = alkira_segment.checkpoint_seg.id
-    zone_name  = "DEFAULT"
-    groups     = ["checkpoint_test"]
-  }
+  segment_id = alkira_segment.checkpoint_seg.id
 }
 ```
 
@@ -73,7 +68,7 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - `name` (String) Name of the Checkpoint Firewall service.
 - `password` (String) The Checkpoint Firewall service password.
-- `segment_options` (Block Set, Min: 1) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint. (see [below for nested schema](#nestedblock--segment_options))
+- `segment_id` (Number) The ID of the segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Checkpoint Firewall.
 
@@ -84,7 +79,7 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
 - `description` (String) The description of the checkpoint service.
 - `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time. If auto-scale is OFF, min_instance_count must equal max_instance_count.
 - `pdp_ips` (List of String) The IPs of the PDP Brokers.
-- `segment_ids` (List of String) The IDs of the segments associated with the service.
+- `segment_options` (Block Set) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
 ### Read-Only

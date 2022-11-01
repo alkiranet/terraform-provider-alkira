@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -180,15 +181,14 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"segment_ids": {
-				Description: "The IDs of the segments associated with the service.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+			"segment_id": {
+				Description: "The ID of the segments associated with the service.",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Description: "The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -262,7 +262,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(checkpoint.Segments, m)
+	segmentIds, err := convertCheckpointSegmentNameToSegmentId(checkpoint.Segments, m)
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_ids", segmentIds)
+	d.Set("segment_id", segmentIds)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
@@ -336,13 +336,13 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		return nil, err
 	}
 
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentIds := []string{strconv.Itoa(d.Get("segment_id").(int))}
+	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
 	if err != nil {
 		return nil, err
 	}
 
-	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentNames[0], d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

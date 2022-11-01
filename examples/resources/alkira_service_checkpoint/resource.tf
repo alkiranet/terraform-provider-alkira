@@ -37,10 +37,5 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
   }
 
   # only one segment allowed.    
-  segment_ids = [alkira_segment.checkpoint_seg.id]
-  segment_options {
-    segment_id = alkira_segment.checkpoint_seg.id
-    zone_name  = "DEFAULT"
-    groups     = ["checkpoint_test"]
-  }
+  segment_id = alkira_segment.checkpoint_seg.id
 }
