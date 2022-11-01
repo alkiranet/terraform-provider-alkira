@@ -13,34 +13,46 @@ Manage checkpoint services
 ## Example Usage
 
 ```terraform
-resource "alkira_service_checkpoint" "test1" {
-  auto_scale         = "OFF"
-  cxp                = "US-WEST"
-  credential_id      = alkira_credential_checkpoint.tf_test_checkpoint.id
-  license_type       = "PAY_AS_YOU_GO"
+resource "alkira_service_checkpoint" "tf_checkpoint" {
+  auto_scale   = "ON"
+  cxp          = "US-WEST"
+  name         = "chkpfw-1"
+  license_type = "PAY_AS_YOU_GO"
+  size         = "SMALL"
+  version      = "R80.30"
+  pdp_ips      = ["10.0.0.1"]
+  password     = "abcd1234"
+
+  # max_instance_count and min_instance_count must equal each other when auto_scale is off.
   max_instance_count = 2
   min_instance_count = 2
-  name               = "testname"
-  segment_ids        = [alkira_segment.test-seg-1.id]
-  size               = "LARGE"
-  tunnel_protocol    = "IPSEC"
-  version            = "R80.30"
 
-  segment_options {
-    segment_id = alkira_segment.test-seg-1.id
-    zone_name  = "DEFAULT"
-    groups     = [alkira_group.test.name]
+
+  instances {
+    sic_key = "abcd1234"
+  }
+  instances {
+    sic_key = "abcd12345"
   }
 
   management_server {
-    configuration_mode  = "MANUAL"
-    global_cidr_list_id = 22
-    ips                 = ["10.2.0.3"]
+    type                = "MDS"
+    configuration_mode  = "AUTOMATED"
     reachability        = "PRIVATE"
-    segment_id          = alkira_segment.test-seg-1.id
-    type                = "SMS"
-    user_name           = "admin"
+    ips                 = ["192.168.3.3"]
+    global_cidr_list_id = alkira_list_global_cidr.checkpoint_cidr.id
+    segment_id          = alkira_segment.checkpoint_seg.id
+
+    # user_name and management_server_password required only when configuration_mode is AUTOMATED.
+    user_name                  = "checkpoint_user"
+    management_server_password = "abcd1234"
+
+    # domain only required when configuration_mode is AUTOMATED and when type is MDS.
+    domain = "test.alkira.com"
   }
+
+  # only one segment allowed.    
+  segment_id = alkira_segment.checkpoint_seg.id
 }
 ```
 
@@ -49,13 +61,14 @@ resource "alkira_service_checkpoint" "test1" {
 
 ### Required
 
-- `credential_id` (String) ID of Checkpoint Firewall credential managed by credential resource.
 - `cxp` (String) CXP region.
+- `instances` (Block Set, Min: 1) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
 - `license_type` (String) Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_server` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - `name` (String) Name of the Checkpoint Firewall service.
-- `segment_ids` (List of String) The IDs of the segments associated with the service.
+- `password` (String) The Checkpoint Firewall service password.
+- `segment_id` (Number) The ID of the segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Checkpoint Firewall.
 
@@ -64,15 +77,27 @@ resource "alkira_service_checkpoint" "test1" {
 - `auto_scale` (String) Indicate if `auto_scale` should be enabled for your checkpointfirewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
 - `description` (String) The description of the checkpoint service.
-- `instances` (Block Set) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
-- `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time.
+- `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time. If auto-scale is OFF, min_instance_count must equal max_instance_count.
 - `pdp_ips` (List of String) The IPs of the PDP Brokers.
 - `segment_options` (Block Set) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
 ### Read-Only
 
+- `credential_id` (String) ID of Checkpoint Firewall credential.
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--instances"></a>
+### Nested Schema for `instances`
+
+Required:
+
+- `sic_key` (String) The checkpoint instance sic keys.
+
+Read-Only:
+
+- `credential_id` (String) ID of Checkpoint Firewall Instance credential.
+
 
 <a id="nestedblock--management_server"></a>
 ### Nested Schema for `management_server`
@@ -86,18 +111,15 @@ Required:
 Optional:
 
 - `domain` (String) Management server domain.
+- `management_server_password` (String) The password for Checkpoint Firewall Management Server.
 - `reachability` (String) This option specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
 - `segment_id` (Number) The ID of the segment to be used to access the management server.
 - `type` (String) The type of the management server.
 - `user_name` (String) The user_name of the management server.
 
+Read-Only:
 
-<a id="nestedblock--instances"></a>
-### Nested Schema for `instances`
-
-Required:
-
-- `name` (String) The name of the Checkpoint Firewall instance.
+- `credential_id` (String) ID of Checkpoint Firewall Managment server credential.
 
 
 <a id="nestedblock--segment_options"></a>
