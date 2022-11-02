@@ -1,0 +1,65 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+## ANYCAST
+
+Based on this AnyCast policy some implicit `alkira_policy_routes` and
+`alkira_policy_prefix_list` get generated. These route policies and
+prefix lists will have the prefix `ALK-SYSTEM-GENERATED-INFOBLOX`.
+
+These route policies and prefix lists cannot be deleted or modified
+directly their lifecycle is bound by the Infoblox services that are
+configured on the network.
+
+AnyCast may be enabled/disabled at the instance level as well. For
+AnyCast to be enabled for an instance it MUST be enabled both at the
+service and the instance level. If AnyCast is NOT enabled at the
+service level it will stay disabled for all instances.
+
+
+## Grid Master
+
+Grid master needs to exist before other instances of a grid can be
+added. The grid master can either be provisioned by Alkira or could
+already be provisioned externally. Some of these properties only need
+to be provided when the grid master is external.
+
+If the grid master needs to be provisioned internally by Alkira then
+an instance needs to be added to Infoblox service configuration with
+type `MASTER`.
+
+
+## Instances
+
+There can only be one `MASTER` instance ever provisioned. When the
+grid master is provisioned by Alkira, provisioning needs to happen in
+two steps. First, the Infoblox service must be provisioned with only 1
+instance of type `MASTER`. Subsequently other instances of the grid
+may be added to the instances list and provisioned. When the grid
+master is external (i.e not provisioned by Alkira) then no instances
+of type `MASTER` should be configured.
+
+
+## Example Usage
+
+The example uses resource `alkira_segment` and
+`alkira_list_global_cidr`.
+
+{{ tffile "examples/resources/alkira_service_infoblox/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

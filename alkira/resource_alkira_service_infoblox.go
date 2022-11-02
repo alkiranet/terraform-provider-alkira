@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraInfoblox() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Infoblox services",
+		Description: "Provide Infoblox service resource.",
 		Create:      resourceInfoblox,
 		Read:        resourceInfobloxRead,
 		Update:      resourceInfobloxUpdate,
@@ -22,21 +22,13 @@ func resourceAlkiraInfoblox() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"anycast": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Description: "Defines the AnyCast policy to be used with the Infoblox Service. " +
-					"Based on this AnyCast policy some implicit route policies and prefix lists get " +
-					"generated. These route policies and prefix lists will have the prefix " +
-					"ALK-SYSTEM-GENERATED-INFOBLOX. These route policies and prefix lists cannot " +
-					"be deleted or modified directly their lifecycle is bound by the Infoblox " +
-					"services that are configured on the network. AnyCast may be enabled/disabled " +
-					"at the instance level as well. For AnyCast to be enabled for an instance it " +
-					"MUST be enabled both at the service and the instance level. If AnyCast is " +
-					"NOT enabled at the service level it will stay disabled for all instances.",
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "Defines the AnyCast policy.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
-							Description: "Defines if AnyCast should be enabled. Default is `false`",
+							Description: "Defines if AnyCast should be enabled. Default value is `false`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
@@ -44,17 +36,17 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"ips": {
 							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
 								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
-								"NOT overlap the CIDR used for the segment IP block associated with " +
-								"the service",
+								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
+								"the service.",
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"backup_cxps": {
 							Description: "The `backup_cxps` to be used when the current " +
-								"Infoblox service is not available. The backup_cxps also need to " +
-								"have a configured Infoblox service inorder to take advantage of " +
-								"this feature. It is NOT required that the backup_cxps should have " +
+								"Infoblox service is not available. It also needs to " +
+								"have a configured Infoblox service in order to take advantage of " +
+								"this feature. It is NOT required that the `backup_cxps` should have " +
 								"a configured Infoblox service before it can be designated as a backup.",
 							Type:     schema.TypeList,
 							Optional: true,
@@ -85,31 +77,26 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			//NOTE: for v1 of Infoblox support we are not supporting the creation of a new infoblox
-			//service on behalf of our customer. Instead the customer must have a preexsting
-			//infoblox service. Future releases will allow for this. At taht time this comment
-			//should be removed.
+			// NOTE: for v1 of Infoblox support we are not supporting the creation of a new infoblox
+			// service on behalf of our customer. Instead the customer must have a preexsting
+			// infoblox service. Future releases will allow for this. At that time this comment
+			// should be removed.
 			"grid_master": {
 				Type:     schema.TypeList,
 				Required: true,
-				Description: "Defines the properties of the Infoblox grid master. The Infoblox " +
-					"grid master needs to exist before other instances of a the grid can be added. " +
-					"The grid master can either be provisioned by Alkira or could already be " +
-					"provisioned externally. Some of these properties only need to be provided when " +
-					"the grid master is external. If the grid master needs to be provisioned " +
-					"internally by Alkira then an instance needs to be added to Infoblox service " +
-					"configuration with type = MASTER",
+				Description: "Defines the properties of the Infoblox grid master.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external": {
 							Description: "External indicates if a new grid master should be " +
-								"created or if an existing grid master should be used.",
+								"created or if an existing grid master should be used. Default " +
+								"value is `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
 						"ip": {
-							Description: "The ip address of the grid master.",
+							Description: "The IP address of the grid master.",
 							Type:        schema.TypeString,
 							Computed:    true,
 							Optional:    true,
@@ -146,7 +133,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"anycast_enabled": {
 							Description: " This knob controls whether AnyCast is to be enabled " +
 								"for this instance or not. AnyCast can only be enabled on an " +
-								"instance if it is also enabled on the service.",
+								"instance if it is also enabled on the service. The default value is `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -177,14 +164,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required:    true,
 						},
 						"type": {
-							Description: "The type of the Infoblox instance that is to be provisioned. " +
-								"There can only be one MASTER ever provisioned. When the grid master " +
-								"is provisioned by Alkira, provisioning needs to happen in two steps. " +
-								"First the Infoblox service must be provisioned with only 1 instance " +
-								"of type MASTER. Subsequently other instances of the grid may be " +
-								"added to the instances list and provisioned. When the grid master " +
-								"is external (i.e not provisioned by Alkira) then no instances of " +
-								"type MASTER should be configured.",
+							Description: "The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),

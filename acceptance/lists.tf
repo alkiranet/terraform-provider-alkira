@@ -27,6 +27,6 @@ resource "alkira_list_as_path" "tf_test" {
 resource "alkira_list_global_cidr" "tf_test" {
   name        = "tf-test"
   description = "terraform test global cidr list"
-  values      = ["172.16.1.0/24", "10.1.0.0/24"]
+  values      = ["172.16.1.0/24"]
   cxp         = "US-WEST-1"
 }
