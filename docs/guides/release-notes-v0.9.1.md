@@ -8,7 +8,7 @@ description: |-
 This release brings new resources, enhancements and bug fixes. The
 main focus is to bring support for all available features up to date.
 
-**NOTE:** There are several changes in `alkira_service_pan` and
+~> **NOTE:** There are several changes in `alkira_service_pan` and
 `alkira_connector_ipsec` that require updates to the existing
 configuration. Please check the resource's documentation before
 attempting an upgrade.
@@ -37,31 +37,30 @@ resource documentation for more details.
 
 ### `size` is updated across connectors and services
 
-    There are more available `size` now across many connectors and
-    services: `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+There are more available `size` now across many connectors and
+services: `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 
 
 ### resource `alkira_connector_aws_vpc`
 
-    New `tgw_attachment` block was added to the connector.
+New `tgw_attachment` block was added to the connector.
 
 
 ### resource `alkira_connector_azure_vent`
 
-    Introduce two more blocks `vnet_subnet` and `vnet_cidr` to support
-    routing options on more granular level of subnet and CIDR of the VNET.
+Introduce two more blocks `vnet_subnet` and `vnet_cidr` to support
+routing options on more granular level of subnet and CIDR of the VNET.
 
 
 ### resource `alkira_connector_cisco_sdwan`
 
-    * New argument `customer_asn` was added.
+* New argument `customer_asn` was added.
 
 
 ### resoruce `alkira_service_pan` (**NEEDS CONFIG UPDATE**)
 
-    `panorama_ip_address` was changed to `panorama_ip_addresses` to
-    support multiple Panorama IP addresses.
-
+`panorama_ip_address` was changed to `panorama_ip_addresses` to
+support multiple Panorama IP addresses.
 
 
 ## Fixes
