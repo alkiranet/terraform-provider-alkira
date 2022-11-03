@@ -52,5 +52,5 @@ resource "alkira_policy" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import POLICY_ID
+terraform import alkira_policy.example POLICY_ID
 ```

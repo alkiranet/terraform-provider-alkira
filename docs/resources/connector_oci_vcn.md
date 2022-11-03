@@ -95,5 +95,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import CONNECTOR_ID
+terraform import alkira_connector_oci_vcn.example CONNECTOR_ID
 ```

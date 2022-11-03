@@ -1,1 +1,1 @@
-terraform import CONNECTOR_ID
+terraform import alkira_connector_azure_vnet.example CONNECTOR_ID

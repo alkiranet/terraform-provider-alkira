@@ -43,5 +43,5 @@ resource "alkira_group" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import GROUP_ID
+terraform import alkira_group.example GROUP_ID
 ```

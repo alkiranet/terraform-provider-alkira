@@ -1,1 +1,1 @@
-terraform import SEGMENT_ID
+terraform import alkira_segment.example SEGMENT_ID

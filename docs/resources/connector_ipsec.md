@@ -201,5 +201,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import CONNECTOR_ID
+terraform import alkira_connector_ipsec.example CONNECTOR_ID
 ```
