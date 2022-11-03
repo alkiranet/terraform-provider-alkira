@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraInfoblox() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provide Infoblox service resource.",
+		Description: "Provide Infoblox service resource (**BETA**).",
 		Create:      resourceInfoblox,
 		Read:        resourceInfobloxRead,
 		Update:      resourceInfobloxUpdate,

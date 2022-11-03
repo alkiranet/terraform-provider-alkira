@@ -2,12 +2,12 @@
 page_title: "alkira_service_infoblox Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Provide Infoblox service resource.
+  Provide Infoblox service resource (BETA).
 ---
 
 # alkira_service_infoblox (Resource)
 
-Provide Infoblox service resource.
+Provide Infoblox service resource (**BETA**).
 
 
 ## ANYCAST
