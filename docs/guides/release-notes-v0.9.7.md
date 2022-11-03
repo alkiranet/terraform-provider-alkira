@@ -78,3 +78,8 @@ upgrading to this version.
 
 * Mark `pan_username` and `pan_password` required in `alkira_service_pan`.
 * Fix the random string in `alkira_serivce_pan` instance name.
+
+
+## Enhancments
+
+* Add unique request ID for every single API calls for easier debugging.
