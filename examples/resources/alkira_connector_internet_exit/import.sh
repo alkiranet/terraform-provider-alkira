@@ -1,1 +1,1 @@
-terraform import CONNECTOR_ID
+terraform import alkira_connector_internet_exit.example CONNECTOR_ID

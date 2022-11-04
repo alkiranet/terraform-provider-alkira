@@ -1,1 +1,1 @@
-terraform import CONNECTOR_ID
+terraform import alkira_connector_cisco_sdwan.example CONNECTOR_ID

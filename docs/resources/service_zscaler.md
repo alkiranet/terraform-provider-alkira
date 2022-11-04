@@ -3,12 +3,12 @@
 page_title: "alkira_service_zscaler Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Zscaler firewall.
+  Manage Zscaler firewall service. (BETA)
 ---
 
 # alkira_service_zscaler (Resource)
 
-Manage Zscaler firewall.
+Manage Zscaler firewall service. (**BETA**)
 
 ## Example Usage
 

@@ -1,0 +1,16 @@
+resource "alkira_connector_azure_vnet" "cidr" {
+  name                    = "test-cidr"
+  azure_vnet_id           = azurerm_virtual_network.vnet.id
+  credential_id           = alkira_credential_azure_vnet.vnet.id
+  cxp                     = "US-WEST"
+  group                   = alkira_group.test.name
+  segment_id              = alkira_segment.test.id
+  size                    = "SMALL"
+
+  vnet_cidr {
+    cidr            = "10.0.0.0/16"
+    prefix_list_ids = [alkira_policy_prefix_list.azure.id]
+    routing_options = "ADVERTISE_CUSTOM_PREFIX"
+    service_tags    = ["ApiManagement", "AppService"]
+  }
+}

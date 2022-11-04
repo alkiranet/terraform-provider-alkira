@@ -49,5 +49,5 @@ resource "alkira_segment" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import SEGMENT_ID
+terraform import alkira_segment.example SEGMENT_ID
 ```

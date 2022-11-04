@@ -1,0 +1,49 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Routing Options
+
+Either `vnet_cidr` or `vnet_subnet` needs to be specified for routing
+purpose.  If `vnet_cidr` is provided, it will automatically select all
+associated subnets of the given VNET. Otherwise, you can select
+certain subnets by specifying `vnet_subnet`.
+
+## Example Usage
+
+This is one simple minimal example to create an AZURE VNET
+connector. One `alkira_segment` and `alkira_credential_azure_vnet` are
+always required.
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet/resource.tf" }}
+
+You could adjust routing options on VNET level by using
+`routing_options` and `routing_prefix_list_ids` along with resource
+`alkira_policy_prefix_list`:
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet/resource2.tf" }}
+
+Moreover, to adjust routing options for CIDR or subnet of the VNET,
+you could use `vnet_cidr` or `vnet_subnet` block:
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet/resource3.tf" }}
+
+There could be multi `vnet_subnet` blocks specified for each subnet if
+needed:
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet/resource4.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

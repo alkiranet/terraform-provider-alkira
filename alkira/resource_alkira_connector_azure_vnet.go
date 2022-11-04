@@ -11,14 +11,11 @@ import (
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure Cloud Connector.\n\n" +
-			"This connector requires at least two other resources `alkira_segment` " +
-			"and `alkira_credential_azure_vnet` to work. Optionally, it works with " +
-			"`alkira_group`, `alkira_billing_tags` and several other resources.",
-		Create: resourceConnectorAzureVnetCreate,
-		Read:   resourceConnectorAzureVnetRead,
-		Update: resourceConnectorAzureVnetUpdate,
-		Delete: resourceConnectorAzureVnetDelete,
+		Description: "Manage Azure VNET Connector.",
+		Create:      resourceConnectorAzureVnetCreate,
+		Read:        resourceConnectorAzureVnetRead,
+		Update:      resourceConnectorAzureVnetUpdate,
+		Delete:      resourceConnectorAzureVnetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"azure_vnet_id": {

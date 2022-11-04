@@ -10,7 +10,7 @@ import (
 
 func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure ExpressRoute Connector.",
+		Description: "Manage Azure ExpressRoute Connector. (**BETA**)",
 
 		Create: resourceConnectorAzureExpressRouteCreate,
 		Read:   resourceConnectorAzureExpressRouteRead,

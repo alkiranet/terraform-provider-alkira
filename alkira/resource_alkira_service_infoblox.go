@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraInfoblox() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provide Infoblox service resource.",
+		Description: "Provide Infoblox service resource (**BETA**).",
 		Create:      resourceInfoblox,
 		Read:        resourceInfobloxRead,
 		Update:      resourceInfobloxUpdate,
@@ -82,8 +82,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			// infoblox service. Future releases will allow for this. At that time this comment
 			// should be removed.
 			"grid_master": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:        schema.TypeList,
+				Required:    true,
 				Description: "Defines the properties of the Infoblox grid master.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -164,7 +164,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required:    true,
 						},
 						"type": {
-							Description: "The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
+							Description:  "The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),

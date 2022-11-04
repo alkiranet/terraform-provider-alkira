@@ -1,0 +1,1 @@
+terraform import alkira_policy.example POLICY_ID

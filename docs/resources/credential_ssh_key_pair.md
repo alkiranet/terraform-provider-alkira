@@ -39,5 +39,5 @@ resource "alkira_credential_ssh_key_pair" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import CREDENTIAL_ID
+terraform import alkira_credential_ssh_key_pair.example CREDENTIAL_ID
 ```

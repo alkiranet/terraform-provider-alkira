@@ -3,12 +3,12 @@
 page_title: "alkira_connector_azure_expressroute Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Azure ExpressRoute Connector.
+  Manage Azure ExpressRoute Connector. (BETA)
 ---
 
 # alkira_connector_azure_expressroute (Resource)
 
-Manage Azure ExpressRoute Connector.
+Manage Azure ExpressRoute Connector. (**BETA**)
 
 ## Example Usage
 

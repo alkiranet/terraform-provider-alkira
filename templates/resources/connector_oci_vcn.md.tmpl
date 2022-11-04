@@ -1,0 +1,39 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Routing Options
+
+Either `vcn_cidr` or `vcn_subnet` needs to be specified for routing
+purpose.  If `vcn_cidr` is provided, it will automatically select all
+associated subnets of the given VCN. Otherwise, you can select
+certain subnets by specifying `vcn_subnet`.
+
+`vcn_route_tables` can be used to adjust the routing options against
+the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
+specified, the existing default route will be overwritten and the
+traffic will be routed to Alkira CXP.  When `ADVERTISE_CUSTOM_PREFIX`
+is specified, you need to provide a list of prefixes for which traffic
+must be routed to Alkira CXP.
+
+## Example Usage
+
+This is one simple minimal example to create an OCI VCN connector. One
+`alkira_segment` and `alkira_credential_oci_vcn` are always required.
+
+{{ tffile "examples/resources/alkira_connector_oci_vcn/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

@@ -1,0 +1,1 @@
+terraform import alkira_connector_oci_vcn.example CONNECTOR_ID

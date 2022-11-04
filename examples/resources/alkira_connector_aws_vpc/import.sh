@@ -1,1 +1,1 @@
-terraform import CONNECTOR_ID
+terraform import alkira_connector_aws_vpc.example CONNECTOR_ID
