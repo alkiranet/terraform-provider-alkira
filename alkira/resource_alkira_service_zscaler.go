@@ -10,7 +10,7 @@ import (
 
 func resourceAlkiraServiceZscaler() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Zscaler firewall.",
+		Description: "Manage Zscaler firewall service. (**BETA**)",
 		Create:      resourceZscaler,
 		Read:        resourceZscalerRead,
 		Update:      resourceZscalerUpdate,

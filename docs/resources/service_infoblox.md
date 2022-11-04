@@ -2,12 +2,12 @@
 page_title: "alkira_service_infoblox Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Provide Infoblox service resource.
+  Provide Infoblox service resource (BETA).
 ---
 
 # alkira_service_infoblox (Resource)
 
-Provide Infoblox service resource.
+Provide Infoblox service resource (**BETA**).
 
 
 ## ANYCAST
@@ -175,5 +175,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import SERVICE_ID
+terraform import alkira_service_infoblox.example SERVICE_ID
 ```
