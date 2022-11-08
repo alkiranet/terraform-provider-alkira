@@ -139,10 +139,10 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Default:     true,
 						},
 						"customer_asn": {
-							Description: "BGP ASN on the customer premise side. Default value is `64523`.",
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Default:     64523,
+							Description: "BGP ASN on the customer premise side. A typical value for 2 byte segment " +
+								"is `64523` and `4200064523` for 4 byte segment.",
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 						"segment_id": {
 							Description: "Segment ID.",
