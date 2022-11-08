@@ -1,3 +1,10 @@
+---
+subcategory: "Release Notes"
+page_title: "v0.9.7"
+description: |-
+    Release notes for v0.9.7
+---
+
 This release introduces new resource to manage Azure ExpressRoute
 connector and several new data sources with various enhancements and
 bug fixes.
