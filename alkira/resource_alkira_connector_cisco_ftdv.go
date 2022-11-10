@@ -57,15 +57,20 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Required: true,
 			},
 			"max_instance_count": {
-				Description: "The maximum number of Cisco FTDv instances that should be deployed."
-				Type:     schema.TypeInt,
-				Required: true,
+				Description: "The maximum number of Cisco FTDv instances that should be deployed.",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"min_instance_count": {
-				Description: "The minimum number of Cisco FTDv instances that should be deployed."
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Description: "The minimum number of Cisco FTDv instances that should be deployed.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+			},
+			"ip_allow_list": {
+				Description: "",
+				Type:        schema.TypeList,
+				Optional:    true,
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -77,6 +82,60 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
+			"segment_id": {
+				Description: "The ID of the segments associated with the service.",
+				Type:        schema.TypeInt,
+				Required:    true,
+			},
+			"management_server": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip_address": {
+							Description: "",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"segment_id": {
+							Description: "The ID of the segment to be used to access the management server.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
+					},
+				},
+			},
+			"instances": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"credential_id": {
+							Description: "",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"hostname": {
+							Description: "",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"version": {
+							Description: "",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"license_type": {
+							Description:  ", either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+						},
+					},
+				},
 			},
 		},
 	}
@@ -122,8 +181,7 @@ func resourceConnectorCiscoFTDvRead(d *schema.ResourceData, m interface{}) error
 
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instances {
-		i := map[string]interface{}{
-		}
+		i := map[string]interface{}{}
 		instances = append(instances, i)
 	}
 
@@ -171,11 +229,15 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	request := &alkira.ConnectorCiscoFTDv{
-		Name:           d.Get("name").(string),
-		Size:           d.Get("size").(string),
-		BillingTags:    billingTags,
-		TunnelProtocol: d.Get("tunnel_protocol").(string),
-		Cxp:            d.Get("cxp").(string),
+		Name:             d.Get("name").(string),
+		AutoScale:        d.Get("auto_scale").(string),
+		GlobalCidrListId: d.Get("global_cidr_list").(int),
+		Size:             d.Get("size").(string),
+		Cxp:              d.Get("cxp").(string),
+		MaxInstanceCount: d.Get("max_instance_count").(int),
+		MinInstanceCount: d.Get("min_instance_count").(int),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		BillingTags:      billingTags,
 		// Instances:      instances,
 		// SegmentOptions: segmentOptions,
 	}
