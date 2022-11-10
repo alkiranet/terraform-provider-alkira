@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -12,6 +12,7 @@ type GlobalCidrList struct {
 	CXP         string      `json:"cxp"`
 	Id          json.Number `json:"id,omitempty"`
 	Name        string      `json:"name"`
+	Tags        []string    `json:"tags,omitempty"`
 	Values      []string    `json:"values"`
 }
 

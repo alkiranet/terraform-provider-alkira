@@ -30,6 +30,7 @@ type InternetApplication struct {
 	Name                   string                       `json:"name"`
 	PublicIps              []string                     `json:"publicIps"`
 	SegmentName            string                       `json:"segmentName"`
+	SnatIpv4Ranges         []string                     `json:"snatIpv4Ranges,omitempty"`
 	Size                   string                       `json:"size"`
 	Targets                []InternetApplicationTargets `json:"targets,omitempty"`
 }
