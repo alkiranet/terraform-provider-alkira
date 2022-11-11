@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,11 +72,7 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Description: "",
 				Type:        schema.TypeList,
 				Optional:    true,
-			},
-			"group": {
-				Description: "The group of the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"billing_tag_ids": {
 				Description: "IDs of Billing Tags.",
@@ -83,9 +80,20 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"segment_id": {
-				Description: "The ID of the segments associated with the service.",
-				Type:        schema.TypeInt,
+			"segment_ids": {
+				Description: "IDs of segments associated with the service.",
+				Type:        schema.TypeList,
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"username": {
+				Description: "",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"password": {
+				Description: "",
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"management_server": {
@@ -94,15 +102,15 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_address": {
+						"fmc_ip": {
 							Description: "",
 							Type:        schema.TypeString,
-							Computed:    true,
+							Required:    true,
 						},
 						"segment_id": {
 							Description: "The ID of the segment to be used to access the management server.",
 							Type:        schema.TypeInt,
-							Optional:    true,
+							Required:    true,
 						},
 					},
 				},
@@ -113,7 +121,22 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "The ID of the Cisco FTDv instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"credential_id": {
+							Description: "",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"internal_name": {
+							Description: "",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"state": {
 							Description: "",
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -133,6 +156,21 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+						},
+						"admin_password": {
+							Description: "",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"fmc_registration_key": {
+							Description: "",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"ftdv_nat_id": {
+							Description: "",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 					},
 				},
@@ -170,24 +208,33 @@ func resourceConnectorCiscoFTDvRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
+	d.Set("name", connector.Name)
+	d.Set("auto_scale", connector.AutoScale)
 	d.Set("size", connector.Size)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
-	d.Set("group", connector.Group)
-	d.Set("enabled", connector.Enabled)
-	d.Set("name", connector.Name)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
-	d.Set("vhub_prefix", connector.VhubPrefix)
+	d.Set("max_instance_count", connector.MaxInstanceCount)
+	d.Set("min_instance_count", connector.MinInstanceCount)
+	d.Set("ip_allow_list", connector.IpAllowList)
+	d.Set("global_cidr_list", connector.GlobalCidrListId)
+	d.Set("credential_id", connector.CredentialId)
+	d.Set("management_server", connector.ManagementServer)
 
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instances {
-		i := map[string]interface{}{}
+		i := map[string]interface{}{
+			"id":            instance.Id,
+			"credential_id": instance.CredentialId,
+			"internal_name": instance.InternalName,
+			"state":         instance.State,
+			"hostname":      instance.Hostname,
+			"version":       instance.Version,
+			"license_type":  instance.LicenseType,
+		}
 		instances = append(instances, i)
 	}
-
 	d.Set("instances", instances)
-
-	var segments []map[string]interface{}
 
 	return nil
 }
@@ -220,16 +267,43 @@ func resourceConnectorCiscoFTDvDelete(d *schema.ResourceData, m interface{}) err
 
 // generateConnectorCiscoFTDvRequest generate a request for Azure ExpressRoute connector
 func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorCiscoFTDv, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	ciscoFTDvCredId := d.Get("credential_id").(string)
+	if 0 == len(ciscoFTDvCredId) {
+		log.Printf("[INFO] Creating Cisco FTDv Firewall Service Credentials")
+		ciscoFTDvName := d.Get("name").(string) + "-" + randomNameSuffix()
+		c := alkira.CredentialCiscoFtdv{Username: d.Get("username").(string), Password: d.Get("password").(string)}
+		credentialId, err := client.CreateCredential(ciscoFTDvName, alkira.CredentialTypeCiscoFtdv, c, 0)
+		if err != nil {
+			return nil, err
+		}
+		d.Set("credential_id", credentialId)
+
+	}
+
+	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
+	segment_names, err := convertSegmentIdsToSegmentNames(ids, m)
+	if err != nil {
+		return nil, err
+	}
+
+	// managementServer, err := expandCiscoFtdvManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	instances, err := expandCiscoFTDvInstances(d.Get("instances").([]interface{}), m)
+	instances, err := expandCiscoFTDvInstances(d.Get("name").(string), d.Get("instances").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
 
 	request := &alkira.ConnectorCiscoFTDv{
+		Id:               d.Get("id").(int),
 		Name:             d.Get("name").(string),
+		CredentialId:     d.Get("credential_id").(string),
 		AutoScale:        d.Get("auto_scale").(string),
 		GlobalCidrListId: d.Get("global_cidr_list").(int),
 		Size:             d.Get("size").(string),
@@ -237,9 +311,11 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		Segments:         segment_names,
+		IpAllowList:      convertTypeListToStringList(d.Get("ip_allow_list").([]interface{})),
 		BillingTags:      billingTags,
-		// Instances:      instances,
-		// SegmentOptions: segmentOptions,
+		// ManagementServer: managementServer,
+		Instances: instances,
 	}
 
 	return request, nil
