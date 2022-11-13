@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Terraform Provider
         run: |
-          cd ${{ env.BUILD_ARTIFACTS_PATH }}
+          cd ${{ env.BUILD_DIR }}
           make
 
       - name: Upload to Latest
