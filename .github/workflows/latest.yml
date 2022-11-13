@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -33,7 +35,6 @@ jobs:
 
       - name: Upload to Latest
         run: |
-          path="${{ env.BUILD_PATH }}"
-          for file in "${{ env.BUILD_DIR }}/releases/*/*.tar.gz"
+          for file in "${{ env.BUILD_DIR }}/releases/*/*.tar.gz"; do
             aws s3 cp "$file" "${{ env.BUILD_ARTIFACTS_PATH }}/"
           done
