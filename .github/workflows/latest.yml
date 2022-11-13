@@ -35,6 +35,8 @@ jobs:
 
       - name: Upload to Latest
         run: |
-          for file in "${{ env.BUILD_DIR }}/releases/*/*.tar.gz"; do
-            aws s3 cp "$file" "${{ env.BUILD_ARTIFACTS_PATH }}/"
-          done
+          ls "${{ env.BUILD_DIR }}"
+          ls "${{ env.BUILD_DIR }}/releases/"
+          # for file in "${{ env.BUILD_DIR }}/releases/*/*.tar.gz"; do
+          #   aws s3 cp "$file" "${{ env.BUILD_ARTIFACTS_PATH }}/"
+          # done
