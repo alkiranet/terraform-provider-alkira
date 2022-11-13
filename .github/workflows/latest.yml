@@ -9,7 +9,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_DOWNLOADS_DEV_SECRET_KEY }}
   AWS_REGION: us-east-1
   BUILD_DIR: /home/runner/work/terraform-provider-alkira/terraform-provider-alkira
-  BUILD_ARTIFACTS_PATH: s3://downloads.alkira.com/dev/terraform-provider-alkira
+  BUILD_ARTIFACTS_PATH: s3://downloads.alkira.com/dev/terraform-provider-alkira/latest
 
 jobs:
   latest:
@@ -18,25 +18,24 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
+      - name: Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Set up Go
+      - name: Set up Golang
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Build Terraform Provider
+      - name: Build terraform provider
         run: |
           cd ${{ env.BUILD_DIR }}
           make release
 
-      - name: Upload to Latest
+      - name: Upload to S3 latest directory
         run: |
-          ls "${{ env.BUILD_DIR }}"
-          ls "${{ env.BUILD_DIR }}/releases/"
-          for file in "${{ env.BUILD_DIR }}/releases/*/*.tar.gz"; do
-            aws s3 cp "$file" "${{ env.BUILD_ARTIFACTS_PATH }}/"
-          done
+          ver=`ls "${{ env.BUILD_DIR }}/releases/"`
+          aws s3 rm "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
+          aws s3 cp releases/$ver "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
+
