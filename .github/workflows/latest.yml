@@ -31,11 +31,33 @@ jobs:
       - name: Build terraform provider
         run: |
           cd ${{ env.BUILD_DIR }}
+          ver=`git describe`
+          echo "latest_version=$ver" >> $GITHUB_ENV
           make release
 
       - name: Upload to S3 latest directory
         run: |
-          ver=`ls "${{ env.BUILD_DIR }}/releases/"`
           aws s3 rm "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
           aws s3 cp releases/$ver "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
 
+      - name: Send custom JSON data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # For posting a rich message using Block Kit
+          payload: |
+          {
+            "text": "Latest Build: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "downloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz"
+                }
+              }
+            ]
+          }
+          env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
