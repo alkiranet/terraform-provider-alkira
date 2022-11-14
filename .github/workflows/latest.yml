@@ -38,7 +38,7 @@ jobs:
       - name: Upload to S3 latest directory
         run: |
           aws s3 rm "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
-          aws s3 cp releases/$ver "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
+          aws s3 cp releases/${{ env.latest_version }} "${{ env.BUILD_ARTIFACTS_PATH }}/" --recursive
 
       - name: Send custom JSON data to Slack workflow
         id: slack
@@ -53,7 +53,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "downloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz"
+                    "text": "downloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-arm64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-linux-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-windows-amd64.zip\n"
                   }
                 }
               ]
