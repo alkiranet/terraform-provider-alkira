@@ -19,10 +19,20 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 		Delete: resourceConnectorCiscoFTDvDelete,
 
 		Schema: map[string]*schema.Schema{
+			// "id": {
+			// 	Description: "The ID of the Cisco FTDv Firewall.",
+			// 	Type:        schema.TypeInt,
+			// 	Computed:    true,
+			// },
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"credential_id": {
+				Description: "ID of Checkpoint Firewall credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"auto_scale": {
 				Description: "Indicate if `auto_scale` should be enabled for your Cisco FTDv connector." +
@@ -107,6 +117,11 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"segment_name": {
+							Description: "",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
 						"segment_id": {
 							Description: "The ID of the segment to be used to access the management server.",
 							Type:        schema.TypeInt,
@@ -144,7 +159,7 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 						"hostname": {
 							Description: "",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 						},
 						"version": {
 							Description: "",
@@ -171,6 +186,31 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 							Description: "",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+					},
+				},
+			},
+			"segment_options": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_id": {
+							Description: "The ID of the segment.",
+							Type:        schema.TypeInt,
+							Required:    true,
+						},
+						"zone_name": {
+							Description: "The name of the associated zone.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"groups": {
+							Description: "The list of Groups associated with the zone.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -217,7 +257,7 @@ func resourceConnectorCiscoFTDvRead(d *schema.ResourceData, m interface{}) error
 	d.Set("max_instance_count", connector.MaxInstanceCount)
 	d.Set("min_instance_count", connector.MinInstanceCount)
 	d.Set("ip_allow_list", connector.IpAllowList)
-	d.Set("global_cidr_list", connector.GlobalCidrListId)
+	d.Set("global_cidr_list_id", connector.GlobalCidrListId)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("management_server", connector.ManagementServer)
 
@@ -282,40 +322,46 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 
 	}
 
+	managementServer, err := expandCiscoFtdvManagementServer(d.Get("management_server").(*schema.Set))
+	if err != nil {
+		return nil, err
+	}
+
 	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
 	segment_names, err := convertSegmentIdsToSegmentNames(ids, m)
 	if err != nil {
 		return nil, err
 	}
 
-	// managementServer, err := expandCiscoFtdvManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+	// segmentOptions, err := expandCiscoFtdvSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	// if err != nil {
 	// 	return nil, err
 	// }
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	instances, err := expandCiscoFTDvInstances(d.Get("name").(string), d.Get("instances").([]interface{}), m)
+	instances, err := expandCiscoFTDvInstances(d.Get("name").(string), d.Get("instances").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
 	request := &alkira.ConnectorCiscoFTDv{
-		Id:               d.Get("id").(int),
+		// Id:               d.Get("id").(int),
 		Name:             d.Get("name").(string),
-		CredentialId:     d.Get("credential_id").(string),
-		AutoScale:        d.Get("auto_scale").(string),
-		GlobalCidrListId: d.Get("global_cidr_list").(int),
+		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
 		Size:             d.Get("size").(string),
+		CredentialId:     d.Get("credential_id").(string),
 		Cxp:              d.Get("cxp").(string),
+		ManagementServer: managementServer,
+		IpAllowList:      convertTypeListToStringList(d.Get("ip_allow_list").([]interface{})),
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
-		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		Segments:         segment_names,
-		IpAllowList:      convertTypeListToStringList(d.Get("ip_allow_list").([]interface{})),
-		BillingTags:      billingTags,
-		// ManagementServer: managementServer,
-		Instances: instances,
+		// SegmentOptions:   segmentOptions,
+		AutoScale:      d.Get("auto_scale").(string),
+		TunnelProtocol: d.Get("tunnel_protocol").(string),
+		BillingTags:    billingTags,
+		Instances:      instances,
 	}
 
 	return request, nil
