@@ -3,6 +3,7 @@ package alkira
 import (
 	"errors"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,9 +30,11 @@ func expandCiscoFTDvInstances(name string, in *schema.Set, m interface{}) ([]alk
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
 		}
-		// if v, ok := instanceCfg["hostname"].(string); ok {
-		// }
-		r.Hostname = name + "-" + randomNameSuffix()
+		if v, ok := instanceCfg["hostname"].(string); ok {
+			r.Hostname = v + "-" + randomNameSuffix()
+		} else {
+			r.Hostname = name + "-" + randomNameSuffix()
+		}
 		if v, ok := instanceCfg["admin_password"].(string); ok {
 			adminPassword = v
 		}
@@ -101,21 +104,42 @@ func expandCiscoFtdvManagementServer(in *schema.Set) (alkira.CiscoFTDvManagement
 	return mg, nil
 }
 
-// func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
+func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
 
-// 	if in == nil || in.Len() == 0 {
-// 		segmentOptions := make(alkira.SegmentNameToZone)
-// 		zonestoGroups := make(alkira.ZoneToGroups)
-// 		z := alkira.OuterZoneToGroups{}
-// 		j := []string{}
+	log.Printf("[ERROR] AAAA %v", in)
 
-// 		zonestoGroups["DEFAULT"] = j
-// 		z.ZonesToGroups = zonestoGroups
+	segmentOptions := make(alkira.SegmentNameToZone, in.Len())
 
-// 		segmentOptions[segmentName] = z
+	for _, option := range in.List() {
+		cfg := option.(map[string]interface{})
+		log.Printf("[ERROR] BBBB %v", option)
 
-// 		return segmentOptions, nil
-// 	}
+		zonestoGroups := make(alkira.ZoneToGroups)
+		j := []string{}
+		zonestoGroups[cfg["zone_name"].(string)] = j
 
-// 	return expandSegmentOptions(in, m)
-// }
+		outerZoneToGroups := alkira.OuterZoneToGroups{
+			SegmentId:     cfg["segment_id"].(int),
+			ZonesToGroups: zonestoGroups,
+		}
+
+		segmentName, err := convertSegmentIdToSegmentName(strconv.Itoa(cfg["segment_id"].(int)), m)
+		if err != nil {
+			return nil, errors.New("Segment could not be found")
+		}
+
+		segmentOptions[segmentName] = outerZoneToGroups
+
+	}
+
+	return segmentOptions, nil
+}
+
+func deflateCiscoFTDvManagementServer(mg alkira.CiscoFTDvManagementServer) []map[string]interface{} {
+	m := make(map[string]interface{})
+	m["fmc_ip"] = mg.IPAddress
+	m["segment_name"] = mg.Segment
+	m["segment_id"] = mg.SegmentId
+
+	return []map[string]interface{}{m}
+}

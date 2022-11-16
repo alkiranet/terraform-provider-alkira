@@ -19,18 +19,13 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 		Delete: resourceConnectorCiscoFTDvDelete,
 
 		Schema: map[string]*schema.Schema{
-			// "id": {
-			// 	Description: "The ID of the Cisco FTDv Firewall.",
-			// 	Type:        schema.TypeInt,
-			// 	Computed:    true,
-			// },
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"credential_id": {
-				Description: "ID of Checkpoint Firewall credential.",
+				Description: "An opaque identifier generated when storing Cisco FTDv credentials.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -44,13 +39,13 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", `MEDIUM`, `LARGE`}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", `MEDIUM`, `LARGE`, `2LARGE`}, false),
 			},
 			"tunnel_protocol": {
-				Description:  "The tunnel protocol. One of `IPSEC`. Default is `IPSEC`",
+				Description:  "The tunnel protocol. Default is `IPSEC`",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPSEC",
@@ -63,7 +58,8 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 			},
 			"global_cidr_list_id": {
 				Description: "The ID of the global cidr list to be associated with " +
-					"the management server.",
+					"the management server. The global cidr list must be tagged with `CISCO FTDV`." +
+					"CIDR must be at least /25.",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -79,7 +75,7 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Default:     0,
 			},
 			"ip_allow_list": {
-				Description: "",
+				Description: "List of IP Addresses and CIDRs to access the Firepower Management Center.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -97,33 +93,33 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"username": {
-				Description: "",
+				Description: "Firepower Management Server username.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"password": {
-				Description: "",
+				Description: "Firepower Management Server password.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"management_server": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "The Firepower Management Server options.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fmc_ip": {
-							Description: "",
+							Description: "IP address of the Firepower Management Server.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"segment_name": {
-							Description: "",
+							Description: "Name of the segment associated with the Firepower Management Server.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"segment_id": {
-							Description: "The ID of the segment to be used to access the management server.",
+							Description: "ID of the segment accociated with the Firepower Management Server.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
@@ -131,59 +127,58 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 				},
 			},
 			"instances": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "",
+				Type:     schema.TypeSet,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description: "The ID of the Cisco FTDv instance.",
+							Description: "ID of the Cisco Firepower Firewall instance.",
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
 						"credential_id": {
-							Description: "",
+							Description: "An opaque identifier generated when storing Cisco Firepower Firewall instance credentials.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"internal_name": {
-							Description: "",
+							Description: "Generated internal name when storing Cisco Firepower Firewall instance.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"state": {
-							Description: "",
+							Description: "Internal state of the Cisco Firepower Firewall instance.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"hostname": {
-							Description: "",
+							Description: "Name of the Cisco Firepower Firewall instance. If empty will use Cisco FTDv `name` field.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
 						"version": {
-							Description: "",
+							Description: "The version of the Cisco Firepower Firewall instance.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"license_type": {
-							Description:  ", either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+							Description:  "Cisco Firepower Firewall instance license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 						},
 						"admin_password": {
-							Description: "",
+							Description: "Cisco Firepower Firewall instance admin password.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"fmc_registration_key": {
-							Description: "",
+							Description: "Cisco Firepower Firewall instance registration key.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"ftdv_nat_id": {
-							Description: "",
+							Description: "ID of NAT which FTDv Services sit behind.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -193,11 +188,11 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 			"segment_options": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "",
+				Description: "The segment options used by the Cisco FTDv.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
-							Description: "The ID of the segment.",
+							Description: "ID of the segment.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
@@ -259,7 +254,8 @@ func resourceConnectorCiscoFTDvRead(d *schema.ResourceData, m interface{}) error
 	d.Set("ip_allow_list", connector.IpAllowList)
 	d.Set("global_cidr_list_id", connector.GlobalCidrListId)
 	d.Set("credential_id", connector.CredentialId)
-	d.Set("management_server", connector.ManagementServer)
+	d.Set("management_server", deflateCiscoFTDvManagementServer(connector.ManagementServer))
+	d.Set("segment_options", deflateSegmentOptions(connector.SegmentOptions))
 
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instances {
@@ -333,7 +329,11 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 		return nil, err
 	}
 
-	// segmentOptions, err := expandCiscoFtdvSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandCiscoFtdvSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+	// segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -346,7 +346,6 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	request := &alkira.ConnectorCiscoFTDv{
-		// Id:               d.Get("id").(int),
 		Name:             d.Get("name").(string),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
 		Size:             d.Get("size").(string),
@@ -357,11 +356,11 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
 		Segments:         segment_names,
-		// SegmentOptions:   segmentOptions,
-		AutoScale:      d.Get("auto_scale").(string),
-		TunnelProtocol: d.Get("tunnel_protocol").(string),
-		BillingTags:    billingTags,
-		Instances:      instances,
+		SegmentOptions:   segmentOptions,
+		AutoScale:        d.Get("auto_scale").(string),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		BillingTags:      billingTags,
+		Instances:        instances,
 	}
 
 	return request, nil
