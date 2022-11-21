@@ -82,6 +82,7 @@ Read-Only:
 
 Required:
 
+- `customer_asn` (Number) BGP ASN on the customer premise side. A typical value for 2 byte segment is `64523` and `4200064523` for 4 byte segment.
 - `segment_id` (Number) Segment ID.
 - `vrf_id` (Number) VRF ID.
 
@@ -89,7 +90,6 @@ Optional:
 
 - `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes.
 - `allow_nat_exit` (Boolean) Allow NAT exit.
-- `customer_asn` (Number) BGP ASN on the customer premise side. Default value is `64523`.
 
 ## Import
 

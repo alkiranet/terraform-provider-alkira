@@ -35,14 +35,14 @@ type Session struct {
 }
 
 func (s *Session) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	logf("DEBUG", "SetCookies URL : %s\n", u.String())
-	logf("DEBUG", "SetCookies: %s\n", cookies)
+	logf("TRACE", "SetCookies URL : %s\n", u.String())
+	logf("TRACE", "SetCookies: %s\n", cookies)
 	s.jar[u.Host] = cookies
 }
 
 func (s *Session) Cookies(u *url.URL) []*http.Cookie {
-	logf("DEBUG", "Cookie URL is : %s\n", u.String())
-	logf("DEBUG", "Cookie being returned is : %s\n", s.jar[u.Host])
+	logf("TRACE", "Cookie URL is : %s\n", u.String())
+	logf("TRACE", "Cookie being returned is : %s\n", s.jar[u.Host])
 	return s.jar[u.Host]
 }
 
@@ -335,7 +335,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return fmt.Errorf("client-delete: retry timeout")
+			return fmt.Errorf("client-delete: retry timeout, %s", string(data))
 		}
 
 		if err != nil {

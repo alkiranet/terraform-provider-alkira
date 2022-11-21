@@ -236,7 +236,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
+				Required: true,
 			},
 			"group": {
 				Description: "The group of the connector.",
