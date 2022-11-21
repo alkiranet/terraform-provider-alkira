@@ -18,6 +18,8 @@ const (
 	CredentialTypeChkpFwInstance                          = "chkp-fw-instance"
 	CredentialTypeChkpFwManagement                        = "chkp-fw-management-server"
 	CredentialTypeCiscoSdwan                              = "ciscosdwan"
+	CredentialTypeCiscoFtdv                               = "cisco-ftdv-fw"
+	CredentialTypeCiscoFtdvInstance                       = "cisco-ftdv-fw-instance"
 	CredentialTypeGcpVpc                                  = "gcpvpc"
 	CredentialTypeKeyPair                                 = "keypair"
 	CredentialTypeLdap                                    = "ldap"
@@ -75,6 +77,17 @@ type CredentialCheckPointFwManagementServer struct {
 type CredentialCiscoSdwan struct {
 	Password string `json:"password"`
 	Username string `json:"userName"`
+}
+
+type CredentialCiscoFtdv struct {
+	Password string `json:"password"`
+	Username string `json:"userName"`
+}
+
+type CredentialCiscoFtdvInstance struct {
+	AdminPassword      string `json:"adminPassword"`
+	FmcRegistrationKey string `json:"fmcRegistrationKey"`
+	FtvdNatId          string `json:"ftdvNatId,omitempty"`
 }
 
 type CredentialGcpVpc struct {
