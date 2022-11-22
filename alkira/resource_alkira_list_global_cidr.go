@@ -43,7 +43,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
-				Description: "A list of service types associated with the GlobalCidrList.",
+				Description: "A list of associated service types.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},

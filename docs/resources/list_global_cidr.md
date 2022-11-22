@@ -34,7 +34,7 @@ resource "alkira_list_global_cidr" "test" {
 ### Optional
 
 - `description` (String) Description for the list.
-- `tags` (List of String) A list of service types associated with the GlobalCidrList.
+- `tags` (List of String) A list of associated service types.
 
 ### Read-Only
 
