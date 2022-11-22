@@ -42,6 +42,12 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": {
+				Description: "A list of associated service types.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -81,6 +87,7 @@ func resourceListGlobalCidrRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", list.Description)
 	d.Set("cxp", list.CXP)
 	d.Set("values", list.Values)
+	d.Set("tags", list.Tags)
 
 	return nil
 }
@@ -111,11 +118,14 @@ func generateListGlobalCidrRequest(d *schema.ResourceData, m interface{}) (*alki
 
 	values := convertTypeListToStringList(d.Get("values").([]interface{}))
 
+	tags := convertTypeListToStringList(d.Get("tags").([]interface{}))
+
 	request := &alkira.GlobalCidrList{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		CXP:         d.Get("cxp").(string),
 		Values:      values,
+		Tags:        tags,
 	}
 
 	return request, nil
