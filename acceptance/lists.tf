@@ -26,7 +26,8 @@ resource "alkira_list_as_path" "tf_test" {
 
 resource "alkira_list_global_cidr" "tf_test" {
   name        = "tf-test"
-  description = "terraform test global cidr list"
-  values      = ["172.16.1.0/24"]
+  description = "terraform test global cidr list for cisco ftdv"
+  values      = ["10.0.0.0/25"]
   cxp         = "US-WEST-1"
+  tags        = ["CISCO_FTDV_FW"]
 }
