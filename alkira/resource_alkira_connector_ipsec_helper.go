@@ -273,6 +273,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 
 				if availOk {
 					staticOption.Availability = avail
+					dynamicOption.Availability = avail
 				}
 
 				asn, asnOk := routingOptionsInput["customer_gateway_asn"].(string)
