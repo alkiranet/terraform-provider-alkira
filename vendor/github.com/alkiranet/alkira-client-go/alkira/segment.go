@@ -19,6 +19,7 @@ type SegmentSrcIpv4PoolList struct {
 
 type Segment struct {
 	Asn                                        int                      `json:"asn"`
+	Description                                string                   `json:"description,omitempty"`
 	EnableIpv6ToIpv4Translation                bool                     `json:"enableIpv6ToIpv4Translation"`
 	EnterpriseDNSServerIP                      string                   `json:"enterpriseDNSServerIP,omitempty"`
 	Id                                         int                      `json:"id,omitempty"` // only for response
