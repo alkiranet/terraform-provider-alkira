@@ -36,6 +36,11 @@ func resourceAlkiraSegment() *schema.Resource {
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"description": {
+				Description: "The description of the segment.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"enable_ipv6_to_ipv4_translation": {
 				Description: "Enable IPv6 to IPv4 translation in the " +
 					"segment for internet application traffic.",
@@ -103,6 +108,7 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("asn", segment.Asn)
+	d.Set("description", segment.Description)
 	d.Set("enable_ipv6_to_ipv4_translation", segment.EnableIpv6ToIpv4Translation)
 	d.Set("enterprise_dns_server_ip", segment.EnterpriseDNSServerIP)
 	d.Set("name", segment.Name)
@@ -160,6 +166,7 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 
 	seg := &alkira.Segment{
 		Asn:                         d.Get("asn").(int),
+		Description:                 d.Get("description").(string),
 		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
 		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
 		Name:                        d.Get("name").(string),

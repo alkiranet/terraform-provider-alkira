@@ -20,7 +20,8 @@ resource "alkira_segment" "seg1" {
 }
 
 resource "alkira_segment" "seg2" {
-  name  = "tftest-cisco-ftdv"
-  asn   = "65513"
-  cidrs = ["10.2.1.0/24"]
+  name        = "tftest-cisco-ftdv"
+  description = "test segment 2"
+  asn         = "65513"
+  cidrs       = ["10.2.1.0/24"]
 }
