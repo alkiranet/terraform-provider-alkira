@@ -78,7 +78,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					"In order to use the option IPV6 or BOTH, `enable_ipv6_to_ipv4_translation` " +
 					"should be enabled on the associated segment and a valid IP pool range should " +
 					"be provided. `IPV6` and `BOTH` options are only available to Internet " +
-					"Applications on AWS CXPs.",
+					"Applications on AWS CXPs. (**BETA**)",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"IPV4", "IPV6", "BOTH"}, false),
@@ -172,6 +172,7 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
 	d.Set("name", app.Name)
+	d.Set("internet_protocol", app.InternetProtocol)
 	d.Set("public_ips", app.PublicIps)
 	d.Set("size", app.Size)
 
@@ -246,6 +247,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		FqdnPrefix:           d.Get("fqdn_prefix").(string),
 		InboundConnectorId:   d.Get("inbound_connector_id").(string),
 		InboundConnectorType: d.Get("inbound_connector_type").(string),
+		InternetProtocol:     d.Get("internet_protocol").(string),
 		Name:                 d.Get("name").(string),
 		PublicIps:            publicIps,
 		SegmentName:          segment.Name,
