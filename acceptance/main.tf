@@ -7,5 +7,5 @@ terraform {
 }
 
 provider "alkira" {
-  portal   = "terraform.preprod.alkira3.net"
+  portal = "terraform.preprod.alkira3.net"
 }

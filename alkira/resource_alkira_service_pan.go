@@ -42,14 +42,19 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
 			"pan_password": {
-				Description: "PAN password.",
+				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"pan_username": {
-				Description: "PAN username.",
+				Description: "PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"pan_license_key": {
+				Description: "PAN Panorama license Key.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"credential_id": {
 				Description: "ID of PAN credential.",
@@ -423,8 +428,9 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		log.Printf("[INFO] Creating PAN Credential")
 		panCredName := d.Get("name").(string) + randomNameSuffix()
 		panCredential := alkira.CredentialPan{
-			Username: d.Get("pan_username").(string),
-			Password: d.Get("pan_password").(string),
+			Username:   d.Get("pan_username").(string),
+			Password:   d.Get("pan_password").(string),
+			LicenseKey: d.Get("pan_license_key").(string),
 		}
 		credentialId, err := client.CreateCredential(
 			panCredName,

@@ -1,31 +1,21 @@
 # Create groups under Management/Groups
 
-resource "alkira_group" "tftest1" {
-  name = "tftest-group1"
+resource "alkira_group" "test1" {
+  name = "acceptance-group1"
 }
 
-resource "alkira_group" "tftest2" {
-  name = "tftest-group2"
+resource "alkira_group" "test2" {
+  name = "acceptance-group2"
 }
 
-resource "alkira_group" "tftest3" {
-  name = "tftest-group3"
+resource "alkira_group" "test3" {
+  name = "acceptance-group3"
 }
 
-resource "alkira_group" "tftest4" {
-  name = "tftest-group4"
+resource "alkira_group" "test4" {
+  name = "acceptance-group4"
 }
 
-resource "alkira_group" "tftest5" {
-  name = "tftest-group5"
-}
-
-resource "alkira_group" "test" {
-  name = "tftest-nat-policy"
-  description = "test policy"
-}
-
-resource "alkira_group" "group1" {
-  name = "tf-test-policy"
-  description = "test policy"
+resource "alkira_group" "test5" {
+  name = "acceptance-group5"
 }
