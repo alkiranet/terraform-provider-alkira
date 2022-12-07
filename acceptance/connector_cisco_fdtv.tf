@@ -1,5 +1,5 @@
 resource "alkira_connector_cisco_ftdv" "cisco_ftdv_test" {
-  name                = "ftdvFirewalll"
+  name                = "acceptance-ftdv-test1"
   auto_scale          = "OFF"
   size                = "SMALL"
   tunnel_protocol     = "IPSEC"
