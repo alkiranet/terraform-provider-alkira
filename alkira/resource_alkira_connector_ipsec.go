@@ -283,7 +283,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 						"availability": {
 							Description: "The method to determine the availability of the routes. The value could be " +
-								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.",
+								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`. (**BETA**)",
 							Type:         schema.TypeString,
 							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
 							Optional:     true,
