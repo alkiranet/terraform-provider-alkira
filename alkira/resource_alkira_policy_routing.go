@@ -351,6 +351,7 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		Name:                          d.Get("name").(string),
 		Description:                   d.Get("description").(string),
 		Direction:                     d.Get("direction").(string),
+		Enabled:                       d.Get("enabled").(bool),
 		Segment:                       segment.Name,
 		IncludedGroups:                inGroups,
 		ExcludedGroups:                exGroups,
