@@ -93,8 +93,8 @@ resource "alkira_service_pan" "test1" {
 - `management_segment_id` (Number) Management Segment ID.
 - `max_instance_count` (Number) Max number of Panorama instances for auto scale.
 - `name` (String) Name of the PAN service.
-- `pan_password` (String) PAN password.
-- `pan_username` (String) PAN username.
+- `pan_password` (String) PAN Panorama password.
+- `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
 - `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `registration_pin_id` (String) PAN Registration PIN ID.
 - `registration_pin_value` (String) PAN Registration PIN Value.
@@ -113,6 +113,7 @@ resource "alkira_service_pan" "test1" {
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
+- `pan_license_key` (String) PAN Panorama license Key.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
