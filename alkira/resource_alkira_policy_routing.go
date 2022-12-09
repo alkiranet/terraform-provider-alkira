@@ -178,7 +178,6 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"`ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.",
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "ALL",
 						},
 						"routes_distribution_restricted_cxps": {
 							Description: "List of cxps to which routes " +

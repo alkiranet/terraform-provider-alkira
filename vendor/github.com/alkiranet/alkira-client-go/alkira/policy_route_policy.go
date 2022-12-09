@@ -27,7 +27,7 @@ type RoutePolicyRules struct {
 	Name                         string                                        `json:"name"`
 	Match                        RoutePolicyRulesMatch                         `json:"match"`
 	Set                          *RoutePolicyRulesSet                          `json:"set,omitempty"`
-	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution"`
+	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution,omitempty"`
 }
 
 type RoutePolicyRulesMatch struct {
@@ -47,7 +47,7 @@ type RoutePolicyRulesSet struct {
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
-	DistributionType        string   `json:"distributionType"`
+	DistributionType        string   `json:"distributionType,omitempty"`
 	RedistributeAsSecondary bool     `json:"redistributeAsSecondary,omitempty"`
 	RestrictedCxps          []string `json:"restrictedCxps,omitempty"`
 }
