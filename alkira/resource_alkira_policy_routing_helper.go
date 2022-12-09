@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,6 +89,10 @@ func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface
 		}
 	}
 
+	if reflect.DeepEqual(distrib, alkira.RoutePolicyRulesInterCxpRoutesRedistribution{}) {
+		return nil, nil
+	}
+
 	return &distrib, nil
 }
 
@@ -128,6 +133,7 @@ func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) 
 		rule.Set = set
 
 		distribution, err := expandPolicyRoutingRuleInterCxpRoutesRedistribution(input)
+
 		if err != nil {
 			return nil, err
 		}
