@@ -132,13 +132,13 @@ func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) 
 
 		rule.Set = set
 
-		// distribution, err := expandPolicyRoutingRuleInterCxpRoutesRedistribution(input)
+		distribution, err := expandPolicyRoutingRuleInterCxpRoutesRedistribution(input)
 
-		// if err != nil {
-		// 	return nil, err
-		// }
+		if err != nil {
+			return nil, err
+		}
 
-		rule.InterCxpRoutesRedistribution = nil
+		rule.InterCxpRoutesRedistribution = distribution
 
 		rules[i] = rule
 	}
