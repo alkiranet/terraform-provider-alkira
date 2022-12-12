@@ -13,25 +13,30 @@ Manage checkpoint services
 ## Example Usage
 
 ```terraform
-resource "alkira_service_checkpoint" "tf_checkpoint" {
+resource "alkira_service_checkpoint" "test" {
+  name         = "test"
+
   auto_scale   = "ON"
   cxp          = "US-WEST"
-  name         = "chkpfw-1"
   license_type = "PAY_AS_YOU_GO"
   size         = "SMALL"
   version      = "R80.30"
   pdp_ips      = ["10.0.0.1"]
   password     = "abcd1234"
+  segment_id   = alkira_segment.test.id
 
-  # max_instance_count and min_instance_count must equal each other when auto_scale is off.
+  # max_instance_count and min_instance_count must equal each other
+  # when auto_scale is off.
   max_instance_count = 2
   min_instance_count = 2
 
-
-  instances {
+  instance {
+    name    = "ins1"
     sic_key = "abcd1234"
   }
-  instances {
+
+  instance {
+    name    = "ins2"
     sic_key = "abcd12345"
   }
 
@@ -40,19 +45,18 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
     configuration_mode  = "AUTOMATED"
     reachability        = "PRIVATE"
     ips                 = ["192.168.3.3"]
-    global_cidr_list_id = alkira_list_global_cidr.checkpoint_cidr.id
-    segment_id          = alkira_segment.checkpoint_seg.id
+    global_cidr_list_id = alkira_list_global_cidr.test.id
+    segment_id          = alkira_segment.test.id
 
-    # user_name and management_server_password required only when configuration_mode is AUTOMATED.
+    # user_name and management_server_password required only when
+    # configuration_mode is AUTOMATED.
     user_name                  = "checkpoint_user"
     management_server_password = "abcd1234"
 
-    # domain only required when configuration_mode is AUTOMATED and when type is MDS.
+    # domain only required when configuration_mode is AUTOMATED and
+    # when type is MDS.
     domain = "test.alkira.com"
   }
-
-  # only one segment allowed.    
-  segment_id = alkira_segment.checkpoint_seg.id
 }
 ```
 
@@ -62,7 +66,7 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
 ### Required
 
 - `cxp` (String) CXP region.
-- `instances` (Block Set, Min: 1) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instances))
+- `instance` (Block List, Min: 1) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_server` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
@@ -79,7 +83,7 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
 - `description` (String) The description of the checkpoint service.
 - `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time. If auto-scale is OFF, min_instance_count must equal max_instance_count.
 - `pdp_ips` (List of String) The IPs of the PDP Brokers.
-- `segment_options` (Block Set) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint. (see [below for nested schema](#nestedblock--segment_options))
+- `segment_options` (Block Set) The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 
 ### Read-Only
@@ -87,16 +91,18 @@ resource "alkira_service_checkpoint" "tf_checkpoint" {
 - `credential_id` (String) ID of Checkpoint Firewall credential.
 - `id` (String) The ID of this resource.
 
-<a id="nestedblock--instances"></a>
-### Nested Schema for `instances`
+<a id="nestedblock--instance"></a>
+### Nested Schema for `instance`
 
 Required:
 
+- `name` (String) The name of the checkpoint instance.
 - `sic_key` (String) The checkpoint instance sic keys.
 
 Read-Only:
 
 - `credential_id` (String) ID of Checkpoint Firewall Instance credential.
+- `id` (Number) The ID of the checkpoint instance.
 
 
 <a id="nestedblock--management_server"></a>
@@ -129,6 +135,9 @@ Required:
 
 - `groups` (List of String) The list of Groups associated with the zone.
 - `segment_id` (Number) The ID of the segment.
-- `zone_name` (String) The name of the associated zone. `zone_name` for Checkpoint should be `DEFAULT`.
+
+Optional:
+
+- `zone_name` (String) The name of the associated zone. Default value is `DEFAULT`.
 
 
