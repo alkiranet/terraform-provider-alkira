@@ -31,9 +31,22 @@ resource "alkira_policy_prefix_list" "test" {
 ### Optional
 
 - `description` (String) The description of the prefix list.
+- `prefix_range` (Block List) A valid prefix range that could be used to define a prefix of type `ROUTE`. (see [below for nested schema](#nestedblock--prefix_range))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--prefix_range"></a>
+### Nested Schema for `prefix_range`
+
+Required:
+
+- `prefix` (String) A valid CIDR as prefix in `x.x.x.x/m` format.
+
+Optional:
+
+- `ge` (Number) Integer less than `32` but greater than mask `m` in prefix and less than `le`.
+- `le` (Number) Integer less than `32` but greater than mask `m` in prefix
 
 
