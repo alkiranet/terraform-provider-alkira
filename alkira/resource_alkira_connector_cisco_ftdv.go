@@ -113,11 +113,6 @@ func resourceAlkiraConnectorCiscoFTDv() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"segment_name": {
-							Description: "Name of the segment associated with the Firepower Management Server.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"segment_id": {
 							Description: "ID of the segment accociated with the Firepower Management Server.",
 							Type:        schema.TypeInt,
@@ -318,7 +313,7 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 
 	}
 
-	managementServer, err := expandCiscoFtdvManagementServer(d.Get("management_server").(*schema.Set))
+	managementServer, err := expandCiscoFtdvManagementServer(d.Get("management_server").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
@@ -333,10 +328,6 @@ func generateConnectorCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*
 	if err != nil {
 		return nil, err
 	}
-	// segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
