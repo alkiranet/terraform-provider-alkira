@@ -16,7 +16,6 @@ resource "alkira_connector_cisco_ftdv" "cisco_ftdv_test" {
 
   management_server {
     fmc_ip       = "1.1.1.2"
-    segment_name = alkira_segment.test4.name
     segment_id   = alkira_segment.test4.id
   }
 
