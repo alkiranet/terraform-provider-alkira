@@ -69,10 +69,10 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			},
 			"advertise_internet_exit": {
 				Description: "Advertise Alkira’s Internet Connector to selected scope. Default " +
-					"value is `false`.",
+					"value is `true`.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"advertise_on_prem_routes": {
 				Description: "Advertise routes from other on premise connectors to selected scope. " +

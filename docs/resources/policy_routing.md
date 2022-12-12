@@ -50,7 +50,7 @@ resource "alkira_policy_routing" "test" {
 ### Optional
 
 - `advertise_custom_routes_prefix_id` (Number) Prefix list ID to send aggregates out towards on-prem connectors.
-- `advertise_internet_exit` (Boolean) Advertise Alkira’s Internet Connector to selected scope. Default value is `false`.
+- `advertise_internet_exit` (Boolean) Advertise Alkira’s Internet Connector to selected scope. Default value is `true`.
 - `advertise_on_prem_routes` (Boolean) Advertise routes from other on premise connectors to selected scope. Default value is `false`.
 - `description` (String) The description of the routing policy.
 - `enabled` (Boolean) Whether the routing policy is enabled. By default, it is set to `false`.
