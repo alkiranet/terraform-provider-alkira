@@ -4,7 +4,7 @@ resource "alkira_connector_cisco_ftdv" "cisco_ftdv_test" {
   size                = "SMALL"
   tunnel_protocol     = "IPSEC"
   cxp                 = "US-WEST-1"
-  global_cidr_list_id = alkira_list_global_cidr.test.id
+  global_cidr_list_id = alkira_list_global_cidr.ciscofdtv.id
   max_instance_count  = 1
   min_instance_count  = 1
   ip_allow_list       = ["192.168.3.3"]

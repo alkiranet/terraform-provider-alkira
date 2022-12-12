@@ -56,14 +56,24 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"instances": {
-				Type:     schema.TypeSet,
+			"instance": {
+				Type:     schema.TypeList,
 				Required: true,
 				Description: "An array containing properties for each Checkpoint Firewall instance " +
 					"that needs to be deployed. The number of instances should be equal to " +
 					"`max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"name": {
+							Description: "The name of the checkpoint instance.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"id": {
+							Description: "The ID of the checkpoint instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"credential_id": {
 							Description: "ID of Checkpoint Firewall Instance credential.",
 							Type:        schema.TypeString,
@@ -187,9 +197,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"segment_options": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "The segment options as used by your Checkpoint firewall. No more than one segment option will be accepted for Checkpoint.",
+				Description: "The segment options as used by your Checkpoint firewall. No more than one " +
+					"segment option will be accepted.",
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -198,9 +209,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the associated zone. `zone_name` for Checkpoint should be `DEFAULT`.",
+							Description: "The name of the associated zone. Default value is `DEFAULT`.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
+							Default:     "DEFAULT",
 						},
 						"groups": {
 							Description: "The list of Groups associated with the zone.",
@@ -272,7 +284,7 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("credential_id", checkpoint.CredentialId)
 	d.Set("cxp", checkpoint.Cxp)
 	d.Set("description", checkpoint.Description)
-	d.Set("instances", deflateCheckpointInstances(checkpoint.Instances))
+	d.Set("instance", setCheckpointInstances(d, checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
 	d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
@@ -297,7 +309,7 @@ func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Checkpoint%s", d.Id())
+	log.Printf("[INFO] Updating Checkpoint %s", d.Id())
 	err = client.UpdateCheckpoint(d.Id(), request)
 
 	return err
@@ -331,7 +343,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 		return nil, err
 	}
 
-	instances, err := expandCheckpointInstances(d.Get("name").(string), d.Get("instances").(*schema.Set), m)
+	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

@@ -85,37 +85,50 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 	return mg, nil
 }
 
-func expandCheckpointInstances(name string, in *schema.Set, m interface{}) ([]alkira.CheckpointInstance, error) {
-	client := m.(*alkira.AlkiraClient)
+func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.CheckpointInstance, error) {
 
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] invalid Checkpoint Firewall instance input.")
+	if in == nil || len(in) == 0 {
+		log.Printf("[DEBUG] Invalid Checkpoint Firewall instance input.")
 		return nil, errors.New("Invalid Checkpoint Firewall instance input.")
 	}
 
-	var chkpfwInstanceKey string
-	instances := make([]alkira.CheckpointInstance, in.Len())
-	for i, instance := range in.List() {
+	client := m.(*alkira.AlkiraClient)
+
+	instances := make([]alkira.CheckpointInstance, len(in))
+	for i, instance := range in {
 		r := alkira.CheckpointInstance{}
 		instanceCfg := instance.(map[string]interface{})
-		r.Name = name + "-instance-" + strconv.Itoa(i+1)
+
+		var sicKey string
+
+		if v, ok := instanceCfg["id"].(int); ok {
+			r.Id = v
+		}
+		if v, ok := instanceCfg["name"].(string); ok {
+			r.Name = v
+		}
 		if v, ok := instanceCfg["sic_key"].(string); ok {
-			chkpfwInstanceKey = v
+			sicKey = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
 				credentialName := r.Name + "-" + randomNameSuffix()
-				c := &alkira.CredentialCheckPointFwServiceInstance{SicKey: chkpfwInstanceKey}
+				c := &alkira.CredentialCheckPointFwServiceInstance{SicKey: sicKey}
+
 				log.Printf("[INFO] Creating Credential CheckpointInstance.")
 				credentialId, err := client.CreateCredential(
 					credentialName,
 					alkira.CredentialTypeChkpFwInstance,
 					c,
 					0)
+
 				if err != nil {
 					return nil, err
 				}
+
 				r.CredentialId = credentialId
+			} else {
+				r.CredentialId = v
 			}
 		}
 		instances[i] = r
@@ -181,15 +194,51 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []m
 	return []map[string]interface{}{m}
 }
 
-func deflateCheckpointInstances(c []alkira.CheckpointInstance) []map[string]interface{} {
+func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstance) []map[string]interface{} {
 	var instances []map[string]interface{}
 
-	for _, instance := range c {
-		i := map[string]interface{}{
-			"name":          instance.Name,
-			"credential_id": instance.CredentialId,
+	for _, value := range d.Get("instance").([]interface{}) {
+		cfg := value.(map[string]interface{})
+
+		for _, ins := range c {
+			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
+				instance := map[string]interface{}{
+					"credential_id": ins.CredentialId,
+					"name":          ins.Name,
+					"id":            ins.Id,
+					"sic_key":       cfg["sic_key"].(string),
+				}
+				instances = append(instances, instance)
+				break
+			}
 		}
-		instances = append(instances, i)
+	}
+
+	for _, instance := range c {
+		new := true
+
+		// Check if the instance already exists in the Terraform config
+		for _, ins := range d.Get("instance").([]interface{}) {
+			cfg := ins.(map[string]interface{})
+
+			if cfg["id"].(int) == instance.Id || cfg["name"].(string) == instance.Name {
+				new = false
+				break
+			}
+		}
+
+		// If the instance is new, add it to the tail of the list,
+		// this will generate a diff
+		if new {
+			instance := map[string]interface{}{
+				"credential_id": instance.CredentialId,
+				"name":          instance.Name,
+				"id":            instance.Id,
+			}
+
+			instances = append(instances, instance)
+			break
+		}
 	}
 
 	return instances
