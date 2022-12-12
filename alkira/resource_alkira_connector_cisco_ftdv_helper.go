@@ -79,9 +79,7 @@ func expandCiscoFTDvInstances(name string, in *schema.Set, m interface{}) ([]alk
 	return instances, nil
 }
 
-func expandCiscoFtdvManagementServer(in *schema.Set) (alkira.CiscoFTDvManagementServer, error) {
-	// client := m.(*alkira.AlkiraClient)
-
+func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (alkira.CiscoFTDvManagementServer, error) {
 	mg := alkira.CiscoFTDvManagementServer{}
 	if in == nil || in.Len() != 1 {
 		log.Printf("[DEBUG] Invalid Cisco FTDv Management Server input.")
@@ -93,12 +91,14 @@ func expandCiscoFtdvManagementServer(in *schema.Set) (alkira.CiscoFTDvManagement
 		if v, ok := cfg["fmc_ip"].(string); ok {
 			mg.IPAddress = v
 		}
-		if v, ok := cfg["segment_name"].(string); ok {
-			mg.Segment = v
-		}
 		if v, ok := cfg["segment_id"].(int); ok {
 			mg.SegmentId = v
 		}
+		segName, err := convertSegmentIdToSegmentName(strconv.Itoa(mg.SegmentId), m)
+		if err != nil {
+			return mg, err
+		}
+		mg.Segment = segName
 	}
 
 	return mg, nil
@@ -106,13 +106,10 @@ func expandCiscoFtdvManagementServer(in *schema.Set) (alkira.CiscoFTDvManagement
 
 func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
 
-	log.Printf("[ERROR] AAAA %v", in)
-
 	segmentOptions := make(alkira.SegmentNameToZone, in.Len())
 
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
-		log.Printf("[ERROR] BBBB %v", option)
 
 		zonestoGroups := make(alkira.ZoneToGroups)
 		j := []string{}

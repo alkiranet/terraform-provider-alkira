@@ -31,7 +31,6 @@ resource "alkira_connector_cisco_ftdv" "cisco_ftdv" {
 
   management_server {
     fmc_ip       = "1.1.1.1"
-    segment_name = "ciscoftdv"
     segment_id   = alkira_segment.tftest1.id
   }
 
@@ -114,7 +113,6 @@ Required:
 
 - `fmc_ip` (String) IP address of the Firepower Management Server.
 - `segment_id` (Number) ID of the segment accociated with the Firepower Management Server.
-- `segment_name` (String) Name of the segment associated with the Firepower Management Server.
 
 
 <a id="nestedblock--segment_options"></a>
