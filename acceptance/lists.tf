@@ -1,7 +1,19 @@
-resource "alkira_policy_prefix_list" "test" {
-  name        = "acceptance-test"
+resource "alkira_policy_prefix_list" "test1" {
+  name        = "acceptance-test1"
   description = "terraform test policy prefix list"
   prefixes    = ["0.0.0.0/0"]
+}
+
+resource "alkira_policy_prefix_list" "test2" {
+  name        = "acceptance-test2-ranges"
+  description = "terraform test policy prefix list"
+  prefixes    = ["0.0.0.0/0"]
+
+  prefix_range {
+    prefix = "0.0.0.0/0"
+    le     = 4
+    ge     = 2
+  }
 }
 
 resource "alkira_list_community" "test" {

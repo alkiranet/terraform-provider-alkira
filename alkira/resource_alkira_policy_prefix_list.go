@@ -35,6 +35,30 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"prefix_range": {
+				Description: "A valid prefix range that could be used to define a prefix of type `ROUTE`.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix": {
+							Description: "A valid CIDR as prefix in `x.x.x.x/m` format.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"le": {
+							Description: "Integer less than `32` but greater than mask `m` in prefix",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
+						"ge": {
+							Description: "Integer less than `32` but greater than mask `m` in prefix and less than `le`.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -106,11 +130,18 @@ func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error
 func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
 
 	prefixes := convertTypeListToStringList(d.Get("prefixes").([]interface{}))
+	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
+
+	if err != nil {
+		log.Printf("[ERROR] Failed to expand prefix ranges of prefix list %s", d.Id())
+		return nil, err
+	}
 
 	list := &alkira.PolicyPrefixList{
-		Description: d.Get("description").(string),
-		Name:        d.Get("name").(string),
-		Prefixes:    prefixes,
+		Description:  d.Get("description").(string),
+		Name:         d.Get("name").(string),
+		Prefixes:     prefixes,
+		PrefixRanges: prefixRanges,
 	}
 
 	return list, nil
