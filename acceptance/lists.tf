@@ -34,10 +34,17 @@ resource "alkira_list_as_path" "test" {
   values      = ["100 [2-5]00", "_6400_"]
 }
 
-resource "alkira_list_global_cidr" "test" {
+resource "alkira_list_global_cidr" "ciscofdtv" {
   name        = "acceptance-test"
   description = "terraform test global cidr list for cisco ftdv"
   values      = ["10.0.0.0/25"]
   cxp         = "US-WEST-1"
   tags        = ["CISCO_FTDV_FW"]
+}
+
+resource "alkira_list_global_cidr" "checkpoint" {
+  name        = "acceptance-checkpoint"
+  description = "global cidr list for checkpoint"
+  values      = ["172.16.1.0/24"]
+  cxp         = "US-WEST-1"
 }
