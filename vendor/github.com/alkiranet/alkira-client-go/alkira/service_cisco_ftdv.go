@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -24,7 +24,7 @@ type CiscoFTDvManagementServer struct {
 	SegmentId int    `json:"segmentId"`
 }
 
-type ConnectorCiscoFTDv struct {
+type ServiceCiscoFTDv struct {
 	Id               int                       `json:"id,omitempty"` // filled in response
 	Name             string                    `json:"name"`
 	GlobalCidrListId int                       `json:"globalCidrListId"`
@@ -45,23 +45,23 @@ type ConnectorCiscoFTDv struct {
 	State            string                    `json:"state,omitempty"`        // filled in response
 }
 
-// getCiscoFTDvConnectors get all Cisco FTDv connectors from the given tenant network
-func (ac *AlkiraClient) getCiscoFTDvConnectors() (string, error) {
+// getCiscoFTDvServices get all Cisco FTDv services from the given tenant network
+func (ac *AlkiraClient) getCiscoFTDvServices() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/cisco-ftdv-fw-services", ac.URI, ac.TenantNetworkId)
 
 	data, err := ac.get(uri)
 	return string(data), err
 }
 
-// CreateConnectorCiscoFTDv create a Cisco FTDv connector
-func (ac *AlkiraClient) CreateConnectorCiscoFTDv(connector *ConnectorCiscoFTDv) (string, error) {
+// CreateServiceCiscoFTDv create a Cisco FTDv service
+func (ac *AlkiraClient) CreateServiceCiscoFTDv(service *ServiceCiscoFTDv) (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/cisco-ftdv-fw-services", ac.URI, ac.TenantNetworkId)
 
 	// Construct the request
-	body, err := json.Marshal(connector)
+	body, err := json.Marshal(service)
 
 	if err != nil {
-		return "", fmt.Errorf("CreateConnectorCiscoFTDv: failed to marshal: %v", err)
+		return "", fmt.Errorf("CreateServiceCiscoFTDv: failed to marshal: %v", err)
 	}
 
 	data, err := ac.create(uri, body, true)
@@ -70,18 +70,18 @@ func (ac *AlkiraClient) CreateConnectorCiscoFTDv(connector *ConnectorCiscoFTDv) 
 		return "", err
 	}
 
-	var result ConnectorCiscoFTDv
+	var result ServiceCiscoFTDv
 	json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return "", fmt.Errorf("CreateConnectorCiscoFTDv: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("CreateServiceCiscoFTDv: failed to unmarshal: %v", err)
 	}
 
 	return strconv.Itoa(result.Id), nil
 }
 
-// GetConnectorCiscoFTDv get one Cisco FTDv connector by Id
-func (ac *AlkiraClient) GetConnectorCiscoFTDv(id string) (*ConnectorCiscoFTDv, error) {
+// GetServiceCiscoFTDv get one Cisco FTDv service by ID
+func (ac *AlkiraClient) GetServiceCiscoFTDv(id string) (*ServiceCiscoFTDv, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/cisco-ftdv-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
 
 	data, err := ac.get(uri)
@@ -90,53 +90,53 @@ func (ac *AlkiraClient) GetConnectorCiscoFTDv(id string) (*ConnectorCiscoFTDv, e
 		return nil, err
 	}
 
-	var result ConnectorCiscoFTDv
+	var result ServiceCiscoFTDv
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, fmt.Errorf("GetConnectorCiscoFTDv: failed to unmarshal: %v", err)
+		return nil, fmt.Errorf("GetServiceCiscoFTDv: failed to unmarshal: %v", err)
 	}
 
 	return &result, nil
 }
 
-// DeleteConnectorCiscoFTDv delete the given Cisco FTDv connector by Id
-func (ac *AlkiraClient) DeleteConnectorCiscoFTDv(id string) error {
+// DeleteServiceCiscoFTDv delete the given Cisco FTDv service by ID
+func (ac *AlkiraClient) DeleteServiceCiscoFTDv(id string) error {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/cisco-ftdv-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
 
 	return ac.delete(uri, true)
 }
 
-// UpdateConnectorCiscoFTDv update a Cisco FTDv connector by Id
-func (ac *AlkiraClient) UpdateConnectorCiscoFTDv(id string, connector *ConnectorCiscoFTDv) error {
+// UpdateServiceCiscoFTDv update a Cisco FTDv service by ID
+func (ac *AlkiraClient) UpdateServiceCiscoFTDv(id string, service *ServiceCiscoFTDv) error {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/cisco-ftdv-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
 
 	// Construct the request
-	body, err := json.Marshal(connector)
+	body, err := json.Marshal(service)
 
 	if err != nil {
-		return fmt.Errorf("UpdateConnectorCiscoFTDv: failed to marshal: %v", err)
+		return fmt.Errorf("UpdateServiceCiscoFTDv: failed to marshal: %v", err)
 	}
 
 	return ac.update(uri, body, true)
 }
 
-// GetConnectorCiscoFTDvByName get an Azure ExpressRoute connector by name
-func (ac *AlkiraClient) GetConnectorCiscoFTDvByName(name string) (ConnectorCiscoFTDv, error) {
-	var ciscoFTDvConnector ConnectorCiscoFTDv
+// GetServiceCiscoFTDvByName get a Cisco FTDv service by name
+func (ac *AlkiraClient) GetServiceCiscoFTDvByName(name string) (ServiceCiscoFTDv, error) {
+	var ciscoFTDvService ServiceCiscoFTDv
 
 	if len(name) == 0 {
-		return ciscoFTDvConnector, fmt.Errorf("GetConnectorCiscoFTDvByName: Invalid Connector name")
+		return ciscoFTDvService, fmt.Errorf("GetServiceCiscoFTDvByName: Invalid Service name")
 	}
 
-	ciscoFTDvConnectors, err := ac.getCiscoFTDvConnectors()
+	ciscoFTDvServices, err := ac.getCiscoFTDvServices()
 
 	if err != nil {
-		return ciscoFTDvConnector, err
+		return ciscoFTDvService, err
 	}
 
-	var result []ConnectorCiscoFTDv
-	json.Unmarshal([]byte(ciscoFTDvConnectors), &result)
+	var result []ServiceCiscoFTDv
+	json.Unmarshal([]byte(ciscoFTDvServices), &result)
 
 	for _, l := range result {
 		if l.Name == name {
@@ -144,5 +144,5 @@ func (ac *AlkiraClient) GetConnectorCiscoFTDvByName(name string) (ConnectorCisco
 		}
 	}
 
-	return ciscoFTDvConnector, fmt.Errorf("GetConnectorCiscoFTDvByName: failed to find the connector by %s", name)
+	return ciscoFTDvService, fmt.Errorf("GetServiceCiscoFTDvByName: failed to find the service by %s", name)
 }
