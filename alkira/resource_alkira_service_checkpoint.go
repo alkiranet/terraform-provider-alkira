@@ -133,13 +133,15 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"reachability": {
-							Description: "This option specifies whether the management server is " +
-								"publicly reachable or not. If the reachability is private then you " +
-								"need to provide the segment to be used to access the management server. " +
-								"Default value is `PUBLIC`.",
-							Type:     schema.TypeString,
-							Default:  "PUBLIC",
-							Optional: true,
+							Description: "Specifies whether the management server " +
+								"is publicly reachable or not. If the reachability is " +
+								"private then you need to provide the segment to be " +
+								"used to access the management server. Default value " +
+								"is `PUBLIC`.",
+							Type:         schema.TypeString,
+							Default:      "PUBLIC",
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"PRIVATE", "PUBLIC"}, false),
 						},
 						"segment_id": {
 							Description: "The ID of the segment to be used to access the management server.",
@@ -147,17 +149,18 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Optional:    true,
 						},
 						"type": {
-							Description: "The type of the management server.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description:  "The type of the management server. either `SMS` or `MDS`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"SMS", "MDS"}, false),
 						},
 						"user_name": {
-							Description: "The user_name of the management server.",
+							Description: "The username of the management server.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
 						"management_server_password": {
-							Description: "The password for Checkpoint Firewall Management Server. ",
+							Description: "The password of the management server.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -168,7 +171,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Description: "The maximum number of Checkpoint Firewall instances that should be " +
 					"deployed when auto-scale is enabled. Note that auto-scale is not supported " +
 					"with Checkpoint at this time. `max_instance_count` must be greater than or " +
-					"equal to `min_instance_count`.",
+					"equal to `min_instance_count`. (**BETA**)",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
