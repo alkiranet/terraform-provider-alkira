@@ -354,6 +354,7 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("bundle", pan.Bundle)
 	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
+	d.Set("instance", setPanInstances(d, pan.Instances))
 	d.Set("license_type", pan.LicenseType)
 	d.Set("license_sub_type", pan.SubLicenseType)
 	d.Set("management_segment_id", pan.ManagementSegmentId)
@@ -376,19 +377,6 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	if pan.PanoramaTemplate != nil {
 		d.Set("panorama_template", pan.PanoramaTemplate)
 	}
-
-	var instances []map[string]interface{}
-
-	for _, instance := range pan.Instances {
-		i := map[string]interface{}{
-			"name":          instance.Name,
-			"credential_id": instance.CredentialId,
-			"id":            instance.Id,
-		}
-		instances = append(instances, i)
-	}
-
-	d.Set("instance", instances)
 
 	return nil
 }
