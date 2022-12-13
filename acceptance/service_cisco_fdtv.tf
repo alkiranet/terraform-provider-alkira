@@ -1,4 +1,4 @@
-resource "alkira_connector_cisco_ftdv" "cisco_ftdv_test" {
+resource "alkira_service_cisco_ftdv" "cisco_ftdv_test" {
   name                = "acceptance-ftdv-test1"
   auto_scale          = "OFF"
   size                = "SMALL"
@@ -7,19 +7,19 @@ resource "alkira_connector_cisco_ftdv" "cisco_ftdv_test" {
   global_cidr_list_id = alkira_list_global_cidr.ciscofdtv.id
   max_instance_count  = 1
   min_instance_count  = 1
-  ip_allow_list       = ["192.168.3.3"]
 
   segment_ids = [alkira_segment.test4.id]
 
-  username = "admin"
-  password = "Abcd1234567"
-
-  management_server {
-    fmc_ip       = "1.1.1.2"
-    segment_id   = alkira_segment.test4.id
+  firepower_management_center {
+    username      = "admin"
+    password      = "Abcd1234567"
+    server_ip     = "1.1.1.2"
+    segment_id    = alkira_segment.test4.id
+    ip_allow_list = ["192.168.3.3"]
   }
 
-  instances {
+  instance {
+    hostname             = "ins-1"
     admin_password       = "Test@2018"
     fmc_registration_key = "abcd12345"
     ftdv_nat_id          = "abcd1234"

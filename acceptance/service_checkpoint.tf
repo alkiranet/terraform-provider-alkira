@@ -1,7 +1,7 @@
 resource "alkira_service_checkpoint" "test" {
-  name         = "acceptance-checkpoint"
-  auto_scale   = "ON"
-  cxp          = "US-WEST-1"
+  name       = "acceptance-checkpoint"
+  auto_scale = "ON"
+  cxp        = "US-WEST-1"
 
   license_type = "PAY_AS_YOU_GO"
   size         = "SMALL"

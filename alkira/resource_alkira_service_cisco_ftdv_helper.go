@@ -1,0 +1,241 @@
+package alkira
+
+import (
+	"errors"
+	"log"
+	"strconv"
+
+	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFTDvInstance, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	if in == nil || len(in) == 0 {
+		log.Printf("[DEBUG] invalid Cisco FTDv instance input")
+		return nil, errors.New("Invalid Cisco FTDv instance input")
+	}
+
+	var adminPassword string
+	var fmcRegistrationKey string
+	var ftdvNatId string
+
+	instances := make([]alkira.CiscoFTDvInstance, len(in))
+
+	for i, instance := range in {
+
+		r := alkira.CiscoFTDvInstance{}
+		instanceCfg := instance.(map[string]interface{})
+
+		if v, ok := instanceCfg["id"].(int); ok {
+			r.Id = v
+		}
+		if v, ok := instanceCfg["hostname"].(string); ok {
+			r.Hostname = v
+		}
+		if v, ok := instanceCfg["admin_password"].(string); ok {
+			adminPassword = v
+		}
+		if v, ok := instanceCfg["fmc_registration_key"].(string); ok {
+			fmcRegistrationKey = v
+		}
+		if v, ok := instanceCfg["ftdv_nat_id"].(string); ok {
+			ftdvNatId = v
+		}
+		if v, ok := instanceCfg["credential_id"].(string); ok {
+			if v == "" {
+				credentialName := r.Hostname + "-" + randomNameSuffix()
+
+				c := alkira.CredentialCiscoFtdvInstance{
+					AdminPassword:      adminPassword,
+					FmcRegistrationKey: fmcRegistrationKey,
+					FtvdNatId:          ftdvNatId,
+				}
+				log.Printf("[INFO] Creating Credential Cisco FTDv Instance.")
+				credentialId, err := client.CreateCredential(
+					credentialName,
+					alkira.CredentialTypeCiscoFtdvInstance,
+					c,
+					0)
+				if err != nil {
+					return nil, err
+				}
+				r.CredentialId = credentialId
+			} else {
+				r.CredentialId = v
+			}
+		}
+		if v, ok := instanceCfg["version"].(string); ok {
+			r.Version = v
+		}
+		if v, ok := instanceCfg["license_type"].(string); ok {
+			r.LicenseType = v
+		}
+
+		instances[i] = r
+	}
+
+	return instances, nil
+}
+
+func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []string, alkira.CiscoFTDvManagementServer, error) {
+	client := m.(*alkira.AlkiraClient)
+
+	var credentialId string
+	var ipAllowList []string = []string{}
+	var managementServer alkira.CiscoFTDvManagementServer = alkira.CiscoFTDvManagementServer{}
+
+	if in == nil || in.Len() != 1 {
+		log.Printf("[DEBUG] Invalid Cisco FTDv Management Server input.")
+		return credentialId, ipAllowList, managementServer, errors.New("Invalid Cisco FTDv Management Server input.")
+	}
+
+	for _, option := range in.List() {
+		cfg := option.(map[string]interface{})
+
+		var username string
+		var password string
+
+		if v, ok := cfg["username"].(string); ok {
+			username = v
+		}
+		if v, ok := cfg["password"].(string); ok {
+			password = v
+		}
+		if v, ok := cfg["credential_id"].(string); ok {
+			if v == "" {
+				credentialName := "cisco-fdtv-" + randomNameSuffix()
+				c := alkira.CredentialCiscoFtdv{Username: username, Password: password}
+
+				log.Printf("[INFO] Creating Cisco FTDv Firewall Service Credentials")
+				cId, err := client.CreateCredential(credentialName, alkira.CredentialTypeCiscoFtdv, c, 0)
+
+				if err != nil {
+					return credentialId, ipAllowList, managementServer, err
+				}
+
+				credentialId = cId
+			} else {
+				credentialId = v
+			}
+		}
+		if v, ok := cfg["server_ip"].(string); ok {
+			managementServer.IPAddress = v
+		}
+		if v, ok := cfg["ip_allow_list"].([]interface{}); ok {
+			ipAllowList = convertTypeListToStringList(v)
+		}
+		if v, ok := cfg["segment_id"].(int); ok {
+			managementServer.SegmentId = v
+		}
+
+		segName, err := convertSegmentIdToSegmentName(strconv.Itoa(managementServer.SegmentId), m)
+
+		if err != nil {
+			return credentialId, ipAllowList, managementServer, err
+		}
+
+		managementServer.Segment = segName
+	}
+
+	return credentialId, ipAllowList, managementServer, nil
+}
+
+func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
+
+	segmentOptions := make(alkira.SegmentNameToZone, in.Len())
+
+	for _, option := range in.List() {
+		cfg := option.(map[string]interface{})
+
+		zonestoGroups := make(alkira.ZoneToGroups)
+		j := []string{}
+		zonestoGroups[cfg["zone_name"].(string)] = j
+
+		outerZoneToGroups := alkira.OuterZoneToGroups{
+			SegmentId:     cfg["segment_id"].(int),
+			ZonesToGroups: zonestoGroups,
+		}
+
+		segmentName, err := convertSegmentIdToSegmentName(strconv.Itoa(cfg["segment_id"].(int)), m)
+		if err != nil {
+			return nil, errors.New("Segment could not be found")
+		}
+
+		segmentOptions[segmentName] = outerZoneToGroups
+
+	}
+
+	return segmentOptions, nil
+}
+
+func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv) []map[string]interface{} {
+
+	m := make(map[string]interface{})
+
+	m["credential_id"] = service.CredentialId
+	m["ip_allow_list"] = service.IpAllowList
+	m["segment_id"] = service.ManagementServer.SegmentId
+	m["segment_name"] = service.ManagementServer.Segment
+	m["server_ip"] = service.ManagementServer.IPAddress
+
+	return []map[string]interface{}{m}
+}
+
+// setCiscoFTDvInstances
+func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance) []map[string]interface{} {
+	var instances []map[string]interface{}
+
+	for _, value := range d.Get("instance").([]interface{}) {
+		cfg := value.(map[string]interface{})
+
+		for _, ins := range c {
+			if cfg["id"].(int) == ins.Id || cfg["hostname"].(string) == ins.Hostname {
+				instance := map[string]interface{}{
+					"admin_password":       cfg["admin_password"].(string),
+					"credential_id":        ins.CredentialId,
+					"fmc_registration_key": cfg["fmc_registration_key"].(string),
+					"ftdv_nat_id":          cfg["ftdv_nat_id"].(string),
+					"hostname":             ins.Hostname,
+					"id":                   ins.Id,
+					"license_type":         ins.LicenseType,
+					"version":              ins.Version,
+				}
+				instances = append(instances, instance)
+				break
+			}
+		}
+	}
+
+	for _, instance := range c {
+		new := true
+
+		// Check if the instance already exists in the Terraform config
+		for _, ins := range d.Get("instance").([]interface{}) {
+			cfg := ins.(map[string]interface{})
+
+			if cfg["id"].(int) == instance.Id || cfg["hostname"].(string) == instance.Hostname {
+				new = false
+				break
+			}
+		}
+
+		// If the instance is new, add it to the tail of the list,
+		// this will generate a diff
+		if new {
+			instance := map[string]interface{}{
+				"credential_id": instance.CredentialId,
+				"hostname":      instance.Hostname,
+				"id":            instance.Id,
+				"license_type":  instance.LicenseType,
+				"version":       instance.Version,
+			}
+
+			instances = append(instances, instance)
+			break
+		}
+	}
+
+	return instances
+}

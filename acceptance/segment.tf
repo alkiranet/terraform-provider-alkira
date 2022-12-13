@@ -7,10 +7,9 @@ resource "alkira_segment" "test1" {
 }
 
 resource "alkira_segment" "test2" {
-  name               = "acceptance-test2"
-  asn                = "65514"
-  cidrs              = ["10.16.1.0/24"]
-  reserve_public_ips = true
+  name  = "acceptance-test2"
+  asn   = "65514"
+  cidrs = ["10.16.1.0/24"]
 }
 
 resource "alkira_segment" "test3" {
