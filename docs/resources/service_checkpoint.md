@@ -69,7 +69,7 @@ resource "alkira_service_checkpoint" "test" {
 - `instance` (Block List, Min: 1) An array containing properties for each Checkpoint Firewall instance that needs to be deployed. The number of instances should be equal to `max_instance_count`. (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_server` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
-- `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`.
+- `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`. (**BETA**)
 - `name` (String) Name of the Checkpoint Firewall service.
 - `password` (String) The Checkpoint Firewall service password.
 - `segment_id` (Number) The ID of the segments associated with the service.
@@ -117,11 +117,11 @@ Required:
 Optional:
 
 - `domain` (String) Management server domain.
-- `management_server_password` (String) The password for Checkpoint Firewall Management Server.
-- `reachability` (String) This option specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
+- `management_server_password` (String) The password of the management server.
+- `reachability` (String) Specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
 - `segment_id` (Number) The ID of the segment to be used to access the management server.
-- `type` (String) The type of the management server.
-- `user_name` (String) The user_name of the management server.
+- `type` (String) The type of the management server. either `SMS` or `MDS`.
+- `user_name` (String) The username of the management server.
 
 Read-Only:
 
