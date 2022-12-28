@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"errors"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -21,36 +20,66 @@ func resourceAlkiraInfoblox() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"anycast": {
-				Type:        schema.TypeSet,
+			"name": {
+				Description: "Name of the Infoblox service.",
+				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Defines the AnyCast policy.",
+			},
+			"global_cidr_list_id": {
+				Description: "The ID of the global cidr list to be associated with " +
+					"the Infoblox service.",
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"grid_master": {
+				Type:        schema.TypeList,
+				Required:    true,
+				Description: "Defines the properties of the Infoblox grid master.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Description: "Defines if AnyCast should be enabled. Default value is `false`.",
-							Type:        schema.TypeBool,
+						"name": {
+							Description: "Name of the grid master.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"existing": {
+							Description: "External indicates if a new grid master should be " +
+								"created or if an existing grid master should be used. Default " +
+								"value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"shared_secret": {
+							Description:  "Shared Secret of the InfoBlox grid. This cannot be empty.",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+						"ip": {
+							Description: "The IP address of the existing grid master.",
+							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     false,
 						},
-						"ips": {
-							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
-								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
-								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
-								"the service.",
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"username": {
+							Description: "The Grid Master username.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
-						"backup_cxps": {
-							Description: "The `backup_cxps` to be used when the current " +
-								"Infoblox service is not available. It also needs to " +
-								"have a configured Infoblox service in order to take advantage of " +
-								"this feature. It is NOT required that the `backup_cxps` should have " +
-								"a configured Infoblox service before it can be designated as a backup.",
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"password": {
+							Description: "The Grid Master password.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"grid_master_credential_id": {
+							Description: "The credential ID of the Grid Master.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"shared_secret_credential_id": {
+							Description: "The credential ID of the shared secret.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -71,62 +100,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"global_cidr_list_id": {
-				Description: "The ID of the global cidr list to be associated with " +
-					"the Infoblox service.",
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			// NOTE: for v1 of Infoblox support we are not supporting the creation of a new infoblox
-			// service on behalf of our customer. Instead the customer must have a preexsting
-			// infoblox service. Future releases will allow for this. At that time this comment
-			// should be removed.
-			"grid_master": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Defines the properties of the Infoblox grid master.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"external": {
-							Description: "External indicates if a new grid master should be " +
-								"created or if an existing grid master should be used. Default " +
-								"value is `false`.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"ip": {
-							Description: "The IP address of the grid master.",
-							Type:        schema.TypeString,
-							Computed:    true,
-							Optional:    true,
-						},
-						"name": {
-							Description: "Name of the grid master.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"username": {
-							Description: "The Grid Master user name.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"password": {
-							Description: "The Grid Master password.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"credential_id": {
-							Description: "The credential ID of the Grid Master.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-					},
-				},
-			},
 			"instance": {
-				Type:        schema.TypeList,
-				Required:    true,
+				Type: schema.TypeList,
+				// Required:    true,
+				Optional:    true,
 				Description: "The properties pertaining to each individual instance of the Infoblox service.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -177,17 +154,6 @@ func resourceAlkiraInfoblox() *schema.Resource {
 					},
 				},
 			},
-			"license_type": {
-				Description:  "Infoblox license type, only `BRING_YOUR_OWN` is supported right now.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN"}, false),
-			},
-			"name": {
-				Description: "Name of the Infoblox service.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeList,
@@ -201,11 +167,29 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"shared_secret": {
-				Description:  "Shared Secret of the InfoBlox grid. This cannot be empty.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
+			"anycast": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "Defines the AnyCast policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Description: "Defines if AnyCast should be enabled. Default value is `false`.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+						},
+						"ips": {
+							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
+								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
+								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
+								"the service.",
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -268,30 +252,10 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Infoblox, error) {
-	client := m.(*alkira.AlkiraClient)
-
-	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
-	nameWithSuffix := name + randomNameSuffix()
-	shared_secret := d.Get("shared_secret").(string)
 
-	var infobloxCredentialId string
-	if shared_secret != "" {
-		err := errors.New("")
-		infobloxCredentialId, err = client.CreateCredential(
-			nameWithSuffix,
-			alkira.CredentialTypeInfoblox,
-			&alkira.CredentialInfoblox{SharedSecret: shared_secret},
-			0,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	//Parse Grid Master
 	gmSet := d.Get("grid_master").([]interface{})
-	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
+	gridMaster, err := expandGridMaster(gmSet, m)
 	if err != nil {
 		return nil, err
 	}
@@ -320,11 +284,9 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 		AnyCast:          *anycast,
 		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Cxp:              d.Get("cxp").(string),
-		Description:      d.Get("description").(string),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
 		GridMaster:       *gridMaster,
 		Instances:        instances,
-		LicenseType:      d.Get("license_type").(string),
 		Name:             name,
 		Segments:         segment_names,
 		ServiceGroupName: d.Get("service_group_name").(string),
