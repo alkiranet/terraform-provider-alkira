@@ -56,42 +56,33 @@ The example uses resource `alkira_segment` and
 
 ```terraform
 resource "alkira_service_infoblox" "test" {
+  name                = "alkiraServiceInfoblox5"
   cxp                 = "US-WEST-1"
   global_cidr_list_id = alkira_list_global_cidr.testcidr.id
-  license_type        = "BRING_YOUR_OWN"
-  name                = "alkiraServiceInfoblox5"
   segment_ids         = [alkira_segment.test1.id]
   service_group_name  = "serviceGroupName"
-  shared_secret       = "thisisanewsecredet"
 
-  instances {
-    anycast_enabled = false
-    hostname        = "hostname.localdomain"
-    model           = "TE-V1425"
-    password        = "password1234"
-    type            = "MASTER_CANDIDATE"
-    version         = "8.5.2"
+  grid_master {
+    # existing = false means create a new grid master.
+    existing      = false
+    name          = "newGridName2"
+    username      = "admin"
+    password      = "Abcd12345"
+    shared_secret = "thisisanewsecredetshhhhh"
   }
 
-  instances {
-    anycast_enabled = false
+  # Only one instance is allowed when creating a new grid master.
+  instance {
+    anycast_enabled = true
     hostname        = "hostname.localdomain"
     model           = "TE-V1425"
-    password        = "password1234"
-    type            = "MASTER_CANDIDATE"
+    password        = "Abcd12345"
+    type            = "MASTER"
     version         = "8.5.2"
   }
 
   anycast {
     enabled = false
-  }
-
-  grid_master {
-    external = false
-    ip       = "10.10.10.10"
-    name     = "newGridName2"
-    username = "admin"
-    password = "admin1234"
   }
 }
 ```
@@ -105,17 +96,15 @@ resource "alkira_service_infoblox" "test" {
 - `cxp` (String) The CXP where the service should be provisioned.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Infoblox service.
 - `grid_master` (Block List, Min: 1) Defines the properties of the Infoblox grid master. (see [below for nested schema](#nestedblock--grid_master))
-- `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
-- `license_type` (String) Infoblox license type, only `BRING_YOUR_OWN` is supported right now.
 - `name` (String) Name of the Infoblox service.
 - `segment_ids` (List of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
-- `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
 
 ### Optional
 
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
 - `description` (String) The description of the Infoblox service.
+- `instance` (Block List) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
 
 ### Read-Only
 
@@ -126,7 +115,6 @@ resource "alkira_service_infoblox" "test" {
 
 Optional:
 
-- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Infoblox service is not available. It also needs to have a configured Infoblox service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Infoblox service before it can be designated as a backup.
 - `enabled` (Boolean) Defines if AnyCast should be enabled. Default value is `false`.
 - `ips` (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
@@ -138,16 +126,18 @@ Required:
 
 - `name` (String) Name of the grid master.
 - `password` (String) The Grid Master password.
-- `username` (String) The Grid Master user name.
+- `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
+- `username` (String) The Grid Master username.
 
 Optional:
 
-- `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. Default value is `false`.
-- `ip` (String) The IP address of the grid master.
+- `existing` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. Default value is `false`.
+- `ip` (String) The IP address of the existing grid master.
 
 Read-Only:
 
-- `credential_id` (String) The credential ID of the Grid Master.
+- `grid_master_credential_id` (String) The credential ID of the Grid Master.
+- `shared_secret_credential_id` (String) The credential ID of the shared secret.
 
 
 <a id="nestedblock--instance"></a>
