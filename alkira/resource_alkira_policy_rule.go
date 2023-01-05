@@ -85,9 +85,11 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Required:    true,
 			},
 			"internet_application_id": {
-				Description: "The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Description: "The ID of the `internet_application` associated with the " +
+					"rule. When an internet applciation is selected, destination IP " +
+					"and port will be the private IP and port of the application.",
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"protocol": {
 				Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
@@ -167,6 +169,8 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("application_ids", rule.MatchCondition.ApplicationList)
 	d.Set("application_family_ids", rule.MatchCondition.ApplicationFamilyList)
 
+	d.Set("internet_application_id", rule.MatchCondition.InternetApplicationId)
+
 	d.Set("rule_action", rule.RuleAction.Action)
 	d.Set("rule_action_service_types", rule.RuleAction.ServiceTypeList)
 	d.Set("rule_action_service_ids", rule.RuleAction.ServiceList)
@@ -222,6 +226,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 			DstPortList:           dstPortList,
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
 			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
+			InternetApplicationId: d.Get("internet_application_id").(int),
 			ApplicationList:       applicationList,
 			ApplicationFamilyList: applicationFamilyList,
 		},

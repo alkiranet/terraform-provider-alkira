@@ -94,3 +94,33 @@ func (ac *AlkiraClient) GetByoipById(id string) (*Byoip, error) {
 
 	return &byoip, nil
 }
+
+// GetByoipByName get a single BYOIP by name
+func (ac *AlkiraClient) GetByoipPrefixByName(name string) (Byoip, error) {
+	var byoip Byoip
+
+	if len(name) == 0 {
+		return byoip, fmt.Errorf("Invalid BYOIP name input")
+	}
+
+	byoips, err := ac.GetByoips()
+
+	if err != nil {
+		return byoip, err
+	}
+
+	var result []Byoip
+	err = json.Unmarshal([]byte(byoips), &result)
+
+	if err != nil {
+		return byoip, fmt.Errorf("GetByoipByName: failed to unmarshal: %v", err)
+	}
+
+	for _, t := range result {
+		if t.Prefix == name {
+			return t, nil
+		}
+	}
+
+	return byoip, fmt.Errorf("failed to find the BYOIP by %s", name)
+}

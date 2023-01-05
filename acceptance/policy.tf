@@ -1,4 +1,4 @@
-# Create resources under Policies/
+# Create resources under Policies
 
 resource "alkira_policy" "test" {
   name         = "acceptance-test"
@@ -10,8 +10,8 @@ resource "alkira_policy" "test" {
   segment_ids  = [alkira_segment.test1.id]
 }
 
-resource "alkira_policy_rule" "test" {
-  name        = "acceptance-test"
+resource "alkira_policy_rule" "test1" {
+  name        = "acceptance-test1"
   description = "Terraform Test Policy"
   src_ip      = "any"
   dst_ip      = "172.16.0.0/16"
@@ -22,13 +22,24 @@ resource "alkira_policy_rule" "test" {
   rule_action = "DROP"
 }
 
+resource "alkira_policy_rule" "test2" {
+  name        = "acceptance-test2-ifa"
+  description = "Terraform Test Policy for IFA"
+  src_ip      = "any"
+  dscp        = "any"
+  protocol    = "tcp"
+  src_ports   = [12000]
+  internet_application_id = alkira_internet_application.test.id
+  rule_action = "DROP"
+}
+
 resource "alkira_policy_rule_list" "test" {
   name        = "acceptance-test"
   description = "terraform test policy rule list"
 
   rules {
     priority = 1
-    rule_id  = alkira_policy_rule.test.id
+    rule_id  = alkira_policy_rule.test1.id
   }
 }
 

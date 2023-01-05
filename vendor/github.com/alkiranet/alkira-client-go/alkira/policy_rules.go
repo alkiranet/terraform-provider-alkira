@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -22,6 +22,7 @@ type PolicyRuleMatchCondition struct {
 	DstIp                 string   `json:"dstIp,omitempty"`
 	DstPortList           []string `json:"dstPortList,omitempty"`
 	DstPrefixListId       int      `json:"dstPrefixListId,omitempty"`
+	InternetApplicationId int      `json:"internetApplicationId,omitempty"`
 	Protocol              string   `json:"protocol"`
 	SrcIp                 string   `json:"srcIp,omitempty"`
 	SrcPortList           []string `json:"srcPortList,omitempty"`
