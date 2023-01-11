@@ -16,7 +16,7 @@ type RoutePolicy struct {
 	IncludedGroups                []int              `json:"includedGroups"`
 	ExcludedGroups                []int              `json:"excludedGroups,omitempty"`
 	Id                            json.Number        `json:"id,omitempty"`
-	AdvertiseInternetExit         bool               `json:"advertiseInternetExit,omitempty"`
+	AdvertiseInternetExit         *bool              `json:"advertiseInternetExit"`
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
 	AdvertiseCustomRoutesPrefixId int                `json:"advertiseCustomRoutesPrefixId,omitempty"`
 	Rules                         []RoutePolicyRules `json:"rules"`
