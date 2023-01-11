@@ -1,7 +1,3 @@
-#
-# A simple internet facing application that assumes that
-# "alkira_connector_aws_vpc" and "alkira_segment" was already created.
-#
 resource "alkira_internet_application" "test" {
   name           = "test-ifa"
   connector_id   = alkira_connector_aws_vpc.test.id
