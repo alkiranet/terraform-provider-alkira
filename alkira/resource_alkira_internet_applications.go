@@ -11,9 +11,7 @@ import (
 
 func resourceAlkiraInternetApplication() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Internet Application.\n\n" +
-			"The internet facing applications could be used with both" +
-			"Users & Sites or Cloud Connectors.",
+		Description: "Manage Internet Application.",
 		Create: resourceInternetApplicationCreate,
 		Read:   resourceInternetApplicationRead,
 		Update: resourceInternetApplicationUpdate,
@@ -40,12 +38,14 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required:    true,
 			},
 			"connector_type": {
-				Description: "Connector Type.",
+				Description: "Connector Type.The value could be `AWS_VPC`, " +
+					"`AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` " +
+					"`ARUBA_EDGE_CONNECT`, `EXPRESS_ROUTE`.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"fqdn_prefix": {
-				Description: "User provided FQDN prefix that will be published on route53.",
+				Description: "User provided FQDN prefix that will be published on AWS Route 53.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -81,6 +81,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					"Applications on AWS CXPs. (**BETA**)",
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      "IPV4",
 				ValidateFunc: validation.StringInSlice([]string{"IPV4", "IPV6", "BOTH"}, false),
 			},
 			"name": {
@@ -124,8 +125,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 						},
 						"port_ranges": {
 							Description: "list of ports or port ranges. Values can be " +
-								"mixed i.e. `['20', '100-200']`. An array with only the " +
-								"value '-1' means any port.",
+								"mixed i.e. `[\"20\", \"100-200\"]`. An array with only the " +
+								"value `-1` means any port.",
 							Type:     schema.TypeList,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
