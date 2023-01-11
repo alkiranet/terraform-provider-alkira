@@ -1,0 +1,1 @@
+terraform import alkira_internet_application.example ID
