@@ -68,11 +68,12 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Optional: true,
 			},
 			"advertise_internet_exit": {
-				Description: "Advertise Alkira’s Internet Connector to selected scope. Default " +
-					"value is `false`.",
+				Description: "Advertise Alkira’s Internet Connector to selected " +
+					"scope. This only applies to `OUTBOUND` policy. Default " +
+					"value is `true`.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"advertise_on_prem_routes": {
 				Description: "Advertise routes from other on premise connectors to selected scope. " +
@@ -234,8 +235,11 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if policy.AdvertiseInternetExit != nil {
+		d.Set("advertise_internet_exit", *policy.AdvertiseInternetExit)
+	}
+
 	d.Set("advertise_custom_routes_prefix_id", policy.AdvertiseCustomRoutesPrefixId)
-	d.Set("advertise_internet_exit", policy.AdvertiseInternetExit)
 	d.Set("advertise_on_prem_routes", policy.AdvertiseOnPremRoutes)
 	d.Set("description", policy.Description)
 	d.Set("direction", policy.Direction)
@@ -346,6 +350,15 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		return nil, err
 	}
 
+	// This field could be only used when policy is "OUTBOUND".
+	advertiseInternetExit := new(bool)
+
+	if d.Get("direction").(string) == "INBOUND" {
+		advertiseInternetExit = nil
+	} else {
+		*advertiseInternetExit = d.Get("advertise_internet_exit").(bool)
+	}
+
 	policy := &alkira.RoutePolicy{
 		Name:                          d.Get("name").(string),
 		Description:                   d.Get("description").(string),
@@ -354,7 +367,7 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		Segment:                       segment.Name,
 		IncludedGroups:                inGroups,
 		ExcludedGroups:                exGroups,
-		AdvertiseInternetExit:         d.Get("advertise_internet_exit").(bool),
+		AdvertiseInternetExit:         advertiseInternetExit,
 		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
 		AdvertiseCustomRoutesPrefixId: d.Get("advertise_custom_routes_prefix_id").(int),
 		Rules:                         rules,
