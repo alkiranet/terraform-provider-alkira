@@ -12,10 +12,10 @@ import (
 func resourceAlkiraInternetApplication() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Internet Application.",
-		Create: resourceInternetApplicationCreate,
-		Read:   resourceInternetApplicationRead,
-		Update: resourceInternetApplicationUpdate,
-		Delete: resourceInternetApplicationDelete,
+		Create:      resourceInternetApplicationCreate,
+		Read:        resourceInternetApplicationRead,
+		Update:      resourceInternetApplicationUpdate,
+		Delete:      resourceInternetApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,8 +41,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Description: "Connector Type.The value could be `AWS_VPC`, " +
 					"`AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` " +
 					"`ARUBA_EDGE_CONNECT`, `EXPRESS_ROUTE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"fqdn_prefix": {
 				Description: "User provided FQDN prefix that will be published on AWS Route 53.",
