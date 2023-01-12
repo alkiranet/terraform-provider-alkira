@@ -30,7 +30,9 @@ resource "alkira_service_cisco_ftdv" "test" {
   segment_options {
     segment_id = alkira_segment.test1.id
     zone_name  = "zone1"
+    groups     = [alkira_group.tftest.name]
   }
+
   segment_options {
     segment_id = alkira_segment.test2.id
     zone_name  = "zone2"
