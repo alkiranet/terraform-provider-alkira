@@ -154,12 +154,17 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 			return nil, errors.New("Segment could not be found")
 		}
 
+		groupList := convertTypeListToStringList(cfg["groups"].([]interface{}))
+		if groupList == nil {
+			groupList = []string{}
+		}
+
 		if val, ok := segmentOptions[segmentName]; ok {
-			val.ZonesToGroups[cfg["zone_name"].(string)] = convertTypeListToStringList(cfg["groups"].([]interface{}))
+			val.ZonesToGroups[cfg["zone_name"].(string)] = groupList
 
 		} else {
 			zonestoGroups := make(alkira.ZoneToGroups)
-			zonestoGroups[cfg["zone_name"].(string)] = convertTypeListToStringList(cfg["groups"].([]interface{}))
+			zonestoGroups[cfg["zone_name"].(string)] = groupList
 
 			outerZoneToGroups := alkira.OuterZoneToGroups{
 				SegmentId:     cfg["segment_id"].(int),
@@ -168,6 +173,7 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 
 			segmentOptions[segmentName] = outerZoneToGroups
 		}
+
 	}
 
 	return segmentOptions, nil
