@@ -46,7 +46,7 @@ resource "alkira_policy_rule" "rule" {
 - `dst_ip` (String) A single destination IP as The match condition of the rule.
 - `dst_ports` (List of String) Destination ports that can take values: `any` or `1` to `65535`.
 - `dst_prefix_list_id` (Number) The ID of prefix list as destination associated with the rule.
-- `internet_application_id` (Number) The ID of the internet application associated with the rule. When an internet applciation is selected, destination ip and port will be the private ip and port of the application.
+- `internet_application_id` (Number) The ID of the `internet_application` associated with the rule. When an internet applciation is selected, destination IP and port will be the private IP and port of the application.
 - `rule_action` (String) The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.
 - `rule_action_service_ids` (List of Number) Based on the service IDs, traffic is routed to the specified services.
 - `rule_action_service_types` (List of String) Based on the service type, traffic is routed to service of the given type.
