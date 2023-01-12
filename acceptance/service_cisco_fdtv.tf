@@ -8,7 +8,7 @@ resource "alkira_service_cisco_ftdv" "cisco_ftdv_test" {
   max_instance_count  = 1
   min_instance_count  = 1
 
-  segment_ids = [alkira_segment.test4.id]
+  segment_ids = [alkira_segment.test3.id, alkira_segment.test4.id]
 
   firepower_management_center {
     username      = "admin"
@@ -28,7 +28,13 @@ resource "alkira_service_cisco_ftdv" "cisco_ftdv_test" {
   }
 
   segment_options {
-    segment_id = alkira_segment.test4.id
+    segment_id = alkira_segment.test3.id
     zone_name  = "zone1"
+    groups     = [alkira_group.test4.name]
+  }
+
+  segment_options {
+    segment_id = alkira_segment.test4.id
+    zone_name  = "zone2"
   }
 }

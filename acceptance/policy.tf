@@ -23,14 +23,14 @@ resource "alkira_policy_rule" "test1" {
 }
 
 resource "alkira_policy_rule" "test2" {
-  name        = "acceptance-test2-ifa"
-  description = "Terraform Test Policy for IFA"
-  src_ip      = "any"
-  dscp        = "any"
-  protocol    = "tcp"
-  src_ports   = [12000]
+  name                    = "acceptance-test2-ifa"
+  description             = "Terraform Test Policy for IFA"
+  src_ip                  = "any"
+  dscp                    = "any"
+  protocol                = "tcp"
+  src_ports               = [12000]
   internet_application_id = alkira_internet_application.test.id
-  rule_action = "DROP"
+  rule_action             = "DROP"
 }
 
 resource "alkira_policy_rule_list" "test" {

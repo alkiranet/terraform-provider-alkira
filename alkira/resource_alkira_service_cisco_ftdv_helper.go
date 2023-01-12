@@ -149,21 +149,30 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
 
-		zonestoGroups := make(alkira.ZoneToGroups)
-		j := []string{}
-		zonestoGroups[cfg["zone_name"].(string)] = j
-
-		outerZoneToGroups := alkira.OuterZoneToGroups{
-			SegmentId:     cfg["segment_id"].(int),
-			ZonesToGroups: zonestoGroups,
-		}
-
 		segmentName, err := convertSegmentIdToSegmentName(strconv.Itoa(cfg["segment_id"].(int)), m)
 		if err != nil {
 			return nil, errors.New("Segment could not be found")
 		}
 
-		segmentOptions[segmentName] = outerZoneToGroups
+		groupList := convertTypeListToStringList(cfg["groups"].([]interface{}))
+		if groupList == nil {
+			groupList = []string{}
+		}
+
+		if val, ok := segmentOptions[segmentName]; ok {
+			val.ZonesToGroups[cfg["zone_name"].(string)] = groupList
+
+		} else {
+			zonestoGroups := make(alkira.ZoneToGroups)
+			zonestoGroups[cfg["zone_name"].(string)] = groupList
+
+			outerZoneToGroups := alkira.OuterZoneToGroups{
+				SegmentId:     cfg["segment_id"].(int),
+				ZonesToGroups: zonestoGroups,
+			}
+
+			segmentOptions[segmentName] = outerZoneToGroups
+		}
 
 	}
 
