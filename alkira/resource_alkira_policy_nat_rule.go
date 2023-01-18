@@ -40,6 +40,12 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"category": {
+				Description:  "The category of NAT rule, options are `DEFAULT` or `INTERNET_CONNECTOR`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+			},
 			"match": {
 				Description: "Match condition for the rule.",
 				Type:        schema.TypeSet,
@@ -161,6 +167,13 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
+						"egress_type": {
+							Description:  "The egress type to use with the match. Options are are `ALKIRA_PUBLIC_IP` or `BYOIP`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "NONE",
+							ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
+						},
 					},
 				},
 			},
@@ -254,6 +267,7 @@ func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkir
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(bool),
+		Category:    d.Get("category").(string),
 		Match:       *match,
 		Action:      *action,
 	}

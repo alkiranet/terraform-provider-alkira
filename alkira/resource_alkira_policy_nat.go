@@ -65,6 +65,12 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
 			},
+			"category": {
+				Description:  "The category of NAT policy, options are `DEFAULT` or `INTERNET_CONNECTOR`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+			},
 		},
 	}
 }
@@ -180,6 +186,7 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		IncludedGroups: inGroups,
 		ExcludedGroups: exGroups,
 		NatRuleIds:     natRules,
+		Category:       d.Get("category").(string),
 	}
 
 	return policy, nil

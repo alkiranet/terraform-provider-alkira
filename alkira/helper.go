@@ -222,14 +222,14 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-//For infoblox if there is a failed POST for infoblox the backend does not clean up the
-//credentials that were created in preparation for creating the infoblox service. This means
-//if you make the same attempt to create an infoblox there will likely already be a credential name
-//that exists. This throws an error. To avoid that this function will be used to add a random suffix
-//of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
-//occurs when creating the infoblox there will be no clash with existing credentials. This is only
-//neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
-//manage the credentials themselves.
+// For infoblox if there is a failed POST for infoblox the backend does not clean up the
+// credentials that were created in preparation for creating the infoblox service. This means
+// if you make the same attempt to create an infoblox there will likely already be a credential name
+// that exists. This throws an error. To avoid that this function will be used to add a random suffix
+// of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
+// occurs when creating the infoblox there will be no clash with existing credentials. This is only
+// neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
+// manage the credentials themselves.
 func randomNameSuffix() string {
 	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
 
