@@ -43,7 +43,7 @@ func resourceAlkiraSegment() *schema.Resource {
 			},
 			"enable_ipv6_to_ipv4_translation": {
 				Description: "Enable IPv6 to IPv4 translation in the " +
-					"segment for internet application traffic.",
+					"segment for internet application traffic. (**BETA**)",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -51,7 +51,7 @@ func resourceAlkiraSegment() *schema.Resource {
 			"enterprise_dns_server_ip": {
 				Description: "The IP of the DNS server used within the segment. This DNS server " +
 					"may be used by the Alkira CXP to resolve the names of LDAP servers for example " +
-					"which are configured on the Remote Access Connector.",
+					"which are configured on the Remote Access Connector. (**BETA**)",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
