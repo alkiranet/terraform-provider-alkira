@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
+	"log"
+
 	"github.com/alkiranet/terraform-provider-alkira/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: alkira.Provider,
+	err := providerserver.Serve(context.Background(), alkira.New, providerserver.ServeOpts{
+		Address: "registry.terraform.io/providers/alkiranet",
 	})
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }

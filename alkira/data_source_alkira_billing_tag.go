@@ -1,38 +1,71 @@
 package alkira
 
 import (
-	"strconv"
+	"context"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func dataSourceAlkiraBillingTag() *schema.Resource {
-	return &schema.Resource{
-		Description: "Use this data source to get information on an existing billing tag.",
+// Ensure the implementation satisfies the expected interfaces.
+var (
+	_ datasource.DataSource              = &alkiraBillingTagDataSource{}
+	_ datasource.DataSourceWithConfigure = &alkiraBillingTagDataSource{}
+)
 
-		Read: dataSourceAlkiraBillingTagRead,
+type alkiraBillingTagDataSource struct {
+	client *alkira.AlkiraClient
+}
 
-		Schema: map[string]*schema.Schema{
-			"name": {
+type alkiraBillingTagDataSourceModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+func NewAlkiraBillingTagDataSource() datasource.DataSource {
+	return &alkiraBillingTagDataSource{}
+}
+
+// Configure adds the provider configured client to the data source.
+func (d *alkiraBillingTagDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*alkira.AlkiraClient)
+}
+
+func (d *alkiraBillingTagDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_billing_tag"
+}
+
+func (d *alkiraBillingTagDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
 				Description: "The name of the billing tag.",
-				Type:        schema.TypeString,
 				Required:    true,
 			},
 		},
 	}
 }
 
-func dataSourceAlkiraBillingTagRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func (d *alkiraBillingTagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state alkiraBillingTagDataSourceModel
 
-	billingTag, err := client.GetBillingTagByName(d.Get("name").(string))
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	billingTag, err := d.client.GetBillingTagByName(state.Name.String())
 
 	if err != nil {
-		return err
+		return
 	}
 
-	d.SetId(strconv.Itoa(billingTag.Id))
+	// Set state
+	diags := resp.State.Set(ctx, &billingTag)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	return nil
 }

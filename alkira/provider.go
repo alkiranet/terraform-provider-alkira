@@ -1,128 +1,181 @@
 package alkira
 
 import (
-	"log"
+	"context"
 	"os"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Provider returns a schema.Provider for Alkira.
-func Provider() *schema.Provider {
-	return &schema.Provider{
-		Schema: map[string]*schema.Schema{
-			"portal": {
-				Description: "The URL for Alkira Custom Portal.",
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: envDefaultFunc("ALKIRA_PORTAL"),
-			},
-			"username": {
-				Description: "Your Tenant Username.",
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: envDefaultFunc("ALKIRA_USERNAME"),
-			},
-			"password": {
-				Description: "Your Tenant Password.",
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
-			},
-		},
+// Ensure the implementation satisfies the expected interfaces
+var (
+	_ provider.Provider = &alkiraProvider{}
+)
 
-		ResourcesMap: map[string]*schema.Resource{
-			"alkira_billing_tag":                  resourceAlkiraBillingTag(),
-			"alkira_byoip_prefix":                 resourceAlkiraByoipPrefix(),
-			"alkira_cloudvisor_account":           resourceAlkiraCloudVisorAccount(),
-			"alkira_connector_akamai_prolexic":    resourceAlkiraConnectorAkamaiProlexic(),
-			"alkira_connector_aruba_edge":         resourceAlkiraConnectorArubaEdge(),
-			"alkira_connector_aws_vpc":            resourceAlkiraConnectorAwsVpc(),
-			"alkira_connector_azure_vnet":         resourceAlkiraConnectorAzureVnet(),
-			"alkira_connector_azure_expressroute": resourceAlkiraConnectorAzureExpressRoute(),
-			"alkira_connector_cisco_sdwan":        resourceAlkiraConnectorCiscoSdwan(),
-			"alkira_connector_gcp_vpc":            resourceAlkiraConnectorGcpVpc(),
-			"alkira_connector_oci_vcn":            resourceAlkiraConnectorOciVcn(),
-			"alkira_connector_internet_exit":      resourceAlkiraConnectorInternetExit(),
-			"alkira_connector_ipsec":              resourceAlkiraConnectorIPSec(),
-			"alkira_credential_aws_vpc":           resourceAlkiraCredentialAwsVpc(),
-			"alkira_credential_azure_vnet":        resourceAlkiraCredentialAzureVnet(),
-			"alkira_credential_gcp_vpc":           resourceAlkiraCredentialGcpVpc(),
-			"alkira_credential_oci_vcn":           resourceAlkiraCredentialOciVcn(),
-			"alkira_credential_ssh_key_pair":      resourceAlkiraCredentialSshKeyPair(),
-			"alkira_group":                        resourceAlkiraGroup(),
-			"alkira_group_user":                   resourceAlkiraGroupUser(),
-			"alkira_internet_application":         resourceAlkiraInternetApplication(),
-			"alkira_list_as_path":                 resourceAlkiraListAsPath(),
-			"alkira_list_community":               resourceAlkiraListCommunity(),
-			"alkira_list_extended_community":      resourceAlkiraListExtendedCommunity(),
-			"alkira_list_global_cidr":             resourceAlkiraListGlobalCidr(),
-			"alkira_policy":                       resourceAlkiraPolicy(),
-			"alkira_policy_nat":                   resourceAlkiraPolicyNat(),
-			"alkira_policy_nat_rule":              resourceAlkiraPolicyNatRule(),
-			"alkira_policy_prefix_list":           resourceAlkiraPolicyPrefixList(),
-			"alkira_policy_routing":               resourceAlkiraPolicyRouting(),
-			"alkira_policy_rule":                  resourceAlkiraPolicyRule(),
-			"alkira_policy_rule_list":             resourceAlkiraPolicyRuleList(),
-			"alkira_segment":                      resourceAlkiraSegment(),
-			"alkira_segment_resource":             resourceAlkiraSegmentResource(),
-			"alkira_segment_resource_share":       resourceAlkiraSegmentResourceShare(),
-			"alkira_service_checkpoint":           resourceAlkiraCheckpoint(),
-			"alkira_service_cisco_ftdv":           resourceAlkiraServiceCiscoFTDv(),
-			"alkira_service_fortinet":             resourceAlkiraServiceFortinet(),
-			"alkira_service_infoblox":             resourceAlkiraInfoblox(),
-			"alkira_service_zscaler":              resourceAlkiraServiceZscaler(),
-			"alkira_service_pan":                  resourceAlkiraServicePan(),
-			"alkira_tenant_network":               resourceAlkiraTenantNetwork(),
+// alkiraProviderModel maps provider schema data to a Go type.
+type alkiraProviderModel struct {
+	Portal   types.String `tfsdk:"portal"`
+	Username types.String `tfsdk:"username"`
+	Password types.String `tfsdk:"password"`
+}
+
+// New is a helper function to simplify provider server and testing implementation.
+func New() provider.Provider {
+	return &alkiraProvider{}
+}
+
+// alkiraProvider is the provider implementation.
+type alkiraProvider struct{}
+
+// Metadata returns the provider type name.
+func (p *alkiraProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "alkira"
+}
+
+// Schema defines the provider-level schema for configuration data.
+func (p *alkiraProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"portal": schema.StringAttribute{
+				Optional: true,
+			},
+			"username": schema.StringAttribute{
+				Optional: true,
+			},
+			"password": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+			},
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_billing_tag":                  dataSourceAlkiraBillingTag(),
-			"alkira_byoip":                        dataSourceAlkiraByoip(),
-			"alkira_credential":                   dataSourceAlkiraCredential(),
-			"alkira_connector_aruba_edge":         dataSourceAlkiraConnectorArubaEdge(),
-			"alkira_connector_azure_vnet":         dataSourceAlkiraConnectorAzureVnet(),
-			"alkira_connector_azure_expressroute": dataSourceAlkiraConnectorAzureExpressRoute(),
-			"alkira_connector_aws_vpc":            dataSourceAlkiraConnectorAwsVpc(),
-			"alkira_connector_ipsec":              dataSourceAlkiraConnectorIpsec(),
-			"alkira_connector_cisco_sdwan":        dataSourceAlkiraConnectorCiscoSdwan(),
-			"alkira_connector_internet_exit":      dataSourceAlkiraConnectorInternetExit(),
-			"alkira_connector_oci_vcn":            dataSourceAlkiraConnectorOciVcn(),
-			"alkira_connector_gcp_vpc":            dataSourceAlkiraConnectorGcpVpc(),
-			"alkira_group":                        dataSourceAlkiraGroup(),
-			"alkira_group_user":                   dataSourceAlkiraGroupUser(),
-			"alkira_list_as_path":                 dataSourceAlkiraListAsPath(),
-			"alkira_list_community":               dataSourceAlkiraListCommunity(),
-			"alkira_list_extended_community":      dataSourceAlkiraListExtendedCommunity(),
-			"alkira_list_global_cidr":             dataSourceAlkiraListGlobalCidr(),
-			"alkira_policy":                       dataSourceAlkiraPolicy(),
-			"alkira_policy_nat_rule":              dataSourceAlkiraPolicyNatRule(),
-			"alkira_policy_prefix_list":           dataSourceAlkiraPolicyPrefixList(),
-			"alkira_policy_rule":                  dataSourceAlkiraPolicyRule(),
-			"alkira_policy_rule_list":             dataSourceAlkiraPolicyRuleList(),
-			"alkira_segment":                      dataSourceAlkiraSegment(),
-		},
-		ConfigureFunc: alkiraConfigure,
 	}
 }
 
-func envDefaultFunc(k string) schema.SchemaDefaultFunc {
-	return func() (interface{}, error) {
-		if v := os.Getenv(k); v != "" {
-			return v, nil
-		}
-
-		return nil, nil
+// Configure prepares a Alkira API client for data sources and resources.
+func (p *alkiraProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var config alkiraProviderModel
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-}
 
-func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
+	if config.Portal.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("host"),
+			"Unknown Alkira Portal",
+			"The provider cannot create the Alkira API client as there is an unknown configuration value for the Alkira API portal. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the ALKIRA_PORTAL environment variable.",
+		)
+	}
 
+	if config.Username.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("username"),
+			"Unknown Alkira Username",
+			"The provider cannot create the Alkira API client as there is an unknown configuration value for the Alkira API username. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the ALKIRA_USERNAME environment variable.",
+		)
+	}
+
+	if config.Password.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Unknown Alkira Password",
+			"The provider cannot create the Alkira API client as there is an unknown configuration value for the Alkira API password. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the ALKIRA_PASSWORD environment variable.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Default values to environment variables, but override
+	// with Terraform configuration value if set.
+
+	portal := os.Getenv("ALKIRA_PORTAL")
+	username := os.Getenv("ALKIRA_USERNAME")
+	password := os.Getenv("ALKIRA_PASSWORD")
+
+	if !config.Portal.IsNull() {
+		portal = config.Portal.ValueString()
+	}
+
+	if !config.Username.IsNull() {
+		username = config.Username.ValueString()
+	}
+
+	if !config.Password.IsNull() {
+		password = config.Password.ValueString()
+	}
+
+	// If any of the expected configurations are missing, return
+	// errors with provider-specific guidance.
+
+	if portal == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("host"),
+			"Missing Alkira API Host",
+			"The provider cannot create the Alkira API client as there is a missing or empty value for the Alkira API host. "+
+				"Set the host value in the configuration or use the ALKIRA_HOST environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if username == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("username"),
+			"Missing Alkira API Username",
+			"The provider cannot create the Alkira API client as there is a missing or empty value for the Alkira API username. "+
+				"Set the username value in the configuration or use the ALKIRA_USERNAME environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if password == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Missing Alkira API Password",
+			"The provider cannot create the Alkira API client as there is a missing or empty value for the Alkira API password. "+
+				"Set the password value in the configuration or use the ALKIRA_PASSWORD environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Create a new Alkira client using the configuration values
+	client, err := alkira.NewAlkiraClient(portal, username, password)
 	if err != nil {
-		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")
-		return nil, err
+		resp.Diagnostics.AddError(
+			"Unable to Create Alkira API Client",
+			"An unexpected error occurred when creating the Alkira API client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Alkira Client Error: "+err.Error(),
+		)
+		return
 	}
 
-	return alkiraClient, nil
+	resp.DataSourceData = client
+	resp.ResourceData = client
+}
+
+// DataSources defines the data sources implemented in the provider.
+func (p *alkiraProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		NewAlkiraBillingTagDataSource,
+	}
+}
+
+// Resources defines the resources implemented in the provider.
+func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource {
+	return nil
 }
