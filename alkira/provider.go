@@ -179,5 +179,6 @@ func (p *alkiraProvider) DataSources(_ context.Context) []func() datasource.Data
 func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewalkiraBillingTagResource,
+		NewalkiraByoipPrefixResource,
 	}
 }

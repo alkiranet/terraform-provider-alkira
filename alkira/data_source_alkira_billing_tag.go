@@ -71,23 +71,4 @@ func (d *alkiraBillingTagDataSource) Read(ctx context.Context, req datasource.Re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// var state alkiraBillingTagDataSourceModel
-
-	// resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &state.Name)...)
-
-	// billingTag, err := d.client.GetBillingTagByName(state.Name.ValueString())
-
-	// if err != nil {
-	// 	return
-	// }
-
-	// // Set state
-	// state.Id = types.Int64Value(int64(billingTag.Id))
-	// diags := resp.State.Set(ctx, &state)
-
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
 }
