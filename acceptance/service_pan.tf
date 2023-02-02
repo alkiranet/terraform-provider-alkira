@@ -15,7 +15,7 @@ resource "alkira_service_pan" "test" {
   management_segment_id = alkira_segment.test1.id
   size                  = "SMALL"
   type                  = "VM-300"
-  version               = "9.1.3"
+  version               = "10.2.2-h2"
 
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"
