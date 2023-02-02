@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -18,11 +17,6 @@ var (
 
 type alkiraBillingTagDataSource struct {
 	client *alkira.AlkiraClient
-}
-
-type alkiraBillingTagDataSourceModel struct {
-	Id   types.Int64  `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
 }
 
 func NewAlkiraBillingTagDataSource() datasource.DataSource {
@@ -45,7 +39,7 @@ func (d *alkiraBillingTagDataSource) Metadata(_ context.Context, req datasource.
 func (d *alkiraBillingTagDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int64Attribute{
+			"id": schema.NumberAttribute{
 				Description: "The ID billing tag.",
 				Computed:    true,
 			},
@@ -53,27 +47,47 @@ func (d *alkiraBillingTagDataSource) Schema(_ context.Context, _ datasource.Sche
 				Description: "The name of the billing tag.",
 				Required:    true,
 			},
+			"description": schema.StringAttribute{
+				Description: "The description of the billing tag.",
+				Computed:    true,
+			},
 		},
 	}
 }
 
 func (d *alkiraBillingTagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state alkiraBillingTagDataSourceModel
+	var state alkira.BillingTag
 
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &state.Name)...)
-
-	billingTag, err := d.client.GetBillingTagByName(state.Name.ValueString())
-
+	state, err := d.client.GetBillingTagByName(string(state.Name))
 	if err != nil {
 		return
 	}
 
-	// Set state
-	state.Id = types.Int64Value(int64(billingTag.Id))
-	diags := resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), state.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), state.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), state.Description)...)
 
-	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// var state alkiraBillingTagDataSourceModel
+
+	// resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &state.Name)...)
+
+	// billingTag, err := d.client.GetBillingTagByName(state.Name.ValueString())
+
+	// if err != nil {
+	// 	return
+	// }
+
+	// // Set state
+	// state.Id = types.Int64Value(int64(billingTag.Id))
+	// diags := resp.State.Set(ctx, &state)
+
+	// resp.Diagnostics.Append(diags...)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
 }

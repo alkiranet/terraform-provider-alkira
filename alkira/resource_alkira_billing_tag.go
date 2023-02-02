@@ -2,13 +2,13 @@ package alkira
 
 import (
 	"context"
-	"log"
+	"strconv"
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -20,13 +20,6 @@ type alkiraBillingTagResource struct {
 	client *alkira.AlkiraClient
 }
 
-type alkiraBillingTagResourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	LastUpdated types.String `tfsdk:"last_updated"`
-}
-
 func NewalkiraBillingTagResource() resource.Resource {
 	return &alkiraBillingTagResource{}
 }
@@ -36,7 +29,6 @@ func (r *alkiraBillingTagResource) Configure(_ context.Context, req resource.Con
 	if req.ProviderData == nil {
 		return
 	}
-
 	r.client = req.ProviderData.(*alkira.AlkiraClient)
 }
 
@@ -49,7 +41,7 @@ func (r *alkiraBillingTagResource) Metadata(_ context.Context, req resource.Meta
 func (r *alkiraBillingTagResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"id": schema.Int64Attribute{
 				Description: "The ID billing tag.",
 				Computed:    true,
 			},
@@ -70,20 +62,25 @@ func (r *alkiraBillingTagResource) Schema(_ context.Context, _ resource.SchemaRe
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *alkiraBillingTagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan alkiraBillingTagResourceModel
+	var plan alkira.BillingTag
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
+	// resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	id, err := r.client.CreateBillingTag(plan.Name.ValueString(), plan.Description.ValueString())
+	id, err := r.client.CreateBillingTag(plan.Name, plan.Description)
 	if err != nil {
 		return
 	}
 
-	// Set state
-	plan.Id = types.StringValue(id)
-	diags := resp.State.Set(ctx, &plan)
+	plan.Id, _ = strconv.Atoi(id)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), plan.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
 
-	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -91,25 +88,20 @@ func (r *alkiraBillingTagResource) Create(ctx context.Context, req resource.Crea
 
 // Read refreshes the Terraform state with the latest data.
 func (r *alkiraBillingTagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state alkiraBillingTagResourceModel
+	var plan alkira.BillingTag
 
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	billingTag, err := r.client.GetBillingTagById(state.Id.String())
+	plan, err := r.client.GetBillingTagById(strconv.Itoa(plan.Id))
 	if err != nil {
 		return
 	}
 
-	// Set state
-	state.Name = types.StringValue(billingTag.Name)
-	state.Description = types.StringValue(billingTag.Description)
-
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -117,32 +109,31 @@ func (r *alkiraBillingTagResource) Read(ctx context.Context, req resource.ReadRe
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *alkiraBillingTagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan alkiraBillingTagResourceModel
+	var plan alkira.BillingTag
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	// Grab the ID from the state.
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
+
+	// Grab the name and description from the plan.
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// log.Println("[ERROR] plan: %s %s %S", plan.Id.ValueString(), plan.Name.ValueString(), plan.Description.ValueString())
 
-	err := r.client.UpdateBillingTag(plan.Id.ValueString(), plan.Name.ValueString(), plan.Description.ValueString())
-	log.Printf("ABABA")
+	err := r.client.UpdateBillingTag(strconv.Itoa(plan.Id), plan.Name, plan.Description)
 	if err != nil {
 		return
 	}
 
-	billingTag, err := r.client.GetBillingTagById(plan.Id.ValueString())
+	plan, err = r.client.GetBillingTagById(strconv.Itoa(plan.Id))
 	if err != nil {
 		return
 	}
 
-	plan.Name = types.StringValue(billingTag.Name)
-	plan.Description = types.StringValue(billingTag.Description)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-
-	diags = resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("last_updated"), time.Now().Format(time.RFC3339))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,15 +141,14 @@ func (r *alkiraBillingTagResource) Update(ctx context.Context, req resource.Upda
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *alkiraBillingTagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state alkiraBillingTagResourceModel
+	var plan alkira.BillingTag
 
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.client.DeleteBillingTag(state.Id.ValueString())
+	err := r.client.DeleteBillingTag(strconv.Itoa(plan.Id))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Billing Tag",
