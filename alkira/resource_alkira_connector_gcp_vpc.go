@@ -55,6 +55,26 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"vpc_subnet": {
+				Description: "The list of subnets of the target GCP VPC for routing purpose. " +
+					"Given GCP VPC supports multiple prefixes per subnet, each prefix under a subnet will be a new entry.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "The Id of the subnet.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cidr": {
+							Description: "The CIDR of the subnet.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+			},
 			"gcp_routing": {
 				Description: "GCP Routing describes the routes that are to be imported to the VPC " +
 					"from the CXP. This essentially controls how traffic is routed between the " +
@@ -213,7 +233,12 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	gcpRouting := convertGcpRouting(d.Get("gcp_routing").(*schema.Set))
+	gcpRouting, err := convertGcpRouting(d.Get("gcp_routing").(*schema.Set), d.Get("vpc_subnet").(*schema.Set))
+	if err != nil {
+		log.Printf("[ERROR] failed to convert gcp routing")
+		return nil, err
+	}
+
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
