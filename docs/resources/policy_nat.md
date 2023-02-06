@@ -63,6 +63,7 @@ resource "alkira_policy_nat" "test" {
 
 ### Optional
 
+- `category` (String) The category of NAT policy, options are `DEFAULT` or `INTERNET_CONNECTOR`. A empty value in this field will be treated the same as a value of `DEFAULT`.
 - `description` (String) The description of the policy.
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`.Implicit group ID of a branch/on-premise connector for which a userdefined group is used in `included_groups` can be used here.
 

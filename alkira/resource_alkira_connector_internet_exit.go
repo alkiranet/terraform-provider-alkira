@@ -93,7 +93,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 			},
 			"egress_ips": {
 				Description: "The types of egress IPs to use with the connector. Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. " +
-					"If `BYOIP` is one of the options provided byoip_id must also be set.",
+					"If `BYOIP` is one of the options provided `byoip_id` must also be set.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -146,6 +146,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("public_ip_number", connector.NumOfPublicIPs)
+	d.Set("egress_ips", connector.EgressIpTypes)
 
 	// Set segment_id
 	if len(connector.Segments) > 0 {
