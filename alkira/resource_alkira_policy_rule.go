@@ -105,13 +105,15 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DROP"}, false),
 			},
 			"rule_action_service_types": {
-				Description: "Based on the service type, traffic is routed to service of the given type.",
+				Description: "Based on the service type, traffic is routed to service of the given type. " + 
+					"For service chaining, both PAN and ZIA service types can be selected but must follow order.",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 			},
 			"rule_action_service_ids": {
-				Description: "Based on the service IDs, traffic is routed to the specified services.",
+				Description: "Based on the service IDs, traffic is routed to the specified services. " +
+					"For service chaining, both `service_pan` and `service_zscaler`'s IDs can be added here, but ID of `service_pan` must be by followed by ID of `service_zscaler`.",
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Optional:    true,
