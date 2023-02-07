@@ -19,7 +19,7 @@ type Byoip struct {
 	Description     string               `json:"description"`
 	ExtraAttributes ByoipExtraAttributes `json:"extraAttributes"`
 	DoNotAdvertise  bool                 `json:"doNotAdvertise"`
-	Id              int                  `json:"id,omitempty"` // response only
+	Id              json.Number          `json:"id,omitempty"` // response only
 }
 
 // CreateByoip create a new BYOIP

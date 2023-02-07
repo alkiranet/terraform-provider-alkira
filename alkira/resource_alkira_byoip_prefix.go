@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -40,7 +41,7 @@ func (r *alkiraByoipPrefixResource) Metadata(_ context.Context, req resource.Met
 func (r *alkiraByoipPrefixResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int64Attribute{
+			"id": schema.NumberAttribute{
 				Description: "The ID of Byoip Prefix.",
 				Computed:    true,
 			},
@@ -82,7 +83,7 @@ func (r *alkiraByoipPrefixResource) Schema(_ context.Context, _ resource.SchemaR
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *alkiraByoipPrefixResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	plan, err := GenerateByoipRequest(ctx, req, resp)
+	plan, err := GenerateByoipRequestCreate(ctx, req, resp)
 	if err != nil {
 		return
 	}
@@ -92,31 +93,53 @@ func (r *alkiraByoipPrefixResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	plan.Id, _ = strconv.Atoi(id)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), plan.Id)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prefix"), plan.Prefix)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cxp"), plan.Cxp)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("do_not_advertise"), plan.DoNotAdvertise)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("message"), plan.ExtraAttributes.Message)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("signature"), plan.ExtraAttributes.Signature)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("public_key"), plan.ExtraAttributes.PublicKey)...)
+	err = json.Unmarshal([]byte(id), &plan.Id)
+	if err != nil {
+		return
+	}
 
-	if resp.Diagnostics.HasError() {
+	err = SetByoipStateCreate(ctx, req, resp, plan)
+	if err != nil {
 		return
 	}
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (r *alkiraByoipPrefixResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var id int
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan, err := r.client.GetByoipById(strconv.Itoa(id))
+	if err != nil {
+		return
+	}
+
+	err = SetByoipStateRead(ctx, req, resp, plan)
+	if err != nil {
+		return
+	}
 }
 
-// Update updates the resource and sets the updated Terraform state on success.
+// Byoip Prefix does not support update
 func (r *alkiraByoipPrefixResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
+	return
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *alkiraByoipPrefixResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var id int
 
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := r.client.DeleteByoip(strconv.Itoa(id))
+	if err != nil {
+		return
+	}
 }
