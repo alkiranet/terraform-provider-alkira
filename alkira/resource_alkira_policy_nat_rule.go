@@ -172,7 +172,6 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Description:  "The egress type to use with the match. Options are are `ALKIRA_PUBLIC_IP` or `BYOIP`.",
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "NONE",
 							ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
 						},
 					},
