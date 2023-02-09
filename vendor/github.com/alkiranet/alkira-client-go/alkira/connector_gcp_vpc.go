@@ -7,12 +7,24 @@ import (
 	"fmt"
 )
 
+type UserInputPrefixes struct {
+	Id    string `json:"id,omitempty"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ConnectorGcpVpcExportOptions struct {
+	ExportAllSubnets bool                `json:"exportAllSubnets,omitempty"`
+	Prefixes         []UserInputPrefixes `json:"userInputPrefixes,omitempty"`
+}
+
 type ConnectorGcpVpcImportOptions struct {
 	RouteImportMode string `json:"routeImportMode"`
 	PrefixListIds   []int  `json:"prefixListIds,omitempty"`
 }
 
 type ConnectorGcpVpcRouting struct {
+	ExportOptions ConnectorGcpVpcExportOptions `json:"exportToCXPOptions"`
 	ImportOptions ConnectorGcpVpcImportOptions `json:"importFromCXPOptions"`
 }
 
