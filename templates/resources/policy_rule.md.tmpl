@@ -1,0 +1,32 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+Simple example of a DROP rule.
+
+{{ tffile "examples/resources/alkira_policy_rule/resource.tf" }}
+
+To configure service chaining, multiple service types can be selected. Service chaining is currently supported only with PAN and Zscaler services.
+
+{{ tffile "examples/resources/alkira_policy_rule/resource1.tf" }}
+
+Another example of service chaining. The order of the services is important and PAN services must be followed by Zscaler services. In the below example, 1 & 2 are PAN serviceIds where as 3 is a Zscaler serviceId.
+
+{{ tffile "examples/resources/alkira_policy_rule/resource2.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
