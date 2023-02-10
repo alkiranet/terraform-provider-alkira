@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -17,7 +16,8 @@ var (
 )
 
 type alkiraByoipPrefixResource struct {
-	client *alkira.AlkiraClient
+	client      *alkira.AlkiraClient
+	byoipPrefix *alkira.AlkiraAPI[alkira.Byoip]
 }
 
 func NewalkiraByoipPrefixResource() resource.Resource {
@@ -88,17 +88,13 @@ func (r *alkiraByoipPrefixResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	id, err := r.client.CreateByoip(plan)
+	result, state, err := r.byoipPrefix.Create(plan)
 	if err != nil {
 		return
 	}
 
-	err = json.Unmarshal([]byte(id), &plan.Id)
-	if err != nil {
-		return
-	}
-
-	err = SetByoipStateCreate(ctx, req, resp, plan)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
+	err = SetByoipStateCreate(ctx, req, resp, result)
 	if err != nil {
 		return
 	}
@@ -113,12 +109,12 @@ func (r *alkiraByoipPrefixResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	plan, err := r.client.GetByoipById(strconv.Itoa(id))
+	result, err := r.byoipPrefix.GetById(strconv.Itoa(id))
 	if err != nil {
 		return
 	}
 
-	err = SetByoipStateRead(ctx, req, resp, plan)
+	err = SetByoipStateRead(ctx, req, resp, result)
 	if err != nil {
 		return
 	}
@@ -138,8 +134,12 @@ func (r *alkiraByoipPrefixResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	err := r.client.DeleteByoip(strconv.Itoa(id))
+	_, err := r.byoipPrefix.Delete(strconv.Itoa(id))
 	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting Byoip Prefix",
+			"Could not delete Byoip Prefix, unexpected error: "+err.Error(),
+		)
 		return
 	}
 }

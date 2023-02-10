@@ -17,7 +17,8 @@ var (
 )
 
 type alkiraBillingTagResource struct {
-	client *alkira.AlkiraClient
+	client     *alkira.AlkiraClient
+	billingTag *alkira.AlkiraAPI[alkira.BillingTag]
 }
 
 func NewalkiraBillingTagResource() resource.Resource {
@@ -30,6 +31,7 @@ func (r *alkiraBillingTagResource) Configure(_ context.Context, req resource.Con
 		return
 	}
 	r.client = req.ProviderData.(*alkira.AlkiraClient)
+	r.billingTag = alkira.NewBillingTag(r.client)
 }
 
 // Metadata returns the resource type name.
@@ -41,6 +43,10 @@ func (r *alkiraBillingTagResource) Metadata(_ context.Context, req resource.Meta
 func (r *alkiraBillingTagResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"state": schema.StringAttribute{
+				Description: "Provisioning state of the billing tag.",
+				Computed:    true,
+			},
 			"id": schema.Int64Attribute{
 				Description: "The ID billing tag.",
 				Computed:    true,
@@ -64,22 +70,25 @@ func (r *alkiraBillingTagResource) Schema(_ context.Context, _ resource.SchemaRe
 func (r *alkiraBillingTagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan alkira.BillingTag
 
-	// resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	id, err := r.client.CreateBillingTag(plan.Name, plan.Description)
+	result, state, err := r.billingTag.Create(&plan)
 	if err != nil {
 		return
 	}
 
-	plan.Id, _ = strconv.Atoi(id)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), plan.Id)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
+	id, err := result.Id.Int64()
+	if err != nil {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -88,20 +97,20 @@ func (r *alkiraBillingTagResource) Create(ctx context.Context, req resource.Crea
 
 // Read refreshes the Terraform state with the latest data.
 func (r *alkiraBillingTagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var plan alkira.BillingTag
+	var id int
 
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan, err := r.client.GetBillingTagById(strconv.Itoa(plan.Id))
+	result, err := r.billingTag.GetById(strconv.Itoa(id))
 	if err != nil {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -110,9 +119,10 @@ func (r *alkiraBillingTagResource) Read(ctx context.Context, req resource.ReadRe
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *alkiraBillingTagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan alkira.BillingTag
+	var id int
 
 	// Grab the ID from the state.
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
 
 	// Grab the name and description from the plan.
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
@@ -121,18 +131,19 @@ func (r *alkiraBillingTagResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	err := r.client.UpdateBillingTag(strconv.Itoa(plan.Id), plan.Name, plan.Description)
+	state, err := r.billingTag.Update(strconv.Itoa(id), &plan)
 	if err != nil {
 		return
 	}
 
-	plan, err = r.client.GetBillingTagById(strconv.Itoa(plan.Id))
+	result, err := r.billingTag.GetById(strconv.Itoa(id))
 	if err != nil {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), plan.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("last_updated"), time.Now().Format(time.RFC3339))...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -141,14 +152,14 @@ func (r *alkiraBillingTagResource) Update(ctx context.Context, req resource.Upda
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *alkiraBillingTagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var plan alkira.BillingTag
+	var id int
 
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &plan.Id)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.client.DeleteBillingTag(strconv.Itoa(plan.Id))
+	_, err := r.billingTag.Delete(strconv.Itoa(id))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Billing Tag",

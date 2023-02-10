@@ -20,9 +20,10 @@ var (
 
 // alkiraProviderModel maps provider schema data to a Go type.
 type alkiraProviderModel struct {
-	Portal   types.String `tfsdk:"portal"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
+	Portal    types.String `tfsdk:"portal"`
+	Username  types.String `tfsdk:"username"`
+	Password  types.String `tfsdk:"password"`
+	Provision types.Bool   `tfsdk:"provision"`
 }
 
 // New is a helper function to simplify provider server and testing implementation.
@@ -51,6 +52,9 @@ func (p *alkiraProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 			"password": schema.StringAttribute{
 				Optional:  true,
 				Sensitive: true,
+			},
+			"provision": schema.BoolAttribute{
+				Required: true,
 			},
 		},
 	}
@@ -92,6 +96,14 @@ func (p *alkiraProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		)
 	}
 
+	if config.Provision.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("provision"),
+			"Unknown Alkira Provision",
+			"The provider cannot create the Alkira API client as there is an unknown configuration value for the Alkira API provision.",
+		)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -114,6 +126,8 @@ func (p *alkiraProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if !config.Password.IsNull() {
 		password = config.Password.ValueString()
 	}
+
+	provision := config.Provision.ValueBool()
 
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
@@ -153,7 +167,7 @@ func (p *alkiraProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	// Create a new Alkira client using the configuration values
-	client, err := alkira.NewAlkiraClient(portal, username, password)
+	client, err := alkira.NewAlkiraClient(portal, username, password, provision)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Alkira API Client",

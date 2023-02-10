@@ -1,19 +1,18 @@
-// Copyright (C) 2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
-type Fortinet struct {
+type ServiceFortinet struct {
 	AutoScale        string                   `json:"autoScale,omitempty"`
 	BillingTags      []int                    `json:"billingTags"`
 	CredentialId     string                   `json:"credentialId"`
 	Cxp              string                   `json:"cxp"`
-	Id               int                      `json:"id"`
+	Id               json.Number              `json:"id"`
 	Instances        []FortinetInstance       `json:"instances"`
 	InternalName     string                   `json:"internalName"`
 	LicenseType      string                   `json:"licenseType"`
@@ -47,98 +46,9 @@ type FortinetInstanceConfig struct {
 	SerialNumber string `json:"serialNumber"`
 }
 
-func (ac *AlkiraClient) CreateFortinet(f *Fortinet) (string, error) {
+// NewServiceFortinet new service fortinet
+func NewServiceFortinet(ac *AlkiraClient) *AlkiraAPI[ServiceFortinet] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services", ac.URI, ac.TenantNetworkId)
-
-	body, err := json.Marshal(f)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateFortinet: marshal failed: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", err
-	}
-
-	var result Fortinet
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateFortinet: failed to unmarshal: %v", err)
-	}
-
-	return strconv.Itoa(result.Id), nil
-}
-
-func (ac *AlkiraClient) GetFortinets() (string, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services", ac.URI, ac.TenantNetworkId)
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
-func (ac *AlkiraClient) GetFortinetById(id string) (*Fortinet, error) {
-
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	var fortinet Fortinet
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &fortinet)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetFortinetById: failed to unmarshal: %v", err)
-	}
-
-	return &fortinet, nil
-}
-
-func (ac *AlkiraClient) GetFortinetInstanceConfig(serviceId string, instanceId string) (*FortinetInstanceConfig, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services/%s/instances/%s/configuration", ac.URI, ac.TenantNetworkId, serviceId, instanceId)
-
-	var fortinet FortinetInstanceConfig
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &fortinet)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetFortinetInstanceConfig: failed to unmarshal: %v", err)
-	}
-
-	return &fortinet, nil
-}
-
-func (ac *AlkiraClient) UpdateFortinet(id string, f *Fortinet) error {
-
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	body, err := json.Marshal(f)
-
-	if err != nil {
-		return fmt.Errorf("UpdateFortinet: failed to marshal request: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-func (ac *AlkiraClient) DeleteFortinet(id string) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
+	api := &AlkiraAPI[ServiceFortinet]{ac, uri}
+	return api
 }

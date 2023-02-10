@@ -16,7 +16,8 @@ var (
 )
 
 type alkiraBillingTagDataSource struct {
-	client *alkira.AlkiraClient
+	client     *alkira.AlkiraClient
+	billingTag *alkira.AlkiraAPI[alkira.BillingTag]
 }
 
 func NewAlkiraBillingTagDataSource() datasource.DataSource {
@@ -30,6 +31,7 @@ func (d *alkiraBillingTagDataSource) Configure(_ context.Context, req datasource
 	}
 
 	d.client = req.ProviderData.(*alkira.AlkiraClient)
+	d.billingTag = alkira.NewBillingTag(d.client)
 }
 
 func (d *alkiraBillingTagDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -39,6 +41,10 @@ func (d *alkiraBillingTagDataSource) Metadata(_ context.Context, req datasource.
 func (d *alkiraBillingTagDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"state": schema.StringAttribute{
+				Description: "Provisioning state of the billing tag.",
+				Computed:    true,
+			},
 			"id": schema.NumberAttribute{
 				Description: "The ID billing tag.",
 				Computed:    true,
@@ -56,17 +62,18 @@ func (d *alkiraBillingTagDataSource) Schema(_ context.Context, _ datasource.Sche
 }
 
 func (d *alkiraBillingTagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state alkira.BillingTag
+	var name string
 
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &state.Name)...)
-	state, err := d.client.GetBillingTagByName(string(state.Name))
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &name)...)
+	result, state, err := d.billingTag.GetByName(name)
 	if err != nil {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), state.Id)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), state.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), state.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), result.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
 
 	if resp.Diagnostics.HasError() {
 		return

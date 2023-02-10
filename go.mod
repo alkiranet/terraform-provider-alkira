@@ -5,7 +5,7 @@ go 1.18
 replace github.com/hashicorp/go-getter => github.com/hashicorp/go-getter v1.6.1
 
 require (
-	github.com/alkiranet/alkira-client-go v1.35.5
+	github.com/alkiranet/alkira-client-go v1.37.0
 	github.com/hashicorp/terraform-plugin-framework v1.1.1
 )
 

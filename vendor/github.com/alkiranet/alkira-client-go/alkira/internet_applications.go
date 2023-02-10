@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -35,70 +35,9 @@ type InternetApplication struct {
 	Targets                []InternetApplicationTargets `json:"targets,omitempty"`
 }
 
-// CreateInternetApplication create an internet application
-func (ac *AlkiraClient) CreateInternetApplication(app *InternetApplication) (string, string, error) {
+// NewInternetApplication new internet application
+func NewInternetApplication(ac *AlkiraClient) *AlkiraAPI[InternetApplication] {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications", ac.URI, ac.TenantNetworkId)
-
-	// Construct the request
-	body, err := json.Marshal(app)
-
-	if err != nil {
-		return "", "", fmt.Errorf("CreateInternetApplication: failed to marshal: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", "", err
-	}
-
-	var result InternetApplication
-	json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", "", fmt.Errorf("CreateInternetApplication: failed to unmarshal: %v", err)
-	}
-
-	return string(result.Id), string(result.InboundInternetGroupId), nil
-}
-
-// DeleteInternetApplication delete given internet application by ID
-func (ac *AlkiraClient) DeleteInternetApplication(id string) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
-}
-
-// UpdateInternetApplication update a given internet application by ID
-func (ac *AlkiraClient) UpdateInternetApplication(id string, app *InternetApplication) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
-
-	// Construct the request
-	body, err := json.Marshal(app)
-
-	if err != nil {
-		return fmt.Errorf("UpdateInternetApplication: failed to marshal: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-// GetInternetApplication get internet application by ID
-func (ac *AlkiraClient) GetInternetApplication(id string) (*InternetApplication, error) {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/internet-applications/%s", ac.URI, ac.TenantNetworkId, id)
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var result InternetApplication
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetInternetApplication: failed to unmarshal: %v", err)
-	}
-
-	return &result, nil
+	api := &AlkiraAPI[InternetApplication]{ac, uri}
+	return api
 }
