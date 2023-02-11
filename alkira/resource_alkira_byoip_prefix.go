@@ -30,6 +30,7 @@ func (r *alkiraByoipPrefixResource) Configure(_ context.Context, req resource.Co
 		return
 	}
 	r.client = req.ProviderData.(*alkira.AlkiraClient)
+	r.byoipPrefix = alkira.NewByoip(r.client)
 }
 
 // Metadata returns the resource type name.
@@ -88,12 +89,15 @@ func (r *alkiraByoipPrefixResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	result, state, err := r.byoipPrefix.Create(plan)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	result, _, err := r.byoipPrefix.Create(plan)
 	if err != nil {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
 	err = SetByoipStateCreate(ctx, req, resp, result)
 	if err != nil {
 		return

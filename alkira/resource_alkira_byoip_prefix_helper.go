@@ -2,9 +2,7 @@ package alkira
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,7 +11,7 @@ import (
 
 func GenerateByoipRequestCreate(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) (*alkira.Byoip, error) {
 	var attributes alkira.ByoipExtraAttributes
-	plan := new(alkira.Byoip)
+	var plan alkira.Byoip
 	plan.ExtraAttributes = attributes
 
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("prefix"), &plan.Prefix)...)
@@ -28,7 +26,7 @@ func GenerateByoipRequestCreate(ctx context.Context, req resource.CreateRequest,
 		return nil, errors.New("resp diagnostics has error")
 	}
 
-	return plan, nil
+	return &plan, nil
 }
 
 func GenerateByoipRequestUpdate(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) (*alkira.Byoip, error) {
@@ -38,7 +36,7 @@ func GenerateByoipRequestUpdate(ctx context.Context, req resource.UpdateRequest,
 
 	var id int
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
-	plan.Id = json.Number(strconv.FormatInt(int64(id), 10))
+	// plan.Id = json.Number(strconv.FormatInt(int64(id), 10))
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("prefix"), &plan.Prefix)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("cxp"), &plan.Cxp)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)

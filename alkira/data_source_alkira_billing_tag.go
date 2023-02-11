@@ -65,13 +65,18 @@ func (d *alkiraBillingTagDataSource) Read(ctx context.Context, req datasource.Re
 	var name string
 
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	result, state, err := d.billingTag.GetByName(name)
 	if err != nil {
 		return
 	}
 
+	id, _ := result.Id.Int64()
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), result.Id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
 
