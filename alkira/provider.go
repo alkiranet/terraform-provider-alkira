@@ -196,5 +196,6 @@ func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource
 		NewalkiraBillingTagResource,
 		NewalkiraByoipPrefixResource,
 		NewalkiraGroupResource,
+		NewalkiraCredentialKeyPairResource,
 	}
 }

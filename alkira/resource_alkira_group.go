@@ -162,8 +162,8 @@ func (r *alkiraGroupResource) Delete(ctx context.Context, req resource.DeleteReq
 	_, err := r.group.Delete(strconv.Itoa(id))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Billing Tag",
-			"Could not delete billing tag, unexpected error: "+err.Error(),
+			"Error Deleting Group",
+			"Could not delete group, unexpected error: "+err.Error(),
 		)
 		return
 	}
