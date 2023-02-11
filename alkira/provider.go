@@ -186,6 +186,7 @@ func (p *alkiraProvider) Configure(ctx context.Context, req provider.ConfigureRe
 func (p *alkiraProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewAlkiraBillingTagDataSource,
+		NewAlkiraGroupDataSource,
 	}
 }
 
@@ -194,5 +195,6 @@ func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		NewalkiraBillingTagResource,
 		NewalkiraByoipPrefixResource,
+		NewalkiraGroupResource,
 	}
 }
