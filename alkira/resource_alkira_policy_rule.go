@@ -121,7 +121,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 }
 
 func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyRuleRequest(d, m)
 
@@ -130,21 +130,23 @@ func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreatePolicyRule(request)
+	id, state, err := api.Create(request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to create policy rule")
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("state", state)
+	d.SetId(response.Id)
+
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyRule(m.(*alkira.AlkiraClient))
 
-	rule, err := client.GetPolicyRuleById(d.Id())
+	rule, err := api.GetById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to get policy rule %s", d.Id())
@@ -179,7 +181,7 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyRule(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyRuleRequest(d, m)
 
@@ -188,23 +190,26 @@ func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = client.UpdatePolicyRule(d.Id(), request)
+	state, err = api.Update(d.Id(), request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to update policy rule %s", d.Id())
 		return err
 	}
 
+	d.Set("state", state)
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyRule(m.(*alkira.AlkiraClient))
 
-	return client.DeletePolicyRule(d.Id())
+	state, err := api.Delete(d.Id())
+
+	return err
 }
 
-func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRule, error) {
+func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.TrafficPolicyRule, error) {
 
 	srcPortList := convertTypeListToStringList(d.Get("src_ports").([]interface{}))
 	dstPortList := convertTypeListToStringList(d.Get("dst_ports").([]interface{}))
@@ -214,7 +219,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.P
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
 	serviceList := convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{}))
 
-	request := &alkira.PolicyRule{
+	request := &alkira.TrafficPolicyRule{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		MatchCondition: alkira.PolicyRuleMatchCondition{

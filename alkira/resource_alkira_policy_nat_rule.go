@@ -166,7 +166,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 }
 
 func resourcePolicyNatRule(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyNatRuleRequest(d, m)
 
@@ -175,21 +175,23 @@ func resourcePolicyNatRule(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateNatRule(request)
+	response, state, err := api.Create(request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to create policy rule")
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("state", state)
+	d.SetId(strconv.Itoa(response.Id))
+
 	return resourcePolicyNatRuleRead(d, m)
 }
 
 func resourcePolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	rule, err := client.GetNatRuleById(d.Id())
+	rule, err := api.GetById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to get policy rule %s", d.Id())
@@ -204,7 +206,7 @@ func resourcePolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyNatRuleUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyNatRuleRequest(d, m)
 
@@ -213,28 +215,28 @@ func resourcePolicyNatRuleUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = client.UpdateNatRule(d.Id(), request)
+	state, err = api.Update(d.Id(), request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to update policy rule %s", d.Id())
 		return err
 	}
 
+	d.Set("state", state)
 	return resourcePolicyNatRuleRead(d, m)
 }
 
 func resourcePolicyNatRuleDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-
-	return client.DeleteNatRule(d.Id())
+	api := alkira.NewPolicyNatRule(m.(*alkira.AlkiraClient))
+	return api.Delete(d.Id())
 }
 
-func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatRule, error) {
+func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicyRule, error) {
 
 	match := expandPolicyNatRuleMatch(d.Get("match").(*schema.Set))
 	action := expandPolicyNatRuleAction(d.Get("action").(*schema.Set))
 
-	request := &alkira.NatRule{
+	request := &alkira.NatPolicyRule{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(bool),

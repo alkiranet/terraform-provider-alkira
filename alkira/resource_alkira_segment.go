@@ -1,7 +1,9 @@
 package alkira
 
 import (
+	"context"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +16,16 @@ func resourceAlkiraSegment() *schema.Resource {
 		Read:        resourceSegmentRead,
 		Update:      resourceSegmentUpdate,
 		Delete:      resourceSegmentDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			o, n := d.GetChange("state")
+
+			if o == "FAILED" {
+				d.SetNew("state", "SUCCESS")
+			}
+
+			return nil
+		},
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,6 +52,11 @@ func resourceAlkiraSegment() *schema.Resource {
 				Description: "The description of the segment.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"state": {
+				Description: "The provisioning state of the segment.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"enable_ipv6_to_ipv4_translation": {
 				Description: "Enable IPv6 to IPv4 translation in the " +
@@ -80,7 +97,7 @@ func resourceAlkiraSegment() *schema.Resource {
 }
 
 func resourceSegment(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	segment, err := generateSegmentRequest(d)
 
@@ -88,23 +105,32 @@ func resourceSegment(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateSegment(segment)
+	response, state, err := api.Create(segment)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("state", state)
+	d.SetId(strconv.Itoa(response.Id))
 
 	return resourceSegmentRead(d, m)
 }
 
 func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	segment, err := client.GetSegmentById(d.Id())
+	segment, err := api.GetById(d.Id())
+
 	if err != nil {
 		return err
+	}
+
+	log.Printf("[DEBUG] SPIKE reading var for %s", d.Get("name").(string))
+	_, _, errGetByName := api.GetByName(d.Get("name").(string))
+
+	if errGetByName != nil {
+		log.Printf("[ERROR] failed to get resoruce by name: %s", err)
 	}
 
 	d.Set("asn", segment.Asn)
@@ -125,7 +151,7 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	segment, err := generateSegmentRequest(d)
 
@@ -134,16 +160,16 @@ func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Updateing Segment %s", d.Id())
-	err = client.UpdateSegment(d.Id(), segment)
+	err = api.Update(d.Id(), segment)
 
 	return err
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting Segment %s", d.Id())
-	err := client.DeleteSegment(d.Id())
+	err := api.Delete(d.Id())
 
 	return err
 }
@@ -180,7 +206,7 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	return seg, nil
 }
 
-func setCidrsSegmentRead(d *schema.ResourceData, segment alkira.Segment) {
+func setCidrsSegmentRead(d *schema.ResourceData, segment *alkira.Segment) {
 	if segment.IpBlock == "" || stringInSlice(segment.IpBlock, segment.IpBlocks.Values) {
 		d.Set("cidrs", segment.IpBlocks.Values)
 	} else {

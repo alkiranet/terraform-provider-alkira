@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorInternetExit() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorInternetExitRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorInternetByName(d.Get("name").(string))
+	resource, err := client.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 	return nil
 }

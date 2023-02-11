@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorArubaEdge() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorArubaEdgeRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorArubaEdgeByName(d.Get("name").(string))
+	connector, err := alkira.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(connector.Id))
 	return nil
 }

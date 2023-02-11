@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorAzureExpressRouteRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorAzureExpressRouteByName(d.Get("name").(string))
+	resource, err := client.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 	return nil
 }

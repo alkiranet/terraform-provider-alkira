@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -149,7 +149,7 @@ func (ac *AlkiraClient) GetTenantNetworkProvisionRequest(id string) (*TenantNetw
 func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/provision", ac.URI, ac.TenantNetworkId)
 
-	data, err := ac.create(uri, nil, false)
+	data, _, err := ac.create(uri, nil, false)
 
 	if err != nil {
 		return "", err

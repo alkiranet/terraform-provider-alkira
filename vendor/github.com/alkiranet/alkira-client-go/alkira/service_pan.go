@@ -1,11 +1,10 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 type ServicePan struct {
@@ -15,7 +14,7 @@ type ServicePan struct {
 	CredentialId                string                               `json:"credentialId"`
 	GlobalProtectEnabled        bool                                 `json:"globalProtectEnabled"`
 	GlobalProtectSegmentOptions map[string]*GlobalProtectSegmentName `json:"globalProtectSegmentOptions,omitempty"`
-	Id                          int                                  `json:"id,omitempty"`
+	Id                          json.Number                          `json:"id,omitempty"`
 	Instances                   []ServicePanInstance                 `json:"instances,omitempty"`
 	LicenseType                 string                               `json:"licenseType"`
 	LicenseKey                  string                               `json:"licenseKey"`
@@ -69,70 +68,9 @@ type ServicePanInstance struct {
 	Name                        string                                       `json:"name"`
 }
 
-// CreateServicePan create service PAN
-func (ac *AlkiraClient) CreateServicePan(service *ServicePan) (string, error) {
+// NewServicePan new service pan
+func NewServicePan(ac *AlkiraClient) *AlkiraAPI[ServicePan] {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices", ac.URI, ac.TenantNetworkId)
-
-	// Construct the request
-	body, err := json.Marshal(service)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateServicePan: marshal failed: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", err
-	}
-
-	var result ServicePan
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateServicePan: failed to unmarshal: %v", err)
-	}
-
-	return strconv.Itoa(result.Id), nil
-}
-
-// DeleteServicePan delete a Service PAN by Id
-func (ac *AlkiraClient) DeleteServicePan(id string) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
-}
-
-// UpdateServicePan Update a Service PAN by Id
-func (ac *AlkiraClient) UpdateServicePan(id string, service *ServicePan) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
-
-	body, err := json.Marshal(service)
-
-	if err != nil {
-		return fmt.Errorf("UpdateServicePan: failed to marshal request: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-// GetServicePanById get an service-pan by Id
-func (ac *AlkiraClient) GetServicePanById(id string) (*ServicePan, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/panfwservices/%s", ac.URI, ac.TenantNetworkId, id)
-
-	var service ServicePan
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &service)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetServicePan: failed to unmarshal: %v", err)
-	}
-
-	return &service, nil
+	api := &AlkiraAPI[ServicePan]{ac, uri}
+	return api
 }

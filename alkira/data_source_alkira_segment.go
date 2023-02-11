@@ -27,10 +27,10 @@ func dataSourceAlkiraSegment() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraSegmentRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraSegmentRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	segment, err := client.GetSegmentByName(d.Get("name").(string))
+	segment, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

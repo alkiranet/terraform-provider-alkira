@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorOciVcn() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorOciVcnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorOciVcnByName(d.Get("name").(string))
+	resource, err := client.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 	return nil
 }

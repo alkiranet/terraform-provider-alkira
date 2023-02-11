@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorCiscoSdwanRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorCiscoSdwanByName(d.Get("name").(string))
+	resource, err := client.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 	return nil
 }

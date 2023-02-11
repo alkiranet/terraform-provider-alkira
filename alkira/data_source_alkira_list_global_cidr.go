@@ -27,10 +27,10 @@ func dataSourceAlkiraListGlobalCidr() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraListGlobalCidrRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraListGlobalCidrRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetGlobalCidrListByName(d.Get("name").(string))
+	list, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

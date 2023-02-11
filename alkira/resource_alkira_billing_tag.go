@@ -33,26 +33,30 @@ func resourceAlkiraBillingTag() *schema.Resource {
 	}
 }
 
-func resourceBillingTag(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
+
+	billingTag := alkira.BillingTag{
+		Name: d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
 
 	log.Printf("[INFO] Billing Tag Creating")
-	id, err := client.CreateBillingTag(d.Get("name").(string), d.Get("description").(string))
-	log.Printf("[INFO] Billing Tag ID: %s", id)
+	response, state, err := api.Create(billingTag)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
 
-	return resourceBillingTagRead(d, meta)
+	return resourceBillingTagRead(d, m)
 }
 
-func resourceBillingTagRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	tag, err := client.GetBillingTagById(d.Id())
+	tag, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -64,24 +68,30 @@ func resourceBillingTagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBillingTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Billing Tag Updating")
-	err := client.UpdateBillingTag(d.Id(), d.Get("name").(string), d.Get("description").(string))
+
+	billingTag := alkira.BillingTag{
+		Name: d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
+
+	_, err := api.Update(d.Id(), billingTag)
 
 	if err != nil {
 		return err
 	}
 
-	return resourceBillingTagRead(d, meta)
+	return resourceBillingTagRead(d, m)
 }
 
-func resourceBillingTagDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceBillingTagDelete(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting Billing Tag %s", d.Id())
-	err := client.DeleteBillingTag(d.Id())
+	_, err := api.Delete(d.Id())
 
 	return err
 }

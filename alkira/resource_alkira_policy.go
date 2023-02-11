@@ -62,7 +62,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 }
 
 func resourcePolicy(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyRequest(d, m)
 
@@ -71,21 +71,23 @@ func resourcePolicy(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreatePolicy(request)
+	response, state, err := api.Create(request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to create policy")
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("state", state)
+	d.SetId(strconv.Itoa(response.Id))
+
 	return resourcePolicyRead(d, m)
 }
 
 func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	policy, err := client.GetPolicyById(d.Id())
+	policy, err := api.GetById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to read policy %s", d.Id())
@@ -104,7 +106,7 @@ func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePolicyRequest(d, m)
 
@@ -113,7 +115,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = client.UpdatePolicy(d.Id(), request)
+	state, err = api.Update(d.Id(), request)
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to update policy")
@@ -124,18 +126,18 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	return client.DeletePolicy(d.Id())
+	return api.Delete(d.Id())
 }
 
-func generatePolicyRequest(d *schema.ResourceData, m interface{}) (*alkira.Policy, error) {
+func generatePolicyRequest(d *schema.ResourceData, m interface{}) (*alkira.TrafficPolicy, error) {
 
 	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
 	fromGroups := convertTypeListToIntList(d.Get("from_groups").([]interface{}))
 	toGroups := convertTypeListToIntList(d.Get("to_groups").([]interface{}))
 
-	policy := &alkira.Policy{
+	policy := &alkira.TrafficPolicy{
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(bool),
 		FromGroups:  fromGroups,

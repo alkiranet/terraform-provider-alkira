@@ -7,15 +7,14 @@ import (
 	"fmt"
 )
 
-type BillingTag struct {
+type Group struct {
 	Id          json.Number `json:"id"`
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
 }
 
-// NewBillingTag
-func NewBillingTag(ac *AlkiraClient) *AlkiraAPI[BillingTag] {
-	uri := fmt.Sprintf("%s/tags", ac.URI)
-	api := &AlkiraAPI[BillingTag]{ac, uri}
+func NewGroup(ac *AlkiraClient) *AlkiraAPI[Group] {
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
+	api := &AlkiraAPI[Group]{ac, uri}
 	return api
 }

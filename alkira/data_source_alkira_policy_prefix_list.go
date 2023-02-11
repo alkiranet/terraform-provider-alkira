@@ -27,10 +27,10 @@ func dataSourceAlkiraPolicyPrefixList() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraPolicyPrefixListRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraPolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	prefixList, err := client.GetPolicyPrefixListByName(d.Get("name").(string))
+	prefixList, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

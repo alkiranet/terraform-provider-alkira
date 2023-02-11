@@ -27,10 +27,10 @@ func dataSourceAlkiraListCommunity() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraListCommunityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraListCommunityRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetListByName(d.Get("name").(string), alkira.ListTypeCommunity)
+	list, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

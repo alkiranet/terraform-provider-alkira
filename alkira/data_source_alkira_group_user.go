@@ -21,10 +21,10 @@ func dataSourceAlkiraGroupUser() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraGroupUserRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraGroupUserRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetUserGroupByName(d.Get("name").(string))
+	group, err := api.GetUserGroupByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

@@ -23,10 +23,10 @@ func dataSourceAlkiraBillingTag() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraBillingTagRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraBillingTagRead(data *schema.ResourceData, meta interface{}) error {
+	api := alkira.NewBillingTag(meta.(*alkira.AlkiraClient))
 
-	billingTag, err := client.GetBillingTagByName(d.Get("name").(string))
+	billingTag, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

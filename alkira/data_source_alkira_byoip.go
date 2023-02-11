@@ -12,7 +12,7 @@ func dataSourceAlkiraByoip() *schema.Resource {
 		Read: dataSourceAlkiraByoipRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"prefix": {
 				Description: "Prefix for BYOIP.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -21,16 +21,16 @@ func dataSourceAlkiraByoip() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraByoipRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraByoipRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
-	prefix, err := client.GetByoipPrefixByName(d.Get("name").(string))
+	resource, err := api.GetByName(d.Get("prefix").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(prefix.Id))
+	d.SetId(string(resource.Id))
 
 	return nil
 }
