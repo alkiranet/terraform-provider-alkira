@@ -24,7 +24,7 @@ func dataSourceAlkiraConnectorArubaEdge() *schema.Resource {
 func dataSourceAlkiraConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	connector, err := alkira.GetByName(d.Get("name").(string))
+	connector, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

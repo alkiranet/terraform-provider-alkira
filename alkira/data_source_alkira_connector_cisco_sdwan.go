@@ -24,7 +24,7 @@ func dataSourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 func dataSourceAlkiraConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	resource, err := client.GetByName(d.Get("name").(string))
+	resource, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

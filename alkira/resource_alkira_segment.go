@@ -169,7 +169,7 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting Segment %s", d.Id())
-	err := api.Delete(d.Id())
+	state, err := api.Delete(d.Id())
 
 	return err
 }

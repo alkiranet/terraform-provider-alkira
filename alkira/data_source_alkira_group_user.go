@@ -24,12 +24,12 @@ func dataSourceAlkiraGroupUser() *schema.Resource {
 func dataSourceAlkiraGroupUserRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	group, err := api.GetUserGroupByName(d.Get("name").(string))
+	group, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(group.Id)
+	d.SetId(string(group.Id))
 	return nil
 }

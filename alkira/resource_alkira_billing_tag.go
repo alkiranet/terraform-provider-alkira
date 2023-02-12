@@ -36,13 +36,13 @@ func resourceAlkiraBillingTag() *schema.Resource {
 func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	billingTag := alkira.BillingTag{
-		Name: d.Get("name").(string),
+	billingTag := &alkira.BillingTag{
+		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 	}
 
 	log.Printf("[INFO] Billing Tag Creating")
-	response, state, err := api.Create(billingTag)
+	response, _, err := api.Create(billingTag)
 
 	if err != nil {
 		return err
@@ -73,8 +73,8 @@ func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Billing Tag Updating")
 
-	billingTag := alkira.BillingTag{
-		Name: d.Get("name").(string),
+	billingTag := &alkira.BillingTag{
+		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 	}
 

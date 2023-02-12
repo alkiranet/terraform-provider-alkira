@@ -61,7 +61,7 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 }
 
 func resourceByoipPrefix(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
 	request, err := generateByoipRequest(d, m)
 
@@ -70,20 +70,22 @@ func resourceByoipPrefix(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateByoip(request)
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceByoipPrefixRead(d, m)
 }
 
 func resourceByoipPrefixRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
-	byoip, err := client.GetByoipById(d.Id())
+	byoip, err := api.GetById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get BYOIP %s", d.Id())
@@ -106,10 +108,12 @@ func resourceByoipPrefixUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceByoipPrefixDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting BYOIP %s", d.Id())
-	return client.DeleteByoip(d.Id())
+	_, err := api.Delete(d.Id())
+
+	return err
 }
 
 func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip, error) {

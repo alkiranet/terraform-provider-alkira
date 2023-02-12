@@ -21,10 +21,10 @@ func dataSourceAlkiraConnectorAzureVnet() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorAzureVnetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAlkiraConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	resource, err := client.GetByName(d.Get("name").(string))
+	resource, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

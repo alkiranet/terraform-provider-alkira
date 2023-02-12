@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,16 +21,16 @@ func dataSourceAlkiraBillingTag() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraBillingTagRead(data *schema.ResourceData, meta interface{}) error {
-	api := alkira.NewBillingTag(meta.(*alkira.AlkiraClient))
+func dataSourceAlkiraBillingTagRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	billingTag, err := api.GetByName(d.Get("name").(string))
+	billingTag, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(billingTag.Id))
+	d.SetId(string(billingTag.Id))
 
 	return nil
 }

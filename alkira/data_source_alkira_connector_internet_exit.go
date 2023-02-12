@@ -24,7 +24,7 @@ func dataSourceAlkiraConnectorInternetExit() *schema.Resource {
 func dataSourceAlkiraConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	resource, err := client.GetByName(d.Get("name").(string))
+	resource, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

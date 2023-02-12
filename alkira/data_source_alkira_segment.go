@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -30,13 +28,13 @@ func dataSourceAlkiraSegment() *schema.Resource {
 func dataSourceAlkiraSegmentRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	segment, err := api.GetByName(d.Get("name").(string))
+	segment, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(segment.Id))
+	d.SetId(string(segment.Id))
 	d.Set("segment_id", segment.Id)
 
 	return nil

@@ -30,7 +30,7 @@ func dataSourceAlkiraPolicyPrefixList() *schema.Resource {
 func dataSourceAlkiraPolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	prefixList, err := api.GetByName(d.Get("name").(string))
+	prefixList, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

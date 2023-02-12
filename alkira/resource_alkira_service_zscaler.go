@@ -237,7 +237,7 @@ func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteZscaler(d.Id())
 }
 
-func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zscaler, error) {
+func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceZscaler, error) {
 	cfgs, err := expandZscalerIpsecConfigurations(d.Get("ipsec_configuration").(*schema.Set))
 	if err != nil {
 		return nil, err
@@ -249,7 +249,7 @@ func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zsca
 		return nil, err
 	}
 
-	return &alkira.Zscaler{
+	return &alkira.ServiceZscaler{
 		BillingTags:           convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Cxp:                   d.Get("cxp").(string),
 		Description:           d.Get("description").(string),

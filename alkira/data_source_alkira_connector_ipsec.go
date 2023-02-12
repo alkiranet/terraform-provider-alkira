@@ -24,7 +24,7 @@ func dataSourceAlkiraConnectorIpsec() *schema.Resource {
 func dataSourceAlkiraConnectorIpsecRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	resource, err := client.GetByName(d.Get("name").(string))
+	resource, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		return nil, nil
 	}
 
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	segmentOptions := make(alkira.SegmentNameToZone)
 
@@ -37,11 +37,11 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		}
 
 		if v, ok := optionsCfg["segment_id"].(int); ok {
-			sg, err := client.GetSegmentById(strconv.Itoa(v))
+			sg, err := api.GetById(strconv.Itoa(v))
 			if err != nil {
 				return nil, err
 			}
-			segment = &sg
+			segment = sg
 		}
 
 		if v, ok := optionsCfg["groups"].([]interface{}); ok {
@@ -57,7 +57,10 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		} else {
 			zonesToGroups[*zoneName] = groups
 			z.ZonesToGroups = zonesToGroups
-			z.SegmentId = segment.Id
+
+			segId, _ := strconv.Atoi(string(segment.Id))
+			z.SegmentId = segId
+
 			segmentOptions[segment.Name] = z
 		}
 	}
@@ -83,19 +86,22 @@ func deflateSegmentOptions(c alkira.SegmentNameToZone) []map[string]interface{} 
 }
 
 func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
-	groups, err := client.GetConnectorGroups()
+	api := alkira.NewGroup(client)
+	groups, err := api.GetAll()
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get groups")
 		return 0
 	}
 
-	var result []alkira.ConnectorGroup
+	var result []alkira.Group
 	json.Unmarshal([]byte(groups), &result)
 
 	for _, group := range result {
 		if group.Name == "ALK-INB-INT-GROUP" {
-			return group.Id
+
+			groupId, _ := strconv.Atoi(string(group.Id))
+			return groupId
 		}
 	}
 
@@ -154,22 +160,28 @@ func convertSegmentIdsToSegmentNames(ids []string, m interface{}) ([]string, err
 }
 
 func convertSegmentIdToSegmentName(id string, m interface{}) (string, error) {
-	seg, err := m.(*alkira.AlkiraClient).GetSegmentById(id)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	seg, err := api.GetById(id)
+
+	if err != nil {
+		return "", err
+	}
+
 	return seg.Name, err
 }
 
 func convertSegmentNamesToSegmentIds(names []string, m interface{}) ([]string, error) {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	var segmentIds []string
 	for _, name := range names {
-		seg, err := client.GetSegmentByName(name)
+		seg, _, err := api.GetByName(name)
 		if err != nil {
 			log.Printf("[DEBUG] failed to get segment. %s does not exist: ", name)
 			return nil, err
 		}
 
-		segmentIds = append(segmentIds, strconv.Itoa(seg.Id))
+		segmentIds = append(segmentIds, string(seg.Id))
 	}
 
 	return segmentIds, nil

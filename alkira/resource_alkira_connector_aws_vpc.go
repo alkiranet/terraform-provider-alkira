@@ -75,6 +75,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"provision_state": {
+				Description: "The provisioning state of connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
@@ -173,7 +178,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 }
 
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorAwsVpcRequest(d, m)
 
@@ -181,20 +186,22 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	id, err := client.CreateConnectorAwsVpc(connector)
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceConnectorAwsVpcRead(d, m)
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorAwsVpc(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -215,7 +222,8 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("vpc_id", connector.VpcId)
 
 	if len(connector.Segments) > 0 {
-		segment, err := client.GetSegmentByName(connector.Segments[0])
+		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+		segment, _, err := segApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -227,7 +235,7 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorAwsVpcRequest(d, m)
 
@@ -235,31 +243,37 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	err = client.UpdateConnectorAwsVpc(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
+
+	d.Set("provision_state", provisionState)
 
 	return err
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
-	err := client.DeleteConnectorAwsVpc(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
 	return nil
 }
 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
@@ -289,7 +303,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		BillingTags:                        billingTags,
 		CXP:                                d.Get("cxp").(string),
 		CredentialId:                       d.Get("credential_id").(string),
-		CustomerName:                       client.Username,
+		CustomerName:                       m.(*alkira.AlkiraClient).Username,
 		CustomerRegion:                     d.Get("aws_region").(string),
 		DirectInterVPCCommunicationEnabled: d.Get("direct_inter_vpc_communication").(bool),
 		Enabled:                            d.Get("enabled").(bool),

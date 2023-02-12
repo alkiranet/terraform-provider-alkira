@@ -325,7 +325,7 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteCheckpoint(d.Id())
 }
 
-func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.Checkpoint, error) {
+func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	chpfwCredId := d.Get("credential_id").(string)
@@ -364,7 +364,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.C
 
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	return &alkira.Checkpoint{
+	return &alkira.ServiceCheckpoint{
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
 		CredentialId:     d.Get("credential_id").(string),

@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,13 +30,13 @@ func dataSourceAlkiraGroup() *schema.Resource {
 func dataSourceAlkiraGroupRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewGroup(m.(*alkira.AlkiraClient))
 
-	group, err := api.GetByName(d.Get("name").(string))
+	group, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(strconv.Itoa(group.Id))
+	d.SetId(string(group.Id))
 	d.Set("group_id", group.Id)
 
 	return nil

@@ -20,20 +20,24 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"aruba_edge_vrf_mapping": {
-				Description: "The connector will accept multiple segments as a part of VRF mappings.",
-				Type:        schema.TypeSet,
+				Description: "The connector will accept multiple segments as a " +
+					"part of VRF mappings.",
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advertise_on_prem_routes": {
-							Description: "Allow routes from the branch/premises to be advertised to the cloud. The default value is False.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Description: "Allow routes from the branch/premises " +
+								"to be advertised to the cloud. The default " +
+								"value is False.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"segment_id": {
-							Description: "The segment ID associated with the Aruba Edge connector.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The segment ID associated with the " +
+								"Aruba Edge connector.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"aruba_edge_connect_segment_id": {
 							Description: "The segment ID of the Aruba Edge connector.",
@@ -41,10 +45,12 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Required:    true,
 						},
 						"disable_internet_exit": {
-							Description: "Enables or disables access to the internet when traffic arrives via this connector. The default value is False.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Description: "Enables or disables access to the internet " +
+								"when traffic arrives via this connector. The default " +
+								"value is False.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"gateway_gbp_asn": {
 							Description: "The gateway BGP ASN.",
@@ -62,8 +68,9 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"boost_mode": {
-				Description: "If enabled the Aruba Edge Connect image supporting the boost mode " +
-					"for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.",
+				Description: "If enabled the Aruba Edge Connect image supporting the " +
+					"boost mode for given size(or bandwidth) would be deployed in " +
+					"Alkira CXP. The default value is false.",
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -88,6 +95,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"provision_state": {
+				Description: "The state of provision.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"instances": {
 				Description: "The Aruba Edge connector instances.",
 				Type:        schema.TypeList,
@@ -105,9 +117,10 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Required:    true,
 						},
 						"host_name": {
-							Description: "The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The host name given to the Aruba SD-WAN " +
+								"appliance that appears in Silver Peak orchestrator.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"id": {
 							Description: "The ID of the endpoint.",
@@ -115,14 +128,16 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Computed:    true,
 						},
 						"name": {
-							Description: "The instance name associated with aruba edge connect instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The instance name associated with Aruba " +
+								"Edge Connect instance.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"site_tag": {
-							Description: "The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The site tag that appears on the SD-WAN " +
+								"appliance on Silver Peak orchestrator",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -133,10 +148,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Required:    true,
 			},
 			"segment_ids": {
-				Description: "The IDs of the segments associated with the Aruba Edge connector.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "The IDs of the segments associated with the" +
+					"Aruba Edge connector.",
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
@@ -162,37 +178,43 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 }
 
 func resourceConnectorArubaEdgeCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorArubaEdgeRequest(d, m)
+
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorArubaEdge(connector)
+	resource, provisionState, err := api.Create(connector)
+
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceConnectorArubaEdgeRead(d, m)
 }
 
 func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorArubaEdgeById(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
 	}
 
 	arubaEdgeMappings, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, m)
+
 	if err != nil {
 		return err
 	}
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(connector.Segments, m)
+
 	if err != nil {
 		return err
 	}
@@ -215,44 +237,52 @@ func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceConnectorArubaEdgeUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorArubaEdgeRequest(d, m)
+
 	if err != nil {
 		return err
 	}
 
-	err = client.UpdateConnectorArubaEdge(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
+
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourceConnectorArubaEdgeRead(d, m)
 }
 
 func resourceConnectorArubaEdgeDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	//NOTE: In other cases I have noticed that we must manually delete associataed resource
-	//credentials. In this case, the backend infers that is neccesary and handles this process for us
-	return client.DeleteConnectorArubaEdge(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if provisionState != "SUCCESS" {
+	}
+
+	return err
 }
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
 	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
+
 	if err != nil {
 		return nil, err
 	}
 
-	instances, err := expandArubaEdgeInstances(d.Get("instances").([]interface{}), client)
+	instances, err := expandArubaEdgeInstances(d.Get("instances").([]interface{}), m.(*alkira.AlkiraClient))
+
 	if err != nil {
 		return nil, err
 	}
 
 	vrfMappings, err := expandArubaEdgeVrfMappings(d.Get("aruba_edge_vrf_mapping").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}

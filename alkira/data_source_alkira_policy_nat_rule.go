@@ -24,7 +24,7 @@ func dataSourceAlkiraPolicyNatRule() *schema.Resource {
 func dataSourceAlkiraPolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
-	rule, err := api.GetByName(d.Get("name").(string))
+	rule, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

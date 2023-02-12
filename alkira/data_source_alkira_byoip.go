@@ -24,7 +24,7 @@ func dataSourceAlkiraByoip() *schema.Resource {
 func dataSourceAlkiraByoipRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
-	resource, err := api.GetByName(d.Get("prefix").(string))
+	resource, _, err := api.GetByName(d.Get("prefix").(string))
 
 	if err != nil {
 		return err

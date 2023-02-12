@@ -267,7 +267,7 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteInfoblox(d.Id())
 }
 
-func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Infoblox, error) {
+func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	//Create Infoblox Service Credential
@@ -316,7 +316,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Inf
 		return nil, err
 	}
 
-	return &alkira.Infoblox{
+	return &alkira.ServiceInfoblox{
 		AnyCast:          *anycast,
 		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Cxp:              d.Get("cxp").(string),

@@ -30,7 +30,7 @@ func dataSourceAlkiraListExtendedCommunity() *schema.Resource {
 func dataSourceAlkiraListExtendedCommunityRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetByName(d.Get("name").(string))
+	list, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

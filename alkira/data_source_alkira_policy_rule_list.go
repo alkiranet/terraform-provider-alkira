@@ -24,7 +24,7 @@ func dataSourceAlkiraPolicyRuleList() *schema.Resource {
 func dataSourceAlkiraPolicyRuleListRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetByName(d.Get("name").(string))
+	list, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

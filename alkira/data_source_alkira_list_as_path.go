@@ -30,7 +30,7 @@ func dataSourceAlkiraListAsPath() *schema.Resource {
 func dataSourceAlkiraListAsPathRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetByName(d.Get("name").(string))
+	list, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

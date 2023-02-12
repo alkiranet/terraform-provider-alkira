@@ -296,7 +296,7 @@ func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
 	return client.DeleteFortinet(d.Id())
 }
 
-func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Fortinet, error) {
+func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	fortinetCredId := d.Get("credential_id").(string)
@@ -354,7 +354,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.For
 		return nil, err
 	}
 
-	service := &alkira.Fortinet{
+	service := &alkira.ServiceFortinet{
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
 		CredentialId:     d.Get("credential_id").(string),
