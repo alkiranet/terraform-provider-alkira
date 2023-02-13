@@ -40,15 +40,15 @@ func (r *alkiraCredentialKeyPairResource) Schema(_ context.Context, _ resource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"state": schema.StringAttribute{
-				Description: "Provisioning state of the billing tag.",
+				Description: "Provisioning state of the ssh credential keypair.",
 				Computed:    true,
 			},
 			"credential_id": schema.StringAttribute{
-				Description: "The ID billing tag.",
+				Description: "The ID ssh credential keypair.",
 				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the billing tag.",
+				Description: "The name of the ssh credential keypair.",
 				Required:    true,
 			},
 			"public_key": schema.StringAttribute{

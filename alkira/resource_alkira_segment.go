@@ -13,50 +13,85 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.ResourceWithConfigure = &alkiraGroupResource{}
+	_ resource.ResourceWithConfigure = &alkiraSegmentResource{}
 )
 
-type alkiraGroupResource struct {
-	client *alkira.AlkiraClient
-	group  *alkira.AlkiraAPI[alkira.Group]
+type alkiraSegmentResource struct {
+	client  *alkira.AlkiraClient
+	segment *alkira.AlkiraAPI[alkira.Segment]
 }
 
-func NewalkiraGroupResource() resource.Resource {
-	return &alkiraGroupResource{}
+func NewalkiraSegmentResource() resource.Resource {
+	return &alkiraSegmentResource{}
 }
 
 // Configure adds the provider configured client to the resource.
-func (r *alkiraGroupResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+func (r *alkiraSegmentResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
 	r.client = req.ProviderData.(*alkira.AlkiraClient)
-	r.group = alkira.NewGroup(r.client)
+	r.segment = alkira.NewSegment(r.client)
 }
 
 // Metadata returns the resource type name.
-func (r *alkiraGroupResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_group"
+func (r *alkiraSegmentResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_segment"
 }
 
 // Schema defines the schema for the resource.
-func (r *alkiraGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"state": schema.StringAttribute{
-				Description: "Provisioning state of the group tag.",
+				Description: "Provisioning state of the Segment.",
 				Computed:    true,
 			},
 			"id": schema.Int64Attribute{
-				Description: "The ID group.",
+				Description: "The ID Segment.",
 				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the group tag.",
+				Description: "The name of the Segment.",
+				Required:    true,
+			},
+			"asn": schema.Int64Attribute{
+				Description: "The BGP ASN for the segment. Default value is `65514`.",
+				Optional:    true,
+			},
+			"cidrs": schema.ListAttribute{
+				Description: "The list of CIDR blocks.",
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Group description.",
+				Description: "Segment description.",
+				Optional:    true,
+			},
+			"enable_ipv6_to_ipv4_translation": schema.BoolAttribute{
+				Description: "Enable IPv6 to IPv4 translation in the " +
+					"segment for internet application traffic. (**BETA**)",
+				Optional: true,
+			},
+			"enterprise_dns_server_ip": schema.StringAttribute{
+				Description: "The IP of the DNS server used within the segment. This DNS server " +
+					"may be used by the Alkira CXP to resolve the names of LDAP servers for example " +
+					"which are configured on the Remote Access Connector. (**BETA**)",
+				Optional: true,
+			},
+			"reserve_public_ips": schema.BoolAttribute{
+				Description: "Default value is `false`. When this is set to " +
+					"`true`. Alkira reserves public IPs " +
+					"which can be used to create underlay tunnels between an " +
+					"external service and Alkira. For example the reserved public IPs " +
+					"may be used to create tunnels to the Akamai Prolexic. (**BETA**)",
+				Optional: true,
+			},
+			"src_ipv4_pool_start_ip": schema.StringAttribute{
+				Description: "The start IP address of IPv4 pool.",
+				Optional:    true,
+			},
+			"src_ipv4_pool_end_ip": schema.StringAttribute{
+				Description: "The end IP address of IPv4 pool.",
 				Optional:    true,
 			},
 			"last_updated": schema.StringAttribute{
@@ -67,8 +102,8 @@ func (r *alkiraGroupResource) Schema(_ context.Context, _ resource.SchemaRequest
 }
 
 // Create creates the resource and sets the initial Terraform state.
-func (r *alkiraGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan alkira.Group
+func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan alkira.Segment
 
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
@@ -76,7 +111,7 @@ func (r *alkiraGroupResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	result, state, err := r.group.Create(&plan)
+	result, state, err := r.segment.Create(&plan)
 	if err != nil {
 		return
 	}
@@ -96,7 +131,7 @@ func (r *alkiraGroupResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (r *alkiraGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var id int
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
@@ -104,7 +139,7 @@ func (r *alkiraGroupResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	result, err := r.group.GetById(strconv.Itoa(id))
+	result, err := r.segment.GetById(strconv.Itoa(id))
 	if err != nil {
 		return
 	}
@@ -117,8 +152,8 @@ func (r *alkiraGroupResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *alkiraGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan alkira.Group
+func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan alkira.Segment
 	var id int
 
 	// Grab the ID from the state.
@@ -131,12 +166,12 @@ func (r *alkiraGroupResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	state, err := r.group.Update(strconv.Itoa(id), &plan)
+	state, err := r.segment.Update(strconv.Itoa(id), &plan)
 	if err != nil {
 		return
 	}
 
-	result, err := r.group.GetById(strconv.Itoa(id))
+	result, err := r.segment.GetById(strconv.Itoa(id))
 	if err != nil {
 		return
 	}
@@ -151,7 +186,7 @@ func (r *alkiraGroupResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *alkiraGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *alkiraSegmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var id int
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
@@ -159,10 +194,10 @@ func (r *alkiraGroupResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	_, err := r.group.Delete(strconv.Itoa(id))
+	_, err := r.segment.Delete(strconv.Itoa(id))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Group",
+			"Error Deleting Segment",
 			"Could not delete group, unexpected error: "+err.Error(),
 		)
 		return

@@ -5,7 +5,6 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 // Generic struct to define a Alkira API
@@ -18,10 +17,7 @@ type AlkiraAPI[T any] struct {
 func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error) {
 
 	// Construct the request
-	log.Printf("[ERROR] Create Byoip Prefix: %s", resource)
 	body, err := json.Marshal(resource)
-	log.Printf("[ERROR] Create: %s", a.Uri)
-	log.Printf("[ERROR] Create: %s", body)
 
 	if err != nil {
 		return nil, "", fmt.Errorf("Create: failed to marshal: %v", err)
