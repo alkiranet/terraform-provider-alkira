@@ -48,7 +48,7 @@ func resourceGroup(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 
 	return resourceGroupRead(d, m)
 }
