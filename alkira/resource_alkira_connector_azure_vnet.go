@@ -66,6 +66,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"routing_options": {
 				Description: " Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` " +
 					"or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
@@ -164,7 +169,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
+					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
@@ -174,27 +180,31 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 }
 
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
+
+	// Generate request
 	connector, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorAzureVnet(connector)
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorAzureVnet(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -215,7 +225,8 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("service_tags", connector.ServiceTags)
 
 	if len(connector.Segments) > 0 {
-		segment, err := client.GetSegmentByName(connector.Segments[0])
+		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+		segment, _, err := segApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -227,39 +238,51 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
+
+	// Generate update request
 	connector, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	err = client.UpdateConnectorAzureVnet(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
+
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	err := client.DeleteConnectorAzureVnet(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
 
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
