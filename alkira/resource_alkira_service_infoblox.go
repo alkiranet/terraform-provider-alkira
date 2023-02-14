@@ -77,10 +77,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			// NOTE: for v1 of Infoblox support we are not supporting the creation of a new infoblox
-			// service on behalf of our customer. Instead the customer must have a preexsting
-			// infoblox service. Future releases will allow for this. At that time this comment
-			// should be removed.
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"grid_master": {
 				Type:        schema.TypeList,
 				Required:    true,
@@ -164,7 +165,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required:    true,
 						},
 						"type": {
-							Description:  "The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
+							Description: "The type of the Infoblox instance that is to be provisioned. " +
+								"The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
@@ -212,29 +214,35 @@ func resourceAlkiraInfoblox() *schema.Resource {
 }
 
 func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate infoblox request")
 		return err
 	}
 
-	id, err := client.CreateInfoblox(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceInfobloxRead(d, m)
 }
 
 func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	infoblox, err := client.GetInfobloxById(d.Id())
+	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
+
+	infoblox, err := api.GetById(d.Id())
+
 	if err != nil {
 		log.Printf("[ERROR] failed to get infoblox %s", d.Id())
 		return err
@@ -246,25 +254,42 @@ func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating infoblox%s", d.Id())
-	err = client.UpdateInfoblox(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
+	return resourceInfobloxRead(d, m)
 }
 
 func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting infoblox %s", d.Id())
-	return client.DeleteInfoblox(d.Id())
+	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
@@ -276,14 +301,17 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	shared_secret := d.Get("shared_secret").(string)
 
 	var infobloxCredentialId string
+
 	if shared_secret != "" {
 		err := errors.New("")
+
 		infobloxCredentialId, err = client.CreateCredential(
 			nameWithSuffix,
 			alkira.CredentialTypeInfoblox,
 			&alkira.CredentialInfoblox{SharedSecret: shared_secret},
 			0,
 		)
+
 		if err != nil {
 			return nil, err
 		}

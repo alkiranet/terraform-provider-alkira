@@ -9,11 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const (
-	FortinetLicenseTypePAYG = "PAY_AS_YOU_GO"
-	FortinetLicenseTyepBYO  = "BRING_YOUR_OWN"
-)
-
 func resourceAlkiraServiceFortinet() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Fortinet firewall.",
@@ -49,6 +44,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Description: "The CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"password": {
 				Description: "Fortinet password.",
@@ -122,8 +122,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Description: "Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 				Type:        schema.TypeString,
 				Required:    true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{FortinetLicenseTyepBYO, FortinetLicenseTypePAYG},
+				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
 					false,
 				),
 			},
@@ -212,30 +211,34 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 }
 
 func resourceFortinetCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Creating fortinet %s", d.Id())
-	id, err := client.CreateFortinet(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
-	return resourceFortinetRead(d, m)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
 
+	return resourceFortinetRead(d, m)
 }
 
 func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	f, err := client.GetFortinetById(d.Id())
+	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
+
+	f, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -275,25 +278,42 @@ func resourceFortinetRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceFortinetUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Fortinet%s", d.Id())
-	err = client.UpdateFortinet(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
 	return err
 }
 
 func resourceFortinetDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Fortinet %s", d.Id())
-	return client.DeleteFortinet(d.Id())
+	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
@@ -303,11 +323,13 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	if 0 == len(fortinetCredId) {
 		log.Printf("[INFO] Creating Fortinet FW Credential")
+
 		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
 		fortinetCred := alkira.CredentialPan{
 			Username: d.Get("username").(string),
 			Password: d.Get("password").(string),
 		}
+
 		credentialId, err := client.CreateCredential(
 			fortinetCredName,
 			alkira.CredentialTypeFortinet,

@@ -41,6 +41,11 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"password": {
 				Description: "The Checkpoint Firewall service password.",
 				Type:        schema.TypeString,
@@ -249,31 +254,37 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 }
 
 func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate checkpoint request")
 		return err
 	}
 
-	id, err := client.CreateCheckpoint(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceCheckpointRead(d, m)
 }
 
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	checkpoint, err := client.GetCheckpointById(d.Id())
+	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
+
+	checkpoint, err := api.GetById(d.Id())
+
 	if err != nil {
-		log.Printf("[ERROR] failed to get checkpoint %s", d.Id())
+		log.Printf("[ERROR] failed to get service-checkpoint %s", d.Id())
 		return err
 	}
 
@@ -304,36 +315,53 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Checkpoint %s", d.Id())
-	err = client.UpdateCheckpoint(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
+	d.Set("provision_state", provisionState)
 	return err
 }
 
 func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Checkpoint %s", d.Id())
-	return client.DeleteCheckpoint(d.Id())
+	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	chpfwCredId := d.Get("credential_id").(string)
+
 	if 0 == len(chpfwCredId) {
+
 		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
+
 		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
 		c := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
 		credentialId, err := client.CreateCredential(chkpfwName, alkira.CredentialTypeChkpFw, c, 0)
+
 		if err != nil {
 			return nil, err
 		}

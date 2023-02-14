@@ -41,6 +41,11 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the segment resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"segment_id": {
 				Description: "The segment ID.",
 				Type:        schema.TypeInt,
@@ -74,28 +79,34 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 }
 
 func resourceSegmentResource(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	resource, err := generateSegmentResourceRequest(d, m)
+	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
-	if err != nil {
-		return err
-	}
-
-	id, err := client.CreateSegmentResource(resource)
+	// Construct request
+	request, err := generateSegmentResourceRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	// Send create request
+	response, provisionState, err := api.Create(request)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceSegmentResourceRead(d, m)
 }
 
 func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	resource, err := client.GetSegmentResourceById(d.Id())
+	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
+
+	resource, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -103,7 +114,8 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("name", resource.Name)
 
-	segment, err := client.GetSegmentByName(resource.Segment)
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, _, err := segmentApi.GetByName(resource.Segment)
 
 	if err != nil {
 		return err
@@ -128,47 +140,53 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSegmentResourceUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	resource, err := generateSegmentResourceRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Segment Resource (%s)", d.Id())
-	err = client.UpdateSegmentResource(d.Id(), resource)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), resource)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return nil
 }
 
 func resourceSegmentResourceDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting SegmentResource (%s)", d.Id())
-	err := client.DeleteSegmentResource(d.Id())
+	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Deleted SegmentResource (%s)", d.Id())
+	if provisionState != "SUCCESS" {
+	}
+
 	d.SetId("")
 	return nil
 }
 
 func generateSegmentResourceRequest(d *schema.ResourceData, m interface{}) (*alkira.SegmentResource, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	groupPrefixes := expandSegmentResourceGroupPrefix(d.Get("group_prefix").(*schema.Set))
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
