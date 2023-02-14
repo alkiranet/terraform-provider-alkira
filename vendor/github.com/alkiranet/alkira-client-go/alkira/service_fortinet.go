@@ -49,6 +49,6 @@ type FortinetInstanceConfig struct {
 // NewServiceFortinet new service fortinet
 func NewServiceFortinet(ac *AlkiraClient) *AlkiraAPI[ServiceFortinet] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/ftnt-fw-services", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ServiceFortinet]{ac, uri}
+	api := &AlkiraAPI[ServiceFortinet]{ac, uri, true}
 	return api
 }

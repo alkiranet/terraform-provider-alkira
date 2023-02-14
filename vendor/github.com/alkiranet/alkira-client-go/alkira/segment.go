@@ -31,6 +31,6 @@ type Segment struct {
 
 func NewSegment(ac *AlkiraClient) *AlkiraAPI[Segment] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[Segment]{ac, uri}
+	api := &AlkiraAPI[Segment]{ac, uri, true}
 	return api
 }

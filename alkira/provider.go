@@ -32,7 +32,7 @@ func Provider() *schema.Provider {
 			},
 			"provision": {
 				Description: "With provision or not.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),

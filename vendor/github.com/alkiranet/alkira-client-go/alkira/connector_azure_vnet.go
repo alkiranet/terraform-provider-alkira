@@ -71,12 +71,13 @@ type ConnectorAzureVnet struct {
 	ServiceTags       []string              `json:"serviceTags,omitempty"`
 	Size              string                `json:"size"`
 	VnetId            string                `json:"vnetId"`
+	ConnectionMode    string                `json:"connectionMode"`
 	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
 }
 
 // NewConnectorAzureVnet initalize a new connector
 func NewConnectorAzureVnet(ac *AlkiraClient) *AlkiraAPI[ConnectorAzureVnet] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azurevnetconnectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorAzureVnet]{ac, uri}
+	api := &AlkiraAPI[ConnectorAzureVnet]{ac, uri, true}
 	return api
 }

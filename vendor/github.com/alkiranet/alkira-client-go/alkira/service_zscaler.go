@@ -39,6 +39,6 @@ type ZscalerIpSecConfig struct {
 // NewServiceZscaler new service zscaler
 func NewServiceZscaler(ac *AlkiraClient) *AlkiraAPI[ServiceZscaler] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/zscaler-internet-access-services", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ServiceZscaler]{ac, uri}
+	api := &AlkiraAPI[ServiceZscaler]{ac, uri, true}
 	return api
 }

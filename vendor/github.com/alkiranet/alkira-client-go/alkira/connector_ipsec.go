@@ -104,6 +104,6 @@ type ConnectorIPSec struct {
 // NewConnectorIPSec initialize a new connector
 func NewConnectorIPSec(ac *AlkiraClient) *AlkiraAPI[ConnectorIPSec] {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsecconnectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorIPSec]{ac, uri}
+	api := &AlkiraAPI[ConnectorIPSec]{ac, uri, true}
 	return api
 }

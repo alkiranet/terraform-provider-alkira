@@ -68,6 +68,6 @@ type RemoteAccessServerCerts struct {
 // NewConnectorRemoteAccess new connector
 func NewConnectorRemoteAccess(ac *AlkiraClient) *AlkiraAPI[ConnectorRemoteAccess] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorRemoteAccess]{ac, uri}
+	api := &AlkiraAPI[ConnectorRemoteAccess]{ac, uri, true}
 	return api
 }

@@ -73,6 +73,6 @@ type RemoteAccessTemplateUserGroupMappings struct {
 // NewConnectorRemoteAccess new connector
 func NewConnectorRemoteAccessTemplate(ac *AlkiraClient) *AlkiraAPI[ConnectorRemoteAccessTemplate] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorRemoteAccessTemplate]{ac, uri}
+	api := &AlkiraAPI[ConnectorRemoteAccessTemplate]{ac, uri, true}
 	return api
 }

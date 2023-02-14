@@ -21,6 +21,6 @@ type TrafficPolicy struct {
 // NewTrafficPolicy new traffic policy
 func NewTrafficPolicy(ac *AlkiraClient) *AlkiraAPI[TrafficPolicy] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/policies", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[TrafficPolicy]{ac, uri}
+	api := &AlkiraAPI[TrafficPolicy]{ac, uri, true}
 	return api
 }

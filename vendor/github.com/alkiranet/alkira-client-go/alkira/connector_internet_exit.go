@@ -35,6 +35,6 @@ type ConnectorInternet struct {
 
 func NewConnectorInternet(ac *AlkiraClient) *AlkiraAPI[ConnectorInternet] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/internetconnectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorInternet]{ac, uri}
+	api := &AlkiraAPI[ConnectorInternet]{ac, uri, true}
 	return api
 }

@@ -23,6 +23,6 @@ type SegmentResourceGroupPrefix struct {
 // NewSegmentResource new segment resource
 func NewSegmentResource(ac *AlkiraClient) *AlkiraAPI[SegmentResource] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/segment-resources", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[SegmentResource]{ac, uri}
+	api := &AlkiraAPI[SegmentResource]{ac, uri, true}
 	return api
 }

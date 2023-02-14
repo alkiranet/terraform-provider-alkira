@@ -35,7 +35,7 @@ type ConnectorGcpVpc struct {
 	CustomerRegion  string                  `json:"customerRegion"`
 	Enabled         bool                    `json:"enabled"`
 	GcpRouting      *ConnectorGcpVpcRouting `json:"gcpRouting,omitempty"`
-	Group           string                  `json:"group"`
+	Group           string                  `json:"group,omitempty"`
 	Id              json.Number             `json:"id,omitempty"`              // response only
 	ImplicitGroupId int                     `json:"implicitGroupId,omitempty"` // response only
 	Name            string                  `json:"name"`
@@ -50,6 +50,6 @@ type ConnectorGcpVpc struct {
 // NewConnectorGcpVpc initialize a new connector
 func NewConnectorGcpVpc(ac *AlkiraClient) *AlkiraAPI[ConnectorGcpVpc] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/gcpvpcconnectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorGcpVpc]{ac, uri}
+	api := &AlkiraAPI[ConnectorGcpVpc]{ac, uri, true}
 	return api
 }

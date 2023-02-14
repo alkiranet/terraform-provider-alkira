@@ -62,6 +62,6 @@ type ConnectorAwsVpc struct {
 // NewConnectorAwsVpc new connector-aws-vpc
 func NewConnectorAwsVpc(ac *AlkiraClient) *AlkiraAPI[ConnectorAwsVpc] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorAwsVpc]{ac, uri}
+	api := &AlkiraAPI[ConnectorAwsVpc]{ac, uri, true}
 	return api
 }

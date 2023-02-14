@@ -41,6 +41,6 @@ type ConnectorAkamaiProlexicTunnelIp struct {
 
 func NewConnectorAkamaiProlexic(ac *AlkiraClient) *AlkiraAPI[ConnectorAkamaiProlexic] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/akamai-prolexic-connectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorAkamaiProlexic]{ac, uri}
+	api := &AlkiraAPI[ConnectorAkamaiProlexic]{ac, uri, true}
 	return api
 }

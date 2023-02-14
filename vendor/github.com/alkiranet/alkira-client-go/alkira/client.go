@@ -132,7 +132,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	defer sessionResponse.Body.Close()
 
 	sessionData, _ := ioutil.ReadAll(sessionResponse.Body)
-	logf("DEBUG", "session data: %s\n", string(sessionData))
+	logf("TRACE", "session data: %s\n", string(sessionData))
 
 	if sessionResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get session (%d)", sessionResponse.StatusCode)
@@ -153,7 +153,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("DEBUG", "tenant network: %s\n", string(data))
+	logf("TRACE", "tenant network: %s\n", string(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -301,11 +301,9 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 				return true, nil
 			} else if request.State == "FAILED" || request.State == "PARTIAL_SUCCESS" {
 				return false, fmt.Errorf("client-create(%s): provision request %s failed", requestId, provisionRequestId)
-			} else {
-				return false, fmt.Errorf("client-create(%s): invalid provision request %s state %s", requestId, provisionRequestId, request.State)
 			}
 
-			logf("DEBUG", "client-create(%s): waiting for provision request %s to finish.", requestId, provisionRequestId)
+			logf("DEBUG", "client-create(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 
@@ -406,11 +404,9 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 				return true, nil
 			} else if request.State == "FAILED" {
 				return false, fmt.Errorf("client-delete(%s): provision request %s failed", requestId, provisionRequestId)
-			} else {
-				return false, fmt.Errorf("client-delete(%s): invalid provision request %s state %s", requestId, provisionRequestId, request.State)
 			}
 
-			logf("DEBUG", "client-delete(%s): waiting for provision request %s to finish.", requestId, provisionRequestId)
+			logf("DEBUG", "client-delete(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 
@@ -480,11 +476,9 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 				return true, nil
 			} else if request.State == "FAILED" {
 				return false, fmt.Errorf("client-update(%s): provision request %s failed", requestId, provisionRequestId)
-			} else {
-				return false, fmt.Errorf("client-update(%s): invalid provision request %s state %s", requestId, provisionRequestId, request.State)
 			}
 
-			logf("DEBUG", "client-update(%s): waiting for provision request %s to finish.", requestId, provisionRequestId)
+			logf("DEBUG", "client-update(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 

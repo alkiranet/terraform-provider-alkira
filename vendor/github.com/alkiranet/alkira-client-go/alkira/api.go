@@ -9,8 +9,9 @@ import (
 
 // Generic struct to define a Alkira API
 type AlkiraAPI[T any] struct {
-	Client *AlkiraClient
-	Uri    string
+	Client    *AlkiraClient
+	Uri       string
+	Provision bool
 }
 
 // Create create a resource
@@ -23,7 +24,7 @@ func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error) {
 		return nil, "", fmt.Errorf("Create: failed to marshal: %v", err)
 	}
 
-	data, state, err := a.Client.create(a.Uri, body, true)
+	data, state, err := a.Client.create(a.Uri, body, a.Provision)
 
 	if err != nil {
 		return nil, state, err
@@ -45,7 +46,7 @@ func (a *AlkiraAPI[T]) Delete(id string) (string, error) {
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
 
-	return a.Client.delete(uri, true)
+	return a.Client.delete(uri, a.Provision)
 }
 
 // Update update a resource by its ID
@@ -61,7 +62,7 @@ func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error) {
 		return "", fmt.Errorf("Update: failed to marshal: %v", err)
 	}
 
-	return a.Client.update(uri, body, true)
+	return a.Client.update(uri, body, a.Provision)
 }
 
 // GetAll get all resources

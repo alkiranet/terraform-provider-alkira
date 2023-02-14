@@ -20,18 +20,18 @@ type List struct {
 
 func NewListAsPath(ac *AlkiraClient) *AlkiraAPI[List] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/as-path-lists", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[List]{ac, uri}
+	api := &AlkiraAPI[List]{ac, uri, true}
 	return api
 }
 
 func NewListCommunity(ac *AlkiraClient) *AlkiraAPI[List] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/community-lists", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[List]{ac, uri}
+	api := &AlkiraAPI[List]{ac, uri, true}
 	return api
 }
 
 func NewListExtendedCommunity(ac *AlkiraClient) *AlkiraAPI[List] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/extended-community-lists", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[List]{ac, uri}
+	api := &AlkiraAPI[List]{ac, uri, true}
 	return api
 }

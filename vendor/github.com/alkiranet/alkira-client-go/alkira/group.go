@@ -15,6 +15,6 @@ type Group struct {
 
 func NewGroup(ac *AlkiraClient) *AlkiraAPI[Group] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/groups", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[Group]{ac, uri}
+	api := &AlkiraAPI[Group]{ac, uri, false}
 	return api
 }

@@ -55,6 +55,6 @@ type RoutePolicyRulesInterCxpRoutesRedistribution struct {
 // NewRoutePolicy new route policy
 func NewRoutePolicy(ac *AlkiraClient) *AlkiraAPI[RoutePolicy] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[RoutePolicy]{ac, uri}
+	api := &AlkiraAPI[RoutePolicy]{ac, uri, true}
 	return api
 }

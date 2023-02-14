@@ -22,6 +22,6 @@ type NatPolicy struct {
 // NewNatPolicy new nat policy
 func NewNatPolicy(ac *AlkiraClient) *AlkiraAPI[NatPolicy] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/nat-policies", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[NatPolicy]{ac, uri}
+	api := &AlkiraAPI[NatPolicy]{ac, uri, true}
 	return api
 }
