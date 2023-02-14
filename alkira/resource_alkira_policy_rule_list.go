@@ -47,34 +47,32 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 }
 
 func resourcePolicyRuleList(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+
+	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
 	ruleList, err := generatePolicyRuleListRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate rule list request")
 		return err
 	}
 
-	log.Printf("[INFO] Creating policy rule list")
-	id, err := client.CreatePolicyRuleList(ruleList)
+	response, _, err := api.Create(ruleList)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create policy rule list")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
 	return resourcePolicyRuleListRead(d, m)
 }
 
 func resourcePolicyRuleListRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	ruleList, err := client.GetPolicyRuleListById(d.Id())
+	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
+
+	ruleList, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get policy rule list %s", d.Id())
 		return err
 	}
 
@@ -86,30 +84,44 @@ func resourcePolicyRuleListRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyRuleListUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	ruleList, err := generatePolicyRuleListRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing policy rule list %s", d.Id())
-	err = client.UpdatePolicyRuleList(d.Id(), ruleList)
+	// Send update request
+	_, err = api.Update(d.Id(), ruleList)
+
+	if err != nil {
+		return err
+	}
 
 	return resourcePolicyRuleListRead(d, m)
 }
 
 func resourcePolicyRuleListDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting policy rule list %s", d.Id())
-	return client.DeletePolicyRuleList(d.Id())
+	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
+
+	_, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generatePolicyRuleListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRuleList, error) {
 
 	rules := expandPolicyRuleListRules(d.Get("rules").(*schema.Set))
+
 	request := &alkira.PolicyRuleList{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),

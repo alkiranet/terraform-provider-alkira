@@ -48,33 +48,32 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 }
 
 func resourceListExtendedCommunity(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	list, err := generateListExtendedCommunityRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate list extended community request")
 		return err
 	}
 
-	id, err := client.CreateList(list, alkira.ListTypeExtendedCommunity)
+	// Send request
+	resource, _, err := api.Create(list)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create list extended community")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 	return resourceListExtendedCommunityRead(d, m)
 }
 
 func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetListById(d.Id(), alkira.ListTypeExtendedCommunity)
+	list, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get list extended community %s", d.Id())
 		return err
 	}
 
@@ -86,25 +85,36 @@ func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceListExtendedCommunityUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	list, err := generateListExtendedCommunityRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing list extended community %s", d.Id())
-	err = client.UpdateList(d.Id(), list, alkira.ListTypeExtendedCommunity)
+	// Send request to update
+	_, err = api.Update(d.Id(), list)
+
+	if err != nil {
+		return err
+	}
 
 	return resourceListExtendedCommunityRead(d, m)
 }
 
 func resourceListExtendedCommunityDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting list extended community %s", d.Id())
-	return client.DeleteList(d.Id(), alkira.ListTypeExtendedCommunity)
+	_, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateListExtendedCommunityRequest(d *schema.ResourceData, m interface{}) (*alkira.List, error) {

@@ -17,7 +17,7 @@ func resourceAlkiraSegment() *schema.Resource {
 		Update:      resourceSegmentUpdate,
 		Delete:      resourceSegmentDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			o, n := d.GetChange("state")
+			o, _ := d.GetChange("state")
 
 			if o == "FAILED" {
 				d.SetNew("state", "SUCCESS")
@@ -99,38 +99,34 @@ func resourceAlkiraSegment() *schema.Resource {
 func resourceSegment(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	segment, err := generateSegmentRequest(d)
 
 	if err != nil {
 		return err
 	}
 
-	response, state, err := api.Create(segment)
+	// Send create request
+	response, provisionState, err := api.Create(segment)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("state", state)
-	d.SetId(strconv.Itoa(response.Id))
+	d.Set("provision_state", provisionState)
+	d.SetId(string(response.Id))
 
 	return resourceSegmentRead(d, m)
 }
 
 func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	segment, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
-	}
-
-	log.Printf("[DEBUG] SPIKE reading var for %s", d.Get("name").(string))
-	_, _, errGetByName := api.GetByName(d.Get("name").(string))
-
-	if errGetByName != nil {
-		log.Printf("[ERROR] failed to get resoruce by name: %s", err)
 	}
 
 	d.Set("asn", segment.Asn)
@@ -151,30 +147,46 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	segment, err := generateSegmentRequest(d)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing Segment %s", d.Id())
-	err = api.Update(d.Id(), segment)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), segment)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
+	return resourceSegmentRead(d, m)
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Segment %s", d.Id())
-	state, err := api.Delete(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
+
 	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
 	// Special handle for pool list, otherwise, request will simply fail

@@ -45,33 +45,32 @@ func resourceAlkiraListCommunity() *schema.Resource {
 }
 
 func resourceListCommunity(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	list, err := generateListCommunityRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate list community request")
 		return err
 	}
 
-	id, err := client.CreateList(list, alkira.ListTypeCommunity)
+	// Send request
+	resource, _, err := api.Create(list)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create list community")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 	return resourceListCommunityRead(d, m)
 }
 
 func resourceListCommunityRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetListById(d.Id(), alkira.ListTypeCommunity)
+	list, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get list community %s", d.Id())
 		return err
 	}
 
@@ -83,7 +82,7 @@ func resourceListCommunityRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceListCommunityUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
 	list, err := generateListCommunityRequest(d, m)
 
@@ -91,17 +90,25 @@ func resourceListCommunityUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing list community %s", d.Id())
-	err = client.UpdateList(d.Id(), list, alkira.ListTypeCommunity)
+	_, err = api.Update(d.Id(), list)
+
+	if err != nil {
+		return err
+	}
 
 	return resourceListCommunityRead(d, m)
 }
 
 func resourceListCommunityDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting list community %s", d.Id())
-	return client.DeleteList(d.Id(), alkira.ListTypeCommunity)
+	_, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func generateListCommunityRequest(d *schema.ResourceData, m interface{}) (*alkira.List, error) {

@@ -36,25 +36,29 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"prefix_range": {
-				Description: "A valid prefix range that could be used to define a prefix of type `ROUTE`.",
-				Type:        schema.TypeList,
-				Optional:    true,
+				Description: "A valid prefix range that could be used to " +
+					"define a prefix of type `ROUTE`.",
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix": {
-							Description: "A valid CIDR as prefix in `x.x.x.x/m` format.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "A valid CIDR as prefix in " +
+								"`x.x.x.x/m` format.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"le": {
-							Description: "Integer less than `32` but greater than mask `m` in prefix",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "Integer less than `32` but " +
+								"greater than mask `m` in prefix",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"ge": {
-							Description: "Integer less than `32` but greater than mask `m` in prefix and less than `le`.",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "Integer less than `32` but " +
+								"greater than mask `m` in prefix and less than `le`.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -64,33 +68,33 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 }
 
 func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generatePolicyPrefixListRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate prefix list request")
 		return err
 	}
 
-	id, err := client.CreatePolicyPrefixList(request)
+	// Send request
+	response, _, err := api.Create(request)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create prefix list")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
 	return resourcePolicyPrefixListRead(d, m)
 }
 
 func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetPolicyPrefixListById(d.Id())
+	list, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to get policy prefix list %s", d.Id())
 		return err
 	}
 
@@ -102,19 +106,19 @@ func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyPrefixListRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy prefix list request")
 		return err
 	}
 
-	err = client.UpdatePolicyPrefixList(d.Id(), request)
+	// Send update request
+	_, err = api.Update(d.Id(), request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update policy prefix list %s", d.Id())
 		return err
 	}
 
@@ -122,9 +126,19 @@ func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	return client.DeletePolicyPrefixList(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
@@ -133,7 +147,6 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to expand prefix ranges of prefix list %s", d.Id())
 		return nil, err
 	}
 
