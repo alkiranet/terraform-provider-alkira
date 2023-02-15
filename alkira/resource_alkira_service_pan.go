@@ -291,7 +291,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description:  "The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'",
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"VM-300", "VM-500", "VM-700"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"VM-300", "VM-500", "VM-700", "VM-SIM"}, false),
 			},
 			"version": {
 				Description: "The version of the PAN firewall.",

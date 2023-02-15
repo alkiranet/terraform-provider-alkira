@@ -1,0 +1,1 @@
+terraform import alkira_policy_rule.example RULE_ID
