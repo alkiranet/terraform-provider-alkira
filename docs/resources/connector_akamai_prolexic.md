@@ -84,6 +84,7 @@ resource "alkira_connector_akamai_prolexic" "test" {
 - `credential_id` (String) The credential ID for storing Akamai BGP authentication key.
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision` (String) The state of provisioning.
 
 <a id="nestedblock--byoip_options"></a>
 ### Nested Schema for `byoip_options`

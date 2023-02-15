@@ -90,6 +90,7 @@ resource "alkira_service_checkpoint" "test" {
 
 - `credential_id` (String) ID of Checkpoint Firewall credential.
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the service.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`

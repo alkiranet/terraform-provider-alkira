@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,12 +19,17 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"connector_internet_exit_id": {
-				//NOTE: This field is included to ensure that teardown of the zscaler service happens first.
-				//By including this field we are ensuring a dependency for the alkira zscaler serivce.
-				//Terraform destroys dependencies first.
-				Description: "The ID of the alkira connector internet exit for the zscaler service.",
-				Type:        schema.TypeString,
-				Required:    true,
+				//
+				// NOTE: This field is included to ensure that teardown
+				// of the zscaler service happens first.  By including
+				// this field we are ensuring a dependency for the
+				// alkira zscaler serivce.  Terraform destroys
+				// dependencies first.
+				//
+				Description: "The ID of the `connector_internet_exit` " +
+					"associated with the zscaler service.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"billing_tag_ids": {
 				Description: "Billing tag IDs to associate with the service.",
@@ -43,6 +46,11 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Description: "The description of the Zscaler service.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"ipsec_configuration": {
 				Type:     schema.TypeSet,
@@ -170,34 +178,42 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 }
 
 func resourceZscaler(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	z, err := generateZscalerRequest(d, m)
-	if err != nil {
-		return err
-	}
+	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Creating zscaler %s", d.Id())
-	id, err := client.CreateZscaler(z)
+	// Construct request
+	request, err := generateZscalerRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	// Send create request
+	response, provisionState, err := api.Create(request)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceZscalerRead(d, m)
-
 }
 
 func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	z, err := client.GetZscalerById(d.Id())
+	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
+
+	// Get the service
+	z, err := api.GetById(d.Id())
+
 	if err != nil {
 		return err
 	}
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(z.Segments, m)
+
 	if err != nil {
 		return err
 	}
@@ -217,39 +233,60 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	z, err := generateZscalerRequest(d, m)
+	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
+
+	// Construct request
+	request, err := generateZscalerRequest(d, m)
+
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Zscaler %s", d.Id())
-	err = client.UpdateZscaler(d.Id(), z)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
+	return resourceZscalerRead(d, m)
 }
 
 func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting Zscaler %s", d.Id())
-	return client.DeleteZscaler(d.Id())
+	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	return nil
 }
 
-func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Zscaler, error) {
+// generateZscalerRequest generate service-zscaler request
+func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceZscaler, error) {
+
 	cfgs, err := expandZscalerIpsecConfigurations(d.Get("ipsec_configuration").(*schema.Set))
+
 	if err != nil {
 		return nil, err
 	}
 
 	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
 	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return &alkira.Zscaler{
+	return &alkira.ServiceZscaler{
 		BillingTags:           convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Cxp:                   d.Get("cxp").(string),
 		Description:           d.Get("description").(string),

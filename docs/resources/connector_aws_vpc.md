@@ -118,6 +118,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision_state` (String) The provisioning state of connector.
 
 <a id="nestedblock--tgw_attachment"></a>
 ### Nested Schema for `tgw_attachment`

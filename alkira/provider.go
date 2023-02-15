@@ -30,6 +30,13 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
 			},
+			"provision": {
+				Description: "With provision or not.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -117,7 +124,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 }
 
 func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string))
+	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string), d.Get("provision").(bool))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")

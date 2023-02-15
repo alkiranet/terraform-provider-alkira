@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -52,70 +52,9 @@ type RoutePolicyRulesInterCxpRoutesRedistribution struct {
 	RestrictedCxps          []string `json:"restrictedCxps,omitempty"`
 }
 
-// CreateRoutePolicy create a route policy
-func (ac *AlkiraClient) CreateRoutePolicy(p *RoutePolicy) (string, error) {
+// NewRoutePolicy new route policy
+func NewRoutePolicy(ac *AlkiraClient) *AlkiraAPI[RoutePolicy] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies", ac.URI, ac.TenantNetworkId)
-
-	// Construct the request
-	body, err := json.Marshal(p)
-
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateRoutePolicy: request failed: %v", err)
-	}
-
-	var result RoutePolicy
-	json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateRoutePolicy: failed to unmarshal: %v", err)
-	}
-
-	return string(result.Id), nil
-}
-
-// DeleteRoutePolicy delete a route policy by Id
-func (ac *AlkiraClient) DeleteRoutePolicy(id string) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
-}
-
-// UpdateRoutePolicy update a route policy by Id
-func (ac *AlkiraClient) UpdateRoutePolicy(id string, p *RoutePolicy) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies/%s", ac.URI, ac.TenantNetworkId, id)
-
-	// Construct the request
-	body, err := json.Marshal(p)
-
-	if err != nil {
-		return fmt.Errorf("UpdateRoutePolicy: failed to marshal: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-// GetRoutePolicy get a route policy by Id
-func (ac *AlkiraClient) GetRoutePolicy(id string) (*RoutePolicy, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/route-policies/%s", ac.URI, ac.TenantNetworkId, id)
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var result RoutePolicy
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetRoutePolicy: failed to unmarshal: %v", err)
-	}
-
-	return &result, nil
+	api := &AlkiraAPI[RoutePolicy]{ac, uri, true}
+	return api
 }

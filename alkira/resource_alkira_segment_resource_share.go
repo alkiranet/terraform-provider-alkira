@@ -28,6 +28,11 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the segment resource share.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"service_ids": {
 				Description: "The list of service IDs.",
 				Type:        schema.TypeList,
@@ -76,28 +81,34 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 }
 
 func resourceSegmentResourceShare(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	share, err := generateSegmentResourceShareRequest(d, m)
+	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
-	if err != nil {
-		return err
-	}
-
-	id, err := client.CreateSegmentResourceShare(share)
+	// Construct request
+	request, err := generateSegmentResourceShareRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	// Send create request
+	response, provisionState, err := api.Create(request)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceSegmentResourceShareRead(d, m)
 }
 
 func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	share, err := client.GetSegmentResourceShareById(d.Id())
+	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
+
+	share, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -116,36 +127,55 @@ func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSegmentResourceShareUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	share, err := generateSegmentResourceShareRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	return client.UpdateSegmentResourceShare(d.Id(), share)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), share)
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
+	return resourceSegmentResourceShareRead(d, m)
 }
 
 func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting segment_resource_share: %s", d.Id())
-	err := client.DeleteSegmentResourceShare(d.Id())
+	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
-	return err
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateSegmentResourceShareRequest generate request for segment resource shared
 func generateSegmentResourceShareRequest(d *schema.ResourceData, m interface{}) (*alkira.SegmentResourceShare, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	serviceList := convertTypeListToIntList(d.Get("service_ids").([]interface{}))
 	endAResources := convertTypeListToIntList(d.Get("end_a_segment_resource_ids").([]interface{}))
 	endBResources := convertTypeListToIntList(d.Get("end_b_segment_resource_ids").([]interface{}))
 
 	segmentId := d.Get("designated_segment_id").(int)
-	segment, err := client.GetSegmentById(strconv.Itoa(segmentId))
+
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(segmentId))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by ID: %d", segmentId)

@@ -13,7 +13,7 @@ func dataSourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the AWS VPC connector.",
+				Description: "The name of the AWS-VPC connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -21,15 +21,15 @@ func dataSourceAlkiraConnectorAwsVpc() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorAwsVpcByName(d.Get("name").(string))
+	resource, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(resource.Id))
 	return nil
 }

@@ -54,6 +54,7 @@ resource "alkira_segment_resource" "test" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of automatically created implicit group.
+- `provision_state` (String) The provision state of the segment resource.
 
 <a id="nestedblock--group_prefix"></a>
 ### Nested Schema for `group_prefix`

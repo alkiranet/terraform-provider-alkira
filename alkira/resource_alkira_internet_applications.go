@@ -89,6 +89,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the internet application.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"public_ips": {
 				Description: "This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. " +
 					"The public IPs are to be used to access the internet application. These public IPs " +
@@ -140,29 +145,32 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 }
 
 func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, groupId, err := client.CreateInternetApplication(request)
+	// Send request to create
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
-	d.Set("group_id", groupId)
+	d.SetId(string(resource.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceInternetApplicationRead(d, m)
 }
 
 func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	app, err := client.GetInternetApplication(d.Id())
+	app, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -178,11 +186,13 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("size", app.Size)
 
 	// segment_id
-	segment, err := client.GetSegmentByName(app.SegmentName)
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, _, err := segmentApi.GetByName(app.SegmentName)
 
 	if err != nil {
 		return err
 	}
+
 	d.Set("segment_id", segment.Id)
 
 	// targets
@@ -204,7 +214,7 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceInternetApplicationUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
 	request, err := generateInternetApplicationRequest(d, m)
 
@@ -212,29 +222,40 @@ func resourceInternetApplicationUpdate(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
-	err = client.UpdateInternetApplication(d.Id(), request)
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
+
 	return resourceInternetApplicationRead(d, m)
 }
 
 func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	return client.DeleteInternetApplication(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	return nil
 }
 
 func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (*alkira.InternetApplication, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	publicIps := convertTypeListToStringList(d.Get("public_ips").([]interface{}))
-
 	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))

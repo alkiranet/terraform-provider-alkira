@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -47,7 +47,7 @@ func (s *Session) Cookies(u *url.URL) []*http.Cookie {
 }
 
 // NewAlkiraClient creates a new API client
-func NewAlkiraClient(hostname string, username string, password string) (*AlkiraClient, error) {
+func NewAlkiraClient(hostname string, username string, password string, provision bool) (*AlkiraClient, error) {
 
 	// Construct the portal URI
 	url := "https://" + hostname
@@ -64,18 +64,11 @@ func NewAlkiraClient(hostname string, username string, password string) (*Alkira
 		}
 	}
 
-	// With provision
-	provision := false
-
-	if os.Getenv("ALKIRA_PROVISION") == "TRUE" {
-		provision = true
-	}
-
 	logf("DEBUG", "PROVISION: %v", provision)
 	return NewAlkiraClientInternal(url, username, password, clientTimeout, provision)
 }
 
-// NewAlkiraClientInternal creates a new client
+// NewAlkiraClientInternal creates a new internal Alkira client
 func NewAlkiraClientInternal(url string, username string, password string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
 
 	// Construct the portal URI based on the given endpoint
@@ -139,7 +132,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	defer sessionResponse.Body.Close()
 
 	sessionData, _ := ioutil.ReadAll(sessionResponse.Body)
-	logf("DEBUG", "session data: %s\n", string(sessionData))
+	logf("TRACE", "session data: %s\n", string(sessionData))
 
 	if sessionResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get session (%d)", sessionResponse.StatusCode)
@@ -160,7 +153,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("DEBUG", "tenant network: %s\n", string(data))
+	logf("TRACE", "tenant network: %s\n", string(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -177,7 +170,14 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	}
 
 	// Construct our client with all information
-	client := &AlkiraClient{URI: apiUrl, Username: username, Password: password, TenantNetworkId: strconv.Itoa(tenantNetworkId), Client: httpClient, Provision: provision}
+	client := &AlkiraClient{
+		URI:             apiUrl,
+		Username:        username,
+		Password:        password,
+		TenantNetworkId: strconv.Itoa(tenantNetworkId),
+		Client:          httpClient,
+		Provision:       provision,
+	}
 
 	return client, nil
 }
@@ -209,8 +209,43 @@ func (ac *AlkiraClient) get(uri string) ([]byte, error) {
 	return data, nil
 }
 
+// get retrieve a resource by sending a GET request
+func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
+	logf("DEBUG", "client-get URI: %s\n", uri)
+
+	requestId := "client-" + uuid.New().String()
+	request, _ := http.NewRequest("GET", uri, nil)
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("x-ak-request-id", requestId)
+
+	response, err := ac.Client.Do(request)
+
+	if err != nil {
+		return nil, "", fmt.Errorf("client-get(%s): failed, %v", requestId, err)
+	}
+
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+	logf("DEBUG", "client-get(%s) RSP: %s\n", requestId, string(data))
+
+	if response.StatusCode != 200 {
+		return nil, "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+	}
+
+	//
+	// If provision is enabled, try to grab the provisioning status
+	//
+	// Also, this header is only available when `?name=` query
+	// parameter is used.
+	//
+	provisionState := response.Header.Get("x-provision-request-state")
+
+	return data, provisionState, nil
+}
+
 // create send a POST request to create resource
-func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, error) {
+func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error) {
 	logf("DEBUG", "client-create REQ: %s\n", string(body))
 
 	//
@@ -232,23 +267,27 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+
 	logf("DEBUG", "client-create(%s) RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
-		return nil, fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
 	}
 
-	// If provision is enabled, wait for provision to finish
+	//
+	// If provision is enabled, wait for provision to finish and
+	// return the provision state
+	//
 	if ac.Provision == true && provision == true {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return nil, fmt.Errorf("client-create: failed to get provision request ID")
+			return data, "FAILED", fmt.Errorf("client-create(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -258,31 +297,32 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 				return false, err
 			}
 
-			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
+			if request.State == "SUCCESS" {
 				return true, nil
-			}
-			if request.State == "FAILED" {
+			} else if request.State == "FAILED" || request.State == "PARTIAL_SUCCESS" {
 				return false, fmt.Errorf("client-create(%s): provision request %s failed", requestId, provisionRequestId)
 			}
 
-			logf("DEBUG", "client-create: waiting for provision to finish.")
+			logf("DEBUG", "client-create(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return nil, fmt.Errorf("client-create: timed out waiting for provision to complete")
+			return data, "FAILED", fmt.Errorf("client-create(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
 		if err != nil {
-			return nil, err
+			return data, "FAILED", err
 		}
+
+		return data, "SUCCESS", nil
 	}
 
-	return data, nil
+	return data, "", nil
 }
 
 // delete send a DELETE request to delete a resource
-func (ac *AlkiraClient) delete(uri string, provision bool) error {
+func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 	logf("DEBUG", "client-delete: URI %s\n", uri)
 
 	//
@@ -304,17 +344,18 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("client-delete(%s): failed, %v", requestId, err)
+		return "", fmt.Errorf("client-delete(%s): failed, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+
 	logf("DEBUG", "client-delete(%s): RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
-			logf("INFO", "client-delete: resource was already deleted.\n")
-			return nil
+			logf("INFO", "client-delete(%s): resource was already deleted.\n", requestId)
+			return "", nil
 		}
 
 		// Retry several more times and see if the delete goes through
@@ -335,21 +376,21 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return fmt.Errorf("client-delete: retry timeout, %s", string(data))
+			return "", fmt.Errorf("client-delete(%s): retry timeout, %s", requestId, string(data))
 		}
 
 		if err != nil {
-			return fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+			return "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
 		}
-
 	}
 
-	// If provision is enabled, wait for provision to finish
+	// If provision is enabled, wait for provision to finish and
+	// return the proper provision state
 	if ac.Provision == true && provision == true {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
+			return "", fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -359,34 +400,33 @@ func (ac *AlkiraClient) delete(uri string, provision bool) error {
 				return false, err
 			}
 
-			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
+			if request.State == "SUCCESS" {
 				return true, nil
-			}
-			if request.State == "FAILED" {
+			} else if request.State == "FAILED" {
 				return false, fmt.Errorf("client-delete(%s): provision request %s failed", requestId, provisionRequestId)
 			}
 
-			logf("DEBUG", "client-delete: waiting for provision to finish.")
+			logf("DEBUG", "client-delete(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return fmt.Errorf("client-delete: timed out waiting for provision to complete")
+			return "FAILED", fmt.Errorf("client-delete(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
-		return err
+		return "SUCCESS", err
 	}
 
-	return nil
+	return "", nil
 }
 
 // update send a PUT request to update a resource
-func (ac *AlkiraClient) update(uri string, body []byte, provision bool) error {
+func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string, error) {
 	logf("DEBUG", "client-update: REQUEST: %s\n", string(body))
 
 	//
 	// There are two knobs here to support turning provision on/off
-	// globally through ENV var and to support APIs that doesn't need
+	// globally through the flag and to support APIs that doesn't need
 	// to provision.
 	//
 	if ac.Provision == true && provision == true {
@@ -403,23 +443,26 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) error {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("client-update(%s): failed, %v", requestId, err)
+		return "", fmt.Errorf("client-update(%s): failed, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
+
 	logf("DEBUG", "client-update(%s): RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
+		return "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
 	}
 
-	// If provision is enabled, wait for provision to finish
+	//
+	// If provision is enabled, wait for provision to finish and return the proper state
+	//
 	if ac.Provision == true && provision == true {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
+			return "", fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -429,27 +472,22 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) error {
 				return false, err
 			}
 
-			// The provision states could be misleading in certain
-			// cases. For "PARTIAL_SUCCESS", provisioning of some
-			// resources actaully failed. For "FAILED" state, some
-			// resources may get provisioned successfully.
-			if request.State == "SUCCESS" || request.State == "PARTIAL_SUCCESS" {
+			if request.State == "SUCCESS" {
 				return true, nil
-			}
-			if request.State == "FAILED" {
+			} else if request.State == "FAILED" {
 				return false, fmt.Errorf("client-update(%s): provision request %s failed", requestId, provisionRequestId)
 			}
 
-			logf("DEBUG", "client-update: waiting for provision to finish.")
+			logf("DEBUG", "client-update(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
 			return false, nil
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return fmt.Errorf("client-update: timed out waiting for provision to complete")
+			return "FAILED", fmt.Errorf("client-update(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
-		return err
+		return "SUCCESS", err
 	}
 
-	return nil
+	return "", nil
 }

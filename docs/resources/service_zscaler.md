@@ -45,7 +45,7 @@ resource "alkira_service_zscaler" "test1" {
 
 ### Required
 
-- `connector_internet_exit_id` (String) The ID of the alkira connector internet exit for the zscaler service.
+- `connector_internet_exit_id` (String) The ID of the `connector_internet_exit` associated with the zscaler service.
 - `cxp` (String) The CXP where the service should be provisioned.
 - `ipsec_configuration` (Block Set, Min: 1) The IPSEC tunnel configuration. This field should only be set when tunnelType is IPSEC. (see [below for nested schema](#nestedblock--ipsec_configuration))
 - `name` (String) The name of the zscaler firewall.
@@ -63,6 +63,7 @@ resource "alkira_service_zscaler" "test1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the service.
 
 <a id="nestedblock--ipsec_configuration"></a>
 ### Nested Schema for `ipsec_configuration`

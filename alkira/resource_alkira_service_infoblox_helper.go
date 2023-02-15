@@ -202,7 +202,7 @@ func deflateInfobloxAnycast(ia alkira.InfobloxAnycast) []map[string]interface{} 
 	return []map[string]interface{}{m}
 }
 
-func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.Infoblox) {
+func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfoblox) {
 	d.Set("anycast", deflateInfobloxAnycast(in.AnyCast))
 	d.Set("billing_tag_ids", in.BillingTags)
 	d.Set("cxp", in.Cxp)

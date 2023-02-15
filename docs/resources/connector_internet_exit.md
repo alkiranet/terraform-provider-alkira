@@ -52,6 +52,7 @@ resource "alkira_connector_internet_exit" "test1" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision_state` (String) The provision state of the connector.
 
 ## Import
 

@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -46,6 +45,11 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"signature": {
 				Description: "Signautre from AWS BYOIP.",
 				Type:        schema.TypeString,
@@ -61,32 +65,44 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 }
 
 func resourceByoipPrefix(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(client)
+
+	// Construct request
 	request, err := generateByoipRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate BYOIP request")
 		return err
 	}
 
-	id, err := client.CreateByoip(request)
+	// Send create request
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceByoipPrefixRead(d, m)
 }
 
 func resourceByoipPrefixRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	byoip, err := client.GetByoipById(d.Id())
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(client)
+
+	// Get the resource
+	byoip, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get BYOIP %s", d.Id())
 		return err
 	}
 
@@ -98,18 +114,40 @@ func resourceByoipPrefixRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("public_key", byoip.ExtraAttributes.PublicKey)
 	d.Set("do_not_advertise", byoip.DoNotAdvertise)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceByoipPrefixUpdate(d *schema.ResourceData, m interface{}) error {
-	return fmt.Errorf("alkira_byoip doesn't support upgrade. Please delete and create new one.")
+	return fmt.Errorf("`alkira_byoip_prefix` doesn't support upgrade. Please delete and create new one.")
 }
 
 func resourceByoipPrefixDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting BYOIP %s", d.Id())
-	return client.DeleteByoip(d.Id())
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewByoip(client)
+
+	// Delete resource
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	// Check provision state
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
+	}
+
+	d.SetId("")
+	return err
 }
 
 func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip, error) {

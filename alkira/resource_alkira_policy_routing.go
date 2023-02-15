@@ -33,6 +33,11 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the routing policy.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"enabled": {
 				Description: "Whether the routing policy is enabled. By default, it is set to `false`.",
 				Type:        schema.TypeBool,
@@ -76,16 +81,17 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Default:  true,
 			},
 			"advertise_on_prem_routes": {
-				Description: "Advertise routes from other on premise connectors to selected scope. " +
-					"Default value is `false`.",
+				Description: "Advertise routes from other on premise connectors to " +
+					"selected scope. Default value is `false`.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"advertise_custom_routes_prefix_id": {
-				Description: "Prefix list ID to send aggregates out towards on-prem connectors.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Description: "Prefix list ID to send aggregates out towards " +
+					"on-prem connectors.",
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"rule": {
 				Type:     schema.TypeSet,
@@ -98,7 +104,8 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Required:    true,
 						},
 						"action": {
-							Description:  "Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`.",
+							Description: "Action to be set on matched routes. Value could be " +
+								"`ALLOW`, `DENY` and `ALLOW_W_SET`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY", "ALLOW_W_SET"}, false),
@@ -205,33 +212,34 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 }
 
 func resourcePolicyRouting(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyRoutingRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate routing policy request.")
 		return err
 	}
 
-	id, err := client.CreateRoutePolicy(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to create routing policy.")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourcePolicyRoutingRead(d, m)
 }
 
 func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
-	policy, err := client.GetRoutePolicy(d.Id())
+	policy, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to read routing policy %s.", d.Id())
 		return err
 	}
 
@@ -248,13 +256,21 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("included_group_ids", policy.IncludedGroups)
 	d.Set("name", policy.Name)
 
-	segment, err := client.GetSegmentByName(policy.Segment)
+	//
+	// Set segment
+	//
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, _, err := segmentApi.GetByName(policy.Segment)
 
 	if err != nil {
 		return err
 	}
+
 	d.Set("segment_id", segment.Id)
 
+	//
+	// Set Rule
+	//
 	var rules []map[string]interface{}
 
 	for _, rule := range policy.Rules {
@@ -304,39 +320,51 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyRoutingUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generatePolicyRoutingRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate routing policy request.")
 		return err
 	}
 
-	err = client.UpdateRoutePolicy(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update routing policy.")
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourcePolicyRoutingRead(d, m)
 }
 
 func resourcePolicyRoutingDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	return client.DeleteRoutePolicy(d.Id())
+	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkira.RoutePolicy, error) {
 
-	client := m.(*alkira.AlkiraClient)
-
 	inGroups := convertTypeListToIntList(d.Get("included_group_ids").([]interface{}))
 	exGroups := convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{}))
 
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))

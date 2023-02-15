@@ -67,6 +67,7 @@ resource "alkira_internet_application" "test" {
 
 - `group_id` (Number) ID of the auto generated system group.
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the internet application.
 
 <a id="nestedblock--target"></a>
 ### Nested Schema for `target`

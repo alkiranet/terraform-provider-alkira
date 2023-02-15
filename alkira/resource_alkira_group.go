@@ -33,25 +33,30 @@ func resourceAlkiraGroup() *schema.Resource {
 	}
 }
 
-func resourceGroup(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroup(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewGroup(m.(*alkira.AlkiraClient))
+
+	group := &alkira.Group{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
 
 	log.Printf("[INFO] Group Creating")
-	id, err := client.CreateConnectorGroup(d.Get("name").(string), d.Get("description").(string))
+	resource, _, err := api.Create(group)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 
-	return resourceGroupRead(d, meta)
+	return resourceGroupRead(d, m)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewGroup(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorGroupById(d.Id())
+	group, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -63,11 +68,16 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupUpdate(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewGroup(m.(*alkira.AlkiraClient))
+
+	group := &alkira.Group{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
 
 	log.Printf("[INFO] Updating Group (%s)", d.Id())
-	err := client.UpdateConnectorGroup(d.Id(), d.Get("name").(string), d.Get("description").(string))
+	_, err := api.Update(d.Id(), group)
 
 	if err != nil {
 		return err
@@ -76,11 +86,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewGroup(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting Group (%s)", d.Id())
-	err := client.DeleteConnectorGroup(d.Id())
+	_, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err

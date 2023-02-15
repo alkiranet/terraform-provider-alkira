@@ -126,6 +126,7 @@ resource "alkira_service_pan" "test1" {
 
 - `credential_id` (String) ID of PAN credential.
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the service.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`

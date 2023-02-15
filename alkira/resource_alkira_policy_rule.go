@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,6 +40,11 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Description: "The description of the policy rule.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"provision_state": {
+				Description: "The provision state of the policy rule.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"src_ip": {
 				Description:   "A single source IP as The match condition of the rule.",
@@ -105,51 +108,52 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DROP"}, false),
 			},
 			"rule_action_service_types": {
-				Description: "Based on the service type, traffic is routed to service of the given type. " + 
+				Description: "Based on the service type, traffic is routed to service of the given type. " +
 					"For service chaining, both PAN and ZIA service types can be selected but must follow order.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 			"rule_action_service_ids": {
 				Description: "Based on the service IDs, traffic is routed to the specified services. " +
 					"For service chaining, both `service_pan` and `service_zscaler`'s IDs can be added here, but ID of `service_pan` must be by followed by ID of `service_zscaler`.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Optional:    true,
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
 			},
 		},
 	}
 }
 
 func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyRuleRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy rule request")
 		return err
 	}
 
-	id, err := client.CreatePolicyRule(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to create policy rule")
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(response.Id))
+
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
-	rule, err := client.GetPolicyRuleById(d.Id())
+	rule, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to get policy rule %s", d.Id())
 		return err
 	}
 
@@ -181,42 +185,52 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyRuleRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy rule request")
 		return err
 	}
 
-	err = client.UpdatePolicyRule(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update policy rule %s", d.Id())
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
-	return client.DeletePolicyRule(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
-func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRule, error) {
+func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.TrafficPolicyRule, error) {
 
 	srcPortList := convertTypeListToStringList(d.Get("src_ports").([]interface{}))
 	dstPortList := convertTypeListToStringList(d.Get("dst_ports").([]interface{}))
-
 	applicationList := convertTypeListToIntList(d.Get("application_ids").([]interface{}))
 	applicationFamilyList := convertTypeListToIntList(d.Get("application_family_ids").([]interface{}))
 	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
 	serviceList := convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{}))
 
-	request := &alkira.PolicyRule{
+	request := &alkira.TrafficPolicyRule{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
 		MatchCondition: alkira.PolicyRuleMatchCondition{
