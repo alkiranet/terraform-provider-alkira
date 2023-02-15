@@ -15,7 +15,6 @@ type panZone struct {
 }
 
 func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentName, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
 		return nil, nil
@@ -28,7 +27,10 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segment, err := client.GetSegmentById(v)
+
+			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+			segment, err := segmentApi.GetById(v)
+
 			if err != nil {
 				return nil, err
 			}
@@ -51,7 +53,6 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 }
 
 func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentNameInstance, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() == 0 {
 		return nil, nil
@@ -64,7 +65,10 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segment, err := client.GetSegmentById(v)
+
+			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+			segment, err := segmentApi.GetById(v)
+
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +91,6 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 }
 
 func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	if in == nil {
 		return nil, errors.New("invalid SegmentOptions input")
@@ -99,7 +102,10 @@ func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interfac
 		r := panZone{}
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["segment_id"].(string); ok {
-			segment, err := client.GetSegmentById(v)
+
+			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+			segment, err := segmentApi.GetById(v)
+
 			if err != nil {
 				return nil, err
 			}

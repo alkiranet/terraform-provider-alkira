@@ -57,6 +57,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"billing_tag_ids": {
 				Description: "IDs of Billing Tags.",
 				Type:        schema.TypeList,
@@ -159,28 +164,29 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 
 // resourceConnectorAzureExpressRouteCreate create an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorAzureExpressRoute(connector)
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceConnectorAzureExpressRouteRead(d, m)
 }
 
 // resourceConnectorAzureExpressRouteRead get and save an Azure ExpressRoute connectors
 func resourceConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-
-	connector, err := client.GetConnectorAzureExpressRoute(d.Id())
+	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -231,28 +237,36 @@ func resourceConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{
 
 // resourceConnectorAzureExpressRouteUpdate update an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
 		return fmt.Errorf("UpdateConnectorAzureExpressRoute: failed to marshal: %v", err)
 	}
 
-	err = client.UpdateConnectorAzureExpressRoute(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourceConnectorAzureExpressRouteRead(d, m)
 }
 
 func resourceConnectorAzureExpressRouteDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	provisionState, err := api.Delete((d.Id()))
 
-	err := client.DeleteConnectorAzureExpressRoute((d.Id()))
+	if err != nil {
+		return err
+	}
 
-	return err
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateConnectorAzureExpressRouteRequest generate a request for Azure ExpressRoute connector

@@ -27,8 +27,8 @@ func dataSourceAlkiraCredential() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraCredentialRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraCredentialRead(d *schema.ResourceData, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
 
 	credential, err := client.GetCredentialByName(d.Get("name").(string))
 

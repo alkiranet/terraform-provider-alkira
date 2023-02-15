@@ -38,10 +38,11 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"credential_id": {
 				Description: "ID of OCI-VCN credential.",
@@ -59,17 +60,26 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
+				Description: "The ID of implicit group automaticaly created with " +
+					"the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"segment_id": {
-				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "The ID of segments associated with the connector. " +
+					"Currently, only `1` segment is allowed.",
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
+					"`10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
@@ -80,14 +90,18 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Required:    true,
 			},
 			"vcn_cidr": {
-				Description:   "The list of CIDR attached to the target VCN for routing purpose. It could be only specified if `vcn_subnet` is not specified.",
+				Description: "The list of CIDR attached to the target VCN " +
+					"for routing purpose. It could be only specified if " +
+					"`vcn_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"vcn_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"vcn_subnet": {
-				Description:   "The list of subnets of the target VCN for routing purpose. It could only specified if `vcn_cidr` is not specified.",
+				Description: "The list of subnets of the target VCN for " +
+					"routing purpose. It could only specified if `vcn_cidr` " +
+					"is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"vcn_cidr"},
@@ -123,7 +137,8 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"options": {
-							Description:  "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
+							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, " +
+								"`OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "OVERRIDE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
@@ -143,28 +158,33 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 }
 
 func resourceConnectorOciVcnCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	connector, err := generateConnectorOciVcnRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorOciVcn(connector)
+	// Send request
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceConnectorOciVcnRead(d, m)
 }
 
 func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorOciVcn(d.Id())
+	// Read connector
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -183,7 +203,8 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("vcn_id", connector.VcnId)
 
 	if len(connector.Segments) > 0 {
-		segment, err := client.GetSegmentByName(connector.Segments[0])
+		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+		segment, _, err := segmentApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -195,47 +216,58 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorOciVcnUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	connector, err := generateConnectorOciVcnRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	err = client.UpdateConnectorOciVcn(d.Id(), connector)
+	// Send request to update connector
+	provisionState, err := api.Update(d.Id(), connector)
 
+	d.Set("provision_state", provisionState)
 	return err
 }
 
 func resourceConnectorOciVcnDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
-	err := client.DeleteConnectorOciVcn(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
 	return nil
 }
 
 // generateConnectorOciVcnRequest generate request for connector-oci-vcn
 func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorOciVcn, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
-	// Segment
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Construct Segment
+	//
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
+		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
 	// Construct Routing Options
+	//
 	inputPrefixes, err := generateConnectorOciVcnUserInputPrefixes(d.Get("vcn_cidr").([]interface{}), d.Get("vcn_subnet").(*schema.Set))
 
 	if err != nil {
@@ -254,6 +286,9 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 		Import: alkira.ConnectorOciVcnImportOptions{routeTables},
 	}
 
+	//
+	// Construct request
+	//
 	request := &alkira.ConnectorOciVcn{
 		BillingTags:    billingTags,
 		CXP:            d.Get("cxp").(string),

@@ -102,20 +102,21 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 	return zonesToGroups
 }
 
-// extractLicenseKey takes two string values. The order of the string parameters matters. After
-// validation, if both fields have are not empty strings extractLicenseKey will default to using
-// licenseKey as the return value. Otherwise extractLicenseKey will read from the licenseKeyPath
-// and return the output as a string
+// extractLicenseKey takes two string values. The order of the string
+// parameters matters. After validation, if both fields have are not
+// empty strings extractLicenseKey will default to using licenseKey as
+// the return value. Otherwise extractLicenseKey will read from the
+// licenseKeyPath and return the output as a string
 func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath string) (string, error) {
 	// if both params are empty
 	if licenseKey == "" && licenseKeyPath == "" {
 
 		// license key is optional for PAY_AS_YOU_GO
-		if licenseType == FortinetLicenseTypePAYG {
+		if licenseType == "PAY_AS_YOU_GO" {
 			return "", nil
 		}
 
-		return "", errors.New("either license_key or license_key_file_path must be populated")
+		return "", errors.New("either 'license_key' or 'icense_key_file_path' must be populated")
 	}
 
 	if licenseKey != "" {

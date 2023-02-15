@@ -79,11 +79,11 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 }
 
 func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{}) ([]map[string]interface{}, error) {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	var mappings []map[string]interface{}
 	for _, vrfmapping := range vrf {
-		arcSeg, err := client.GetSegmentByName(vrfmapping.ArubaEdgeConnectSegmentName)
+		arcSeg, _, err := api.GetByName(vrfmapping.ArubaEdgeConnectSegmentName)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +102,7 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{})
 }
 
 func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEdgeVRFMapping, error) {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	var mappings []alkira.ArubaEdgeVRFMapping
 	if in == nil || in.Len() == 0 {
@@ -124,7 +124,7 @@ func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEd
 			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
 		if v, ok := m["aruba_edge_connect_segment_id"].(string); ok {
-			segment, err := client.GetSegmentById(v)
+			segment, err := api.GetById(v)
 			if err != nil {
 				return nil, err
 			}

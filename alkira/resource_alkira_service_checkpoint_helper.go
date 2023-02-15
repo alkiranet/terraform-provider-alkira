@@ -10,7 +10,9 @@ import (
 )
 
 func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
+
 	client := m.(*alkira.AlkiraClient)
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	if in == nil || in.Len() > 1 {
 		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input.")
@@ -61,12 +63,12 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 		}
 		if v, ok := cfg["segment_id"].(int); ok {
 
-			var sg alkira.Segment
+			var sg *alkira.Segment
 			var err error
 
 			// 0 is an invalid ID but also the default value of int
 			if v != 0 {
-				sg, err = client.GetSegmentById(strconv.Itoa(v))
+				sg, err = segmentApi.GetById(strconv.Itoa(v))
 				if err != nil {
 					return nil, err
 				}
@@ -163,19 +165,21 @@ func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interf
 }
 
 func convertCheckpointSegmentNameToSegmentId(names []string, m interface{}) (int, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	if len(names) != 1 {
-		log.Printf("[DEBUG] invalid number of segments in Checkpoint Firewall instance.")
 		return 0, errors.New("Invalid number of segments in Checkpoint Firewall instance.")
 	}
 
-	seg, err := client.GetSegmentByName(names[0])
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	seg, _, err := segmentApi.GetByName(names[0])
+
 	if err != nil {
 		log.Printf("[DEBUG] failed to get segment. %s does not exist: ", names[0])
 		return 0, err
 	}
-	return seg.Id, nil
+
+	segmentId, _ := strconv.Atoi(string(seg.Id))
+	return segmentId, nil
 }
 
 func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {

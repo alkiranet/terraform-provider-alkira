@@ -71,6 +71,7 @@ resource "alkira_connector_oci_vcn" "test" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--vcn_route_table"></a>
 ### Nested Schema for `vcn_route_table`

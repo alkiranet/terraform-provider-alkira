@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -53,33 +51,32 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 }
 
 func resourceListGlobalCidr(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
+	// Construct requst
 	list, err := generateListGlobalCidrRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate list global CIDR request")
 		return err
 	}
 
-	id, err := client.CreateGlobalCidrList(list)
+	// Send request
+	resource, _, err := api.Create(list)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create list global CIDR")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 	return resourceListGlobalCidrRead(d, m)
 }
 
 func resourceListGlobalCidrRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetGlobalCidrListById(d.Id())
+	list, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get list global CIDR %s", d.Id())
 		return err
 	}
 
@@ -93,31 +90,40 @@ func resourceListGlobalCidrRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceListGlobalCidrUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	list, err := generateListGlobalCidrRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing global CIDR list %s", d.Id())
-	err = client.UpdateGlobalCidrList(d.Id(), list)
+	// Send request
+	_, err = api.Update(d.Id(), list)
+
+	if err != nil {
+		return err
+	}
 
 	return resourceListGlobalCidrRead(d, m)
 }
 
 func resourceListGlobalCidrDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting global CIDR list %s", d.Id())
-	return client.DeleteGlobalCidrList(d.Id())
+	_, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func generateListGlobalCidrRequest(d *schema.ResourceData, m interface{}) (*alkira.GlobalCidrList, error) {
 
 	values := convertTypeListToStringList(d.Get("values").([]interface{}))
-
 	tags := convertTypeListToStringList(d.Get("tags").([]interface{}))
 
 	request := &alkira.GlobalCidrList{

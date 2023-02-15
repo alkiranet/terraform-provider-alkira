@@ -1,3 +1,5 @@
+// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
@@ -5,8 +7,7 @@ import (
 	"fmt"
 )
 
-// POST
-type RemoteAccessConnectorTemplate struct {
+type ConnectorRemoteAccessTemplate struct {
 	AdvancedOptions       RemoteAccessConnectorTemplateAdvancedOptions  `json:"advancedOptions"`
 	Arguments             []RemoteAccessConnectorTemplateArguments      `json:"arguments"`
 	AuthenticationOptions RemoteAccessConnectorTemplateAuthOptions      `json:"authenticationOptions"`
@@ -66,78 +67,12 @@ type RemoteAccessTemplateUserGroupMappings struct {
 	PrefixListID       *int                                      `json:"prefixListId"`
 	RoutingTagID       int                                       `json:"routingTagId,omitempty"`
 	SplitTunneling     bool                                      `json:"splitTunneling"`
-	//Subnets            []string                                  `json:"subnets"`
-	UserGroupID int `json:"userGroupId,omitempty"`
+	UserGroupID        int                                       `json:"userGroupId,omitempty"`
 }
 
-func (ac *AlkiraClient) CreateRemoteAccessConnectorTemplate(r *RemoteAccessConnectorTemplate) (string, error) {
+// NewConnectorRemoteAccess new connector
+func NewConnectorRemoteAccessTemplate(ac *AlkiraClient) *AlkiraAPI[ConnectorRemoteAccessTemplate] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates", ac.URI, ac.TenantNetworkId)
-	body, err := json.Marshal(r)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateRemoteAccessConnectorTemplate: marshal failed: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", err
-	}
-
-	var result RemoteAccessConnectorTemplate
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateRemoteAccessConnectorTemplate: failed to unmarshal: %v", err)
-	}
-
-	return string(result.Id), nil
-}
-
-func (ac *AlkiraClient) GetRemoteAccessConnectorTemplates() (string, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates", ac.URI, ac.TenantNetworkId)
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-func (ac *AlkiraClient) GetRemoteAccessConnectorTemplateById(id string) (*RemoteAccessConnectorTemplate, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates/%s", ac.URI, ac.TenantNetworkId, id)
-
-	var ract RemoteAccessConnectorTemplate
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &ract)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetRemoteAccessConnectorTemplateById: failed to unmarshal: %v", err)
-	}
-
-	return &ract, nil
-}
-
-func (ac *AlkiraClient) UpdateRemoteAccessConnectorTemplate(id string, r *RemoteAccessConnectorTemplate) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates/%s", ac.URI, ac.TenantNetworkId, id)
-
-	body, err := json.Marshal(r)
-
-	if err != nil {
-		return fmt.Errorf("UpdateRemoteAccessConnectorTemplate: failed to marshal: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-func (ac *AlkiraClient) DeleteRemoteAccessConnectorTemplate(id string) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
+	api := &AlkiraAPI[ConnectorRemoteAccessTemplate]{ac, uri, true}
+	return api
 }

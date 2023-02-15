@@ -23,7 +23,7 @@ data "alkira_connector_aws_vpc" "test" {
 
 ### Required
 
-- `name` (String) The name of the AWS VPC connector.
+- `name` (String) The name of the AWS-VPC connector.
 
 ### Read-Only
 

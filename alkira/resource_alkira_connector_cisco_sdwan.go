@@ -47,6 +47,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created with the connector.",
 				Type:        schema.TypeInt,
@@ -163,29 +168,32 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 }
 
 func resourceConnectorCiscoSdwanCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	connector, err := generateConnectorCiscoSdwanRequest(client, d, m)
+	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
+
+	// Generate request for create connector
+	connector, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[INFO] Creating Connector (Cisco SD-WAN)")
-	id, err := client.CreateConnectorCiscoSdwan(connector)
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
 
 	return resourceConnectorCiscoSdwanRead(d, m)
 }
 
 func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorCiscoSdwan(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -224,42 +232,52 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceConnectorCiscoSdwanUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorCiscoSdwanRequest(client, d, m)
+	connector, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[INFO] Updating Connector (Cisco SD-WAN) %s", d.Id())
-	err = client.UpdateConnectorCiscoSdwan(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
+
 	return resourceConnectorCiscoSdwanRead(d, m)
 }
 
 func resourceConnectorCiscoSdwanDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	id := d.Id()
+	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Connector (Cisco SD-WAN) %s", id)
-	err := client.DeleteConnectorCiscoSdwan(id)
+	log.Printf("[INFO] Deleting Connector (Cisco SD-WAN) %s", d.Id())
+	provisionState, err := api.Delete(d.Id())
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+
+	return nil
 }
 
 // generateConnectorCiscoSdwanRequest generate request for Cisco SD-WAN connector
-func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.ResourceData, m interface{}) (*alkira.ConnectorCiscoSdwan, error) {
+func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorCiscoSdwan, error) {
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	mappings := expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set))
 
 	// Expand Cisco SDWAN vEdge block
-	vedges, err := expandCiscoSdwanVedges(ac, d.Get("vedge").([]interface{}))
+	vedges, err := expandCiscoSdwanVedges(m.(*alkira.AlkiraClient), d.Get("vedge").([]interface{}))
 
 	if err != nil {
 		return nil, err
@@ -284,6 +302,7 @@ func generateConnectorCiscoSdwanRequest(ac *alkira.AlkiraClient, d *schema.Resou
 
 // expandCiscoSdwanVrfMappings expand Cisco SD-WAN VRF segment mapping
 func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMapping {
+
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] Empty vrf_segment_mapping")
 		return []alkira.CiscoSdwanEdgeVrfMapping{}
@@ -318,6 +337,7 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 
 // expandCiscoSdwanVedges expand Cisco SD-WAN Edge
 func expandCiscoSdwanVedges(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.CiscoSdwanEdgeInfo, error) {
+
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] Empty vedges")
 		return []alkira.CiscoSdwanEdgeInfo{}, nil

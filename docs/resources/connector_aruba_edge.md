@@ -57,7 +57,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 - `gateway_gbp_asn` (Number) The gateway BGP ASN.
 - `instances` (Block List, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
 - `name` (String) The name of the connector.
-- `segment_ids` (List of String) The IDs of the segments associated with the Aruba Edge connector.
+- `segment_ids` (List of String) The IDs of the segments associated with theAruba Edge connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
 - `version` (String) The version of the Aruba Edge connector.
 
@@ -73,6 +73,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision_state` (String) The state of provision.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
@@ -82,7 +83,7 @@ Required:
 - `account_key` (String) The account key generated in Silver Peak orchestrator account.
 - `account_name` (String) The account name given in Silver Peak orchestrator registration.
 - `host_name` (String) The host name given to the Aruba SD-WAN appliance that appears in Silver Peak orchestrator.
-- `name` (String) The instance name associated with aruba edge connect instance.
+- `name` (String) The instance name associated with Aruba Edge Connect instance.
 - `site_tag` (String) The site tag that appears on the SD-WAN appliance on Silver Peak orchestrator
 
 Read-Only:

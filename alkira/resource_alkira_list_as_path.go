@@ -44,8 +44,9 @@ func resourceAlkiraListAsPath() *schema.Resource {
 }
 
 func resourceListAsPath(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	list, err := generateListAsPathRequest(d, m)
 
 	if err != nil {
@@ -53,21 +54,23 @@ func resourceListAsPath(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	id, err := client.CreateList(list, alkira.ListTypeAsPath)
+	// Send request
+	resource, _, err := api.Create(list)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to create list as path")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
+
 	return resourceListAsPathRead(d, m)
 }
 
 func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	list, err := client.GetListById(d.Id(), alkira.ListTypeAsPath)
+	list, err := api.GetById(d.Id())
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get list as path %s", d.Id())
@@ -82,7 +85,7 @@ func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceListAsPathUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
 	list, err := generateListAsPathRequest(d, m)
 
@@ -91,16 +94,26 @@ func resourceListAsPathUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Updateing list as path %s", d.Id())
-	err = client.UpdateList(d.Id(), list, alkira.ListTypeAsPath)
+	_, err = api.Update(d.Id(), list)
+
+	if err != nil {
+		return err
+	}
 
 	return resourceListAsPathRead(d, m)
 }
 
 func resourceListAsPathDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting list as path %s", d.Id())
-	return client.DeleteList(d.Id(), alkira.ListTypeAsPath)
+	_, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateListAsPathRequest(d *schema.ResourceData, m interface{}) (*alkira.List, error) {

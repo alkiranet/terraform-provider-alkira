@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -46,7 +46,7 @@ type ConnectorAwsVpc struct {
 	CustomerRegion                     string          `json:"customerRegion"`
 	DirectInterVPCCommunicationEnabled bool            `json:"directInterVPCCommunicationEnabled"`
 	Enabled                            bool            `json:"enabled"`
-	Group                              string          `json:"group"`
+	Group                              string          `json:"group,omitempty"`
 	Id                                 json.Number     `json:"id,omitempty"`              // response only
 	ImplicitGroupId                    int             `json:"implicitGroupId,omitempty"` // response only
 	Name                               string          `json:"name"`
@@ -59,104 +59,9 @@ type ConnectorAwsVpc struct {
 	VpcRouting                         interface{}     `json:"vpcRouting"`
 }
 
-// getAwsVpcConnectors get all aws vpc connectors from the given tenant network
-func (ac *AlkiraClient) getAwsVpcConnectors() (string, error) {
+// NewConnectorAwsVpc new connector-aws-vpc
+func NewConnectorAwsVpc(ac *AlkiraClient) *AlkiraAPI[ConnectorAwsVpc] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
-
-	data, err := ac.get(uri)
-	return string(data), err
-}
-
-// CreateConnectorAwsVPC create an AWS-VPC connector
-func (ac *AlkiraClient) CreateConnectorAwsVpc(connector *ConnectorAwsVpc) (string, error) {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors", ac.URI, ac.TenantNetworkId)
-
-	// Construct the request
-	body, err := json.Marshal(connector)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to marshal: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", err
-	}
-
-	var result ConnectorAwsVpc
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateConnectorAwsVpc: failed to unmarshal: %v", err)
-	}
-
-	return string(result.Id), nil
-}
-
-// DeleteConnectorAwsVpc delete an AWS-VPC connector
-func (ac *AlkiraClient) DeleteConnectorAwsVpc(id string) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
-}
-
-// UpdateConnectorAwsVPC update an AWS-VPC connector
-func (ac *AlkiraClient) UpdateConnectorAwsVpc(id string, connector *ConnectorAwsVpc) error {
-	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
-
-	// Construct the request
-	body, err := json.Marshal(connector)
-
-	if err != nil {
-		return fmt.Errorf("UpdateConnectorAwsVpc: failed to marshal: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-// GetConnectorAwsVpc get one AWS-VPC connector by Id
-func (ac *AlkiraClient) GetConnectorAwsVpc(id string) (*ConnectorAwsVpc, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/awsvpcconnectors/%s", ac.URI, ac.TenantNetworkId, id)
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var result ConnectorAwsVpc
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetConnectorAwsVpc: failed to unmarshal: %v", err)
-	}
-
-	return &result, nil
-}
-
-// GetConnectorAwsVpcByName get an Aws Vpc connector by name
-func (ac *AlkiraClient) GetConnectorAwsVpcByName(name string) (ConnectorAwsVpc, error) {
-	var awsVpcConnector ConnectorAwsVpc
-
-	if len(name) == 0 {
-		return awsVpcConnector, fmt.Errorf("GetConnectorAwsVpcByName: Invalid Connector name")
-	}
-
-	awsVpcConnectors, err := ac.getAwsVpcConnectors()
-
-	if err != nil {
-		return awsVpcConnector, err
-	}
-
-	var result []ConnectorAwsVpc
-	json.Unmarshal([]byte(awsVpcConnectors), &result)
-
-	for _, l := range result {
-		if l.Name == name {
-			return l, nil
-		}
-	}
-
-	return awsVpcConnector, fmt.Errorf("GetConnectorAwsVpcByName: failed to find the connector by %s", name)
+	api := &AlkiraAPI[ConnectorAwsVpc]{ac, uri, true}
+	return api
 }

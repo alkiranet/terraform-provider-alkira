@@ -1,3 +1,5 @@
+// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
@@ -5,7 +7,7 @@ import (
 	"fmt"
 )
 
-type Infoblox struct {
+type ServiceInfoblox struct {
 	AnyCast          InfobloxAnycast    `json:"anycast"`
 	BillingTags      []int              `json:"billingTags"`
 	Cxp              string             `json:"cxp"`
@@ -54,76 +56,9 @@ type InfobloxInstance struct {
 	Version            string      `json:"version,omitempty"`
 }
 
-func (ac *AlkiraClient) CreateInfoblox(in *Infoblox) (string, error) {
+// NewServiceInfoblox new service infoblox
+func NewServiceInfoblox(ac *AlkiraClient) *AlkiraAPI[ServiceInfoblox] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services", ac.URI, ac.TenantNetworkId)
-
-	body, err := json.Marshal(in)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateInfoblox: marshal failed: %v", err)
-	}
-
-	data, err := ac.create(uri, body, true)
-
-	if err != nil {
-		return "", err
-	}
-
-	var result Infoblox
-	err = json.Unmarshal([]byte(data), &result)
-
-	if err != nil {
-		return "", fmt.Errorf("CreateInfoblox: failed to unmarshal: %v", err)
-	}
-
-	return result.Id.String(), nil
-}
-
-func (ac *AlkiraClient) GetAllInfoblox() (string, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services", ac.URI, ac.TenantNetworkId)
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
-func (ac *AlkiraClient) GetInfobloxById(id string) (*Infoblox, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	var infoblox Infoblox
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &infoblox)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetInfobloxById: failed to unmarshal: %v", err)
-	}
-
-	return &infoblox, nil
-}
-
-func (ac *AlkiraClient) UpdateInfoblox(id string, in *Infoblox) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	body, err := json.Marshal(in)
-
-	if err != nil {
-		return fmt.Errorf("UpdateInfoblox: failed to marshal request: %v", err)
-	}
-
-	return ac.update(uri, body, true)
-}
-
-func (ac *AlkiraClient) DeleteInfoblox(id string) error {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/infoblox-services/%s", ac.URI, ac.TenantNetworkId, id)
-
-	return ac.delete(uri, true)
+	api := &AlkiraAPI[ServiceInfoblox]{ac, uri, true}
+	return api
 }

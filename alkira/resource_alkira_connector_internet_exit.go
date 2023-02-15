@@ -59,6 +59,11 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"public_ip_number": {
 				Description: "The number of the public IPs to the connector. Default is `2`.",
 				Type:        schema.TypeInt,
@@ -79,7 +84,8 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"HASHING"}, false),
 			},
 			"traffic_distribution_algorithm_attribute": {
-				Description:  "The attributes depends on the algorithm. For now, it's either `DEFAULT` or `SRC_IP`.",
+				Description: "The attributes depends on the algorithm. For now, " +
+					"it's either `DEFAULT` or `SRC_IP`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "DEFAULT",
@@ -90,28 +96,32 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 }
 
 func resourceConnectorInternetExitCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
+	// Generate request for creating connector
 	connector, err := generateConnectorInternetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorInternetExit(connector)
+	// Create connector
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
+
 	return resourceConnectorInternetExitRead(d, m)
 }
 
 func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorInternetExitById(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -129,7 +139,8 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 
 	// Set segment_id
 	if len(connector.Segments) > 0 {
-		segment, err := client.GetSegmentByName(connector.Segments[0])
+		segmentApi := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
+		segment, _, err := segmentApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -146,7 +157,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorInternetRequest(d, m)
 
@@ -155,24 +166,38 @@ func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) 
 	}
 
 	log.Printf("[INFO] Updating Connector (INTERNET-EXIT) %s", d.Id())
-	err = client.UpdateConnectorInternetExit(d.Id(), connector)
+	provisionState, err := api.Update(d.Id(), connector)
+
+	d.Set("provision_state", provisionState)
 
 	return err
 }
 
 func resourceConnectorInternetExitDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Connector (INTERNET-EXIT) %s", d.Id())
-	return client.DeleteConnectorInternetExit(d.Id())
+	log.Printf("[INFO] Deleting connector-internet %s", d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateConnectorInternetRequest generate request for connector-internet
 func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorInternet, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	segment, err := client.GetSegmentById(d.Get("segment_id").(string))
+
+	// Get Segment
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(d.Get("segment_id").(string))
 
 	algorithmAttributes := alkira.AlgorithmAttributes{
 		Keys: d.Get("traffic_distribution_algorithm_attribute").(string),

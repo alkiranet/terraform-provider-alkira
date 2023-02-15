@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -199,7 +199,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
-	data, err := ac.create(uri, body, false)
+	data, _, err := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -214,7 +214,8 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 // DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
-	return ac.delete(uri, false)
+	_, err := ac.delete(uri, false)
+	return err
 }
 
 // UpdateCredential update a given credential by its Id
@@ -236,7 +237,9 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
-	return ac.update(uri, body, false)
+	_, err = ac.update(uri, body, false)
+
+	return err
 }
 
 // GetCredentials get all credentials

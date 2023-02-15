@@ -248,6 +248,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"policy_options": {
 				Description: "Policy options, both on-prem and cxp prefix" +
 					"list ids must be provided if vpnMode is `POLICY_BASED`",
@@ -357,28 +362,32 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 }
 
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
+
+	// Generate request for creating connector
 	connector, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateConnectorIPSec(connector)
+	// Send request to create connector
+	resource, provisionState, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.Set("provision_state", provisionState)
+	d.SetId(string(resource.Id))
 
 	return resourceConnectorIPSecRead(d, m)
 }
 
 func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	connector, err := client.GetConnectorIPSec(d.Id())
+	connector, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -394,7 +403,8 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("vpn_mode", connector.VpnMode)
 
 	if len(connector.Segments) > 0 {
-		segment, err := client.GetSegmentByName(connector.Segments[0])
+		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+		segment, _, err := segmentApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -457,49 +467,72 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
+
+	// Generate new request for updating connector
 	connector, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	err = client.UpdateConnectorIPSec(d.Id(), connector)
+	// Send request to update connector
+	provisionState, err := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourceConnectorIPSecRead(d, m)
 }
 
 func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	return client.DeleteConnectorIPSec(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateConnectorIPSecRequest generate request for connector-ipsec
 func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorIPSec, error) {
-	client := m.(*alkira.AlkiraClient)
 
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").([]interface{}))
 
-	// For now, IPSec connector only support single segment
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Construct Segment
+	//
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
+	// Construct segment options
+	//
 	segmentOptions, optErr := expandConnectorIPSecSegmentOptions(d.Get("segment_options").(*schema.Set))
 
 	if optErr != nil {
 		return nil, optErr
 	}
 
+	//
+	// Construct Policy Options and Routing Options
+	//
 	// Base on the vpn_mode, switch what options to use
+	//
 	vpnMode := d.Get("vpn_mode").(string)
 
 	var policyOptions *alkira.ConnectorIPSecPolicyOptions
@@ -524,6 +557,9 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		}
 	}
 
+	//
+	// Construct the request
+	//
 	connector := &alkira.ConnectorIPSec{
 		CXP:            d.Get("cxp").(string),
 		Enabled:        d.Get("enabled").(bool),

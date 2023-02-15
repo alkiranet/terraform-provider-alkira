@@ -119,6 +119,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--gcp_routing"></a>
 ### Nested Schema for `gcp_routing`

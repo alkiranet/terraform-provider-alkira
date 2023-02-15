@@ -1,3 +1,5 @@
+// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+
 package alkira
 
 import (
@@ -5,8 +7,8 @@ import (
 	"fmt"
 )
 
-type RemoteAccessConnector struct {
-	Id                    int                                   `json:"id,omitempty"`
+type ConnectorRemoteAccess struct {
+	Id                    json.Number                           `json:"id,omitempty"`
 	TemplateID            int                                   `json:"templateId"`
 	Name                  string                                `json:"name"`
 	InternalName          string                                `json:"internalName,omitempty"`
@@ -63,45 +65,9 @@ type RemoteAccessServerCerts struct {
 	ServerRootCertificateID int `json:"serverRootCertificateId"`
 }
 
-func (ac *AlkiraClient) GetRemoteAccessConnectors() (string, error) {
+// NewConnectorRemoteAccess new connector
+func NewConnectorRemoteAccess(ac *AlkiraClient) *AlkiraAPI[ConnectorRemoteAccess] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connectors", ac.URI, ac.TenantNetworkId)
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
-func (ac *AlkiraClient) GetRemoteAccessConnectorById(id string) (*RemoteAccessConnector, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connectors/%s", ac.URI, ac.TenantNetworkId, id)
-
-	var rac RemoteAccessConnector
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(data), &rac)
-
-	if err != nil {
-		return nil, fmt.Errorf("GetRemoteAccessConnectorById: failed to unmarshal: %v", err)
-	}
-
-	return &rac, nil
-}
-
-func (ac *AlkiraClient) GetRemoteAccessConnectorConfig(id string) (string, error) {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connectors/%s", ac.URI, ac.TenantNetworkId, id)
-
-	data, err := ac.get(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
+	api := &AlkiraAPI[ConnectorRemoteAccess]{ac, uri, true}
+	return api
 }

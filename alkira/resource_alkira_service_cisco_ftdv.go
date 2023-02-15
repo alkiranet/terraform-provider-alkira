@@ -31,6 +31,11 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
 			},
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"size": {
 				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:         schema.TypeString,
@@ -199,28 +204,35 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 
 // resourceServiceCiscoFTDvCreate create a Cisco FTDv service
 func resourceServiceCiscoFTDvCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	service, err := generateServiceCiscoFTDvRequest(d, m)
+
+	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
+
+	// Construct request
+	request, err := generateServiceCiscoFTDvRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := client.CreateServiceCiscoFTDv(service)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceServiceCiscoFTDvRead(d, m)
 }
 
 // resourceServiceCiscoFTDvRead get and save a Cisco FTDv services
 func resourceServiceCiscoFTDvRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	service, err := client.GetServiceCiscoFTDv(d.Id())
+	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
+
+	service, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -245,31 +257,46 @@ func resourceServiceCiscoFTDvRead(d *schema.ResourceData, m interface{}) error {
 
 // resourceServiceCiscoFTDvUpdate update a Cisco FTDv service
 func resourceServiceCiscoFTDvUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	service, err := generateServiceCiscoFTDvRequest(d, m)
+
+	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
+
+	// Construct request
+	request, err := generateServiceCiscoFTDvRequest(d, m)
 
 	if err != nil {
 		return fmt.Errorf("UpdateServiceCiscoFTDv: failed to marshal: %v", err)
 	}
 
-	err = client.UpdateServiceCiscoFTDv(d.Id(), service)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
+	d.Set("provision_state", provisionState)
 	return resourceServiceCiscoFTDvRead(d, m)
 }
 
+// resourceServiceCiscoFTDvDelete delete
 func resourceServiceCiscoFTDvDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	err := client.DeleteServiceCiscoFTDv((d.Id()))
+	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
-	return err
+	provisionState, err := api.Delete((d.Id()))
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
-// generateServiceCiscoFTDvRequest generate a request for Azure ExpressRoute service
+// generateServiceCiscoFTDvRequest generate a request
 func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCiscoFTDv, error) {
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))

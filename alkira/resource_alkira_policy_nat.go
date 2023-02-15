@@ -70,33 +70,34 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 }
 
 func resourcePolicyNat(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyNatRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy")
 		return err
 	}
 
-	id, err := client.CreateNatPolicy(request)
+	// Send request
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to create policy")
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourcePolicyNatRead(d, m)
 }
 
 func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
-	policy, err := client.GetNatPolicy(d.Id())
+	policy, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to read policy %s", d.Id())
 		return err
 	}
 
@@ -107,51 +108,64 @@ func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
 	d.Set("nat_rule_ids", policy.NatRuleIds)
 
-	segment, err := client.GetSegmentByName(policy.Segment)
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, _, err := segmentApi.GetByName(policy.Segment)
 
 	if err != nil {
 		return err
 	}
+
 	d.Set("segment_id", segment.Id)
 
 	return nil
 }
 
 func resourcePolicyNatUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
+	// Construct request
 	request, err := generatePolicyNatRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to generate policy")
 		return err
 	}
 
-	err = client.UpdateNatPolicy(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to update policy")
 		return err
 	}
+
+	d.Set("provision_state", provisionState)
 
 	return resourcePolicyNatRead(d, m)
 }
 
 func resourcePolicyNatDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
-	return client.DeleteNatPolicy(d.Id())
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicy, error) {
-
-	client := m.(*alkira.AlkiraClient)
 
 	inGroups := convertTypeListToIntList(d.Get("included_group_ids").([]interface{}))
 	exGroups := convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{}))
 	natRules := convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{}))
 
-	segment, err := client.GetSegmentById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))

@@ -1,11 +1,11 @@
 resource "alkira_policy_prefix_list" "test1" {
-  name        = "acceptance-test1"
+  name        = "acceptance-test-prefix-list"
   description = "terraform test policy prefix list"
   prefixes    = ["0.0.0.0/0"]
 }
 
 resource "alkira_policy_prefix_list" "test2" {
-  name        = "acceptance-test2-ranges"
+  name        = "acceptance-test-prefix-list-ranges"
   description = "terraform test policy prefix list"
   prefixes    = ["0.0.0.0/0"]
 

@@ -41,6 +41,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
 			},
+			"provision_state": {
+				Description: "The provision state of the service.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"pan_password": {
 				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
@@ -253,9 +258,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"registration_pin_expiry": {
-				Description: "PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "PAN Registration PIN Expiry. The date " +
+					"should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"name": {
 				Description: "Name of the PAN service.",
@@ -322,29 +328,35 @@ func resourceAlkiraServicePan() *schema.Resource {
 }
 
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Creating service-pan %s", d.Id())
-	id, err := client.CreateServicePan(request)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(response.Id))
+	d.Set("provision_state", provisionState)
+
 	return resourceServicePanRead(d, m)
 }
 
 func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	pan, err := client.GetServicePanById(d.Id())
+	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+
+	// Get the service
+	pan, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -382,28 +394,45 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
+	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+
+	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing service-pan %s", d.Id())
-	err = client.UpdateServicePan(d.Id(), request)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	d.Set("provision_state", provisionState)
+	return resourceServicePanRead(d, m)
 }
 
 func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting service-pan %s", d.Id())
-	return client.DeleteServicePan(d.Id())
+	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+
+	provisionState, err := api.Delete(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if provisionState != "SUCCESS" {
+	}
+
+	return nil
 }
 
 func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
+
 	client := m.(*alkira.AlkiraClient)
 
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
@@ -414,21 +443,25 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	if 0 == len(panCredentialId) {
 		log.Printf("[INFO] Creating PAN Credential")
+
 		panCredName := d.Get("name").(string) + randomNameSuffix()
 		panCredential := alkira.CredentialPan{
 			Username:   d.Get("pan_username").(string),
 			Password:   d.Get("pan_password").(string),
 			LicenseKey: d.Get("pan_license_key").(string),
 		}
+
 		credentialId, err := client.CreateCredential(
 			panCredName,
 			alkira.CredentialTypePan,
 			panCredential,
 			0,
 		)
+
 		if err != nil {
 			return nil, err
 		}
+
 		d.Set("credential_id", credentialId)
 	}
 

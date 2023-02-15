@@ -28,13 +28,15 @@ func resourceAlkiraCloudVisorAccount() *schema.Resource {
 				Required:    true,
 			},
 			"cloud_provider": {
-				Description:  "Cloud provider of the account, currently, `AWS` and `AZURE` are supported.",
+				Description: "Cloud provider of the account, currently, " +
+					"`AWS` and `AZURE` are supported.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AWS", "AZURE"}, false),
 			},
 			"auto_sync": {
-				Description:  "The interval at which the account should be auto synced. The value could be `NONE`, `DAILY`, `WEEKLY` and `MONTHLY`.",
+				Description: "The interval at which the account should be auto " +
+					"synced. The value could be `NONE`, `DAILY`, `WEEKLY` and `MONTHLY`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"NONE", "DAILY", "WEEKLY", "MONTHLY"}, false),
@@ -49,25 +51,26 @@ func resourceAlkiraCloudVisorAccount() *schema.Resource {
 }
 
 func resourceCloudVisorAccount(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	request := generateCloudVisorAccountRequest(d, m)
+	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Creating cloudvisor-account")
-	id, err := client.CreateCloudProviderAccount(request)
+	request := generateCloudVisorAccountRequest(d, m)
+
+	resource, _, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 
 	return resourceCloudVisorAccountRead(d, m)
 }
 
 func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
-	account, err := client.GetCloudProviderAccountById(d.Id())
+	account, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -83,11 +86,12 @@ func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceCloudVisorAccountUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*alkira.AlkiraClient)
-	request := generateCloudVisorAccountRequest(d, m)
+	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Updating cloudvisor-account (%s)", d.Id())
-	err := client.UpdateCloudProviderAccount(d.Id(), request)
+	request := generateCloudVisorAccountRequest(d, m)
+
+	_, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
@@ -96,11 +100,11 @@ func resourceCloudVisorAccountUpdate(d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func resourceCloudVisorAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceCloudVisorAccountDelete(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting CloudVisorAccount (%s)", d.Id())
-	err := client.DeleteCloudProviderAccount(d.Id())
+	_, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
@@ -111,8 +115,8 @@ func resourceCloudVisorAccountDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func generateCloudVisorAccountRequest(d *schema.ResourceData, m interface{}) alkira.CloudProviderAccount {
-	return alkira.CloudProviderAccount{
+func generateCloudVisorAccountRequest(d *schema.ResourceData, m interface{}) *alkira.CloudProviderAccount {
+	return &alkira.CloudProviderAccount{
 		Name:          d.Get("name").(string),
 		CredentialId:  d.Get("credential_id").(string),
 		CloudProvider: d.Get("cloud_provider").(string),

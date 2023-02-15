@@ -21,10 +21,10 @@ func dataSourceAlkiraConnectorGcpVpc() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraConnectorGcpVpcRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetConnectorGcpVpcByName(d.Get("name").(string))
+	group, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

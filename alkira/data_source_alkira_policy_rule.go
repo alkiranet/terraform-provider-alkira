@@ -21,10 +21,10 @@ func dataSourceAlkiraPolicyRule() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraPolicyRuleRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func dataSourceAlkiraPolicyRuleRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
-	rule, err := client.GetPolicyRuleByName(d.Get("name").(string))
+	rule, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err

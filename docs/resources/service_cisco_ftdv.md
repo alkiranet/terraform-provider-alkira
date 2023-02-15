@@ -80,6 +80,7 @@ resource "alkira_service_cisco_ftdv" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the service.
 
 <a id="nestedblock--firepower_management_center"></a>
 ### Nested Schema for `firepower_management_center`

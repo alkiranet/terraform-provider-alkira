@@ -30,24 +30,29 @@ func resourceAlkiraGroupUser() *schema.Resource {
 	}
 }
 
-func resourceGroupUser(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupUser(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	id, err := client.CreateUserGroup(d.Get("name").(string), d.Get("description").(string))
+	group := &alkira.UserGroup{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
+
+	resource, _, err := api.Create(group)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(id)
+	d.SetId(string(resource.Id))
 
-	return resourceGroupUserRead(d, meta)
+	return resourceGroupUserRead(d, m)
 }
 
-func resourceGroupUserRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupUserRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	group, err := client.GetUserGroupById(d.Id())
+	group, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -59,11 +64,16 @@ func resourceGroupUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupUserUpdate(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
+
+	group := &alkira.UserGroup{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+	}
 
 	log.Printf("[INFO] Updating User Group (%s)", d.Id())
-	err := client.UpdateUserGroup(d.Id(), d.Get("name").(string), d.Get("description").(string))
+	_, err := api.Update(d.Id(), group)
 
 	if err != nil {
 		return err
@@ -72,10 +82,10 @@ func resourceGroupUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupUserDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*alkira.AlkiraClient)
+func resourceGroupUserDelete(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	err := client.DeleteUserGroup(d.Id())
+	_, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
