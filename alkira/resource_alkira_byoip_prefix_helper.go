@@ -17,7 +17,7 @@ func GenerateByoipRequestCreate(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("prefix"), &plan.Prefix)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("cxp"), &plan.Cxp)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
-	// req.Config.GetAttribute(ctx, path.Root("do_not_advertise"), &plan.DoNotAdvertise)
+	req.Config.GetAttribute(ctx, path.Root("do_not_advertise"), &plan.DoNotAdvertise)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("message"), &plan.ExtraAttributes.Message)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("signature"), &plan.ExtraAttributes.Signature)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("public_key"), &plan.ExtraAttributes.PublicKey)...)

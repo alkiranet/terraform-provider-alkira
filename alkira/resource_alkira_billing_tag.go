@@ -21,7 +21,7 @@ type alkiraBillingTagResource struct {
 	billingTag *alkira.AlkiraAPI[alkira.BillingTag]
 }
 
-func NewalkiraBillingTagResource() resource.Resource {
+func NewalkiraBillingTag() resource.Resource {
 	return &alkiraBillingTagResource{}
 }
 

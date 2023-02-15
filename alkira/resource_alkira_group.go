@@ -21,7 +21,7 @@ type alkiraGroupResource struct {
 	group  *alkira.AlkiraAPI[alkira.Group]
 }
 
-func NewalkiraGroupResource() resource.Resource {
+func NewalkiraGroup() resource.Resource {
 	return &alkiraGroupResource{}
 }
 

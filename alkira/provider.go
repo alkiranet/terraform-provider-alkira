@@ -193,9 +193,10 @@ func (p *alkiraProvider) DataSources(_ context.Context) []func() datasource.Data
 // Resources defines the resources implemented in the provider.
 func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewalkiraBillingTagResource,
-		NewalkiraByoipPrefixResource,
-		NewalkiraGroupResource,
-		NewalkiraCredentialKeyPairResource,
+		NewalkiraBillingTag,
+		NewalkiraByoipPrefix,
+		NewalkiraGroup,
+		NewalkiraCredentialKeyPair,
+		NewalkiraSegment,
 	}
 }

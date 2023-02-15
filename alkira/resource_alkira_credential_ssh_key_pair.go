@@ -18,7 +18,7 @@ type alkiraCredentialKeyPairResource struct {
 	client *alkira.AlkiraClient
 }
 
-func NewalkiraCredentialKeyPairResource() resource.Resource {
+func NewalkiraCredentialKeyPair() resource.Resource {
 	return &alkiraCredentialKeyPairResource{}
 }
 

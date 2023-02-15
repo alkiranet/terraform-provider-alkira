@@ -2,13 +2,15 @@ package alkira
 
 import (
 	"context"
+	"log"
 	"strconv"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -21,7 +23,7 @@ type alkiraSegmentResource struct {
 	segment *alkira.AlkiraAPI[alkira.Segment]
 }
 
-func NewalkiraSegmentResource() resource.Resource {
+func NewalkiraSegment() resource.Resource {
 	return &alkiraSegmentResource{}
 }
 
@@ -56,10 +58,15 @@ func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaReque
 				Required:    true,
 			},
 			"asn": schema.Int64Attribute{
-				Description: "The BGP ASN for the segment. Default value is `65514`.",
+				Description: "The BGP ASN for the segment. Default value is 65514.",
+				Computed:    true,
 				Optional:    true,
+				PlanModifiers: []planmodifier.Int64{
+					Int64DefaultValue(types.Int64Value(65514)),
+				},
 			},
 			"cidrs": schema.ListAttribute{
+				ElementType: types.StringType,
 				Description: "The list of CIDR blocks.",
 				Required:    true,
 			},
@@ -70,7 +77,11 @@ func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaReque
 			"enable_ipv6_to_ipv4_translation": schema.BoolAttribute{
 				Description: "Enable IPv6 to IPv4 translation in the " +
 					"segment for internet application traffic. (**BETA**)",
+				Computed: true,
 				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					BoolDefaultValue(types.BoolValue(false)),
+				},
 			},
 			"enterprise_dns_server_ip": schema.StringAttribute{
 				Description: "The IP of the DNS server used within the segment. This DNS server " +
@@ -84,7 +95,11 @@ func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaReque
 					"which can be used to create underlay tunnels between an " +
 					"external service and Alkira. For example the reserved public IPs " +
 					"may be used to create tunnels to the Akamai Prolexic. (**BETA**)",
+				Computed: true,
 				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					BoolDefaultValue(types.BoolValue(false)),
+				},
 			},
 			"src_ipv4_pool_start_ip": schema.StringAttribute{
 				Description: "The start IP address of IPv4 pool.",
@@ -104,9 +119,37 @@ func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaReque
 // Create creates the resource and sets the initial Terraform state.
 func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan alkira.Segment
+	var cidrs []string
+	srcIpv4PoolList := []alkira.SegmentSrcIpv4PoolList{}
+	list := alkira.SegmentSrcIpv4PoolList{}
+	var startIp string
+	var endIp string
 
+	req.Config.GetAttribute(ctx, path.Root("src_ipv4_pool_start_ip"), &startIp)
+	req.Config.GetAttribute(ctx, path.Root("src_ipv4_pool_end_ip"), &endIp)
+	if startIp != "" && endIp != "" {
+		list.StartIp = startIp
+		list.EndIp = endIp
+		srcIpv4PoolList = append(srcIpv4PoolList, list)
+	} else {
+		srcIpv4PoolList = nil
+	}
+
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("asn"), &plan.Asn)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("cidrs"), &cidrs)...)
+	req.Config.GetAttribute(ctx, path.Root("enable_ipv6_to_ipv4_translation"), &plan.EnableIpv6ToIpv4Translation)
+	req.Config.GetAttribute(ctx, path.Root("reserve_public_ips"), &plan.ReservePublicIPsForUserAndSiteConnectivity)
+	req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)
+	req.Config.GetAttribute(ctx, path.Root("enterprise_dns_server_ip"), &plan.EnterpriseDNSServerIP)
+
+	plan.IpBlocks = alkira.SegmentIpBlocks{
+		Values: cidrs,
+	}
+	plan.SrcIpv4PoolList = srcIpv4PoolList
+
+	log.Printf("[DEBUG] plan: %v", plan)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -123,7 +166,20 @@ func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("asn"), result.Asn)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enable_ipv6_to_ipv4_translation"), result.EnableIpv6ToIpv4Translation)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("reserve_public_ips"), result.ReservePublicIPsForUserAndSiteConnectivity)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cidrs"), result.IpBlocks.Values)...)
+	if result.Description != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
+	}
+	if result.EnterpriseDNSServerIP != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enterprise_dns_server_ip"), result.EnterpriseDNSServerIP)...)
+	}
+	if result.SrcIpv4PoolList != nil && len(result.SrcIpv4PoolList) > 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_start_ip"), result.SrcIpv4PoolList[0].StartIp)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_end_ip"), result.SrcIpv4PoolList[0].EndIp)...)
+	}
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,8 +200,23 @@ func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("asn"), result.Asn)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enable_ipv6_to_ipv4_translation"), result.EnableIpv6ToIpv4Translation)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("reserve_public_ips"), result.ReservePublicIPsForUserAndSiteConnectivity)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cidrs"), result.IpBlocks.Values)...)
+	if result.Description != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
+	}
+	if result.EnterpriseDNSServerIP != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enterprise_dns_server_ip"), result.EnterpriseDNSServerIP)...)
+	}
+	if result.SrcIpv4PoolList != nil && len(result.SrcIpv4PoolList) > 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_start_ip"), result.SrcIpv4PoolList[0].StartIp)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_end_ip"), result.SrcIpv4PoolList[0].EndIp)...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -155,13 +226,40 @@ func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadReque
 func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan alkira.Segment
 	var id int
+	var cidrs []string
+	srcIpv4PoolList := []alkira.SegmentSrcIpv4PoolList{}
+	list := alkira.SegmentSrcIpv4PoolList{}
+	var startIp string
+	var endIp string
 
 	// Grab the ID from the state.
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
 
-	// Grab the name and description from the plan.
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("description"), &plan.Description)...)
+	req.Config.GetAttribute(ctx, path.Root("src_ipv4_pool_start_ip"), &startIp)
+	req.Config.GetAttribute(ctx, path.Root("src_ipv4_pool_end_ip"), &endIp)
+	if startIp != "" && endIp != "" {
+		list.StartIp = startIp
+		list.EndIp = endIp
+		srcIpv4PoolList = append(srcIpv4PoolList, list)
+	} else {
+		srcIpv4PoolList = nil
+	}
+
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("asn"), &plan.Asn)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("cidrs"), &cidrs)...)
+	req.Config.GetAttribute(ctx, path.Root("enable_ipv6_to_ipv4_translation"), &plan.EnableIpv6ToIpv4Translation)
+	req.Config.GetAttribute(ctx, path.Root("reserve_public_ips"), &plan.ReservePublicIPsForUserAndSiteConnectivity)
+	req.Config.GetAttribute(ctx, path.Root("description"), &plan.Description)
+	req.Config.GetAttribute(ctx, path.Root("enterprise_dns_server_ip"), &plan.EnterpriseDNSServerIP)
+
+	plan.IpBlocks = alkira.SegmentIpBlocks{
+		Values: cidrs,
+	}
+	plan.SrcIpv4PoolList = srcIpv4PoolList
+
+	log.Printf("[DEBUG] plan: %v", plan)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -177,9 +275,25 @@ func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("state"), state)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), result.Name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("description"), result.Description)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("last_updated"), time.Now().Format(time.RFC3339))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("asn"), result.Asn)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enable_ipv6_to_ipv4_translation"), result.EnableIpv6ToIpv4Translation)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("reserve_public_ips"), result.ReservePublicIPsForUserAndSiteConnectivity)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cidrs"), result.IpBlocks.Values)...)
+	if result.Description == "" {
+		resp.State.SetAttribute(ctx, path.Root("description"), types.StringNull())
+	} else {
+		resp.State.SetAttribute(ctx, path.Root("description"), result.Description)
+	}
+	if result.EnterpriseDNSServerIP != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("enterprise_dns_server_ip"), result.EnterpriseDNSServerIP)...)
+	}
+	if result.SrcIpv4PoolList != nil && len(result.SrcIpv4PoolList) > 0 {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_start_ip"), result.SrcIpv4PoolList[0].StartIp)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("src_ipv4_pool_end_ip"), result.SrcIpv4PoolList[0].EndIp)...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}

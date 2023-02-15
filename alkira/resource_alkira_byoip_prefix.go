@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -18,49 +17,12 @@ var (
 	_ resource.ResourceWithConfigure = &alkiraByoipPrefixResource{}
 )
 
-// PlanModifyBool is a plan modifier for types.Bool attributes.
-func BoolDefaultValue(v types.Bool) planmodifier.Bool {
-	return &boolDefaultValuePlanModifier{v}
-}
-
-type boolDefaultValuePlanModifier struct {
-	DefaultValue types.Bool
-}
-
-var _ planmodifier.Bool = (*boolDefaultValuePlanModifier)(nil)
-
-func (apm *boolDefaultValuePlanModifier) Description(ctx context.Context) string {
-	/* ... */
-	return ""
-}
-
-func (apm *boolDefaultValuePlanModifier) MarkdownDescription(ctx context.Context) string {
-	/* ... */
-	return ""
-}
-
-func (apm *boolDefaultValuePlanModifier) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, res *planmodifier.BoolResponse) {
-	// If the attribute configuration is not null, we are done here
-	if !req.ConfigValue.IsNull() {
-		return
-	}
-
-	// If the attribute plan is "known" and "not null", then a previous plan modifier in the sequence
-	// has already been applied, and we don't want to interfere.
-	if !req.PlanValue.IsUnknown() && !req.PlanValue.IsNull() {
-		log.Printf("[ERROR] AAAAA")
-		return
-	}
-	log.Printf("[ERROR] BBBBB")
-	res.PlanValue = apm.DefaultValue
-}
-
 type alkiraByoipPrefixResource struct {
 	client      *alkira.AlkiraClient
 	byoipPrefix *alkira.AlkiraAPI[alkira.Byoip]
 }
 
-func NewalkiraByoipPrefixResource() resource.Resource {
+func NewalkiraByoipPrefix() resource.Resource {
 	return &alkiraByoipPrefixResource{}
 }
 
