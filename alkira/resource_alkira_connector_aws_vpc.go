@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -178,15 +179,20 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 }
 
 func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorAwsVpcRequest(d, m)
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(client)
+
+	// Create request
+	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
@@ -199,8 +205,12 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(client)
+
+	// Get connector
 	connector, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -222,8 +232,8 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("vpc_id", connector.VpcId)
 
 	if len(connector.Segments) > 0 {
-		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segApi.GetByName(connector.Segments[0])
+		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+		segment, _, err := segmentApi.GetByName(connector.Segments[0])
 
 		if err != nil {
 			return err
@@ -231,35 +241,59 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("segment_id", segment.Id)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorAwsVpcRequest(d, m)
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(client)
+
+	// Construct request
+	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
-	d.Set("provision_state", provisionState)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
+	return resourceSegmentRead(d, m)
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewConnectorAwsVpc(m.(*alkira.AlkiraClient))
 
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewConnectorAwsVpc(client)
+
+	// Delete resource
 	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
@@ -272,8 +306,8 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
-	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))

@@ -24,7 +24,7 @@ type PolicyPrefixList struct {
 
 // NewPolicyPrefixList new policy prefix list
 func NewPolicyPrefixList(ac *AlkiraClient) *AlkiraAPI[PolicyPrefixList] {
-	uri := fmt.Sprintf("%s/tenantnetworks/%s/segments", ac.URI, ac.TenantNetworkId)
+	uri := fmt.Sprintf("%s/tenantnetworks/%s/policy/prefixlists", ac.URI, ac.TenantNetworkId)
 	api := &AlkiraAPI[PolicyPrefixList]{ac, uri, true}
 	return api
 }

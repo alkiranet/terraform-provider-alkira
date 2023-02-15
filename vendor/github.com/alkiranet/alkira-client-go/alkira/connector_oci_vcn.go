@@ -39,7 +39,7 @@ type ConnectorOciVcn struct {
 	CredentialId    string      `json:"credentialId"`
 	CustomerRegion  string      `json:"customerRegion"`
 	Enabled         bool        `json:"enabled"`
-	Group           string      `json:"group"`
+	Group           string      `json:"group,omitempty"`
 	Id              json.Number `json:"id,omitempty"`              // response only
 	ImplicitGroupId int         `json:"implicitGroupId,omitempty"` // response only
 	Name            string      `json:"name"`

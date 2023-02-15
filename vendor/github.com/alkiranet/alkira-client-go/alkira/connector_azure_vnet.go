@@ -59,7 +59,7 @@ type ConnectorAzureVnet struct {
 	BillingTags       []int                 `json:"billingTags"`
 	CXP               string                `json:"cxp"`
 	CredentialId      string                `json:"credentialId"`
-	Group             string                `json:"group"`
+	Group             string                `json:"group,omitempty"`
 	Enabled           bool                  `json:"enabled"`
 	Id                json.Number           `json:"id,omitempty"`              // response only
 	ImplicitGroupId   int                   `json:"implicitGroupId,omitempty"` // response only

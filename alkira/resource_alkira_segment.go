@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,11 +15,13 @@ func resourceAlkiraSegment() *schema.Resource {
 		Read:        resourceSegmentRead,
 		Update:      resourceSegmentUpdate,
 		Delete:      resourceSegmentDelete,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			o, _ := d.GetChange("state")
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
 
-			if o == "FAILED" {
-				d.SetNew("state", "SUCCESS")
+			old, _ := d.GetChange("state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
 			}
 
 			return nil
@@ -51,7 +54,7 @@ func resourceAlkiraSegment() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"state": {
+			"provision_state": {
 				Description: "The provisioning state of the segment.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -95,7 +98,9 @@ func resourceAlkiraSegment() *schema.Resource {
 }
 
 func resourceSegment(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
+
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(client)
 
 	// Construct request
 	segment, err := generateSegmentRequest(d)
@@ -111,16 +116,21 @@ func resourceSegment(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
 	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceSegmentRead(d, m)
 }
 
 func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(client)
 
+	// Get the resource
 	segment, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -141,12 +151,20 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 
 	setCidrsSegmentRead(d, segment)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(client)
 
 	// Construct request
 	segment, err := generateSegmentRequest(d)
@@ -162,13 +180,18 @@ func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceSegmentRead(d, m)
 }
 
 func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewSegment(client)
 
 	provisionState, err := api.Delete(d.Id())
 
@@ -176,7 +199,8 @@ func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

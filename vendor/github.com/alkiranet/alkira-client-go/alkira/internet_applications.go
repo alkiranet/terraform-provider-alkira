@@ -21,7 +21,7 @@ type InternetApplication struct {
 	ConnectorType          string                       `json:"connectorType"`
 	Description            string                       `json:"description,omitempty"`
 	FqdnPrefix             string                       `json:"fqdnPrefix"`
-	Group                  string                       `json:"group"`
+	Group                  string                       `json:"group,omitempty"`
 	Id                     json.Number                  `json:"id,omitempty"` // response only
 	InboundConnectorId     string                       `json:"inboundConnectorId,omitempty"`
 	InboundConnectorType   string                       `json:"inboundConnectorType,omitempty"`
