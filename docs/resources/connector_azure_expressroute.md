@@ -62,6 +62,7 @@ resource "alkira_connector_azure_expressroute" "test_basic" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`

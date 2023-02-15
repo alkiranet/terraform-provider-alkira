@@ -31,7 +31,7 @@ resource "alkira_connector_internet_exit" "cn" {
 
 ### Required
 
-- `name` (String) Prefix for BYOIP.
+- `prefix` (String) Prefix for BYOIP.
 
 ### Read-Only
 

@@ -86,8 +86,8 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"provision": {
-				Description: "The state of provisioning.",
+			"provision_state": {
+				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -157,30 +157,34 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 }
 
 func resourceConnectorAkamaiProlexicCreate(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Creating Connector (Akamai-Prolexic)")
+	// Construct request
 	connector, err := generateConnectorAkamaiProlexicRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
+	// Send create request
 	resource, provision, err := api.Create(connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision", provision)
+	d.Set("provision_state", provision)
 	d.SetId(string(resource.Id))
 
 	return resourceConnectorAkamaiProlexicRead(d, m)
 }
 
 func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
+	// Get resource
 	connector, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -224,27 +228,30 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceConnectorAkamaiProlexicUpdate(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
+	// Construct update request
 	connector, err := generateConnectorAkamaiProlexicRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Connector (Akamai-Prolexic): %s", d.Id())
+	// Send update request
 	provisionState, err := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision", provisionState)
+	d.Set("provision_state", provisionState)
 
 	return resourceConnectorAkamaiProlexicRead(d, m)
 }
 
 func resourceConnectorAkamaiProlexicDelete(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
 	log.Printf("[INFO] Deleting Connector (Akamai-Prolexic): %s", d.Id())
@@ -259,6 +266,7 @@ func resourceConnectorAkamaiProlexicDelete(d *schema.ResourceData, m interface{}
 
 // generateConnectorAkamaiProlexicRequest generate request for the connector
 func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAkamaiProlexic, error) {
+
 	client := m.(*alkira.AlkiraClient)
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
@@ -266,8 +274,8 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 	tunnelConfigurations := expandConnectorAkamaiTunnelConfiguration(d.Get("tunnel_configuration").(*schema.Set))
 
 	// Get Segment
-	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
+	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
