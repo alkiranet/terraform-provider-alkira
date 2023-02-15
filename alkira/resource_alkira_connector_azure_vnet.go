@@ -174,6 +174,15 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
+			"connection_mode": {
+				Description: "The method the Vnet will use to connect. Options are `VNET_GATEWAY` or `VNET_PEERING`. " +
+					"Vnet Peering requires an Alkira Transit Hub (ATH) to be available for your network. If no value is " +
+					"specified here, the connector will be use Vnet Peering if it is available, otherwise it will connect " +
+					"via a Vnet Gateay.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"VNET_GATEWAY", "VNET_PEERING"}, false),
+			},
 		},
 	}
 }
@@ -222,6 +231,7 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
+	d.Set("connection_mode", connector.ConnectionMode)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -310,6 +320,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Size:          d.Get("size").(string),
 		ServiceTags:   convertTypeListToStringList(d.Get("service_tags").([]interface{})),
 		VnetId:        d.Get("azure_vnet_id").(string),
+		ConnectionMode: d.Get("connection_mode").(string),
 		VnetRouting:   routing,
 	}
 
