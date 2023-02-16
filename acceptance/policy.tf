@@ -14,12 +14,13 @@ resource "alkira_policy_rule" "test1" {
   name        = "acceptance-test1"
   description = "Terraform Test Policy"
   src_ip      = "any"
-  dst_ip      = "172.16.0.0/16"
+  dst_ip      = "any"
   dscp        = "any"
   protocol    = "any"
   src_ports   = ["any"]
   dst_ports   = ["any"]
-  rule_action = "DROP"
+  rule_action = "ALLOW"
+  rule_action_service_types = ["ANYFW"]
 }
 
 resource "alkira_policy_rule" "test2" {
@@ -31,6 +32,7 @@ resource "alkira_policy_rule" "test2" {
   src_ports               = [12000]
   internet_application_id = alkira_internet_application.test.id
   rule_action             = "DROP"
+  rule_action_service_types = ["ANYFW"]
 }
 
 resource "alkira_policy_rule_list" "test" {

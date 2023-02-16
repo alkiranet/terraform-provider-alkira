@@ -192,7 +192,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -338,8 +338,8 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	}
 
 	//segmentIdsToSegmentNames
-	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segment_names, err := convertSegmentIdsToSegmentNames(ids, m)
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
 		Name:             name,
-		Segments:         segment_names,
+		Segments:         segmentNames,
 		ServiceGroupName: d.Get("service_group_name").(string),
 	}, nil
 }

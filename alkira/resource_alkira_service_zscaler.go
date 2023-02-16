@@ -155,8 +155,8 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Required:    true,
 			},
 			"segment_ids": {
-				Description: "Names of segments associated with the service.",
-				Type:        schema.TypeList,
+				Description: "IDs of segment associated with the service.",
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -279,8 +279,7 @@ func generateZscalerRequest(d *schema.ResourceData, m interface{}) (*alkira.Serv
 		return nil, err
 	}
 
-	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 
 	if err != nil {
 		return nil, err

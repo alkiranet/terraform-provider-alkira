@@ -150,7 +150,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 
 	// Set segment_id
 	if len(connector.Segments) > 0 {
-		segmentApi := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
+		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 		segment, _, err := segmentApi.GetByName(connector.Segments[0])
 
 		if err != nil {

@@ -98,7 +98,7 @@ resource "alkira_service_pan" "test1" {
 - `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `registration_pin_id` (String) PAN Registration PIN ID.
 - `registration_pin_value` (String) PAN Registration PIN Value.
-- `segment_ids` (List of Number) IDs of segments associated with the service.
+- `segment_ids` (Set of Number) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 - `version` (String) The version of the PAN firewall.
 

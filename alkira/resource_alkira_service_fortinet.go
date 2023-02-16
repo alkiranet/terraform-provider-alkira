@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -159,7 +158,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -344,8 +343,8 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	segmentId := strconv.Itoa(d.Get("management_server_segment_id").(int))
-	mgmtSegName, err := convertSegmentIdToSegmentName(segmentId, m)
+	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(int), m)
+
 	if err != nil {
 		return nil, err
 	}
@@ -364,9 +363,9 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		return nil, err
 	}
 
-	// convert segment ids to segment names
-	segmentIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
+	// Convert segment IDs to segment names
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}

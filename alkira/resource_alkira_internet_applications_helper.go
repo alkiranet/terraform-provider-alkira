@@ -1,11 +1,36 @@
 package alkira
 
 import (
+	"encoding/json"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func getInternetApplicationGroup(client *alkira.AlkiraClient) int {
+	api := alkira.NewGroup(client)
+	groups, err := api.GetAll()
+
+	if err != nil {
+		log.Printf("[ERROR] failed to get groups")
+		return 0
+	}
+
+	var result []alkira.Group
+	json.Unmarshal([]byte(groups), &result)
+
+	for _, group := range result {
+		if group.Name == "ALK-INB-INT-GROUP" {
+
+			groupId, _ := strconv.Atoi(string(group.Id))
+			return groupId
+		}
+	}
+
+	return 0
+}
 
 func expandInternetApplicationTargets(in *schema.Set) []alkira.InternetApplicationTargets {
 	if in == nil || in.Len() == 0 {

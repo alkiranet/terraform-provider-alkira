@@ -108,7 +108,7 @@ resource "alkira_service_infoblox" "test" {
 - `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) Infoblox license type, only `BRING_YOUR_OWN` is supported right now.
 - `name` (String) Name of the Infoblox service.
-- `segment_ids` (List of String) IDs of segments associated with the service.
+- `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
 - `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
 

@@ -59,7 +59,7 @@ resource "alkira_service_fortinet" "test1" {
 - `management_server_segment_id` (Number) The segment ID used to access the management server. This segment must be present in the list of segments assigned to this Fortinet Firewall service.
 - `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Fortinet at this time. max_instance_count must be greater than or equal to min_instance_count.
 - `name` (String) Name of the Fortinet Firewall service.
-- `segment_ids` (List of String) IDs of segments associated with the service.
+- `segment_ids` (Set of String) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Fortinet Firewall.
 
