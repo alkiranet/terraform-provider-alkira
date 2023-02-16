@@ -80,7 +80,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
