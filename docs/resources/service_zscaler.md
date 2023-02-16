@@ -51,7 +51,7 @@ resource "alkira_service_zscaler" "test1" {
 - `name` (String) The name of the zscaler firewall.
 - `primary_public_edge_ip` (String) The IP for closest Zscaler PoP to `cxp` region.
 - `secondary_public_edge_ip` (String) The ip for standby Zscaler PoP to `cxp` region.
-- `segment_ids` (List of String) Names of segments associated with the service.
+- `segment_ids` (Set of String) IDs of segment associated with the service.
 - `size` (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.
 
 ### Optional

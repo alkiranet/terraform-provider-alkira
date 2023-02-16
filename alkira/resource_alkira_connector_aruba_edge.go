@@ -268,8 +268,7 @@ func resourceConnectorArubaEdgeDelete(d *schema.ResourceData, m interface{}) err
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {
 
-	segIds := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segmentNames, err := convertSegmentIdsToSegmentNames(segIds, m)
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 
 	if err != nil {
 		return nil, err

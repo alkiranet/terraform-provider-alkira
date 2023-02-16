@@ -1,6 +1,8 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -14,10 +16,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 		Description: "Manage Palo Alto Firewall service.\n\n" +
 			"When `panorama_enabled` is set to `true`, `pan_username` and " +
 			"`pan_password` are required.",
-		Create: resourceServicePanCreate,
-		Read:   resourceServicePanRead,
-		Update: resourceServicePanUpdate,
-		Delete: resourceServicePanDelete,
+		Create:        resourceServicePanCreate,
+		Read:          resourceServicePanRead,
+		Update:        resourceServicePanUpdate,
+		Delete:        resourceServicePanDelete,
+		CustomizeDiff: resourceServicePanCustomizeDiff,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,9 +56,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"pan_username": {
-				Description: "PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "PAN Panorama username. For AWS, username should " +
+					"be `admin`. For AZURE, it should be `akadmin`.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"pan_license_key": {
 				Description: "PAN Panorama license Key.",
@@ -82,14 +87,16 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
-							Description: "The name of the segment to which the global protect options should apply",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The name of the segment to which the " +
+								"global protect options should apply",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"remote_user_zone_name": {
-							Description: "Firewall security zone is created using the zone name for remote user sessions.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "Firewall security zone is created using " +
+								"the zone name for remote user sessions.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"portal_fqdn_prefix": {
 							Description: "Prefix for the global protect portal FQDN, this would " +
@@ -100,9 +107,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Required: true,
 						},
 						"service_group_name": {
-							Description: "The name of the service group. A group with the same name will be created.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The name of the service group. A group " +
+								"with the same name will be created.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -183,13 +191,15 @@ func resourceAlkiraServicePan() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description:  "PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+				Description: "PAN license type, either `BRING_YOUR_OWN` " +
+					"or `PAY_AS_YOU_GO`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
 			"license_sub_type": {
-				Description:  "PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)",
+				Description: "PAN sub license type, either `CREDIT_BASED` " +
+					"or `MODEL_BASED`. (BETA)",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"CREDIT_BASED", "MODEL_BASED"}, false),
@@ -226,15 +236,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional:    true,
 			},
 			"master_key_enabled": {
-				Description: "Enable Master Key for PAN instances or not. It's default to `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Enable Master Key for PAN instances or not. " +
+					"It's default to `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"master_key_expiry": {
-				Description: "PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "PAN Master Key Expiry. The date should be in " +
+					"format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"max_instance_count": {
 				Description: "Max number of Panorama instances for auto scale.",
@@ -242,10 +254,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"min_instance_count": {
-				Description: "Minimal number of Panorama instances for auto scale. Default value is `0`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
+				Description: "Minimal number of Panorama instances for auto " +
+					"scale. Default value is `0`.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
 			},
 			"registration_pin_id": {
 				Description: "PAN Registration PIN ID.",
@@ -270,25 +283,29 @@ func resourceAlkiraServicePan() *schema.Resource {
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the service, one of " +
+					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, " +
+					"`5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"tunnel_protocol": {
-				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
+				Description: "Tunnel Protocol, default to `IPSEC`, " +
+					"could be either `IPSEC` or `GRE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPSEC",
 				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
 			},
 			"type": {
-				Description:  "The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'",
+				Description: "The type of the PAN firewall. Either " +
+					"'VM-300', 'VM-500' or 'VM-700'",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VM-300", "VM-500", "VM-700", "VM-SIM"}, false),
@@ -329,7 +346,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewServicePan(client)
 
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
@@ -346,14 +365,19 @@ func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceServicePanRead(d, m)
 }
 
 func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewServicePan(client)
 
 	// Get the service
 	pan, err := api.GetById(d.Id())
@@ -390,12 +414,21 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("panorama_template", pan.PanoramaTemplate)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewServicePan(client)
 
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
@@ -411,21 +444,45 @@ func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceServicePanRead(d, m)
 }
 
 func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 
-	api := alkira.NewServicePan(m.(*alkira.AlkiraClient))
+	// Init
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewServicePan(client)
 
+	// Delete resource
 	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	// Check provision state
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete service-pan %s, provision failed", d.Id())
+	}
+
+	d.SetId("")
+	return nil
+}
+
+func resourceServicePanCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
+
+	// Handle provision_state
+	old, _ := d.GetChange("provision_state")
+
+	if client.Provision == true && old == "FAILED" {
+		d.SetNew("provision_state", "SUCCESS")
 	}
 
 	return nil
@@ -439,6 +496,9 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
 	panoramaTemplate := d.Get("panorama_template").(string)
 
+	//
+	// Construct credentials
+	//
 	panCredentialId := d.Get("credential_id").(string)
 
 	if 0 == len(panCredentialId) {
@@ -465,17 +525,29 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		d.Set("credential_id", credentialId)
 	}
 
+	//
+	// Construct instances
+	//
 	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
+
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// Construct segment options
+	//
 	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// Construct global protect
+	//
 	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
@@ -551,7 +623,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaTemplate:            &panoramaTemplate,
 		RegistrationCredentialId:    regCredentialId,
 		SegmentOptions:              segmentOptions,
-		SegmentIds:                  convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
+		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),
 		Size:                        d.Get("size").(string),
 		Type:                        d.Get("type").(string),

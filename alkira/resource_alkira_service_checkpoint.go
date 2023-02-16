@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -379,13 +378,12 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		return nil, err
 	}
 
-	segmentIds := []string{strconv.Itoa(d.Get("segment_id").(int))}
-	segmentNames, err := convertSegmentIdsToSegmentNames(segmentIds, m)
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(int), m)
 	if err != nil {
 		return nil, err
 	}
 
-	segmentOptions, err := expandCheckpointSegmentOptions(segmentNames[0], d.Get("segment_options").(*schema.Set), m)
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +403,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		Name:             d.Get("name").(string),
 		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         segmentNames,
+		Segments:         []string{segmentName},
 		SegmentOptions:   segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
