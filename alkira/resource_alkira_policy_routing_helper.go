@@ -70,7 +70,7 @@ func expandPolicyRoutingRuleSet(in map[string]interface{}) (*alkira.RoutePolicyR
 }
 
 // expandPolicyRoutingRuleInterCxpRoutesRedistribution expand the
-//   "inter_cxp_routes_redistribution" section of the policy routing rule
+//		"inter_cxp_routes_redistribution" section of the policy routing rule
 func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface{}) (*alkira.RoutePolicyRulesInterCxpRoutesRedistribution, error) {
 
 	distrib := alkira.RoutePolicyRulesInterCxpRoutesRedistribution{}

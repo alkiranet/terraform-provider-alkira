@@ -65,6 +65,13 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
 			},
+			"category": {
+				Description: "The category of NAT policy, options are `DEFAULT` or `INTERNET_CONNECTOR`. A empty value in this field " +
+					"will be treated the same as a value of `DEFAULT`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+			},
 		},
 	}
 }
@@ -107,6 +114,7 @@ func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("included_group_ids", policy.IncludedGroups)
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
 	d.Set("nat_rule_ids", policy.NatRuleIds)
+	d.Set("category", policy.Category)
 
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 	segment, _, err := segmentApi.GetByName(policy.Segment)
@@ -180,6 +188,7 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		IncludedGroups: inGroups,
 		ExcludedGroups: exGroups,
 		NatRuleIds:     natRules,
+		Category:       d.Get("category").(string),
 	}
 
 	return policy, nil
