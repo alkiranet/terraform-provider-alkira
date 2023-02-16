@@ -59,10 +59,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -70,9 +71,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"provision_state": {
 				Description: "The provisioning state of connector.",
@@ -85,12 +87,14 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "The ID of segments associated with the connector. Currently, only `1` segment is allowed.",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "The ID of segments associated with the connector. " +
+					"Currently, only `1` segment is allowed.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
+					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
@@ -120,14 +124,16 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"vpc_cidr": {
-				Description:   "The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.",
+				Description: "The list of CIDR attached to the target VPC for routing " +
+					"purpose. It could be only specified if `vpc_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_subnet": {
-				Description:   "The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified.",
+				Description: "The list of subnets of the target VPC for routing purpose. " +
+					"It could only specified if `vpc_cidr` is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_cidr"},
@@ -163,7 +169,8 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"options": {
-							Description:  "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
+							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, " +
+								"`OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "OVERRIDE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
@@ -229,14 +236,17 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", connector.Size)
 	d.Set("vpc_id", connector.VpcId)
 
-	if len(connector.Segments) > 0 {
-		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segmentApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	// Set provision state
@@ -301,10 +311,10 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 // generateConnectorAwsVpcRequest generate request for connector-aws-vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
-
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(int), m)
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
 		return nil, err
@@ -330,7 +340,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	}
 
 	request := &alkira.ConnectorAwsVpc{
-		BillingTags:                        billingTags,
+		BillingTags:                        convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:                                d.Get("cxp").(string),
 		CredentialId:                       d.Get("credential_id").(string),
 		CustomerName:                       m.(*alkira.AlkiraClient).Username,
@@ -340,7 +350,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Group:                              d.Get("group").(string),
 		Name:                               d.Get("name").(string),
 		Segments:                           []string{segmentName},
-		SecondaryCXPs:                      failoverCXPs,
+		SecondaryCXPs:                      convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
 		Size:                               d.Get("size").(string),
 		TgwAttachments:                     tgwAttachments,
 		VpcId:                              d.Get("vpc_id").(string),

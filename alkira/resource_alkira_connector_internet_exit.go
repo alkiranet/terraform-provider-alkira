@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -148,15 +149,17 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("public_ip_number", connector.NumOfPublicIPs)
 	d.Set("egress_ips", connector.EgressIpTypes)
 
-	// Set segment_id
-	if len(connector.Segments) > 0 {
-		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segmentApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	if connector.TrafficDistribution != nil {
@@ -204,12 +207,14 @@ func resourceConnectorInternetExitDelete(d *schema.ResourceData, m interface{}) 
 // generateConnectorInternetRequest generate request for connector-internet
 func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorInternet, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
-	// Get Segment
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(d.Get("segment_id").(string))
-	egressTypes := convertTypeListToStringList(d.Get("egress_ips").([]interface{}))
+	if err != nil {
+		return nil, err
+	}
 
 	algorithmAttributes := alkira.AlgorithmAttributes{
 		Keys: d.Get("traffic_distribution_algorithm_attribute").(string),
@@ -225,7 +230,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	}
 
 	request := &alkira.ConnectorInternet{
-		BillingTags:         billingTags,
+		BillingTags:         convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		ByoipId:             d.Get("byoip_id").(int),
 		CXP:                 d.Get("cxp").(string),
 		Description:         d.Get("description").(string),
@@ -233,9 +238,9 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		Enabled:             d.Get("enabled").(bool),
 		Name:                d.Get("name").(string),
 		NumOfPublicIPs:      d.Get("public_ip_number").(int),
-		Segments:            []string{segment.Name},
+		Segments:            []string{segmentName},
 		TrafficDistribution: &trafficDistribution,
-		EgressIpTypes:       egressTypes,
+		EgressIpTypes:       convertTypeListToStringList(d.Get("egress_ips").([]interface{})),
 	}
 
 	return request, nil

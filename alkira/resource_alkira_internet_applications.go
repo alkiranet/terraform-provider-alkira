@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -104,7 +101,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of segment associated with the internet application.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"size": {
@@ -185,15 +182,14 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("public_ips", app.PublicIps)
 	d.Set("size", app.Size)
 
-	// segment_id
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, _, err := segmentApi.GetByName(app.SegmentName)
+	// Segment
+	segmentId, err := getSegmentIdByName(app.SegmentName, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("segment_id", segment.Id)
+	d.Set("segment_id", segmentId)
 
 	// targets
 	var targets []map[string]interface{}
@@ -250,20 +246,23 @@ func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) er
 
 func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (*alkira.InternetApplication, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	publicIps := convertTypeListToStringList(d.Get("public_ips").([]interface{}))
-	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
+	// Targets
+	//
+	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
+
+	// Assemble request
 	request := &alkira.InternetApplication{
-		BillingTags:          billingTags,
+		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		ConnectorId:          d.Get("connector_id").(int),
 		ConnectorType:        d.Get("connector_type").(string),
 		FqdnPrefix:           d.Get("fqdn_prefix").(string),
@@ -271,8 +270,8 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		InboundConnectorType: d.Get("inbound_connector_type").(string),
 		InternetProtocol:     d.Get("internet_protocol").(string),
 		Name:                 d.Get("name").(string),
-		PublicIps:            publicIps,
-		SegmentName:          segment.Name,
+		PublicIps:            convertTypeListToStringList(d.Get("public_ips").([]interface{})),
+		SegmentName:          segmentName,
 		Size:                 d.Get("size").(string),
 		Targets:              targets,
 	}

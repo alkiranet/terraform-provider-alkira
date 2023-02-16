@@ -140,61 +140,6 @@ func convertTypeSetToIntList(in *schema.Set) []int {
 	return intList
 }
 
-// convertSegmentIdsToSegmentNames
-func convertSegmentIdsToSegmentNames(in *schema.Set, m interface{}) ([]string, error) {
-
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] empty SegmentIds to convert to SegmentNames")
-		return nil, nil
-	}
-
-	segmentNames := make([]string, in.Len())
-
-	for i, id := range in.List() {
-		segmentName, err := getSegmentNameById(id.(int), m)
-
-		if err != nil {
-			log.Printf("[DEBUG] failed to get segment name by ID %s.", id)
-			return nil, err
-		}
-
-		segmentNames[i] = segmentName
-	}
-
-	return segmentNames, nil
-}
-
-// getSegmentNamebyId get a segment name by its ID
-func getSegmentNameById(id int, m interface{}) (string, error) {
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segmentId := strconv.Itoa(id)
-	segment, err := segmentApi.GetById(segmentId)
-
-	if err != nil {
-		return "", err
-	}
-
-	return segment.Name, err
-}
-
-func convertSegmentNamesToSegmentIds(names []string, m interface{}) ([]string, error) {
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
-
-	var segmentIds []string
-	for _, name := range names {
-		seg, _, err := api.GetByName(name)
-		if err != nil {
-			log.Printf("[DEBUG] failed to get segment. %s does not exist: ", name)
-			return nil, err
-		}
-
-		segmentIds = append(segmentIds, string(seg.Id))
-	}
-
-	return segmentIds, nil
-}
-
 func convertStringArrToInterfaceArr(sArr []string) []interface{} {
 	iArr := make([]interface{}, len(sArr))
 	for i, v := range sArr {

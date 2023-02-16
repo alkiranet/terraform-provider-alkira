@@ -323,7 +323,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
 							Description: "The ID of the segment.",
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"zone_name": {

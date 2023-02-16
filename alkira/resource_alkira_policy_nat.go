@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,7 +36,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define the policy scope.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"included_group_ids": {
@@ -116,14 +113,14 @@ func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("nat_rule_ids", policy.NatRuleIds)
 	d.Set("category", policy.Category)
 
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, _, err := segmentApi.GetByName(policy.Segment)
+	// Get segment
+	segmentId, err := getSegmentIdByName(policy.Segment, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("segment_id", segment.Id)
+	d.Set("segment_id", segmentId)
 
 	return nil
 }
@@ -168,26 +165,24 @@ func resourcePolicyNatDelete(d *schema.ResourceData, m interface{}) error {
 
 func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicy, error) {
 
-	inGroups := convertTypeListToIntList(d.Get("included_group_ids").([]interface{}))
-	exGroups := convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{}))
-	natRules := convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{}))
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	// Assemble request
 	policy := &alkira.NatPolicy{
 		Name:           d.Get("name").(string),
 		Description:    d.Get("description").(string),
 		Type:           d.Get("type").(string),
-		Segment:        segment.Name,
-		IncludedGroups: inGroups,
-		ExcludedGroups: exGroups,
-		NatRuleIds:     natRules,
+		Segment:        segmentName,
+		IncludedGroups: convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
+		ExcludedGroups: convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
+		NatRuleIds:     convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{})),
 		Category:       d.Get("category").(string),
 	}
 
