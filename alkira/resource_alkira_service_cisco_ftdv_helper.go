@@ -3,7 +3,6 @@ package alkira
 import (
 	"errors"
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -130,7 +129,7 @@ func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []s
 			managementServer.SegmentId = v
 		}
 
-		segName, err := convertSegmentIdToSegmentName(strconv.Itoa(managementServer.SegmentId), m)
+		segName, err := getSegmentNameById(managementServer.SegmentId, m)
 
 		if err != nil {
 			return credentialId, ipAllowList, managementServer, err
@@ -149,9 +148,10 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
 
-		segmentName, err := convertSegmentIdToSegmentName(strconv.Itoa(cfg["segment_id"].(int)), m)
+		segmentName, err := getSegmentNameById(cfg["segment_id"].(int), m)
+
 		if err != nil {
-			return nil, errors.New("Segment could not be found")
+			return nil, err
 		}
 
 		groupList := convertTypeListToStringList(cfg["groups"].([]interface{}))

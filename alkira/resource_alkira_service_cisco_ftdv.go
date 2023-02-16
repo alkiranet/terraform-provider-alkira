@@ -300,8 +300,7 @@ func resourceServiceCiscoFTDvDelete(d *schema.ResourceData, m interface{}) error
 func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCiscoFTDv, error) {
 
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	ids := convertTypeListToStringList(d.Get("segment_ids").([]interface{}))
-	segment_names, err := convertSegmentIdsToSegmentNames(ids, m)
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 
 	if err != nil {
 		return nil, err
@@ -348,7 +347,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 		IpAllowList:      ipAllowList,
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
-		Segments:         segment_names,
+		Segments:         segmentNames,
 		SegmentOptions:   segmentOptions,
 		AutoScale:        d.Get("auto_scale").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),

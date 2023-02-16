@@ -2,8 +2,6 @@ package alkira
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -306,11 +304,9 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
 
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(int), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
@@ -343,7 +339,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Enabled:                            d.Get("enabled").(bool),
 		Group:                              d.Get("group").(string),
 		Name:                               d.Get("name").(string),
-		Segments:                           []string{segment.Name},
+		Segments:                           []string{segmentName},
 		SecondaryCXPs:                      failoverCXPs,
 		Size:                               d.Get("size").(string),
 		TgwAttachments:                     tgwAttachments,
