@@ -91,6 +91,16 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Default:      "DEFAULT",
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "SRC_IP"}, false),
 			},
+			"egress_ips": {
+				Description: "The types of egress IPs to use with the connector. Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. " +
+					"If `BYOIP` is one of the options provided `byoip_id` must also be set.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
+				},
+			},
 		},
 	}
 }
@@ -136,6 +146,7 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("public_ip_number", connector.NumOfPublicIPs)
+	d.Set("egress_ips", connector.EgressIpTypes)
 
 	// Set segment_id
 	if len(connector.Segments) > 0 {
@@ -198,6 +209,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	// Get Segment
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 	segment, err := segmentApi.GetById(d.Get("segment_id").(string))
+	egressTypes := convertTypeListToStringList(d.Get("egress_ips").([]interface{}))
 
 	algorithmAttributes := alkira.AlgorithmAttributes{
 		Keys: d.Get("traffic_distribution_algorithm_attribute").(string),
@@ -223,6 +235,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		NumOfPublicIPs:      d.Get("public_ip_number").(int),
 		Segments:            []string{segment.Name},
 		TrafficDistribution: &trafficDistribution,
+		EgressIpTypes:       egressTypes,
 	}
 
 	return request, nil

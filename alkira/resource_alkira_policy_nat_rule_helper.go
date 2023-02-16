@@ -55,6 +55,7 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 
 	st := alkira.NatRuleActionSrcTranslation{}
 	dt := alkira.NatRuleActionDstTranslation{}
+	e := alkira.EgressAction{}
 
 	for _, m := range in.List() {
 
@@ -93,11 +94,15 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		if v, ok := actionValue["dst_addr_translation_advertise_to_connector"].(bool); ok {
 			dt.AdvertiseToConnector = v
 		}
+		if v, ok := actionValue["egress_type"].(string); ok {
+			e.IpType = v
+		}
 	}
 
 	action := alkira.NatRuleAction{
 		SourceAddressTranslation:      st,
 		DestinationAddressTranslation: dt,
+		Egress:                        e,
 	}
 
 	return &action
