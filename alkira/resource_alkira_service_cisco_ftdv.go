@@ -82,7 +82,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
 				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"firepower_management_center": {
 				Description: "The Firepower Management Center options.",
