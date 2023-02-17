@@ -45,7 +45,7 @@ resource "alkira_policy_routing" "test" {
 - `included_group_ids` (List of Number) Defines the scope for the policy. Connector associated with group IDs metioned here is where this policy would be applied. Group IDs that associated with branch/on-premise connectors can be used here. These group should not contain any cloud connector.
 - `name` (String) The name of the routing policy.
 - `rule` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rule))
-- `segment_id` (Number) IDs of segments that will define the policy scope.
+- `segment_id` (String) IDs of segments that will define the policy scope.
 
 ### Optional
 

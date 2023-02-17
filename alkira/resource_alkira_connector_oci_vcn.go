@@ -1,8 +1,7 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -202,14 +201,17 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", connector.Size)
 	d.Set("vcn_id", connector.VcnId)
 
-	if len(connector.Segments) > 0 {
-		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segmentApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	return nil
@@ -251,22 +253,17 @@ func resourceConnectorOciVcnDelete(d *schema.ResourceData, m interface{}) error 
 // generateConnectorOciVcnRequest generate request for connector-oci-vcn
 func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorOciVcn, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
-
 	//
-	// Construct Segment
+	// Segment
 	//
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
 	//
-	// Construct Routing Options
+	// Routing Options
 	//
 	inputPrefixes, err := generateConnectorOciVcnUserInputPrefixes(d.Get("vcn_cidr").([]interface{}), d.Get("vcn_subnet").(*schema.Set))
 
@@ -287,18 +284,18 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 	}
 
 	//
-	// Construct request
+	// Assemble request
 	//
 	request := &alkira.ConnectorOciVcn{
-		BillingTags:    billingTags,
+		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerRegion: d.Get("oci_region").(string),
 		Enabled:        d.Get("enabled").(bool),
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
-		SecondaryCXPs:  failoverCXPs,
-		Segments:       []string{segment.Name},
+		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:       []string{segmentName},
 		Size:           d.Get("size").(string),
 		VcnId:          d.Get("vcn_id").(string),
 		VcnRouting:     vcnRouting,

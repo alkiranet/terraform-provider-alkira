@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -41,7 +38,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			},
 			"designated_segment_id": {
 				Description: "The designated segment ID.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"end_a_segment_resource_ids": {
@@ -168,26 +165,19 @@ func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) e
 // generateSegmentResourceShareRequest generate request for segment resource shared
 func generateSegmentResourceShareRequest(d *schema.ResourceData, m interface{}) (*alkira.SegmentResourceShare, error) {
 
-	serviceList := convertTypeListToIntList(d.Get("service_ids").([]interface{}))
-	endAResources := convertTypeListToIntList(d.Get("end_a_segment_resource_ids").([]interface{}))
-	endBResources := convertTypeListToIntList(d.Get("end_b_segment_resource_ids").([]interface{}))
-
-	segmentId := d.Get("designated_segment_id").(int)
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(segmentId))
+	// Get segment name
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by ID: %d", segmentId)
 		return nil, err
 	}
 
 	request := &alkira.SegmentResourceShare{
 		Name:              d.Get("name").(string),
-		ServiceList:       serviceList,
-		DesignatedSegment: segment.Name,
-		EndAResources:     endAResources,
-		EndBResources:     endBResources,
+		ServiceList:       convertTypeListToIntList(d.Get("service_ids").([]interface{})),
+		DesignatedSegment: segmentName,
+		EndAResources:     convertTypeListToIntList(d.Get("end_a_segment_resource_ids").([]interface{})),
+		EndBResources:     convertTypeListToIntList(d.Get("end_b_segment_resource_ids").([]interface{})),
 		EndARouteLimit:    d.Get("end_a_route_limit").(int),
 		EndBRouteLimit:    d.Get("end_b_route_limit").(int),
 		Direction:         d.Get("traffic_direction").(string),

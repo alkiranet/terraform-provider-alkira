@@ -268,18 +268,27 @@ func resourceConnectorArubaEdgeDelete(d *schema.ResourceData, m interface{}) err
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {
 
+	//
+	// Segments
+	//
 	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// Instances
+	//
 	instances, err := expandArubaEdgeInstances(d.Get("instances").([]interface{}), m.(*alkira.AlkiraClient))
 
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// VRF Mapping
+	//
 	vrfMappings, err := expandArubaEdgeVrfMappings(d.Get("aruba_edge_vrf_mapping").(*schema.Set), m)
 
 	if err != nil {

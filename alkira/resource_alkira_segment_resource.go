@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -48,7 +45,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The segment ID.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"implicit_group_id": {
@@ -106,6 +103,7 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
+	// Get resource
 	resource, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -113,16 +111,22 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("name", resource.Name)
+	d.Set("implicit_group_id", resource.GroupId)
 
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, _, err := segmentApi.GetByName(resource.Segment)
+	//
+	// Get segemnt
+	//
+	segmentId, err := getSegmentIdByName(resource.Segment, m)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("segment_id", segment.Id)
+	d.Set("segment_id", segmentId)
 
+	//
+	// Get Prefixes
+	//
 	var prefixes []map[string]interface{}
 
 	for _, prefix := range resource.GroupPrefixes {
@@ -134,7 +138,6 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("group_prefix", prefixes)
-	d.Set("implicit_group_id", resource.GroupId)
 
 	return nil
 }
@@ -179,20 +182,24 @@ func resourceSegmentResourceDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 func generateSegmentResourceRequest(d *schema.ResourceData, m interface{}) (*alkira.SegmentResource, error) {
-
-	groupPrefixes := expandSegmentResourceGroupPrefix(d.Get("group_prefix").(*schema.Set))
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
+	// Group Prefix
+	//
+	groupPrefixes := expandSegmentResourceGroupPrefix(d.Get("group_prefix").(*schema.Set))
+
+	// Assemble request
 	resource := alkira.SegmentResource{
 		Name:          d.Get("name").(string),
-		Segment:       segment.Name,
+		Segment:       segmentName,
 		GroupPrefixes: groupPrefixes,
 	}
 

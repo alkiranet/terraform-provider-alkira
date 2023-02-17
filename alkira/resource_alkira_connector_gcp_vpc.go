@@ -1,8 +1,8 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -143,7 +143,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of the segment associated with the connector.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"size": {
@@ -203,14 +203,17 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", connector.Size)
 	setGcpRoutingOptions(connector.GcpRouting, d)
 
-	if len(connector.Segments) > 0 {
-		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	return err
@@ -256,25 +259,27 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 
+	//
+	// Routing
+	//
 	gcpRouting, err := convertGcpRouting(d.Get("gcp_routing").(*schema.Set), d.Get("vpc_subnet").(*schema.Set))
 	if err != nil {
 		log.Printf("[ERROR] failed to convert gcp routing")
 		return nil, err
 	}
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
-
-	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	// Assemble request
 	connector := &alkira.ConnectorGcpVpc{
-		BillingTags:    billingTags,
+		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		GcpRouting:     gcpRouting,
@@ -283,8 +288,8 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Group:          d.Get("group").(string),
 		Name:           d.Get("name").(string),
 		ProjectId:      d.Get("gcp_project_id").(string),
-		Segments:       []string{segment.Name},
-		SecondaryCXPs:  failoverCXPs,
+		Segments:       []string{segmentName},
+		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
 		Size:           d.Get("size").(string),
 		VpcId:          d.Get("gcp_vpc_id").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),

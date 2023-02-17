@@ -27,14 +27,7 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-
-			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-			segment, err := segmentApi.GetById(v)
-
-			if err != nil {
-				return nil, err
-			}
-			segmentName = segment.Name
+			segmentName, _ = getSegmentNameById(v, m)
 		}
 		if v, ok := segmentCfg["remote_user_zone_name"].(string); ok {
 			r.RemoteUserZoneName = v
@@ -65,14 +58,7 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-
-			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-			segment, err := segmentApi.GetById(v)
-
-			if err != nil {
-				return nil, err
-			}
-			segmentName = segment.Name
+			segmentName, _ = getSegmentNameById(v, m)
 		}
 		if v, ok := segmentCfg["portal_enabled"].(bool); ok {
 			r.PortalEnabled = v
@@ -102,14 +88,12 @@ func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interfac
 		r := panZone{}
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["segment_id"].(string); ok {
-
-			segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-			segment, err := segmentApi.GetById(v)
+			segmentName, err := getSegmentNameById(v, m)
 
 			if err != nil {
 				return nil, err
 			}
-			r.Segment = segment.Name
+			r.Segment = segmentName
 		}
 		if v, ok := cfg["zone_name"].(string); ok {
 			r.Zone = v

@@ -1,8 +1,7 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -342,7 +341,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of the segment associated with the connector.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"size": &schema.Schema{
@@ -402,17 +401,18 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", connector.Size)
 	d.Set("vpn_mode", connector.VpnMode)
 
-	if len(connector.Segments) > 0 {
-		segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segmentApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
-
-	var endpoints []map[string]interface{}
 
 	//
 	// Go through all endpoints from the config firstly to find a
@@ -422,6 +422,8 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	// On the first read call at the end of the create call, Terraform
 	// didn't track any endpoint IDs yet.
 	//
+	var endpoints []map[string]interface{}
+
 	for _, endpoint := range d.Get("endpoint").([]interface{}) {
 		endpointConfig := endpoint.(map[string]interface{})
 
@@ -509,13 +511,11 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 	sites := expandConnectorIPSecEndpoint(d.Get("endpoint").([]interface{}))
 
 	//
-	// Construct Segment
+	// Segment
 	//
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
@@ -568,7 +568,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		PolicyOptions:  policyOptions,
 		RoutingOptions: routingOptions,
 		SegmentOptions: segmentOptions,
-		Segments:       []string{segment.Name},
+		Segments:       []string{segmentName},
 		Sites:          sites,
 		Size:           d.Get("size").(string),
 		VpnMode:        vpnMode,

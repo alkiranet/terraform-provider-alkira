@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -148,9 +149,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"PRIVATE", "PUBLIC"}, false),
 						},
 						"segment_id": {
-							Description: "The ID of the segment to be used to access the management server.",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "The IDs of the segment to be used to " +
+								"access the management server.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"type": {
 							Description:  "The type of the management server. either `SMS` or `MDS`.",
@@ -200,7 +202,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of the segments associated with the service.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"segment_options": {
@@ -212,7 +214,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
 							Description: "The ID of the segment.",
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"zone_name": {
@@ -283,13 +285,20 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	checkpoint, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get service-checkpoint %s", d.Id())
 		return err
 	}
 
-	segmentIds, err := convertCheckpointSegmentNameToSegmentId(checkpoint.Segments, m)
-	if err != nil {
-		return err
+	// Get segment
+	numOfSegments := len(checkpoint.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(checkpoint.Segments[0], m)
+
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	d.Set("auto_scale", checkpoint.AutoScale)
@@ -304,7 +313,6 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_id", segmentIds)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
@@ -349,6 +357,7 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
+
 	client := m.(*alkira.AlkiraClient)
 
 	chpfwCredId := d.Get("credential_id").(string)
@@ -369,30 +378,42 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// Instances
+	//
 	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
+
 	if err != nil {
 		return nil, err
 	}
 
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(int), m)
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	// Segment Options
+	//
 	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
 
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-
+	// Assemble request
 	return &alkira.ServiceCheckpoint{
 		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      billingTagIds,
+		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CredentialId:     d.Get("credential_id").(string),
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),

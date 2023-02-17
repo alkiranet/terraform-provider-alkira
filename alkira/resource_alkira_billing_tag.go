@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,15 +32,17 @@ func resourceAlkiraBillingTag() *schema.Resource {
 }
 
 func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	billingTag := &alkira.BillingTag{
+	// Construct request
+	request := &alkira.BillingTag{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 	}
 
-	log.Printf("[INFO] Billing Tag Creating")
-	response, _, err := api.Create(billingTag)
+	// Send create request
+	response, _, err := api.Create(request)
 
 	if err != nil {
 		return err
@@ -54,8 +54,10 @@ func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
+	// Get resource
 	tag, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -69,16 +71,17 @@ func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Billing Tag Updating")
-
-	billingTag := &alkira.BillingTag{
+	// Construct request
+	request := &alkira.BillingTag{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 	}
 
-	_, err := api.Update(d.Id(), billingTag)
+	// Send update request
+	_, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
@@ -88,10 +91,15 @@ func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceBillingTagDelete(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Billing Tag %s", d.Id())
 	_, err := api.Delete(d.Id())
 
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return err
 }

@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -9,11 +10,13 @@ import (
 
 func resourceAlkiraByoipPrefix() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage BYOIP Prefix.",
-		Create:      resourceByoipPrefix,
-		Read:        resourceByoipPrefixRead,
-		Update:      resourceByoipPrefixUpdate,
-		Delete:      resourceByoipPrefixDelete,
+		Description:   "Manage BYOIP Prefix.",
+		Create:        resourceByoipPrefix,
+		Read:          resourceByoipPrefixRead,
+		Update:        resourceByoipPrefixUpdate,
+		Delete:        resourceByoipPrefixDelete,
+		CustomizeDiff: resourceByoipPrefixCustomizeDiff,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -148,6 +151,20 @@ func resourceByoipPrefixDelete(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId("")
 	return err
+}
+
+func resourceByoipPrefixCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
+
+	// Handle provision_state
+	old, _ := d.GetChange("provision_state")
+
+	if client.Provision == true && old == "FAILED" {
+		d.SetNew("provision_state", "SUCCESS")
+	}
+
+	return nil
 }
 
 func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip, error) {

@@ -50,7 +50,6 @@ type CheckpointManagementServer struct {
 	Ips               []string `json:"ips"`
 	Reachability      string   `json:"reachability"`
 	Segment           string   `json:"segment"`
-	SegmentId         int      `json:"segmentId"`
 	Type              string   `json:"type"`
 	UserName          string   `json:"userName"`
 }

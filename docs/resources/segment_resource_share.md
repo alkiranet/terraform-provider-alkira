@@ -34,7 +34,7 @@ resource "alkira_segment_resource_share" "test" {
 
 ### Required
 
-- `designated_segment_id` (Number) The designated segment ID.
+- `designated_segment_id` (String) The designated segment ID.
 - `end_a_segment_resource_ids` (List of Number) The End-A segment resource IDs. All segment resources must be on the same segment.
 - `end_b_segment_resource_ids` (List of Number) The End-B segment resource IDs. All segment resources must be on the same segment.
 - `name` (String) The name of the segment resource share.

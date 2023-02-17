@@ -108,7 +108,7 @@ Read-Only:
 Required:
 
 - `groups` (List of String) The list of Groups associated with the zone.
-- `segment_id` (Number) The ID of the segment.
+- `segment_id` (String) The ID of the segment.
 - `zone_name` (String) The name of the associated zone.
 
 

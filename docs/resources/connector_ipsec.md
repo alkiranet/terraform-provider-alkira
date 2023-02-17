@@ -94,7 +94,7 @@ resource "alkira_connector_ipsec" "ipsec" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `endpoint` (Block List, Min: 1) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - `name` (String) The name of the connector.
-- `segment_id` (Number) The ID of the segment associated with the connector.
+- `segment_id` (String) The ID of the segment associated with the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 - `vpn_mode` (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
