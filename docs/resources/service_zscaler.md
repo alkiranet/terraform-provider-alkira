@@ -72,7 +72,6 @@ Required:
 
 - `health_check_type` (String) The type of health check. Input values must be either `IKE_STATUS` `PING_PROBE` `HTTP_PROBE`
 - `local_fpdn_id` (String) The local FQDN Id.
-- `ping_probe_ip` (String) The ping destination to check connection health, should be provided when health_check_type is `PING_PROBE`
 - `pre_shared_key` (String) The preshared key.
 
 Optional:
@@ -84,5 +83,6 @@ Optional:
 - `ike_dh_group_number` (String) The IPSEC phase 1 DH Group to be used. Input value must either be `MODP1024` or `MODP2048`. The default is `MODP1024`
 - `ike_encryption_algorithm` (String) The IPSEC phase 1 Encryption Algorithm to be used. Only `AES256CBC` is allowed. The default value is `AES256CBC`.
 - `ike_integrity_algorithm` (String) The IPSEC phase 1 Integrity Algorithm to be used. Only `SHA256` is allowed. The default value is `SHA256`.
+- `ping_probe_ip` (String) The ping destination to check connection health. It should be provided when `health_check_type` is `PING_PROBE`
 
 
