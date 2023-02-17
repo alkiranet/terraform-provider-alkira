@@ -66,7 +66,7 @@ resource "alkira_service_cisco_ftdv" "test" {
 - `instance` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - `max_instance_count` (Number) The maximum number of instances that should be deployed.
 - `name` (String) The name of the service.
-- `segment_ids` (List of String) IDs of segments associated with the service.
+- `segment_ids` (Set of String) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.
 
 ### Optional
@@ -88,7 +88,7 @@ resource "alkira_service_cisco_ftdv" "test" {
 Required:
 
 - `password` (String) Firepower Management Center (FMC) password.
-- `segment_id` (Number) ID of the segment accociated with the Firepower Management Center.
+- `segment_id` (String) ID of the segment accociated with the Firepower Management Center.
 - `server_ip` (String) IP address of the Firepower Management Center.
 - `username` (String) Firepower Management Center (FMC) username.
 
@@ -127,7 +127,7 @@ Read-Only:
 
 Required:
 
-- `segment_id` (Number) ID of the segment.
+- `segment_id` (String) ID of the segment.
 - `zone_name` (String) The name of the associated zone.
 
 Optional:

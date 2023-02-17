@@ -72,7 +72,7 @@ resource "alkira_service_checkpoint" "test" {
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`. (**BETA**)
 - `name` (String) Name of the Checkpoint Firewall service.
 - `password` (String) The Checkpoint Firewall service password.
-- `segment_id` (Number) The ID of the segments associated with the service.
+- `segment_id` (String) The ID of the segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Checkpoint Firewall.
 
@@ -120,7 +120,7 @@ Optional:
 - `domain` (String) Management server domain.
 - `management_server_password` (String) The password of the management server.
 - `reachability` (String) Specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
-- `segment_id` (Number) The ID of the segment to be used to access the management server.
+- `segment_id` (String) The IDs of the segment to be used to access the management server.
 - `type` (String) The type of the management server. either `SMS` or `MDS`.
 - `user_name` (String) The username of the management server.
 
@@ -135,7 +135,7 @@ Read-Only:
 Required:
 
 - `groups` (List of String) The list of Groups associated with the zone.
-- `segment_id` (Number) The ID of the segment.
+- `segment_id` (String) The ID of the segment.
 
 Optional:
 

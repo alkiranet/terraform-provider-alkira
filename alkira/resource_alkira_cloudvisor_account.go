@@ -1,8 +1,6 @@
 package alkira
 
 import (
-	"log"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -51,11 +49,13 @@ func resourceAlkiraCloudVisorAccount() *schema.Resource {
 }
 
 func resourceCloudVisorAccount(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Creating cloudvisor-account")
+	// Construct request
 	request := generateCloudVisorAccountRequest(d, m)
 
+	// Send create request
 	resource, _, err := api.Create(request)
 
 	if err != nil {
@@ -68,8 +68,10 @@ func resourceCloudVisorAccount(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
+	// Get resource
 	account, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -86,31 +88,32 @@ func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceCloudVisorAccountUpdate(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Updating cloudvisor-account (%s)", d.Id())
+	// Construct request
 	request := generateCloudVisorAccountRequest(d, m)
 
+	// Send update request
 	_, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return resourceCloudVisorAccountRead(d, m)
 }
 
 func resourceCloudVisorAccountDelete(d *schema.ResourceData, m interface{}) error {
+
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting CloudVisorAccount (%s)", d.Id())
 	_, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Deleted CloudVisorAccount (%s)", d.Id())
 	d.SetId("")
 	return nil
 }

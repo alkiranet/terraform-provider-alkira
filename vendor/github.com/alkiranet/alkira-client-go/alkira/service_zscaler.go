@@ -33,7 +33,7 @@ type ZscalerIpSecConfig struct {
 	IkeIntegrityAlgorithm  string `json:"ikeIntegrityAlgorithm"`
 	LocalFqdnId            string `json:"localFqdnId"`
 	PreSharedKey           string `json:"preSharedKey"`
-	PingProbeIp            string `json:"pingProbeIp"`
+	PingProbeIp            string `json:"pingProbeIp,omitempty"`
 }
 
 // NewServiceZscaler new service zscaler

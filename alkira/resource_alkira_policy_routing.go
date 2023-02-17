@@ -1,9 +1,6 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
-
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -52,7 +49,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define the policy scope.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"included_group_ids": {
@@ -259,14 +256,12 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 	//
 	// Set segment
 	//
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, _, err := segmentApi.GetByName(policy.Segment)
+	segmentId, err := getSegmentIdByName(policy.Segment, m)
 
 	if err != nil {
 		return err
 	}
-
-	d.Set("segment_id", segment.Id)
+	d.Set("segment_id", segmentId)
 
 	//
 	// Set Rule
@@ -360,21 +355,21 @@ func resourcePolicyRoutingDelete(d *schema.ResourceData, m interface{}) error {
 
 func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkira.RoutePolicy, error) {
 
-	inGroups := convertTypeListToIntList(d.Get("included_group_ids").([]interface{}))
-	exGroups := convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{}))
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by ID: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
+	// Rule
+	//
 	rules, err := expandPolicyRoutingRule(d.Get("rule").(*schema.Set))
 
 	if err != nil {
-		log.Printf("[ERROR] failed to expand routing policy rules.")
 		return nil, err
 	}
 
@@ -387,14 +382,15 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		*advertiseInternetExit = d.Get("advertise_internet_exit").(bool)
 	}
 
+	// Assemble request
 	policy := &alkira.RoutePolicy{
 		Name:                          d.Get("name").(string),
 		Description:                   d.Get("description").(string),
 		Direction:                     d.Get("direction").(string),
 		Enabled:                       d.Get("enabled").(bool),
-		Segment:                       segment.Name,
-		IncludedGroups:                inGroups,
-		ExcludedGroups:                exGroups,
+		Segment:                       segmentName,
+		IncludedGroups:                convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
+		ExcludedGroups:                convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
 		AdvertiseInternetExit:         advertiseInternetExit,
 		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
 		AdvertiseCustomRoutesPrefixId: d.Get("advertise_custom_routes_prefix_id").(int),
