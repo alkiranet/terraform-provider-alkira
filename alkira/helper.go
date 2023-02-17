@@ -140,6 +140,23 @@ func convertTypeSetToIntList(in *schema.Set) []int {
 	return intList
 }
 
+// convertTypeSetToStringList convert a TypeSet into a list of string
+func convertTypeSetToStringList(in *schema.Set) []string {
+
+	if in == nil || in.Len() == 0 {
+		log.Printf("[DEBUG] empty TypeSet to convert to StringList")
+		return nil
+	}
+
+	intList := make([]string, in.Len())
+
+	for i, value := range in.List() {
+		intList[i] = value.(string)
+	}
+
+	return intList
+}
+
 func convertStringArrToInterfaceArr(sArr []string) []interface{} {
 	iArr := make([]interface{}, len(sArr))
 	for i, v := range sArr {

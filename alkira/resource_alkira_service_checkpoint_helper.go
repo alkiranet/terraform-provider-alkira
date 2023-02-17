@@ -166,7 +166,6 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []m
 	m["ips"] = convertStringArrToInterfaceArr(mg.Ips)
 	m["reachability"] = mg.Reachability
 	m["segment"] = mg.Segment
-	m["segment_id"] = mg.SegmentId
 	m["type"] = mg.Type
 	m["user_name"] = mg.UserName
 

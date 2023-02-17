@@ -50,7 +50,7 @@ resource "alkira_internet_application" "test" {
 - `connector_type` (String) Connector Type.The value could be `AWS_VPC`, `AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` `ARUBA_EDGE_CONNECT`, `EXPRESS_ROUTE`.
 - `fqdn_prefix` (String) User provided FQDN prefix that will be published on AWS Route 53.
 - `name` (String) The name of the internet application.
-- `segment_id` (Number) The ID of segment associated with the internet application.
+- `segment_id` (String) The ID of segment associated with the internet application.
 - `size` (String) The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.
 - `target` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--target))
 

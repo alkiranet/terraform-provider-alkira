@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -199,11 +200,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"segment_ids": {
-				Description: "The IDs of the segments associated with the service.",
-				Type:        schema.TypeSet,
+			"segment_id": {
+				Description: "The ID of the segments associated with the service.",
+				Type:        schema.TypeString,
 				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_options": {
 				Description: "The segment options as used by your Checkpoint firewall. No more than one " +
@@ -285,14 +285,20 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	checkpoint, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get service-checkpoint %s", d.Id())
 		return err
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(checkpoint.Segments, m)
+	// Get segment
+	numOfSegments := len(checkpoint.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(checkpoint.Segments[0], m)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	d.Set("auto_scale", checkpoint.AutoScale)
@@ -307,7 +313,6 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
 	d.Set("pdp_ips", checkpoint.PdpIps)
-	d.Set("segment_ids", segmentIds)
 	d.Set("size", checkpoint.Size)
 	d.Set("segment_options", deflateSegmentOptions(checkpoint.SegmentOptions))
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
@@ -373,6 +378,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}
@@ -387,19 +393,27 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	//
-	// Segment Options
+	// Segment
 	//
-	segmentOptions, err := expandCheckpointSegmentOptions(d, m)
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
 		return nil, err
 	}
 
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	//
+	// Segment Options
+	//
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
 
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble request
 	return &alkira.ServiceCheckpoint{
 		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      billingTagIds,
+		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CredentialId:     d.Get("credential_id").(string),
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),
@@ -410,7 +424,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		Name:             d.Get("name").(string),
 		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
+		Segments:         []string{segmentName},
 		SegmentOptions:   segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
