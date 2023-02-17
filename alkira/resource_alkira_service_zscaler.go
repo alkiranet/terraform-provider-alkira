@@ -131,10 +131,10 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 							Required:    true,
 						},
 						"ping_probe_ip": {
-							Description: "The ping destination to check connection health, " +
-								"should be provided when health_check_type is `PING_PROBE`",
+							Description: "The ping destination to check connection health. " +
+								"It should be provided when `health_check_type` is `PING_PROBE`",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
