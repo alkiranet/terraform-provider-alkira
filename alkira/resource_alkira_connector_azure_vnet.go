@@ -1,8 +1,7 @@
 package alkira
 
 import (
-	"log"
-	"strconv"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -87,7 +86,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of the segment assoicated with the connector.",
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"vnet_cidr": &schema.Schema{
@@ -224,14 +223,17 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
 
-	if len(connector.Segments) > 0 {
-		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	return nil
@@ -277,35 +279,36 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	failoverCXPs := convertTypeListToStringList(d.Get("failover_cxps").([]interface{}))
-	serviceTags := convertTypeListToStringList(d.Get("service_tags").([]interface{}))
-
-	segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
+	//
+	// Routing
+	//
 	routing, err := constructVnetRouting(d)
 
 	if err != nil {
 		return nil, err
 	}
 
+	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:   billingTags,
+		BillingTags:   convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CXP:           d.Get("cxp").(string),
 		CredentialId:  d.Get("credential_id").(string),
 		Enabled:       d.Get("enabled").(bool),
 		Group:         d.Get("group").(string),
 		Name:          d.Get("name").(string),
-		SecondaryCXPs: failoverCXPs,
-		Segments:      []string{segment.Name},
+		SecondaryCXPs: convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:      []string{segmentName},
 		Size:          d.Get("size").(string),
-		ServiceTags:   serviceTags,
+		ServiceTags:   convertTypeListToStringList(d.Get("service_tags").([]interface{})),
 		VnetId:        d.Get("azure_vnet_id").(string),
 		VnetRouting:   routing,
 	}

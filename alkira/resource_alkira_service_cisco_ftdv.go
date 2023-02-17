@@ -82,7 +82,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
 				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"firepower_management_center": {
 				Description: "The Firepower Management Center options.",
@@ -111,15 +111,17 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Required:    true,
 						},
 						"segment_id": {
-							Description: "ID of the segment accociated with the Firepower Management Center.",
-							Type:        schema.TypeInt,
-							Required:    true,
+							Description: "ID of the segment accociated with the " +
+								"Firepower Management Center.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"ip_allow_list": {
-							Description: "List of IP addresses and CIDRs to access the Firepower Management Center.",
-							Type:        schema.TypeList,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "List of IP addresses and CIDRs to access the " +
+								"Firepower Management Center.",
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -181,7 +183,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
 							Description: "ID of the segment.",
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"zone_name": {

@@ -11,27 +11,27 @@ resource "alkira_policy" "test" {
 }
 
 resource "alkira_policy_rule" "test1" {
-  name        = "acceptance-test1"
-  description = "Terraform Test Policy"
-  src_ip      = "any"
-  dst_ip      = "any"
-  dscp        = "any"
-  protocol    = "any"
-  src_ports   = ["any"]
-  dst_ports   = ["any"]
-  rule_action = "ALLOW"
+  name                      = "acceptance-test1"
+  description               = "Terraform Test Policy"
+  src_ip                    = "any"
+  dst_ip                    = "any"
+  dscp                      = "any"
+  protocol                  = "any"
+  src_ports                 = ["any"]
+  dst_ports                 = ["any"]
+  rule_action               = "ALLOW"
   rule_action_service_types = ["ANYFW"]
 }
 
 resource "alkira_policy_rule" "test2" {
-  name                    = "acceptance-test2-ifa"
-  description             = "Terraform Test Policy for IFA"
-  src_ip                  = "any"
-  dscp                    = "any"
-  protocol                = "tcp"
-  src_ports               = [12000]
-  internet_application_id = alkira_internet_application.test.id
-  rule_action             = "DROP"
+  name                      = "acceptance-test2-ifa"
+  description               = "Terraform Test Policy for IFA"
+  src_ip                    = "any"
+  dscp                      = "any"
+  protocol                  = "tcp"
+  src_ports                 = [12000]
+  internet_application_id   = alkira_internet_application.test.id
+  rule_action               = "DROP"
   rule_action_service_types = ["ANYFW"]
 }
 

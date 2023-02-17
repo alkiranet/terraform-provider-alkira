@@ -3,7 +3,6 @@ package alkira
 import (
 	"errors"
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,7 +11,6 @@ import (
 func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
 
 	client := m.(*alkira.AlkiraClient)
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	if in == nil || in.Len() > 1 {
 		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input.")
@@ -61,21 +59,15 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 		if v, ok := cfg["reachability"].(string); ok {
 			mg.Reachability = v
 		}
-		if v, ok := cfg["segment_id"].(int); ok {
+		if v, ok := cfg["segment_id"].(string); ok {
 
-			var sg *alkira.Segment
-			var err error
+			segment, err := getSegmentNameById(v, m)
 
-			// 0 is an invalid ID but also the default value of int
-			if v != 0 {
-				sg, err = segmentApi.GetById(strconv.Itoa(v))
-				if err != nil {
-					return nil, err
-				}
-				mg.SegmentId = v
-				mg.Segment = sg.Name
+			if err != nil {
+				return nil, err
 			}
 
+			mg.Segment = segment
 		}
 		if v, ok := cfg["type"].(string); ok {
 			mg.Type = v
@@ -90,7 +82,6 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.CheckpointInstance, error) {
 
 	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] Invalid Checkpoint Firewall instance input.")
 		return nil, errors.New("Invalid Checkpoint Firewall instance input.")
 	}
 
@@ -147,8 +138,10 @@ If segment_options is included, populates it normally.
 func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
 
 	if in == nil || in.Len() == 0 {
+
 		segmentOptions := make(alkira.SegmentNameToZone)
 		zonestoGroups := make(alkira.ZoneToGroups)
+
 		z := alkira.OuterZoneToGroups{}
 		j := []string{}
 
@@ -164,24 +157,6 @@ func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interf
 
 }
 
-func convertCheckpointSegmentNameToSegmentId(names []string, m interface{}) (int, error) {
-
-	if len(names) != 1 {
-		return 0, errors.New("Invalid number of segments in Checkpoint Firewall instance.")
-	}
-
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	seg, _, err := segmentApi.GetByName(names[0])
-
-	if err != nil {
-		log.Printf("[DEBUG] failed to get segment. %s does not exist: ", names[0])
-		return 0, err
-	}
-
-	segmentId, _ := strconv.Atoi(string(seg.Id))
-	return segmentId, nil
-}
-
 func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
 	m := make(map[string]interface{})
 	m["configuration_mode"] = mg.ConfigurationMode
@@ -191,7 +166,6 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []m
 	m["ips"] = convertStringArrToInterfaceArr(mg.Ips)
 	m["reachability"] = mg.Reachability
 	m["segment"] = mg.Segment
-	m["segment_id"] = mg.SegmentId
 	m["type"] = mg.Type
 	m["user_name"] = mg.UserName
 

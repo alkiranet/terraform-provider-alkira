@@ -1,8 +1,8 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,7 +107,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +
 					"Currently, only `1` segment is allowed.",
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"tunnel_configuration": &schema.Schema{
@@ -200,15 +200,17 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 
-	// segment_id
-	if len(connector.Segments) > 0 {
-		segApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-		segment, _, err := segApi.GetByName(connector.Segments[0])
+	// Get segment
+	numOfSegments := len(connector.Segments)
+	if numOfSegments == 1 {
+		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
 			return err
 		}
-		d.Set("segment_id", segment.Id)
+		d.Set("segment_id", segmentId)
+	} else {
+		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
 	// byoip_options
@@ -267,27 +269,23 @@ func resourceConnectorAkamaiProlexicDelete(d *schema.ResourceData, m interface{}
 // generateConnectorAkamaiProlexicRequest generate request for the connector
 func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAkamaiProlexic, error) {
 
-	client := m.(*alkira.AlkiraClient)
-
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 	byoipOptions := expandConnectorAkamaiByoipOptions(d.Get("byoip_options").(*schema.Set))
 	tunnelConfigurations := expandConnectorAkamaiTunnelConfiguration(d.Get("tunnel_configuration").(*schema.Set))
 
-	// Get Segment
-	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(strconv.Itoa(d.Get("segment_id").(int)))
+	// Convert Segment
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get segment by Id: %d", d.Get("segment_id"))
 		return nil, err
 	}
 
 	// Create implict akamai-prolexic credential
+	log.Printf("[INFO] Creating Credential (akamai-prolexic)")
 	c := alkira.CredentialAkamaiProlexic{
 		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),
 	}
 
-	log.Printf("[INFO] Creating Credential (akamai-prolexic)")
+	client := m.(*alkira.AlkiraClient)
 	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
 
 	if err != nil {
@@ -298,14 +296,14 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
-		BillingTags:          billingTags,
+		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		ByoipOptions:         byoipOptions,
 		CXP:                  d.Get("cxp").(string),
 		CredentialId:         credentialId,
 		Group:                d.Get("group").(string),
 		Enabled:              d.Get("enabled").(bool),
 		Name:                 d.Get("name").(string),
-		Segments:             []string{segment.Name},
+		Segments:             []string{segmentName},
 		Size:                 d.Get("size").(string),
 		OverlayConfiguration: tunnelConfigurations,
 	}

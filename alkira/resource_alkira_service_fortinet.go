@@ -170,7 +170,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
 							Description: "The ID of the segment.",
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"zone_name": {
@@ -343,7 +343,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
 
-	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(int), m)
+	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
 
 	if err != nil {
 		return nil, err

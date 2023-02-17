@@ -3,6 +3,7 @@ package alkira
 import (
 	"errors"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -125,17 +126,10 @@ func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []s
 		if v, ok := cfg["ip_allow_list"].([]interface{}); ok {
 			ipAllowList = convertTypeListToStringList(v)
 		}
-		if v, ok := cfg["segment_id"].(int); ok {
-			managementServer.SegmentId = v
+		if v, ok := cfg["segment_id"].(string); ok {
+			segmentName, _ := getSegmentNameById(v, m)
+			managementServer.Segment = segmentName
 		}
-
-		segName, err := getSegmentNameById(managementServer.SegmentId, m)
-
-		if err != nil {
-			return credentialId, ipAllowList, managementServer, err
-		}
-
-		managementServer.Segment = segName
 	}
 
 	return credentialId, ipAllowList, managementServer, nil
@@ -148,13 +142,14 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
 
-		segmentName, err := getSegmentNameById(cfg["segment_id"].(int), m)
+		segmentName, err := getSegmentNameById(cfg["segment_id"].(string), m)
 
 		if err != nil {
 			return nil, err
 		}
 
 		groupList := convertTypeListToStringList(cfg["groups"].([]interface{}))
+
 		if groupList == nil {
 			groupList = []string{}
 		}
@@ -166,8 +161,10 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 			zonestoGroups := make(alkira.ZoneToGroups)
 			zonestoGroups[cfg["zone_name"].(string)] = groupList
 
+			segmentId, _ := strconv.Atoi(cfg["segment_id"].(string))
+
 			outerZoneToGroups := alkira.OuterZoneToGroups{
-				SegmentId:     cfg["segment_id"].(int),
+				SegmentId:     segmentId,
 				ZonesToGroups: zonestoGroups,
 			}
 

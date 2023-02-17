@@ -58,7 +58,7 @@ resource "alkira_policy_nat" "test" {
 - `included_group_ids` (List of Number) Defines the scope for the policy. Connector associatedwith group IDs metioned here is where this policy would be applied.Group IDs that associated with branch/on-premise connectors can beused here. These group should not contain any cloud connector.
 - `name` (String) The name of the policy.
 - `nat_rule_ids` (List of Number) The list of NAT rules to be applied by the policy.
-- `segment_id` (Number) IDs of segments that will define the policy scope.
+- `segment_id` (String) IDs of segments that will define the policy scope.
 - `type` (String) The type of NAT policy, currently only `INTRA_SEGMENT`is supported.
 
 ### Optional
