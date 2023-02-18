@@ -49,6 +49,7 @@ resource "alkira_policy_nat_rule" "test" {
   name        = "acceptance-test"
   description = "tftest nat rule"
   enabled     = false
+  category    = "DEFAULT"
 
   match {
     src_prefixes = ["any"]
