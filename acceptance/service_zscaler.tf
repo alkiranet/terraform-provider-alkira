@@ -4,11 +4,11 @@ resource "alkira_service_zscaler" "test1" {
   cxp         = "US-WEST-1"
 
   connector_internet_exit_id = alkira_connector_internet_exit.test1.id
-  primary_public_edge_ip            = "11.11.11.11"
-  secondary_public_edge_ip          = "12.12.12.12"
-  segment_ids                       = [alkira_segment.test1.id]
-  size                              = "MEDIUM"
-  tunnel_protocol                   = "IPSEC"
+  primary_public_edge_ip     = "11.11.11.11"
+  secondary_public_edge_ip   = "12.12.12.12"
+  segment_ids                = [alkira_segment.test1.id]
+  size                       = "MEDIUM"
+  tunnel_protocol            = "IPSEC"
 
   ipsec_configuration {
     esp_dh_group_number      = "MODP1024"
