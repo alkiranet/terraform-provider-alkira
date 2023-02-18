@@ -166,7 +166,7 @@ func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) e
 func generateSegmentResourceShareRequest(d *schema.ResourceData, m interface{}) (*alkira.SegmentResourceShare, error) {
 
 	// Get segment name
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+	segmentName, err := getSegmentNameById(d.Get("designated_segment_id").(string), m)
 
 	if err != nil {
 		return nil, err
