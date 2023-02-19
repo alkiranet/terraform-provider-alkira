@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -148,8 +147,6 @@ func (r *alkiraSegment) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	plan.SrcIpv4PoolList = srcIpv4PoolList
 
-	log.Printf("[DEBUG] plan: %v", plan)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -257,8 +254,6 @@ func (r *alkiraSegment) Update(ctx context.Context, req resource.UpdateRequest, 
 		Values: cidrs,
 	}
 	plan.SrcIpv4PoolList = srcIpv4PoolList
-
-	log.Printf("[DEBUG] plan: %v", plan)
 
 	if resp.Diagnostics.HasError() {
 		return

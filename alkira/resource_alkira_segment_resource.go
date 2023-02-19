@@ -127,7 +127,7 @@ func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
 	plan.GroupPrefixes = prefixes
 
-	result, prov_state, err := r.segment.Create(&plan)
+	result, provState, err := r.segment.Create(&plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating Segment Resource",
@@ -136,7 +136,7 @@ func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	resp.State.SetAttribute(ctx, path.Root("provision_state"), prov_state)
+	resp.State.SetAttribute(ctx, path.Root("provision_state"), provState)
 	resp.State.SetAttribute(ctx, path.Root("id"), result.Id)
 	resp.State.SetAttribute(ctx, path.Root("name"), result.Name)
 	resp.State.SetAttribute(ctx, path.Root("segment_id"), result.Segment)
@@ -153,10 +153,93 @@ func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateR
 
 // Read refreshes the Terraform state with the latest data.
 func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var id int
+	prefixPathsExpr := path.MatchRoot("group_prefix").AtAnySetValue()
+	prefixPaths, _ := req.State.PathMatches(ctx, prefixPathsExpr)
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	result, err := r.segment.GetById(strconv.Itoa(id))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Segment Resource",
+			"Could not read segment resource, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	m := alkira.NewSegment(r.client)
+	segment, provState, err := m.GetByName(result.Segment)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Segment Resource",
+			"Could not read segment resource, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	resp.State.SetAttribute(ctx, path.Root("provision_state"), provState)
+	resp.State.SetAttribute(ctx, path.Root("id"), result.Id)
+	resp.State.SetAttribute(ctx, path.Root("name"), result.Name)
+	resp.State.SetAttribute(ctx, path.Root("segment_id"), segment.Name)
+	for i, path := range prefixPaths {
+		resp.State.SetAttribute(ctx, path.AtName("group_id"), result.GroupPrefixes[i].GroupId)
+		resp.State.SetAttribute(ctx, path.AtName("prefix_list_id"), result.GroupPrefixes[i].PrefixListId)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var id int
+	var plan alkira.SegmentResource
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &plan.Name)...)
+
+	prefixPathsExpr := path.MatchRoot("group_prefix").AtAnySetValue()
+	prefixPaths, _ := req.Config.PathMatches(ctx, prefixPathsExpr)
+
+	if len(prefixPaths) == 0 {
+		resp.Diagnostics.AddError(
+			"invalid input for segment resource group prefix.",
+			"Could not create segment resource, unexpected error: ",
+		)
+		return
+	}
+
+	prefixes := make([]alkira.SegmentResourceGroupPrefix, len(prefixPaths))
+	for i, path := range prefixPaths {
+		req.Config.GetAttribute(ctx, path.AtName("group_id"), prefixes[i].GroupId)
+		req.Config.GetAttribute(ctx, path.AtName("prefix_list_id"), prefixes[i].PrefixListId)
+	}
+
+	plan.GroupPrefixes = prefixes
+
+	provState, err := r.segment.Update(strconv.Itoa(id), &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Segment Resource",
+			"Could not update segment resource, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	resp.State.SetAttribute(ctx, path.Root("provision_state"), provState)
+	resp.State.SetAttribute(ctx, path.Root("id"), plan.Id)
+	resp.State.SetAttribute(ctx, path.Root("name"), plan.Name)
+	resp.State.SetAttribute(ctx, path.Root("segment_id"), plan.Segment)
+	for i, path := range prefixPaths {
+		resp.State.SetAttribute(ctx, path.AtName("group_id"), plan.GroupPrefixes[i].GroupId)
+		resp.State.SetAttribute(ctx, path.AtName("prefix_list_id"), plan.GroupPrefixes[i].PrefixListId)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 }
 
