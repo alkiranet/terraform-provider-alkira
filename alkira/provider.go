@@ -198,5 +198,6 @@ func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource
 		NewalkiraGroup,
 		NewalkiraCredentialKeyPair,
 		NewalkiraSegment,
+		NewalkiraSegmentResource,
 	}
 }

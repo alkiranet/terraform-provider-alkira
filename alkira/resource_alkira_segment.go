@@ -15,20 +15,20 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.ResourceWithConfigure = &alkiraSegmentResource{}
+	_ resource.ResourceWithConfigure = &alkiraSegment{}
 )
 
-type alkiraSegmentResource struct {
+type alkiraSegment struct {
 	client  *alkira.AlkiraClient
 	segment *alkira.AlkiraAPI[alkira.Segment]
 }
 
 func NewalkiraSegment() resource.Resource {
-	return &alkiraSegmentResource{}
+	return &alkiraSegment{}
 }
 
 // Configure adds the provider configured client to the resource.
-func (r *alkiraSegmentResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+func (r *alkiraSegment) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -37,12 +37,12 @@ func (r *alkiraSegmentResource) Configure(_ context.Context, req resource.Config
 }
 
 // Metadata returns the resource type name.
-func (r *alkiraSegmentResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *alkiraSegment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_segment"
 }
 
 // Schema defines the schema for the resource.
-func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *alkiraSegment) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"state": schema.StringAttribute{
@@ -117,7 +117,7 @@ func (r *alkiraSegmentResource) Schema(_ context.Context, _ resource.SchemaReque
 }
 
 // Create creates the resource and sets the initial Terraform state.
-func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *alkiraSegment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan alkira.Segment
 	var cidrs []string
 	srcIpv4PoolList := []alkira.SegmentSrcIpv4PoolList{}
@@ -187,7 +187,7 @@ func (r *alkiraSegmentResource) Create(ctx context.Context, req resource.CreateR
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *alkiraSegment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var id int
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
@@ -223,7 +223,7 @@ func (r *alkiraSegmentResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *alkiraSegment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan alkira.Segment
 	var id int
 	var cidrs []string
@@ -300,7 +300,7 @@ func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateR
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *alkiraSegmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *alkiraSegment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var id int
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
