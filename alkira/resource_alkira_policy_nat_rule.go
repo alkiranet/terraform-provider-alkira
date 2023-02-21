@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +18,17 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 		Read:   resourcePolicyNatRuleRead,
 		Update: resourcePolicyNatRuleUpdate,
 		Delete: resourcePolicyNatRuleDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,13 +50,15 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "the provision state of the NAT policy rule.",
+				Description: "the provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"category": {
-				Description: "The category of NAT rule, options are `DEFAULT` or `INTERNET_CONNECTOR`. A empty value in this field " +
-					"will be treated the same as a value of `DEFAULT`.",
+				Description: "The category of NAT rule, options are " +
+					"`DEFAULT` or `INTERNET_CONNECTOR`. A empty " +
+					"value in this field will be treated the same " +
+					"as a value of `DEFAULT`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
@@ -90,7 +106,8 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"protocol": {
-							Description:  "The following protocols are supported, `icmp`, `tcp`, `udp` or `any`.",
+							Description: "The following protocols are supported, " +
+								"`icmp`, `tcp`, `udp` or `any`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
@@ -164,12 +181,15 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"dst_addr_translation_advertise_to_connector": {
-							Description: "Whether the destination address should be advertised to connector.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Whether the destination address " +
+								"should be advertised to connector.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"egress_type": {
-							Description:  "The egress type to use with the match. Options are are `ALKIRA_PUBLIC_IP` or `BYOIP`.",
+							Description: "The egress type to use with the " +
+								"match. Options are are `ALKIRA_PUBLIC_IP` " +
+								"or `BYOIP`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
@@ -182,6 +202,8 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 }
 
 func resourcePolicyNatRule(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -198,13 +220,18 @@ func resourcePolicyNatRule(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourcePolicyNatRuleRead(d, m)
 }
 
 func resourcePolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	rule, err := api.GetById(d.Id())
@@ -218,10 +245,19 @@ func resourcePolicyNatRuleRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("enabled", rule.Enabled)
 	d.Set("category", rule.Category)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourcePolicyNatRuleUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -238,12 +274,17 @@ func resourcePolicyNatRuleUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourcePolicyNatRuleRead(d, m)
 }
 
 func resourcePolicyNatRuleDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -252,7 +293,8 @@ func resourcePolicyNatRuleDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete policy_nat_rule %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

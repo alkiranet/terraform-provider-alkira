@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -15,6 +16,17 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Read:        resourceConnectorAwsVpcRead,
 		Update:      resourceConnectorAwsVpcUpdate,
 		Delete:      resourceConnectorAwsVpcDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -197,14 +209,18 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 	}
 
 	// Send create request
-	resource, provisionState, err := api.Create(request)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(resource.Id))
-	d.Set("provision_state", provisionState)
+	// Set the state
+	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorAwsVpcRead(d, m)
 }
@@ -301,7 +317,7 @@ func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error 
 	}
 
 	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
+		return fmt.Errorf("failed to delete connector_aws_vpc %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

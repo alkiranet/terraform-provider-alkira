@@ -1,7 +1,8 @@
 package alkira
 
 import (
-	"log"
+	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +17,17 @@ func resourceAlkiraListAsPath() *schema.Resource {
 		Read:   resourceListAsPathRead,
 		Update: resourceListAsPathUpdate,
 		Delete: resourceListAsPathDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -31,6 +43,11 @@ func resourceAlkiraListAsPath() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"values": {
 				Description: "Value can be regular expression of AS PATH " +
 					"or space sparated AS numbers. BGP regular expressions" +
@@ -44,36 +61,41 @@ func resourceAlkiraListAsPath() *schema.Resource {
 }
 
 func resourceListAsPath(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	list, err := generateListAsPathRequest(d, m)
+	request, err := generateListAsPathRequest(d, m)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to generate list as path request")
 		return err
 	}
 
 	// Send request
-	resource, _, err := api.Create(list)
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
-		log.Printf("[ERROR] failed to create list as path")
 		return err
 	}
 
-	d.SetId(string(resource.Id))
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(resource.Id))
 	return resourceListAsPathRead(d, m)
 }
 
 func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
 	list, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get list as path %s", d.Id())
 		return err
 	}
 
@@ -81,35 +103,56 @@ func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", list.Description)
 	d.Set("values", list.Values)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceListAsPathUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	list, err := generateListAsPathRequest(d, m)
+	// Construct request
+	request, err := generateListAsPathRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updateing list as path %s", d.Id())
-	_, err = api.Update(d.Id(), list)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
+	}
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
 	}
 
 	return resourceListAsPathRead(d, m)
 }
 
 func resourceListAsPathDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	_, err := api.Delete(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
+	}
+
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete list_as_path %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

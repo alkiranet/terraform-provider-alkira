@@ -1,33 +1,31 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraSegmentResource() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage segment resource\n\n" +
-			"To use this resource, you will need to use or create `alkira_group`, `alkira_segment` and " +
-			"`alkira_policy_prefix_list`. " +
-			"There could be multiple `group_prefix` section defined as needed. The `group_prefix` should " +
-			"be defined like this:\n\n" +
-			"* ANY -> ANY:  where `group_id` must be `-1` and prefix_list_id must be `-1`. When an " +
-			"ANY -> ANY mapping is present then it should be the only mapping in the group_prefix\n\n" +
-			"* EXPLICIT Group -> ANY:  where `group_id` must be the ID of group of type EXPLICIT and " +
-			"prefix_list_id MUST be `-1`.\n\n" +
-			"* IMPLICIT Group -> ANY: where group_id must be the ID of group of type IMPLICIT, this is " +
-			"also known as a Connector Group and `prefix_list_id` must be `-1`. If an IMPLICIT group is " +
-			"mapped to ANY `prefix_list_id`, then an IMPLICIT Group -> `prefix_list_id` must NOT be present " +
-			"in `group_prefix`\n\n" +
-			"* IMPLICIT Group -> PrefixList ID: where `group_id` must be the ID of group of type IMPLICIT " +
-			"and `prefix_list_id` MUST be the ID of an existing `prefix_list_id`\n\n" +
-			"* SERVICE Group -> ANY: where `group_id` must be the ID of group of type SERVICE and `prefix_list_id` " +
-			"MUST be -1.",
-		Create: resourceSegmentResource,
-		Read:   resourceSegmentResourceRead,
-		Update: resourceSegmentResourceUpdate,
-		Delete: resourceSegmentResourceDelete,
+		Description: "Manage segment resource.",
+		Create:      resourceSegmentResource,
+		Read:        resourceSegmentResourceRead,
+		Update:      resourceSegmentResourceUpdate,
+		Delete:      resourceSegmentResourceDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +37,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the segment resource.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -77,6 +75,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 
 func resourceSegmentResource(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -93,14 +92,18 @@ func resourceSegmentResource(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceSegmentResourceRead(d, m)
 }
 
 func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
 	// Get resource
@@ -139,33 +142,46 @@ func resourceSegmentResourceRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("group_prefix", prefixes)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceSegmentResourceUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	resource, err := generateSegmentResourceRequest(d, m)
+	request, err := generateSegmentResourceRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), resource)
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceSegmentResourceDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -174,7 +190,8 @@ func resourceSegmentResourceDelete(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete segment_resource %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

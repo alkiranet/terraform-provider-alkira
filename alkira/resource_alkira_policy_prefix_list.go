@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -12,6 +15,17 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 		Read:        resourcePolicyPrefixListRead,
 		Update:      resourcePolicyPrefixListUpdate,
 		Delete:      resourcePolicyPrefixListDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,6 +40,11 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Description: "The description of the prefix list.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"prefixes": {
 				Description: "A list of prefixes.",
@@ -67,6 +86,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 
 func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -77,10 +97,15 @@ func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Send request
-	response, _, err := api.Create(request)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
+	}
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
 	}
 
 	d.SetId(string(response.Id))
@@ -88,6 +113,8 @@ func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	list, err := api.GetById(d.Id())
@@ -100,10 +127,19 @@ func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("description", list.Description)
 	d.Set("prefixes", list.Prefixes)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -114,16 +150,23 @@ func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error
 	}
 
 	// Send update request
-	_, err = api.Update(d.Id(), request)
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
+	}
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
 	}
 
 	return resourcePolicyPrefixListRead(d, m)
 }
 
 func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -132,7 +175,8 @@ func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete policy_prefix_list %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
@@ -141,7 +185,6 @@ func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error
 
 func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
 
-	prefixes := convertTypeListToStringList(d.Get("prefixes").([]interface{}))
 	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
 
 	if err != nil {
@@ -151,7 +194,7 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	list := &alkira.PolicyPrefixList{
 		Description:  d.Get("description").(string),
 		Name:         d.Get("name").(string),
-		Prefixes:     prefixes,
+		Prefixes:     convertTypeListToStringList(d.Get("prefixes").([]interface{})),
 		PrefixRanges: prefixRanges,
 	}
 

@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +18,17 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 		Read:   resourcePolicyRoutingRead,
 		Update: resourcePolicyRoutingUpdate,
 		Delete: resourcePolicyRoutingDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -31,26 +45,29 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Optional:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the routing policy.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"enabled": {
-				Description: "Whether the routing policy is enabled. By default, it is set to `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Whether the routing policy is enabled. " +
+					"By default, it is set to `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"direction": {
-				Description:  "The direction of the route, `INBOUND` or `OUTBOUND`.",
+				Description: "The direction of the route, `INBOUND` " +
+					"or `OUTBOUND`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, false),
 			},
 			"segment_id": {
-				Description: "IDs of segments that will define the policy scope.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "IDs of segments that will define " +
+					"the policy scope.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"included_group_ids": {
 				Description: "Defines the scope for the policy. Connector associated " +
@@ -209,6 +226,8 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 }
 
 func resourcePolicyRouting(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -225,13 +244,18 @@ func resourcePolicyRouting(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourcePolicyRoutingRead(d, m)
 }
 
 func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
 	policy, err := api.GetById(d.Id())
@@ -311,11 +335,19 @@ func resourcePolicyRoutingRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("rule", rules)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourcePolicyRoutingUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -332,12 +364,17 @@ func resourcePolicyRoutingUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourcePolicyRoutingRead(d, m)
 }
 
 func resourcePolicyRoutingDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -346,7 +383,8 @@ func resourcePolicyRoutingDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete policy_routing %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

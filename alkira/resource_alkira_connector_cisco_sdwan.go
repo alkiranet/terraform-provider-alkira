@@ -1,6 +1,8 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -15,6 +17,17 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 		Read:        resourceConnectorCiscoSdwanRead,
 		Update:      resourceConnectorCiscoSdwanUpdate,
 		Delete:      resourceConnectorCiscoSdwanDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -168,29 +181,37 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 }
 
 func resourceConnectorCiscoSdwanCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	// Generate request for create connector
-	connector, err := generateConnectorCiscoSdwanRequest(d, m)
+	// Construct request
+	request, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Creating Connector (Cisco SD-WAN)")
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set states
+	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorCiscoSdwanRead(d, m)
 }
 
 func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
 	connector, err := api.GetById(d.Id())
@@ -228,41 +249,56 @@ func resourceConnectorCiscoSdwanRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("vrf_segment_mapping", mappings)
 	d.Set("version", connector.Version)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceConnectorCiscoSdwanUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorCiscoSdwanRequest(d, m)
+	// Construct update request
+	request, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Connector (Cisco SD-WAN) %s", d.Id())
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorCiscoSdwanRead(d, m)
 }
 
 func resourceConnectorCiscoSdwanDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Connector (Cisco SD-WAN) %s", d.Id())
 	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_cisco_sdwan %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
@@ -273,9 +309,6 @@ func resourceConnectorCiscoSdwanDelete(d *schema.ResourceData, m interface{}) er
 // generateConnectorCiscoSdwanRequest generate request for Cisco SD-WAN connector
 func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorCiscoSdwan, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-	mappings := expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set))
-
 	// Expand Cisco SDWAN vEdge block
 	vedges, err := expandCiscoSdwanVedges(m.(*alkira.AlkiraClient), d.Get("vedge").([]interface{}))
 
@@ -285,9 +318,9 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 
 	// Construct the request payload
 	connector := &alkira.ConnectorCiscoSdwan{
-		BillingTags:          billingTags,
+		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		CiscoEdgeInfo:        vedges,
-		CiscoEdgeVrfMappings: mappings,
+		CiscoEdgeVrfMappings: expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set)),
 		Cxp:                  d.Get("cxp").(string),
 		Group:                d.Get("group").(string),
 		Enabled:              d.Get("enabled").(bool),

@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -15,6 +16,20 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 		Read:        resourceConnectorAzureVnetRead,
 		Update:      resourceConnectorAzureVnetUpdate,
 		Delete:      resourceConnectorAzureVnetDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"azure_vnet_id": {
@@ -179,30 +194,41 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 }
 
 func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
+
+	// Init
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Generate request
-	connector, err := generateConnectorAzureVnetRequest(d, m)
+	// Construct request
+	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set states
+	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
+	// Get the resource
 	connector, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -236,31 +262,46 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Generate update request
-	connector, err := generateConnectorAzureVnetRequest(d, m)
+	// Construct update request
+	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorAzureVnetRead(d, m)
 }
 
 func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -269,7 +310,8 @@ func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_azure_vnet %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

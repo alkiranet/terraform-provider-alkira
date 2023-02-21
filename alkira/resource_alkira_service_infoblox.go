@@ -1,8 +1,9 @@
 package alkira
 
 import (
+	"context"
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,10 +17,20 @@ func resourceAlkiraInfoblox() *schema.Resource {
 		Read:        resourceInfobloxRead,
 		Update:      resourceInfobloxUpdate,
 		Delete:      resourceInfobloxDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"anycast": {
 				Type:        schema.TypeSet,
@@ -72,20 +83,21 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Optional:    true,
 			},
 			"global_cidr_list_id": {
-				Description: "The ID of the global cidr list to be associated with " +
-					"the Infoblox service.",
+				Description: "The ID of the global cidr list to be " +
+					"associated with the Infoblox service.",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"provision_state": {
-				Description: "The provision state of the service.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"grid_master": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Defines the properties of the Infoblox grid master.",
+				Type:     schema.TypeList,
+				Required: true,
+				Description: "Defines the properties of the Infoblox grid " +
+					"master.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external": {
@@ -126,9 +138,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				},
 			},
 			"instance": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "The properties pertaining to each individual instance of the Infoblox service.",
+				Type:     schema.TypeList,
+				Required: true,
+				Description: "The properties pertaining to each individual " +
+					"instance of the Infoblox service.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"anycast_enabled": {
@@ -150,9 +163,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Computed:    true,
 						},
 						"hostname": {
-							Description: "The host name of the instance. The host name MUST always have a suffix `.localdomain`.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The host name of the instance. The " +
+								"host name MUST always have a suffix `.localdomain`.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"model": {
 							Description: "The model of the Infoblox instance.",
@@ -160,13 +174,15 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required:    true,
 						},
 						"password": {
-							Description: "The password associated with the infoblox instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The password associated with the " +
+								"infoblox instance.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"type": {
-							Description: "The type of the Infoblox instance that is to be provisioned. " +
-								"The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.",
+							Description: "The type of the Infoblox instance that " +
+								"is to be provisioned. The value could be `MASTER`, " +
+								"`MASTER_CANDIDATE` and `MEMBER`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
@@ -180,7 +196,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description:  "Infoblox license type, only `BRING_YOUR_OWN` is supported right now.",
+				Description: "Infoblox license type, only " +
+					"`BRING_YOUR_OWN` is supported right now.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN"}, false),
@@ -197,14 +214,16 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"service_group_name": {
-				Description: "The name of the service group to be associated with the service. " +
-					"A service group represents the service in traffic policies, route policies " +
+				Description: "The name of the service group to be associated " +
+					"with the service. A service group represents the " +
+					"service in traffic policies, route policies " +
 					"and when configuring segment resource shares.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"shared_secret": {
-				Description:  "Shared Secret of the InfoBlox grid. This cannot be empty.",
+				Description: "Shared Secret of the InfoBlox grid. " +
+					"This cannot be empty.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
@@ -215,6 +234,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 
 func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -231,30 +251,41 @@ func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceInfobloxRead(d, m)
 }
 
 func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
 	infoblox, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] failed to get infoblox %s", d.Id())
 		return err
 	}
 
 	setAllInfobloxResourceFields(d, infoblox)
+
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
 
 	return nil
 }
 
 func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -271,12 +302,17 @@ func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceInfobloxRead(d, m)
 }
 
 func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -285,7 +321,8 @@ func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete service_infoblox %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
