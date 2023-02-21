@@ -46,7 +46,7 @@ resource "alkira_policy" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the policy.
+- `provision_state` (String) The provision state of the resource.
 
 ## Import
 

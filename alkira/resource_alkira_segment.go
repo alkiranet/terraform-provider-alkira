@@ -18,7 +18,7 @@ func resourceAlkiraSegment() *schema.Resource {
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
-			old, _ := d.GetChange("state")
+			old, _ := d.GetChange("provision_state")
 
 			if client.Provision == true && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
@@ -26,11 +26,9 @@ func resourceAlkiraSegment() *schema.Resource {
 
 			return nil
 		},
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the segment.",
@@ -55,7 +53,7 @@ func resourceAlkiraSegment() *schema.Resource {
 				Optional:    true,
 			},
 			"provision_state": {
-				Description: "The provisioning state of the segment.",
+				Description: "The provisioning state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -116,12 +114,12 @@ func resourceSegment(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-
+	// Set provision state
 	if client.Provision == true {
 		d.Set("provision_state", provisionState)
 	}
 
+	d.SetId(string(response.Id))
 	return resourceSegmentRead(d, m)
 }
 

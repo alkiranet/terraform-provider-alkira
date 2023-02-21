@@ -33,7 +33,7 @@ This resource is usually used along with policy resources:`policy_nat_policy`.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) the provision state of the NAT policy rule.
+- `provision_state` (String) the provision state of the resource.
 
 <a id="nestedblock--action"></a>
 ### Nested Schema for `action`

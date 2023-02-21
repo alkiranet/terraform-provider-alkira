@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +19,17 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 		Read:   resourcePolicyRuleRead,
 		Update: resourcePolicyRuleUpdate,
 		Delete: resourcePolicyRuleDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +56,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the policy rule.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -71,21 +85,24 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Optional:    true,
 			},
 			"src_prefix_list_id": {
-				Description:   "The ID of prefix list as source associated with the rule.",
+				Description: "The ID of prefix list as source associated " +
+					"with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"src_ip"},
 				Optional:      true,
 			},
 			"dst_prefix_list_id": {
-				Description:   "The ID of prefix list as destination associated with the rule.",
+				Description: "The ID of prefix list as destination " +
+					"associated with the rule.",
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"dst_ip"},
 				Optional:      true,
 			},
 			"dscp": {
-				Description: "The dscp value can be `any` or between `0` to `63` inclusive.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The dscp value can be `any` or between " +
+					"`0` to `63` inclusive.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"internet_application_id": {
 				Description: "The ID of the `internet_application` associated with the " +
@@ -130,14 +147,12 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 }
 
 func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleRequest(d, m)
-
-	if err != nil {
-		return err
-	}
+	request := generatePolicyRuleRequest(d, m)
 
 	// Send create request
 	response, provisionState, err := api.Create(request)
@@ -146,13 +161,18 @@ func resourcePolicyRule(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(response.Id))
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	rule, err := api.GetById(d.Id())
@@ -185,18 +205,23 @@ func resourcePolicyRuleRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("rule_action_service_types", rule.RuleAction.ServiceTypeList)
 	d.Set("rule_action_service_ids", rule.RuleAction.ServiceList)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleRequest(d, m)
-
-	if err != nil {
-		return err
-	}
+	request := generatePolicyRuleRequest(d, m)
 
 	// Send update request
 	provisionState, err := api.Update(d.Id(), request)
@@ -205,11 +230,17 @@ func resourcePolicyRuleUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourcePolicyRuleRead(d, m)
 }
 
 func resourcePolicyRuleDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -218,21 +249,15 @@ func resourcePolicyRuleDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete policy_rule %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.TrafficPolicyRule, error) {
-
-	srcPortList := convertTypeListToStringList(d.Get("src_ports").([]interface{}))
-	dstPortList := convertTypeListToStringList(d.Get("dst_ports").([]interface{}))
-	applicationList := convertTypeListToIntList(d.Get("application_ids").([]interface{}))
-	applicationFamilyList := convertTypeListToIntList(d.Get("application_family_ids").([]interface{}))
-	serviceTypeList := convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{}))
-	serviceList := convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{}))
+func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicyRule {
 
 	request := &alkira.TrafficPolicyRule{
 		Description: d.Get("description").(string),
@@ -242,20 +267,20 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.T
 			DstIp:                 d.Get("dst_ip").(string),
 			Dscp:                  d.Get("dscp").(string),
 			Protocol:              d.Get("protocol").(string),
-			SrcPortList:           srcPortList,
-			DstPortList:           dstPortList,
+			SrcPortList:           convertTypeListToStringList(d.Get("src_ports").([]interface{})),
+			DstPortList:           convertTypeListToStringList(d.Get("dst_ports").([]interface{})),
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
 			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
 			InternetApplicationId: d.Get("internet_application_id").(int),
-			ApplicationList:       applicationList,
-			ApplicationFamilyList: applicationFamilyList,
+			ApplicationList:       convertTypeListToIntList(d.Get("application_ids").([]interface{})),
+			ApplicationFamilyList: convertTypeListToIntList(d.Get("application_family_ids").([]interface{})),
 		},
 		RuleAction: alkira.PolicyRuleAction{
 			Action:          d.Get("rule_action").(string),
-			ServiceTypeList: serviceTypeList,
-			ServiceList:     serviceList,
+			ServiceTypeList: convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{})),
+			ServiceList:     convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{})),
 		},
 	}
 
-	return request, nil
+	return request
 }

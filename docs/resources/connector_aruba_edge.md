@@ -73,7 +73,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
-- `provision_state` (String) The state of provision.
+- `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`

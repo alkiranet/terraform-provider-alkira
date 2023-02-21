@@ -1,8 +1,8 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,7 +16,20 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 		Read:        resourceConnectorInternetExitRead,
 		Update:      resourceConnectorInternetExitUpdate,
 		Delete:      resourceConnectorInternetExitDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
 
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
 				Description: "The list of billing tag IDs.",
@@ -107,29 +120,37 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 }
 
 func resourceConnectorInternetExitCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	// Generate request for creating connector
-	connector, err := generateConnectorInternetRequest(d, m)
+	// Construct request
+	request, err := generateConnectorInternetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	// Create connector
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set the state
+	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorInternetExitRead(d, m)
 }
 
 func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
 	connector, err := api.GetById(d.Id())
@@ -167,37 +188,52 @@ func resourceConnectorInternetExitRead(d *schema.ResourceData, m interface{}) er
 		d.Set("traffic_distribution_algorithm_attribute", connector.TrafficDistribution.AlgorithmAttributes.Keys)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceConnectorInternetExitUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorInternetRequest(d, m)
+	// Construct update request
+	request, err := generateConnectorInternetRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[INFO] Updating Connector (INTERNET-EXIT) %s", d.Id())
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return err
 }
 
 func resourceConnectorInternetExitDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting connector-internet %s", d.Id())
 	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_internet_exit %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

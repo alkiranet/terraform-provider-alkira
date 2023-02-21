@@ -1,7 +1,8 @@
 package alkira
 
 import (
-	"log"
+	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +15,17 @@ func resourceAlkiraPolicy() *schema.Resource {
 		Read:        resourcePolicyRead,
 		Update:      resourcePolicyUpdate,
 		Delete:      resourcePolicyDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +53,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the policy.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -67,35 +79,37 @@ func resourceAlkiraPolicy() *schema.Resource {
 }
 
 func resourcePolicy(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRequest(d, m)
-
-	if err != nil {
-		return err
-	}
+	request := generatePolicyRequest(d, m)
 
 	// Send request
-	resource, provisionState, err := api.Create(request)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourcePolicyRead(d, m)
 }
 
 func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	policy, err := api.GetById(d.Id())
 
 	if err != nil {
-		log.Printf("[ERROR] Failed to read policy %s", d.Id())
 		return err
 	}
 
@@ -107,18 +121,23 @@ func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("from_groups", policy.FromGroups)
 	d.Set("to_groups", policy.ToGroups)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRequest(d, m)
-
-	if err != nil {
-		return err
-	}
+	request := generatePolicyRequest(d, m)
 
 	// Send update request
 	provisionState, err := api.Update(d.Id(), request)
@@ -127,11 +146,17 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourcePolicyRead(d, m)
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -140,28 +165,25 @@ func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete policy %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func generatePolicyRequest(d *schema.ResourceData, m interface{}) (*alkira.TrafficPolicy, error) {
-
-	segmentIds := convertTypeListToIntList(d.Get("segment_ids").([]interface{}))
-	fromGroups := convertTypeListToIntList(d.Get("from_groups").([]interface{}))
-	toGroups := convertTypeListToIntList(d.Get("to_groups").([]interface{}))
+func generatePolicyRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicy {
 
 	policy := &alkira.TrafficPolicy{
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(bool),
-		FromGroups:  fromGroups,
+		FromGroups:  convertTypeListToIntList(d.Get("from_groups").([]interface{})),
 		Name:        d.Get("name").(string),
 		RuleListId:  d.Get("rule_list_id").(int),
-		SegmentIds:  segmentIds,
-		ToGroups:    toGroups,
+		SegmentIds:  convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
+		ToGroups:    convertTypeListToIntList(d.Get("to_groups").([]interface{})),
 	}
 
-	return policy, nil
+	return policy
 }

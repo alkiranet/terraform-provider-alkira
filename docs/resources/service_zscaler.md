@@ -47,7 +47,7 @@ resource "alkira_service_zscaler" "test1" {
 
 - `connector_internet_exit_id` (String) The ID of the `connector_internet_exit` associated with the zscaler service.
 - `cxp` (String) The CXP where the service should be provisioned.
-- `ipsec_configuration` (Block Set, Min: 1) The IPSEC tunnel configuration. This field should only be set when tunnelType is IPSEC. (see [below for nested schema](#nestedblock--ipsec_configuration))
+- `ipsec_configuration` (Block Set, Min: 1) The IPSEC tunnel configuration. This field should only be set when `tunnel_type` is `IPSEC`. (see [below for nested schema](#nestedblock--ipsec_configuration))
 - `name` (String) The name of the zscaler firewall.
 - `primary_public_edge_ip` (String) The IP for closest Zscaler PoP to `cxp` region.
 - `secondary_public_edge_ip` (String) The ip for standby Zscaler PoP to `cxp` region.
@@ -63,20 +63,20 @@ resource "alkira_service_zscaler" "test1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the service.
+- `provision_state` (String) The provision state of the resource.
 
 <a id="nestedblock--ipsec_configuration"></a>
 ### Nested Schema for `ipsec_configuration`
 
 Required:
 
-- `health_check_type` (String) The type of health check. Input values must be either `IKE_STATUS` `PING_PROBE` `HTTP_PROBE`
+- `health_check_type` (String) The type of health check. Input values must be either `IKE_STATUS` `PING_PROBE` or `HTTP_PROBE`
 - `local_fpdn_id` (String) The local FQDN Id.
 - `pre_shared_key` (String) The preshared key.
 
 Optional:
 
-- `esp_dh_group_number` (String) The IPSEC phase 2 DH Group to be used. Input value must be either `MODP1024` or `MODP2048`. The default value is `MODP1024`
+- `esp_dh_group_number` (String) The IPSEC phase 2 DH Group to be used. Input value must be either `MODP1024`or `MODP2048`. The default value is `MODP1024`
 - `esp_encryption_algorithm` (String) The IPSEC phase 2 Encryption Algorithm to be used. Input value must be either `NULL` or `AES256CBC`. The default value is `NULL`
 - `esp_integrity_algorithm` (String) The IPSEC phase 2 Integrity Algorithm to be used. Input value must be either `MD5` or `SHA256`. The default value is `MD5`.
 - `http_probe_url` (String) The url to check connection to health, should be provided when health check type is 'HTTP_PROBE'

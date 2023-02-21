@@ -35,5 +35,6 @@ resource "alkira_list_as_path" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provisioning state of the resource.
 
 

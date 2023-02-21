@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -16,15 +17,26 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 		Read:        resourceCheckpointRead,
 		Update:      resourceCheckpointUpdate,
 		Delete:      resourceCheckpointDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"auto_scale": {
-				Description: "Indicate if `auto_scale` should be enabled for your checkpoint" +
-					"firewall. `ON` and `OFF` are accepted values. `OFF` is the default if " +
-					"field is omitted",
+				Description: "Indicate if `auto_scale` should be enabled " +
+					"for your checkpoint firewall. `ON` and `OFF` are " +
+					"accepted values. `OFF` is the default if field is omitted",
 				Type:         schema.TypeString,
 				Default:      "OFF",
 				Optional:     true,
@@ -42,7 +54,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the service.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -64,8 +76,9 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			"instance": {
 				Type:     schema.TypeList,
 				Required: true,
-				Description: "An array containing properties for each Checkpoint Firewall instance " +
-					"that needs to be deployed. The number of instances should be equal to " +
+				Description: "An array containing properties for each " +
+					"Checkpoint Firewall instance that needs to be " +
+					"deployed. The number of instances should be equal to " +
 					"`max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -93,7 +106,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description:  "Checkpoint license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+				Description: "Checkpoint license type, either " +
+					"`BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
@@ -256,6 +270,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 
 func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -272,14 +287,18 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceCheckpointRead(d, m)
 }
 
 func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
 	checkpoint, err := api.GetById(d.Id())
@@ -318,11 +337,19 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("tunnel_protocol", checkpoint.TunnelProtocol)
 	d.Set("version", checkpoint.Version)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -335,12 +362,17 @@ func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 	// Send update request
 	provisionState, err := api.Update(d.Id(), request)
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return err
 }
 
 func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -349,7 +381,8 @@ func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete service_checkpoint %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +18,17 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 		Read:   resourceSegmentResourceShareRead,
 		Update: resourceSegmentResourceShareUpdate,
 		Delete: resourceSegmentResourceShareDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,7 +40,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the segment resource share.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -42,32 +56,37 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Required:    true,
 			},
 			"end_a_segment_resource_ids": {
-				Description: "The End-A segment resource IDs. All segment resources must be on the same segment.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "The End-A segment resource IDs. All " +
+					"segment resources must be on the same segment.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 			"end_b_segment_resource_ids": {
-				Description: "The End-B segment resource IDs. All segment resources must be on the same segment.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "The End-B segment resource IDs. All " +
+					"segment resources must be on the same segment.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 			"end_a_route_limit": {
-				Description: "The End-A route limit. The default value is `100`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
+				Description: "The End-A route limit. The default " +
+					"value is `100`.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  100,
 			},
 			"end_b_route_limit": {
-				Description: "The End-B route limit. The default value is `100`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
+				Description: "The End-B route limit. The default " +
+					"value is `100`.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  100,
 			},
 			"traffic_direction": {
-				Description: "Specify the direction in which traffic is orignated at " +
-					"both Resource End-A and Resource End-B. The default value is `BIDIRECTIONAL`.",
+				Description: "Specify the direction in which traffic " +
+					"is orignated at both Resource End-A and Resource " +
+					"End-B. The default value is `BIDIRECTIONAL`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "BIDIRECTIONAL",
@@ -79,6 +98,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 
 func resourceSegmentResourceShare(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -95,14 +115,18 @@ func resourceSegmentResourceShare(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceSegmentResourceShareRead(d, m)
 }
 
 func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
 	share, err := api.GetById(d.Id())
@@ -120,33 +144,46 @@ func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) err
 	d.Set("end_b_route_limit", share.EndBRouteLimit)
 	d.Set("traffic_direction", share.Direction)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceSegmentResourceShareUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	share, err := generateSegmentResourceShareRequest(d, m)
+	request, err := generateSegmentResourceShareRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), share)
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceSegmentResourceShareRead(d, m)
 }
 
 func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -155,7 +192,8 @@ func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete segment_resource_share %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

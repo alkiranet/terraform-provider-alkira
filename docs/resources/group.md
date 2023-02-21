@@ -37,6 +37,7 @@ resource "alkira_group" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provisioning state of the resource.
 
 ## Import
 

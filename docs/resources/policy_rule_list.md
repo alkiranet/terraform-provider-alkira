@@ -41,16 +41,17 @@ resource "alkira_policy_rule_list" "test" {
 
 ### Required
 
-- `name` (String)
+- `name` (String) The name of the policy rule list.
 - `rules` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--rules))
 
 ### Optional
 
-- `description` (String)
+- `description` (String) The description of the policy rule list.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provisioning state of the resource.
 
 <a id="nestedblock--rules"></a>
 ### Nested Schema for `rules`

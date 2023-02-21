@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -15,6 +16,17 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 		Read:        resourceConnectorOciVcnRead,
 		Update:      resourceConnectorOciVcnUpdate,
 		Delete:      resourceConnectorOciVcnDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -138,9 +150,12 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 						"options": {
 							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, " +
 								"`OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "OVERRIDE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"OVERRIDE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 					},
 				},
@@ -157,29 +172,36 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 }
 
 func resourceConnectorOciVcnCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	connector, err := generateConnectorOciVcnRequest(d, m)
+	request, err := generateConnectorOciVcnRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	// Send request
-	resource, provisionState, err := api.Create(connector)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set the state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceConnectorOciVcnRead(d, m)
 }
 
 func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
 	// Read connector
@@ -214,10 +236,19 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceConnectorOciVcnUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -230,11 +261,17 @@ func resourceConnectorOciVcnUpdate(d *schema.ResourceData, m interface{}) error 
 	// Send request to update connector
 	provisionState, err := api.Update(d.Id(), connector)
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return err
 }
 
 func resourceConnectorOciVcnDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -243,7 +280,8 @@ func resourceConnectorOciVcnDelete(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_oci_vcn %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

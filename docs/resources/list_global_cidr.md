@@ -39,5 +39,6 @@ resource "alkira_list_global_cidr" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provisioning state of the resource.
 
 

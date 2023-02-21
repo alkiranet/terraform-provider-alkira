@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,10 +16,20 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 		Read:        resourceZscalerRead,
 		Update:      resourceZscalerUpdate,
 		Delete:      resourceZscalerDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"connector_internet_exit_id": {
 				//
@@ -48,73 +61,83 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Optional:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the service.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"ipsec_configuration": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Description: "The IPSEC tunnel configuration. This field should only be set " +
-					"when tunnelType is IPSEC.",
+				Description: "The IPSEC tunnel configuration. This field " +
+					"should only be set when `tunnel_type` is `IPSEC`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"esp_dh_group_number": {
-							Description: "The IPSEC phase 2 DH Group to be used. Input value must " +
-								"be either `MODP1024` or `MODP2048`. The default value is `MODP1024`",
+							Description: "The IPSEC phase 2 DH Group to be " +
+								"used. Input value must be either `MODP1024`" +
+								"or `MODP2048`. The default value is `MODP1024`",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "MODP1024",
 							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
 						},
 						"esp_encryption_algorithm": {
-							Description: "The IPSEC phase 2 Encryption Algorithm to be used. " +
-								"Input value must be either `NULL` or `AES256CBC`. The default value is `NULL`",
+							Description: "The IPSEC phase 2 Encryption " +
+								"Algorithm to be used. Input value must " +
+								"be either `NULL` or `AES256CBC`. The " +
+								"default value is `NULL`",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "NULL",
 							ValidateFunc: validation.StringInSlice([]string{"NULL", "AES256CBC"}, false),
 						},
 						"esp_integrity_algorithm": {
-							Description: "The IPSEC phase 2 Integrity Algorithm to be used. " +
-								"Input value must be either `MD5` or `SHA256`. The default value is `MD5`.",
+							Description: "The IPSEC phase 2 Integrity " +
+								"Algorithm to be used. Input value must " +
+								"be either `MD5` or `SHA256`. The default " +
+								"value is `MD5`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "MD5",
 							ValidateFunc: validation.StringInSlice([]string{"MD5", "SHA256"}, false),
 						},
 						"health_check_type": {
-							Description: "The type of health check. Input values must be either " +
-								"`IKE_STATUS` `PING_PROBE` `HTTP_PROBE`",
+							Description: "The type of health check. Input " +
+								"values must be either `IKE_STATUS` " +
+								"`PING_PROBE` or `HTTP_PROBE`",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "PING_PROBE", "HTTP_PROBE"}, false),
 						},
 						"http_probe_url": {
-							Description: "The url to check connection to health, should be provided " +
+							Description: "The url to check connection to " +
+								"health, should be provided " +
 								"when health check type is 'HTTP_PROBE'",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ike_dh_group_number": {
-							Description: "The IPSEC phase 1 DH Group to be used. Input value " +
-								"must either be `MODP1024` or `MODP2048`. The default is `MODP1024`",
+							Description: "The IPSEC phase 1 DH Group to be " +
+								"used. Input value must either be `MODP1024` " +
+								"or `MODP2048`. The default is `MODP1024`",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "MODP1024",
 							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
 						},
 						"ike_encryption_algorithm": {
-							Description: "The IPSEC phase 1 Encryption Algorithm to be used. " +
-								"Only `AES256CBC` is allowed. The default value is `AES256CBC`.",
+							Description: "The IPSEC phase 1 Encryption " +
+								"Algorithm to be used. Only `AES256CBC` " +
+								"is allowed. The default value is `AES256CBC`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "AES256CBC",
 							ValidateFunc: validation.StringInSlice([]string{"AES256CBC"}, false),
 						},
 						"ike_integrity_algorithm": {
-							Description: "The IPSEC phase 1 Integrity Algorithm to be used. " +
-								"Only `SHA256` is allowed. The default value is `SHA256`.",
+							Description: "The IPSEC phase 1 Integrity " +
+								"Algorithm to be used. Only `SHA256` " +
+								"is allowed. The default value is `SHA256`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "SHA256",
@@ -131,8 +154,9 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 							Required:    true,
 						},
 						"ping_probe_ip": {
-							Description: "The ping destination to check connection health. " +
-								"It should be provided when `health_check_type` is `PING_PROBE`",
+							Description: "The ping destination to check " +
+								"connection health. It should be provided " +
+								"when `health_check_type` is `PING_PROBE`",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -179,6 +203,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 
 func resourceZscaler(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -195,14 +220,18 @@ func resourceZscaler(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceZscalerRead(d, m)
 }
 
 func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
 	// Get the service
@@ -229,11 +258,19 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", z.Size)
 	d.Set("tunnel_protocol", z.TunnelType)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -250,12 +287,17 @@ func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceZscalerRead(d, m)
 }
 
 func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -264,9 +306,11 @@ func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete service_zscaler %s, provision failed", d.Id())
 	}
 
+	d.SetId("")
 	return nil
 }
 

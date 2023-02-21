@@ -146,7 +146,7 @@ func resourceByoipPrefixDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Check provision state
 	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
+		return fmt.Errorf("failed to delete byoip_prefix %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

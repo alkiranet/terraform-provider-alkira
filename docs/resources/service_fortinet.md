@@ -78,7 +78,7 @@ resource "alkira_service_fortinet" "test1" {
 
 - `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the service.
+- `provision_state` (String) The provision state of the resource.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
