@@ -21,11 +21,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 		Update:        resourceServicePanUpdate,
 		Delete:        resourceServicePanDelete,
 		CustomizeDiff: resourceServicePanCustomizeDiff,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
 				Description: "Billing tag IDs to associate with the service.",
@@ -41,9 +39,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 					"is legacy bundle and is not supported on AWS. It is recommended" +
 					"to use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports " +
 					"Global Protect).",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"VM_SERIES_BUNDLE_1", "VM_SERIES_BUNDLE_2", "PAN_VM_300_BUNDLE_2"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"VM_SERIES_BUNDLE_1",
+					"VM_SERIES_BUNDLE_2",
+					"PAN_VM_300_BUNDLE_2"}, false),
 			},
 			"provision_state": {
 				Description: "The provision state of the service.",
@@ -143,8 +144,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Optional: true,
 						},
 						"auth_code": {
-							Description: "PAN instance auth code. Only required when `license_type` " +
-								"is `BRING_YOUR_OWN`.",
+							Description: "PAN instance auth code. Only required " +
+								"when `license_type` is `BRING_YOUR_OWN`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -170,14 +171,16 @@ func resourceAlkiraServicePan() *schema.Resource {
 										Required:    true,
 									},
 									"portal_enabled": {
-										Description: "indicates if the Global Protect Portal is enabled on this PAN instance",
-										Type:        schema.TypeBool,
-										Required:    true,
+										Description: "indicates if the Global Protect Portal is " +
+											"enabled on this PAN instance",
+										Type:     schema.TypeBool,
+										Required: true,
 									},
 									"gateway_enabled": {
-										Description: "indicates if the Global Protect Gateway is enabled on this PAN instance",
-										Type:        schema.TypeBool,
-										Required:    true,
+										Description: "indicates if the Global Protect Gateway " +
+											"is enabled on this PAN instance",
+										Type:     schema.TypeBool,
+										Required: true,
 									},
 									"prefix_list_id": {
 										Description: "Prefix List with Client IP Pool.",
@@ -205,9 +208,10 @@ func resourceAlkiraServicePan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"CREDIT_BASED", "MODEL_BASED"}, false),
 			},
 			"panorama_enabled": {
-				Description: "Enable Panorama or not. Default value is `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
+				Description: "Enable Panorama or not. Default value " +
+					"is `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"panorama_device_group": {
 				Description: "Panorama device group.",
@@ -291,9 +295,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "The size of the service, one of " +
 					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, " +
 					"`5LARGE`, `10LARGE`, `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL",
+					"MEDIUM",
+					"LARGE",
+					"2LARGE",
+					"4LARGE",
+					"5LARGE",
+					"10LARGE",
+					"20LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, " +
@@ -467,7 +479,7 @@ func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Check provision state
 	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete service-pan %s, provision failed", d.Id())
+		return fmt.Errorf("failed to delete service_pan %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

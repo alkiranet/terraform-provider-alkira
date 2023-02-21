@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -15,6 +16,17 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 		Read:        resourceConnectorIPSecRead,
 		Update:      resourceConnectorIPSecUpdate,
 		Delete:      resourceConnectorIPSecDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -361,29 +373,36 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 }
 
 func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	// Generate request for creating connector
-	connector, err := generateConnectorIPSecRequest(d, m)
+	// Construct request
+	request, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	// Send request to create connector
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceConnectorIPSecRead(d, m)
 }
 
 func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
 	connector, err := api.GetById(d.Id())
@@ -463,33 +482,47 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	d.Set("endpoint", endpoints)
 
 	return nil
 }
 
 func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	// Generate new request for updating connector
-	connector, err := generateConnectorIPSecRequest(d, m)
+	// Construct update request
+	request, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	// Send request to update connector
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request to update connector
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceConnectorIPSecRead(d, m)
 }
 
 func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -498,7 +531,8 @@ func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_ipsec %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

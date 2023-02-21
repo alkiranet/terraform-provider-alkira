@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,6 +17,17 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 		Read:   resourceListExtendedCommunityRead,
 		Update: resourceListExtendedCommunityUpdate,
 		Delete: resourceListExtendedCommunityDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -28,6 +42,11 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 				Description: "description for the list.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"values": {
 				Description: "extended-community values to match on routes. Each " +
@@ -46,27 +65,32 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 }
 
 func resourceListExtendedCommunity(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	list, err := generateListExtendedCommunityRequest(d, m)
-
-	if err != nil {
-		return err
-	}
+	request := generateListExtendedCommunityRequest(d, m)
 
 	// Send request
-	resource, _, err := api.Create(list)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(resource.Id))
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
+	d.SetId(string(response.Id))
 	return resourceListExtendedCommunityRead(d, m)
 }
 
 func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
 	list, err := api.GetById(d.Id())
@@ -79,51 +103,65 @@ func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) er
 	d.Set("description", list.Description)
 	d.Set("values", list.Values)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceListExtendedCommunityUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	list, err := generateListExtendedCommunityRequest(d, m)
+	request := generateListExtendedCommunityRequest(d, m)
+
+	// Send request to update
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	// Send request to update
-	_, err = api.Update(d.Id(), list)
-
-	if err != nil {
-		return err
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
 	}
 
 	return resourceListExtendedCommunityRead(d, m)
 }
 
 func resourceListExtendedCommunityDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	_, err := api.Delete(d.Id())
+	provisionState, err := api.Delete(d.Id())
 
 	if err != nil {
 		return err
+	}
+
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete list_extended_community %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func generateListExtendedCommunityRequest(d *schema.ResourceData, m interface{}) (*alkira.List, error) {
-
-	values := convertTypeListToStringList(d.Get("values").([]interface{}))
+func generateListExtendedCommunityRequest(d *schema.ResourceData, m interface{}) *alkira.List {
 
 	request := &alkira.List{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
-		Values:      values,
+		Values:      convertTypeListToStringList(d.Get("values").([]interface{})),
 	}
 
-	return request, nil
+	return request
 }

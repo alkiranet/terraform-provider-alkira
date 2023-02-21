@@ -120,7 +120,7 @@ resource "alkira_service_infoblox" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the service.
+- `provision_state` (String) The provision state of the resource.
 
 <a id="nestedblock--anycast"></a>
 ### Nested Schema for `anycast`

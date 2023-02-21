@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -17,6 +18,17 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Read:   resourceConnectorGcpVpcRead,
 		Update: resourceConnectorGcpVpcUpdate,
 		Delete: resourceConnectorGcpVpcDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -157,29 +169,37 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 }
 
 func resourceConnectorGcpVpcCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	// Generate request for creating connector
-	connector, err := generateConnectorGcpVpcRequest(d, m)
+	// Construct request
+	request, err := generateConnectorGcpVpcRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	// Create connector
-	resource, provisionState, err := api.Create(connector)
+	// Send create request
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
-	d.SetId(string(resource.Id))
+	// Set states
+	d.SetId(string(response.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorGcpVpcRead(d, m)
 }
 
 func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
 	connector, err := api.GetById(d.Id())
@@ -216,31 +236,46 @@ func resourceConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
 	}
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return err
 }
 
 func resourceConnectorGcpVpcUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	connector, err := generateConnectorGcpVpcRequest(d, m)
+	// Construct request
+	request, err := generateConnectorGcpVpcRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
-	provisionState, err := api.Update(d.Id(), connector)
+	// Send update request
+	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorGcpVpcRead(d, m)
 }
 
 func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -249,7 +284,8 @@ func resourceConnectorGcpVpcDelete(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_gcp_vpc %s, provision failed", d.Id())
 	}
 
 	d.SetId("")

@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -16,7 +17,21 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 		Read:   resourceServiceCiscoFTDvRead,
 		Update: resourceServiceCiscoFTDvUpdate,
 		Delete: resourceServiceCiscoFTDvDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
 
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the service.",
@@ -32,12 +47,13 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
 			},
 			"provision_state": {
-				Description: "The provision state of the service.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
+				Description: "The size of the service, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", `MEDIUM`, `LARGE`, `2LARGE`}, false),
@@ -96,9 +112,10 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Required:    true,
 						},
 						"credential_id": {
-							Description: "An opaque identifier generated when storing firepower_management_center credentials.",
-							Type:        schema.TypeString,
-							Computed:    true,
+							Description: "An opaque identifier generated when " +
+								"storing firepower_management_center credentials.",
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"username": {
 							Description: "Firepower Management Center (FMC) username.",
@@ -137,9 +154,11 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Computed:    true,
 						},
 						"credential_id": {
-							Description: "An opaque identifier generated when storing Cisco Firepower Firewall instance credentials.",
-							Type:        schema.TypeString,
-							Computed:    true,
+							Description: "An opaque identifier generated when " +
+								"storing Cisco Firepower Firewall instance " +
+								"credentials.",
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"hostname": {
 							Description: "Hostname of the Firepower Firewall.",
@@ -152,7 +171,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Required:    true,
 						},
 						"license_type": {
-							Description:  "Cisco Firepower Firewall license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
+							Description: "Cisco Firepower Firewall license " +
+								"type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
@@ -207,6 +227,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 // resourceServiceCiscoFTDvCreate create a Cisco FTDv service
 func resourceServiceCiscoFTDvCreate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -223,15 +244,19 @@ func resourceServiceCiscoFTDvCreate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	d.SetId(string(response.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceServiceCiscoFTDvRead(d, m)
 }
 
 // resourceServiceCiscoFTDvRead get and save a Cisco FTDv services
 func resourceServiceCiscoFTDvRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
 	service, err := api.GetById(d.Id())
@@ -254,12 +279,20 @@ func resourceServiceCiscoFTDvRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("size", service.Size)
 	d.Set("tunnel_protocol", service.TunnelProtocol)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 // resourceServiceCiscoFTDvUpdate update a Cisco FTDv service
 func resourceServiceCiscoFTDvUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -276,13 +309,18 @@ func resourceServiceCiscoFTDvUpdate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
+
 	return resourceServiceCiscoFTDvRead(d, m)
 }
 
 // resourceServiceCiscoFTDvDelete delete
 func resourceServiceCiscoFTDvDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete((d.Id()))
@@ -291,7 +329,8 @@ func resourceServiceCiscoFTDvDelete(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete service_cisco_ftdv %s, provision failed", d.Id())
 	}
 
 	d.SetId("")
@@ -301,7 +340,7 @@ func resourceServiceCiscoFTDvDelete(d *schema.ResourceData, m interface{}) error
 // generateServiceCiscoFTDvRequest generate a request
 func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCiscoFTDv, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	// Segments
 	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 
 	if err != nil {
@@ -353,7 +392,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 		SegmentOptions:   segmentOptions,
 		AutoScale:        d.Get("auto_scale").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		BillingTags:      billingTags,
+		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Instances:        instances,
 	}
 

@@ -59,7 +59,7 @@ resource "alkira_policy_routing" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the routing policy.
+- `provision_state` (String) The provision state of the resource.
 
 <a id="nestedblock--rule"></a>
 ### Nested Schema for `rule`

@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -20,6 +21,17 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 		Read:   resourceConnectorAkamaiProlexicRead,
 		Update: resourceConnectorAkamaiProlexicUpdate,
 		Delete: resourceConnectorAkamaiProlexicDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -158,30 +170,36 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 
 func resourceConnectorAkamaiProlexicCreate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	connector, err := generateConnectorAkamaiProlexicRequest(d, m)
+	request, err := generateConnectorAkamaiProlexicRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
 	// Send create request
-	resource, provision, err := api.Create(connector)
+	resource, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provision)
+	// Set the state
 	d.SetId(string(resource.Id))
+
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorAkamaiProlexicRead(d, m)
 }
 
 func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
 	// Get resource
@@ -224,13 +242,19 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 		options = append(options, i)
 	}
 
-	d.Set("byoip_options", options)
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
 
 	return nil
 }
 
 func resourceConnectorAkamaiProlexicUpdate(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
 	// Construct update request
@@ -247,23 +271,31 @@ func resourceConnectorAkamaiProlexicUpdate(d *schema.ResourceData, m interface{}
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceConnectorAkamaiProlexicRead(d, m)
 }
 
 func resourceConnectorAkamaiProlexicDelete(d *schema.ResourceData, m interface{}) error {
 
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	log.Printf("[INFO] Deleting Connector (Akamai-Prolexic): %s", d.Id())
 	provisionState, err := api.Delete(d.Id())
 
-	if provisionState != "SUCCESS" {
-		log.Printf("[ERROR] De-provision connector-akamai-prolexic failed: %s", d.Id())
+	if err != nil {
+		return err
 	}
 
-	return err
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete connector_akamai_prolexic %s, provision failed", d.Id())
+	}
+
+	d.SetId("")
+	return nil
 }
 
 // generateConnectorAkamaiProlexicRequest generate request for the connector

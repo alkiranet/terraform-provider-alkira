@@ -1,0 +1,1 @@
+terraform import alkira_segment_resource.example SEGMENT_RESOURCE_ID

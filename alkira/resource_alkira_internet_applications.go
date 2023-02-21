@@ -1,6 +1,9 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,6 +16,17 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 		Read:        resourceInternetApplicationRead,
 		Update:      resourceInternetApplicationUpdate,
 		Delete:      resourceInternetApplicationDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,9 +56,10 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required: true,
 			},
 			"fqdn_prefix": {
-				Description: "User provided FQDN prefix that will be published on AWS Route 53.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "User provided FQDN prefix that will be " +
+					"published on AWS Route 53.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"group_id": {
 				Description: "ID of the auto generated system group.",
@@ -52,8 +67,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Computed:    true,
 			},
 			"inbound_connector_id": {
-				Description: "Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, " +
-					"it could be left empty.",
+				Description: "Inbound connector ID. When `inbound_connector_type` " +
+					"is `DEFAULT`, it could be left empty.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -87,25 +102,29 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the internet application.",
+				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"public_ips": {
-				Description: "This option pertains to the `AKAMAI_PROLEXIC` inbound_connector_type. " +
-					"The public IPs are to be used to access the internet application. These public IPs " +
-					"must belong to one of the BYOIP ranges configured for the Akamai Prolexic Connector.",
+				Description: "This option pertains to the `AKAMAI_PROLEXIC` " +
+					"`inbound_connector_type`. The public IPs are to be used " +
+					"to access the internet application. These public IPs " +
+					"must belong to one of the BYOIP ranges configured for " +
+					"the connector-akamai-prolexic.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_id": {
-				Description: "The ID of segment associated with the internet application.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The ID of segment associated with the internet " +
+					"application.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"size": {
-				Description:  "The size of the internet application, one of `SMALL`, `MEDIUM` and `LARGE`.",
+				Description: "The size of the internet application, one of " +
+					"`SMALL`, `MEDIUM` and `LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
@@ -142,6 +161,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 }
 
 func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
 	// Construct request
@@ -152,19 +173,24 @@ func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) er
 	}
 
 	// Send request to create
-	resource, provisionState, err := api.Create(request)
+	response, provisionState, err := api.Create(request)
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(resource.Id))
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
+	d.SetId(string(response.Id))
 	return resourceInternetApplicationRead(d, m)
 }
 
 func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
 	app, err := api.GetById(d.Id())
@@ -206,30 +232,46 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 
 	d.Set("targets", targets)
 
+	// Set provision state
+	_, provisionState, err := api.GetByName(d.Get("name").(string))
+
+	if client.Provision == true && provisionState != "" {
+		d.Set("provision_state", provisionState)
+	}
+
 	return nil
 }
 
 func resourceInternetApplicationUpdate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
+	// Construct update request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
 		return err
 	}
 
+	// Send update request
 	provisionState, err := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
 	}
 
-	d.Set("provision_state", provisionState)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provisionState)
+	}
 
 	return resourceInternetApplicationRead(d, m)
 }
 
 func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
 	provisionState, err := api.Delete(d.Id())
@@ -238,9 +280,11 @@ func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provisionState != "SUCCESS" {
+		return fmt.Errorf("failed to delete internet_application %s, provision failed", d.Id())
 	}
 
+	d.SetId("")
 	return nil
 }
 

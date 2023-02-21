@@ -44,7 +44,7 @@ resource "alkira_segment" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provisioning state of the segment.
+- `provision_state` (String) The provisioning state of the resource.
 
 ## Import
 

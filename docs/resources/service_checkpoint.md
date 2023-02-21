@@ -78,7 +78,7 @@ resource "alkira_service_checkpoint" "test" {
 
 ### Optional
 
-- `auto_scale` (String) Indicate if `auto_scale` should be enabled for your checkpointfirewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
+- `auto_scale` (String) Indicate if `auto_scale` should be enabled for your checkpoint firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
 - `description` (String) The description of the checkpoint service.
 - `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time. If auto-scale is OFF, min_instance_count must equal max_instance_count.
@@ -90,7 +90,7 @@ resource "alkira_service_checkpoint" "test" {
 
 - `credential_id` (String) ID of Checkpoint Firewall credential.
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the service.
+- `provision_state` (String) The provision state of the resource.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`
