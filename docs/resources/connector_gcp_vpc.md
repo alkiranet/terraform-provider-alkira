@@ -136,7 +136,8 @@ Required:
 Optional:
 
 - `cidr` (String) The CIDR of the subnet.
-- `id` (String) The Id of the subnet.
+- `fq_id` (String) The fully-qualified Id of the subnet with the format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. This is the Id returned by the GCP Terraform provider.
+- `id` (String) The numeric Id of the subnet. This is the Id returned by the GCP REST API.
 
 ## Import
 

@@ -75,9 +75,15 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description: "The Id of the subnet.",
+							Description: "The numeric Id of the subnet. This is the Id returned by the GCP REST API.",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"fq_id": {
+							Description: "The fully-qualified Id of the subnet with the format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. " +
+								"This is the Id returned by the GCP Terraform provider.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"cidr": {
 							Description: "The CIDR of the subnet.",
