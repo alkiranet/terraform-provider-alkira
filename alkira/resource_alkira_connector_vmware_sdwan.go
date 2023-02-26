@@ -60,6 +60,11 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"orchestrator_host": {
+				Description: "VMWare (Velo) Orchestrator portal host address.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created " +
 					"with the connector.",
@@ -77,6 +82,12 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 					"LARGE", "2LARGE",
 					"4LARGE", "5LARGE",
 					"10LARGE", "20LARGE"}, false),
+			},
+			"tunnel_protocol": {
+				Description: "Only supported tunnel protocol is `IPSEC` for now.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "IPSEC",
 			},
 			"virtual_edge": &schema.Schema{
 				Description: "Virtual Edge",
@@ -138,7 +149,8 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 								"A typical value for 2 byte segment " +
 								"is `64523` and `4200064523` for 4 byte segment.",
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  65000,
 						},
 						"segment_id": {
 							Description: "Alkira Segment ID.",
@@ -204,7 +216,9 @@ func resourceConnectorVmwareSdwanRead(d *schema.ResourceData, m interface{}) err
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
+	d.Set("orchestrator_host", connector.OrchestratorHostAddress)
 	d.Set("size", connector.Size)
+	d.Set("tunnel_protocol", connector.TunnelProtocol)
 
 	// Set virtual edge
 	setVirtualEdge(d, connector)
@@ -297,14 +311,16 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 
 	// Construct the request payload
 	connector := &alkira.ConnectorVmwareSdwan{
-		BillingTags:            convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
-		Instances:              virtualEdges,
-		VmWareSdWanVRFMappings: expandVmwareSdwanVrfMappings(d.Get("target_segment").(*schema.Set)),
-		Cxp:                    d.Get("cxp").(string),
-		Group:                  d.Get("group").(string),
-		Name:                   d.Get("name").(string),
-		Size:                   d.Get("size").(string),
-		Version:                d.Get("version").(string),
+		BillingTags:             convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		Instances:               virtualEdges,
+		VmWareSdWanVRFMappings:  expandVmwareSdwanVrfMappings(d.Get("target_segment").(*schema.Set)),
+		Cxp:                     d.Get("cxp").(string),
+		Group:                   d.Get("group").(string),
+		OrchestratorHostAddress: d.Get("orchestrator_host").(string),
+		Name:                    d.Get("name").(string),
+		Size:                    d.Get("size").(string),
+		TunnelProtocol:          d.Get("tunnel_protocol").(string),
+		Version:                 d.Get("version").(string),
 	}
 
 	return connector, nil

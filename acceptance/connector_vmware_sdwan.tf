@@ -1,8 +1,8 @@
 resource "alkira_connector_vmware_sdwan" "test" {
-  name              = "test"
-  cxp               = "US-WEST"
+  name              = "acceptance-test-vmware-sdwan"
+  cxp               = "US-WEST-1"
   group             = alkira_group.test1.name
-  orchestrator_host = "http://test.alkira.com/portal"
+  orchestrator_host = "http://alkiratest.alkira3.net/test"
   size              = "SMALL"
   version           = "4.3.1"
 

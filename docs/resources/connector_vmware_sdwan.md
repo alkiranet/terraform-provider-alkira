@@ -14,18 +14,20 @@ Manage VMWARE SD-WAN Connector.
 
 ```terraform
 resource "alkira_connector_vmware_sdwan" "test" {
-  name          = "test"
-  cxp           = "US-WEST"
-  size          = "SMALL"
-  version       = "18.4.0"
+  name              = "test"
+  cxp               = "US-WEST"
+  group             = alkira_group.test1.name
+  orchestrator_host = "http://test.alkira.com/portal"
+  size              = "SMALL"
+  version           = "4.3.1"
 
-  virtual_vedge {
+  virtual_edge {
     hostname        = "vedge1"
     activation_code = "12345678"
   }
 
-  vrf_segment_mapping {
-    segment_id = alkira_segment.test.id
+  target_segment {
+    segment_id                = alkira_segment.test1.id
     vmware_sdwan_segment_name = "segment1"
   }
 }
@@ -38,6 +40,7 @@ resource "alkira_connector_vmware_sdwan" "test" {
 
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
+- `orchestrator_host` (String) VMWare (Velo) Orchestrator portal host address.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 - `target_segment` (Block Set, Min: 1) Specify target segment. (see [below for nested schema](#nestedblock--target_segment))
 - `version` (String) The version of VMWARE SD-WAN.
@@ -47,6 +50,7 @@ resource "alkira_connector_vmware_sdwan" "test" {
 
 - `billing_tag_ids` (List of Number) A list of Billing Tag by ID associated with the connector.
 - `group` (String) The group of the connector.
+- `tunnel_protocol` (String) Only supported tunnel protocol is `IPSEC` for now.
 
 ### Read-Only
 
@@ -59,7 +63,6 @@ resource "alkira_connector_vmware_sdwan" "test" {
 
 Required:
 
-- `gateway_bgp_asn` (Number) BGP ASN on the customer premise side. A typical value for 2 byte segment is `64523` and `4200064523` for 4 byte segment.
 - `segment_id` (Number) Alkira Segment ID.
 - `vmware_sdwan_segment_name` (String) VMWare SD-WAN Segment name for correlating with Alkria segment.
 
@@ -67,6 +70,7 @@ Optional:
 
 - `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes.
 - `allow_nat_exit` (Boolean) Allow NAT exit.
+- `gateway_bgp_asn` (Number) BGP ASN on the customer premise side. A typical value for 2 byte segment is `64523` and `4200064523` for 4 byte segment.
 
 
 <a id="nestedblock--virtual_edge"></a>
