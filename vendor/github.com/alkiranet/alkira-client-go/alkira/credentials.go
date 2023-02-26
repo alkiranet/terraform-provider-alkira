@@ -17,10 +17,15 @@ const (
 	CredentialTypeChkpFw                                  = "chkp-fw"
 	CredentialTypeChkpFwInstance                          = "chkp-fw-instance"
 	CredentialTypeChkpFwManagement                        = "chkp-fw-management-server"
-	CredentialTypeCiscoSdwan                              = "ciscosdwan"
 	CredentialTypeCiscoFtdv                               = "cisco-ftdv-fw"
 	CredentialTypeCiscoFtdvInstance                       = "cisco-ftdv-fw-instance"
+	CredentialTypeCiscoSdwan                              = "ciscosdwan"
+	CredentialTypeFortinet                                = "ftntfw"
+	CredentialTypeFortinetInstance                        = "ftntfw-instance"
 	CredentialTypeGcpVpc                                  = "gcpvpc"
+	CredentialTypeInfoblox                                = "infoblox"
+	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
+	CredentialTypeInfobloxInstance                        = "infoblox-instance"
 	CredentialTypeKeyPair                                 = "keypair"
 	CredentialTypeLdap                                    = "ldap"
 	CredentialTypeOciVcn                                  = "ocivcn"
@@ -28,11 +33,7 @@ const (
 	CredentialTypePanInstance                             = "paninstance"
 	CredentialTypePanMasterKey                            = "pan-masterkey"
 	CredentialTypePanRegistration                         = "pan-registration"
-	CredentialTypeFortinet                                = "ftntfw"
-	CredentialTypeFortinetInstance                        = "ftntfw-instance"
-	CredentialTypeInfoblox                                = "infoblox"
-	CredentialTypeInfobloxInstance                        = "infoblox-instance"
-	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
+	CredentialTypeVmwareSdwanInstance                     = "vmware-sdwan-connector-instance"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -165,6 +166,10 @@ type CredentialPanMasterKey struct {
 type CredentialPanRegistration struct {
 	RegistrationPinId    string `json:"registrationPinId"`
 	RegistrationPinValue string `json:"registrationPinValue"`
+}
+
+type CredentialVmwareSdwanInstance struct {
+	ActivationCode string `json:"activationCode"`
 }
 
 type Credentials struct {

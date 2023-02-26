@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,22 +98,13 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
-						"username": &schema.Schema{
-							Description: "VMWARE SD-WAN username. It could be also " +
-								"set by environment variable `AK_VMWARE_SDWAN_USERNAME`.",
+						"activation_code": &schema.Schema{
+							Description: "Activation code generated in " +
+								"VMWare orchestrator account.",
 							Type:     schema.TypeString,
 							Required: true,
 							DefaultFunc: schema.EnvDefaultFunc(
-								"AK_VMWARE_SDWAN_USERNAME",
-								nil),
-						},
-						"password": &schema.Schema{
-							Description: "VMWARE SD-WAN password. It could be also " +
-								"set by environment variable `AK_VMWARE_SDWAN_PASSWORD`.",
-							Type:     schema.TypeString,
-							Required: true,
-							DefaultFunc: schema.EnvDefaultFunc(
-								"AK_VMWARE_SDWAN_PASSWORD",
+								"AK_VMWARE_SDWAN_ACTIVATION_CODE",
 								nil),
 						},
 					},
@@ -126,8 +116,8 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"vrf_segment_mapping": {
-				Description: "Specify target segment for VRF.",
+			"target_segment": {
+				Description: "Specify target segment.",
 				Type:        schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -151,14 +141,15 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 							Required: true,
 						},
 						"segment_id": {
-							Description: "Segment ID.",
+							Description: "Alkira Segment ID.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
-						"vrf_id": {
-							Description: "VRF ID.",
-							Type:        schema.TypeInt,
-							Required:    true,
+						"vmware_sdwan_segment_name": {
+							Description: "VMWare SD-WAN Segment name for " +
+								"correlating with Alkria segment.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -223,15 +214,16 @@ func resourceConnectorVmwareSdwanRead(d *schema.ResourceData, m interface{}) err
 
 	for _, m := range connector.VmWareSdWanVRFMappings {
 		mapping := map[string]interface{}{
-			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
-			"allow_nat_exit":           m.DisableInternetExit,
-			"gateway_bgp_asn":          m.GatewayBgpAsn,
-			"segment_id":               m.SegmentId,
+			"advertise_on_prem_routes":   m.AdvertiseOnPremRoutes,
+			"allow_nat_exit":             m.DisableInternetExit,
+			"gateway_bgp_asn":            m.GatewayBgpAsn,
+			"segment_id":                 m.SegmentId,
+			"vmware_sdwang_segment_name": m.VmWareSdWanSegmentName,
 		}
 		mappings = append(mappings, mapping)
 	}
 
-	d.Set("vrf_segment_mapping", mappings)
+	d.Set("target_segment", mappings)
 	d.Set("version", connector.Version)
 
 	// Set provision state
@@ -307,7 +299,7 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 	connector := &alkira.ConnectorVmwareSdwan{
 		BillingTags:            convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		Instances:              virtualEdges,
-		VmWareSdWanVRFMappings: expandVmwareSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set)),
+		VmWareSdWanVRFMappings: expandVmwareSdwanVrfMappings(d.Get("target_segment").(*schema.Set)),
 		Cxp:                    d.Get("cxp").(string),
 		Group:                  d.Get("group").(string),
 		Name:                   d.Get("name").(string),
@@ -316,98 +308,4 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 	}
 
 	return connector, nil
-}
-
-// expandVmwareSdwanVrfMappings expand VMWARE SD-WAN VRF segment mapping
-func expandVmwareSdwanVrfMappings(in *schema.Set) []alkira.VmwareSdwanEdgeVrfMapping {
-
-	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] Empty vrf_segment_mapping")
-		return []alkira.VmwareSdwanVrfMapping{}
-	}
-
-	mappings := make([]alkira.VmwareSdwanVrfMapping, in.Len())
-	for i, mapping := range in.List() {
-		r := alkira.VmwareSdwanVrfMapping{}
-		t := mapping.(map[string]interface{})
-
-		if v, ok := t["advertise_on_prem_routes"].(bool); ok {
-			r.AdvertiseOnPremRoutes = v
-		}
-		if v, ok := t["allow_nat_exit"].(bool); ok {
-			r.DisableInternetExit = !v
-		}
-		if v, ok := t["gateway_bgp_asn"].(int); ok {
-			r.GatewayBgpAsn = v
-		}
-		if v, ok := t["segment_id"].(int); ok {
-			r.SegmentId = v
-		}
-
-		mappings[i] = r
-	}
-
-	return mappings
-}
-
-// expandVmwareSdwanVedges expand virtual edges
-func expandVmwareSdwanVirtualEdges(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.VmwareSdwanInstance, error) {
-
-	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] Empty vedges")
-		return []alkira.VmwareSdwanInstance{}, nil
-	}
-
-	mappings := make([]alkira.VmwareSdwanInstance, len(in))
-
-	for i, mapping := range in {
-		r := alkira.VmwareSdwanInstance{}
-		t := mapping.(map[string]interface{})
-
-		var username string
-		var password string
-
-		if v, ok := t["hostname"].(string); ok {
-			r.HostName = v
-		}
-		if v, ok := t["username"].(string); ok {
-			username = v
-		}
-		if v, ok := t["password"].(string); ok {
-			password = v
-		}
-		if v, ok := t["credential_id"].(string); ok {
-			if v == "" {
-				log.Printf("[INFO] Creating VMWARE-SDWAN Credential")
-				credentialName := r.HostName + randomNameSuffix()
-
-				credential := alkira.CredentialVmwareSdwan{
-					Username: username,
-					Password: password,
-				}
-
-				credentialId, err := ac.CreateCredential(
-					credentialName,
-					alkira.CredentialTypeVmwareSdwan,
-					credential,
-					0,
-				)
-
-				if err != nil {
-					return nil, err
-				}
-
-				r.CredentialId = credentialId
-			} else {
-				r.CredentialId = v
-			}
-		}
-		if v, ok := t["id"].(int); ok {
-			r.Id = v
-		}
-
-		mappings[i] = r
-	}
-
-	return mappings, nil
 }
