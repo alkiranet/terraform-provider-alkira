@@ -84,7 +84,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +
 					"Currently, only `1` segment is allowed.",
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"size": {
