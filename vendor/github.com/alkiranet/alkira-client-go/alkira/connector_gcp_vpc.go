@@ -9,6 +9,7 @@ import (
 
 type UserInputPrefixes struct {
 	Id    string `json:"id,omitempty"`
+	FqId  string `json:"fqId,omitempty"`
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
