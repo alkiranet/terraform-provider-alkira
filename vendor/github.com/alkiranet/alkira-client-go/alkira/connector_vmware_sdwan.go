@@ -12,7 +12,7 @@ type VmwareSdwanVrfMapping struct {
 	GatewayBgpAsn          int    `json:"gatewayBgpAsn,omitempty"`
 	DisableInternetExit    bool   `json:"disableInternetExit"`
 	SegmentId              int    `json:"segmentId"`
-	VmWareSdWanSegmentName string `json:"vmWareSdwanSegmentName"`
+	VmWareSdWanSegmentName string `json:"vmWareSdWanSegmentName"`
 }
 
 type VmwareSdwanInstance struct {
@@ -34,7 +34,7 @@ type ConnectorVmwareSdwan struct {
 	Size                    string                  `json:"size"`
 	TunnelProtocol          string                  `json:"tunnelProtocol"`
 	Version                 string                  `json:"version"`
-	VmWareSdWanVRFMappings  []VmwareSdwanVrfMapping `json:"vmWareSdWanVRFMapping"`
+	VmWareSdWanVRFMappings  []VmwareSdwanVrfMapping `json:"vmWareSdWanVRFMappings"`
 }
 
 // NewConnectorVmwareSdwan new connector

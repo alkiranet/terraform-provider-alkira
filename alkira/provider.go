@@ -53,6 +53,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_oci_vcn":            resourceAlkiraConnectorOciVcn(),
 			"alkira_connector_internet_exit":      resourceAlkiraConnectorInternetExit(),
 			"alkira_connector_ipsec":              resourceAlkiraConnectorIPSec(),
+			"alkira_connector_vmware_sdwan":       resourceAlkiraConnectorVmwareSdwan(),
 			"alkira_credential_aws_vpc":           resourceAlkiraCredentialAwsVpc(),
 			"alkira_credential_azure_vnet":        resourceAlkiraCredentialAzureVnet(),
 			"alkira_credential_gcp_vpc":           resourceAlkiraCredentialGcpVpc(),
