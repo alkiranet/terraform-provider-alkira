@@ -71,7 +71,7 @@ type ConnectorAzureVnet struct {
 	ServiceTags       []string              `json:"serviceTags,omitempty"`
 	Size              string                `json:"size"`
 	VnetId            string                `json:"vnetId"`
-	ConnectionMode    string                `json:"connectionMode"`
+	ConnectionMode    string                `json:"connectionMode,omitempty"`
 	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
 }
 
