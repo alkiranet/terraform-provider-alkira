@@ -146,7 +146,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"management_server_segment_id": {
 				Description: "The segment ID used to access the management server. This segment " +
 					"must be present in the list of segments assigned to this Fortinet Firewall service.",
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"max_instance_count": {
@@ -403,6 +403,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	}
 
 	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+
 	if err != nil {
 		return nil, err
 	}

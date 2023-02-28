@@ -14,13 +14,13 @@ import (
 )
 
 func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
-	// as segment options are optional we don't care if none are provided
+	// As segment options are optional we don't care if none are
+	// provided
 	if in == nil || in.Len() == 0 {
 		return nil, nil
 	}
 
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
-
+	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 	segmentOptions := make(alkira.SegmentNameToZone)
 
 	for _, options := range in.List() {
@@ -36,12 +36,13 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 			zoneName = &v
 		}
 
-		if v, ok := optionsCfg["segment_id"].(int); ok {
-			sg, err := api.GetById(strconv.Itoa(v))
+		if v, ok := optionsCfg["segment_id"].(string); ok {
+			seg, err := segmentApi.GetById(v)
+
 			if err != nil {
 				return nil, err
 			}
-			segment = sg
+			segment = seg
 		}
 
 		if v, ok := optionsCfg["groups"].([]interface{}); ok {
@@ -49,7 +50,7 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		}
 
 		if zoneName == nil || segment == nil || groups == nil {
-			return nil, errors.New("segment_option fields cannot be nil")
+			return nil, errors.New("segment_option cannot be nil")
 		}
 
 		if v, ok := segmentOptions[segment.Name]; ok {
