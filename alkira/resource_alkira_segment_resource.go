@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"time"
 
@@ -262,9 +261,6 @@ func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateR
 		GroupPrefixes: groupPrefixes,
 	}
 
-	log.Printf("[DEBUG] Updating Segment Resource: %v", resource)
-	log.Printf("[DEBUG] Updating Segment Resource ID: %v", plan.Id.String())
-	log.Printf("[DEBUG] CCCC %v", plan)
 	_, err = r.segment.Update(plan.Id.String(), &resource)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -275,7 +271,7 @@ func (r *alkiraSegmentResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-	resp.Diagnostics.Append(req.State.SetAttribute(ctx, path.Root("group_prefix"), prefixes)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_prefix"), prefixes)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("last_updated"), time.Now().Format(time.RFC3339))...)
 
 	if resp.Diagnostics.HasError() {

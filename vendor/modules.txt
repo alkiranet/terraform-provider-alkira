@@ -68,6 +68,7 @@ github.com/hashicorp/terraform-plugin-framework/types/basetypes
 github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag
 github.com/hashicorp/terraform-plugin-framework-validators/internal/schemavalidator
 github.com/hashicorp/terraform-plugin-framework-validators/setvalidator
+github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator
 # github.com/hashicorp/terraform-plugin-go v0.14.3
 ## explicit; go 1.18
 github.com/hashicorp/terraform-plugin-go/internal/logging
