@@ -300,7 +300,7 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 		d.Set("provision_state", provisionState)
 	}
 
-	return resourceSegmentRead(d, m)
+	return resourceConnectorAwsVpcRead(d, m)
 }
 
 func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
