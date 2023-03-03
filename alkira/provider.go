@@ -200,5 +200,6 @@ func (p *alkiraProvider) Resources(_ context.Context) []func() resource.Resource
 		NewalkiraSegment,
 		NewalkiraSegmentResource,
 		NewalkiraSegmentResourceShare,
+		NewalkiraPolicyRule,
 	}
 }
