@@ -37,7 +37,7 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		}
 
 		if v, ok := optionsCfg["segment_id"].(string); ok {
-			seg, err := segmentApi.GetById(v)
+			seg, _, err := segmentApi.GetById(v)
 
 			if err != nil {
 				return nil, err

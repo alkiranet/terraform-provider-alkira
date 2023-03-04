@@ -42,7 +42,7 @@ func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Send create request
-	response, _, err := api.Create(request)
+	response, _, err, _ := api.Create(request)
 
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
 	// Get resource
-	tag, err := api.GetById(d.Id())
+	tag, _, err := api.GetById(d.Id())
 
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Send update request
-	_, err := api.Update(d.Id(), request)
+	_, err, _ := api.Update(d.Id(), request)
 
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func resourceBillingTagDelete(d *schema.ResourceData, m interface{}) error {
 
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
-	_, err := api.Delete(d.Id())
+	_, err, _ := api.Delete(d.Id())
 
 	if err != nil {
 		return err
