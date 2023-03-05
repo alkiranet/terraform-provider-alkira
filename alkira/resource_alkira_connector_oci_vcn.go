@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorOciVcn() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Oracle Cloud (OCI) Virtual Computing Network (VCN) Cloud Connector.",
-		Create:      resourceConnectorOciVcnCreate,
-		Read:        resourceConnectorOciVcnRead,
-		Update:      resourceConnectorOciVcnUpdate,
-		Delete:      resourceConnectorOciVcnDelete,
+		Description:   "Manage Oracle Cloud (OCI) Virtual Computing Network (VCN) Cloud Connector.",
+		CreateContext: resourceConnectorOciVcnCreate,
+		ReadContext:   resourceConnectorOciVcnRead,
+		UpdateContext: resourceConnectorOciVcnUpdate,
+		DeleteContext: resourceConnectorOciVcnDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -171,7 +173,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 	}
 }
 
-func resourceConnectorOciVcnCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorOciVcnCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
@@ -180,35 +182,43 @@ func resourceConnectorOciVcnCreate(d *schema.ResourceData, m interface{}) error 
 	request, err := generateConnectorOciVcnRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set the state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourceConnectorOciVcnRead(d, m)
+	return resourceConnectorOciVcnRead(ctx, d, m)
 }
 
-func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorOciVcnRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
 	// Read connector
-	connector, err := api.GetById(d.Id())
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
@@ -229,24 +239,22 @@ func resourceConnectorOciVcnRead(d *schema.ResourceData, m interface{}) error {
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceConnectorOciVcnUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorOciVcnUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
@@ -255,33 +263,41 @@ func resourceConnectorOciVcnUpdate(d *schema.ResourceData, m interface{}) error 
 	connector, err := generateConnectorOciVcnRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send request to update connector
-	provisionState, err := api.Update(d.Id(), connector)
+	provState, err, provErr := api.Update(d.Id(), connector)
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
-func resourceConnectorOciVcnDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorOciVcnDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorOciVcn(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_oci_vcn %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

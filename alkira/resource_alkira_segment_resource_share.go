@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -14,10 +16,10 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 		Description: "Manages segment resource share.\n\n" +
 			"Select resources to share between Resource End-A " +
 			"in a segment and Resource End-B in another segment.",
-		Create: resourceSegmentResourceShare,
-		Read:   resourceSegmentResourceShareRead,
-		Update: resourceSegmentResourceShareUpdate,
-		Delete: resourceSegmentResourceShareDelete,
+		CreateContext: resourceSegmentResourceShare,
+		ReadContext:   resourceSegmentResourceShareRead,
+		UpdateContext: resourceSegmentResourceShareUpdate,
+		DeleteContext: resourceSegmentResourceShareDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -30,7 +32,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -96,7 +98,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 	}
 }
 
-func resourceSegmentResourceShare(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentResourceShare(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
@@ -105,34 +107,43 @@ func resourceSegmentResourceShare(d *schema.ResourceData, m interface{}) error {
 	request, err := generateSegmentResourceShareRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
-	}
-
-	// Set provision state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceSegmentResourceShareRead(d, m)
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceSegmentResourceShareRead(ctx, d, m)
 }
 
-func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
-	share, err := api.GetById(d.Id())
+	share, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", share.Name)
@@ -145,16 +156,14 @@ func resourceSegmentResourceShareRead(d *schema.ResourceData, m interface{}) err
 	d.Set("traffic_direction", share.Direction)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceSegmentResourceShareUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentResourceShareUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
@@ -163,37 +172,45 @@ func resourceSegmentResourceShareUpdate(d *schema.ResourceData, m interface{}) e
 	request, err := generateSegmentResourceShareRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceSegmentResourceShareRead(d, m)
+	return resourceSegmentResourceShareRead(ctx, d, m)
 }
 
-func resourceSegmentResourceShareDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentResourceShareDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete segment_resource_share %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

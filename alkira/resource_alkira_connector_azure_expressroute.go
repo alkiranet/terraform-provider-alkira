@@ -1,9 +1,12 @@
 package alkira
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -12,10 +15,24 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Azure ExpressRoute Connector. (**BETA**)",
 
-		Create: resourceConnectorAzureExpressRouteCreate,
-		Read:   resourceConnectorAzureExpressRouteRead,
-		Update: resourceConnectorAzureExpressRouteUpdate,
-		Delete: resourceConnectorAzureExpressRouteDelete,
+		CreateContext: resourceConnectorAzureExpressRouteCreate,
+		ReadContext:   resourceConnectorAzureExpressRouteRead,
+		UpdateContext: resourceConnectorAzureExpressRouteUpdate,
+		DeleteContext: resourceConnectorAzureExpressRouteDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -163,33 +180,50 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 }
 
 // resourceConnectorAzureExpressRouteCreate create an Azure ExpressRoute connector
-func resourceConnectorAzureExpressRouteCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
-	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
+
+	request, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	resource, provisionState, err := api.Create(connector)
+	resource, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	d.Set("provision_state", provisionState)
 	d.SetId(string(resource.Id))
 
-	return resourceConnectorAzureExpressRouteRead(d, m)
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceConnectorAzureExpressRouteRead(ctx, d, m)
 }
 
 // resourceConnectorAzureExpressRouteRead get and save an Azure ExpressRoute connectors
-func resourceConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
-	connector, err := api.GetById(d.Id())
+
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("size", connector.Size)
@@ -232,37 +266,61 @@ func resourceConnectorAzureExpressRouteRead(d *schema.ResourceData, m interface{
 	}
 	d.Set("segment_options", segments)
 
+	// Set provision state
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
+	}
+
 	return nil
 }
 
 // resourceConnectorAzureExpressRouteUpdate update an Azure ExpressRoute connector
-func resourceConnectorAzureExpressRouteUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+
 	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 
 	if err != nil {
-		return fmt.Errorf("UpdateConnectorAzureExpressRoute: failed to marshal: %v", err)
+		return diag.FromErr(err)
 	}
 
-	provisionState, err := api.Update(d.Id(), connector)
+	provState, err, provErr := api.Update(d.Id(), connector)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	d.Set("provision_state", provisionState)
-	return resourceConnectorAzureExpressRouteRead(d, m)
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceConnectorAzureExpressRouteRead(ctx, d, m)
 }
 
-func resourceConnectorAzureExpressRouteDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
-	provisionState, err := api.Delete((d.Id()))
+
+	provState, err, provErr := api.Delete((d.Id()))
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if provisionState != "SUCCESS" {
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

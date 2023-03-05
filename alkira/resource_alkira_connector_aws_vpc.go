@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provide AWS VPC Connector resource.",
-		Create:      resourceConnectorAwsVpcCreate,
-		Read:        resourceConnectorAwsVpcRead,
-		Update:      resourceConnectorAwsVpcUpdate,
-		Delete:      resourceConnectorAwsVpcDelete,
+		Description:   "Provide AWS VPC Connector resource.",
+		CreateContext: resourceConnectorAwsVpcCreate,
+		ReadContext:   resourceConnectorAwsVpcRead,
+		UpdateContext: resourceConnectorAwsVpcUpdate,
+		DeleteContext: resourceConnectorAwsVpcDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -195,7 +197,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 	}
 }
 
-func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAwsVpcCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
@@ -205,37 +207,45 @@ func resourceConnectorAwsVpcCreate(d *schema.ResourceData, m interface{}) error 
 	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set the state
 	d.SetId(string(response.Id))
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorAwsVpcRead(d, m)
+	return resourceConnectorAwsVpcRead(ctx, d, m)
 }
 
-func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
 	// Get connector
-	connector, err := api.GetById(d.Id())
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("aws_account_id", connector.VpcOwnerId)
@@ -254,28 +264,27 @@ func resourceConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) error {
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
+
 	if numOfSegments == 1 {
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAwsVpcUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
@@ -285,39 +294,47 @@ func resourceConnectorAwsVpcUpdate(d *schema.ResourceData, m interface{}) error 
 	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorAwsVpcRead(d, m)
+	return resourceConnectorAwsVpcRead(ctx, d, m)
 }
 
-func resourceConnectorAwsVpcDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAwsVpcDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
 	// Delete resource
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_aws_vpc %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

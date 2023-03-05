@@ -6,17 +6,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraInfoblox() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provide Infoblox service resource (**BETA**).",
-		Create:      resourceInfoblox,
-		Read:        resourceInfobloxRead,
-		Update:      resourceInfobloxUpdate,
-		Delete:      resourceInfobloxDelete,
+		Description:   "Provide Infoblox service resource (**BETA**).",
+		CreateContext: resourceInfoblox,
+		ReadContext:   resourceInfobloxRead,
+		UpdateContext: resourceInfobloxUpdate,
+		DeleteContext: resourceInfobloxDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -29,7 +31,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"anycast": {
@@ -232,7 +234,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 	}
 }
 
-func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
+func resourceInfoblox(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
@@ -241,50 +243,58 @@ func resourceInfoblox(d *schema.ResourceData, m interface{}) error {
 	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
-	}
-
-	// Set provision state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceInfobloxRead(d, m)
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceInfobloxRead(ctx, d, m)
 }
 
-func resourceInfobloxRead(d *schema.ResourceData, m interface{}) error {
+func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
-	infoblox, err := api.GetById(d.Id())
+	infoblox, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	setAllInfobloxResourceFields(d, infoblox)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// Init
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
@@ -292,37 +302,45 @@ func resourceInfobloxUpdate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateInfobloxRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceInfobloxRead(d, m)
+	return resourceInfobloxRead(ctx, d, m)
 }
 
-func resourceInfobloxDelete(d *schema.ResourceData, m interface{}) error {
+func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete service_infoblox %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

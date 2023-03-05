@@ -87,7 +87,7 @@ func (a *AlkiraAPI[T]) GetById(id string) (*T, string, error) {
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, provState, fmt.Errorf("Get: failed to unmarshal: %v", err)
+		return nil, provState, fmt.Errorf("api-get-all: failed to unmarshal: %v", err)
 	}
 
 	return &result, provState, nil
@@ -97,7 +97,7 @@ func (a *AlkiraAPI[T]) GetById(id string) (*T, string, error) {
 func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 
 	if len(name) == 0 {
-		return nil, "", fmt.Errorf("GetByName: Invalid resource name")
+		return nil, "", fmt.Errorf("api-get-by-name: Invalid resource name")
 	}
 
 	// Construct single resource URI
@@ -113,11 +113,11 @@ func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("GetbyName: failed to unmarshal: %v", err)
+		return nil, state, fmt.Errorf("api-get-by-name: failed to unmarshal: %v", err)
 	}
 
 	if len(result) != 1 {
-		return nil, state, fmt.Errorf("GetbyName: failed to get resource by name: %s", name)
+		return nil, state, fmt.Errorf("api-get-by-name: failed to get resource by name: %s", name)
 	}
 
 	return &result[0], state, nil

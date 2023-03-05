@@ -1,19 +1,22 @@
 package alkira
 
 import (
+	"context"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraBillingTag() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Billing Tag.",
-		Create:      resourceBillingTag,
-		Read:        resourceBillingTagRead,
-		Update:      resourceBillingTagUpdate,
-		Delete:      resourceBillingTagDelete,
+		Description:   "Manage Billing Tag.",
+		CreateContext: resourceBillingTag,
+		ReadContext:   resourceBillingTagRead,
+		UpdateContext: resourceBillingTagUpdate,
+		DeleteContext: resourceBillingTagDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,7 +34,7 @@ func resourceAlkiraBillingTag() *schema.Resource {
 	}
 }
 
-func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
+func resourceBillingTag(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
@@ -45,15 +48,15 @@ func resourceBillingTag(d *schema.ResourceData, m interface{}) error {
 	response, _, err, _ := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
 
-	return resourceBillingTagRead(d, m)
+	return resourceBillingTagRead(ctx, d, m)
 }
 
-func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
+func resourceBillingTagRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
@@ -61,7 +64,7 @@ func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
 	tag, _, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", tag.Name)
@@ -70,7 +73,7 @@ func resourceBillingTagRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceBillingTagUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
@@ -84,22 +87,22 @@ func resourceBillingTagUpdate(d *schema.ResourceData, m interface{}) error {
 	_, err, _ := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceBillingTagRead(d, m)
+	return resourceBillingTagRead(ctx, d, m)
 }
 
-func resourceBillingTagDelete(d *schema.ResourceData, m interface{}) error {
+func resourceBillingTagDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewBillingTag(m.(*alkira.AlkiraClient))
 
 	_, err, _ := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
-	return err
+	return diag.FromErr(err)
 }

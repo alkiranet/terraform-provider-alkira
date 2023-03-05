@@ -1,10 +1,13 @@
 package alkira
 
 import (
+	"context"
 	"errors"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -21,12 +24,12 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"You can provide your credentials via enviromental variables:\n\n " +
 			"* AK_AWS_ACCESS_KEY_ID\n * AK_AWS_SECRET_ACCESS_KEY\n * AK_AWS_ROLE_ARN\n " +
 			"* AK_AWS_ROLE_EXTERNAL_ID\n\n",
-		Create: resourceCredentialAwsVpc,
-		Read:   resourceCredentialAwsVpcRead,
-		Update: resourceCredentialAwsVpcUpdate,
-		Delete: resourceCredentialAwsVpcDelete,
+		CreateContext: resourceCredentialAwsVpc,
+		ReadContext:   resourceCredentialAwsVpcRead,
+		UpdateContext: resourceCredentialAwsVpcUpdate,
+		DeleteContext: resourceCredentialAwsVpcDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,54 +79,54 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 	}
 }
 
-func resourceCredentialAwsVpc(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c, err := generateCredentialAwsVpc(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAwsVpc, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)
-	return resourceCredentialAwsVpcRead(d, meta)
+	return resourceCredentialAwsVpcRead(ctx, d, meta)
 }
 
-func resourceCredentialAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceCredentialAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c, err := generateCredentialAwsVpc(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Updating credential (AWS-VPC) %s", d.Id())
 	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAwsVpc, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCredentialAwsVpcRead(d, meta)
+	return resourceCredentialAwsVpcRead(ctx, d, meta)
 }
 
-func resourceCredentialAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAwsVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
-	return client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc)
+	return diag.FromErr(client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc))
 }
 
 func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {

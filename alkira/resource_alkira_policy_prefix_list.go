@@ -5,16 +5,17 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraPolicyPrefixList() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage policy prefix list.",
-		Create:      resourcePolicyPrefixList,
-		Read:        resourcePolicyPrefixListRead,
-		Update:      resourcePolicyPrefixListUpdate,
-		Delete:      resourcePolicyPrefixListDelete,
+		Description:   "Manage policy prefix list.",
+		CreateContext: resourcePolicyPrefixList,
+		ReadContext:   resourcePolicyPrefixListRead,
+		UpdateContext: resourcePolicyPrefixListUpdate,
+		DeleteContext: resourcePolicyPrefixListDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -27,7 +28,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,7 +85,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 	}
 }
 
-func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyPrefixList(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
@@ -93,34 +94,42 @@ func resourcePolicyPrefixList(d *schema.ResourceData, m interface{}) error {
 	request, err := generatePolicyPrefixListRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourcePolicyPrefixListRead(d, m)
+	return resourcePolicyPrefixListRead(ctx, d, m)
 }
 
-func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetById(d.Id())
+	list, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", list.Name)
@@ -128,16 +137,14 @@ func resourcePolicyPrefixListRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("prefixes", list.Prefixes)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyPrefixListUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
@@ -146,37 +153,45 @@ func resourcePolicyPrefixListUpdate(d *schema.ResourceData, m interface{}) error
 	request, err := generatePolicyPrefixListRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourcePolicyPrefixListRead(d, m)
+	return resourcePolicyPrefixListRead(ctx, d, m)
 }
 
-func resourcePolicyPrefixListDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete policy_prefix_list %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

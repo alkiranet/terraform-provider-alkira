@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -17,10 +18,10 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"changes in the near future. Today, to use this connector, you will need " +
 			"to have onboarded a BYOIP with Do Not Advertise set to `true`. Also, the " +
 			"segment with public IPs needs to be reported to Akamai Representative.",
-		Create: resourceConnectorAkamaiProlexicCreate,
-		Read:   resourceConnectorAkamaiProlexicRead,
-		Update: resourceConnectorAkamaiProlexicUpdate,
-		Delete: resourceConnectorAkamaiProlexicDelete,
+		CreateContext: resourceConnectorAkamaiProlexicCreate,
+		ReadContext:   resourceConnectorAkamaiProlexicRead,
+		UpdateContext: resourceConnectorAkamaiProlexicUpdate,
+		DeleteContext: resourceConnectorAkamaiProlexicDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -33,7 +34,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -168,7 +169,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 	}
 }
 
-func resourceConnectorAkamaiProlexicCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
@@ -177,36 +178,45 @@ func resourceConnectorAkamaiProlexicCreate(d *schema.ResourceData, m interface{}
 	request, err := generateConnectorAkamaiProlexicRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	resource, provisionState, err := api.Create(request)
+	resource, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set the state
 	d.SetId(string(resource.Id))
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+
 	}
 
-	return resourceConnectorAkamaiProlexicRead(d, m)
+	return resourceConnectorAkamaiProlexicRead(ctx, d, m)
 }
 
-func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
 	// Get resource
-	connector, err := api.GetById(d.Id())
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("akamai_bgp_asn", connector.AkamaiBgpAsn)
@@ -224,11 +234,11 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	// byoip_options
@@ -243,16 +253,14 @@ func resourceConnectorAkamaiProlexicRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceConnectorAkamaiProlexicUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAkamaiProlexicUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
@@ -261,37 +269,45 @@ func resourceConnectorAkamaiProlexicUpdate(d *schema.ResourceData, m interface{}
 	connector, err := generateConnectorAkamaiProlexicRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), connector)
+	provState, err, provisionErr := api.Update(d.Id(), connector)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provisionErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provisionErr),
+			}}
+		}
 	}
 
-	return resourceConnectorAkamaiProlexicRead(d, m)
+	return resourceConnectorAkamaiProlexicRead(ctx, d, m)
 }
 
-func resourceConnectorAkamaiProlexicDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provisionErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_akamai_prolexic %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provisionErr)
 	}
 
 	d.SetId("")

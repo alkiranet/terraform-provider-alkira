@@ -16,8 +16,17 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 		ReadContext:   resourceByoipPrefixRead,
 		UpdateContext: resourceByoipPrefixUpdate,
 		DeleteContext: resourceByoipPrefixDelete,
-		CustomizeDiff: resourceByoipPrefixCustomizeDiff,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
 
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -158,20 +167,6 @@ func resourceByoipPrefixDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	d.SetId("")
 	return diag.FromErr(err)
-}
-
-func resourceByoipPrefixCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
-
-	client := m.(*alkira.AlkiraClient)
-
-	// Handle provision_state
-	old, _ := d.GetChange("provision_state")
-
-	if client.Provision == true && old == "FAILED" {
-		d.SetNew("provision_state", "SUCCESS")
-	}
-
-	return nil
 }
 
 func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip, error) {

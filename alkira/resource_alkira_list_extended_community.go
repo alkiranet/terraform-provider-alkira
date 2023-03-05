@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,10 +15,10 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 		Description: "An extended community list matches a route when all values " +
 			"in the list are present on the route. A route matches an extended " +
 			"community list when any of the values match.",
-		Create: resourceListExtendedCommunity,
-		Read:   resourceListExtendedCommunityRead,
-		Update: resourceListExtendedCommunityUpdate,
-		Delete: resourceListExtendedCommunityDelete,
+		CreateContext: resourceListExtendedCommunity,
+		ReadContext:   resourceListExtendedCommunityRead,
+		UpdateContext: resourceListExtendedCommunityUpdate,
+		DeleteContext: resourceListExtendedCommunityDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -29,7 +31,7 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,7 +66,7 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 	}
 }
 
-func resourceListExtendedCommunity(d *schema.ResourceData, m interface{}) error {
+func resourceListExtendedCommunity(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
@@ -73,30 +75,38 @@ func resourceListExtendedCommunity(d *schema.ResourceData, m interface{}) error 
 	request := generateListExtendedCommunityRequest(d, m)
 
 	// Send request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourceListExtendedCommunityRead(d, m)
+	return resourceListExtendedCommunityRead(ctx, d, m)
 }
 
-func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) error {
+func resourceListExtendedCommunityRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetById(d.Id())
+	list, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", list.Name)
@@ -104,16 +114,14 @@ func resourceListExtendedCommunityRead(d *schema.ResourceData, m interface{}) er
 	d.Set("values", list.Values)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceListExtendedCommunityUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceListExtendedCommunityUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
@@ -122,33 +130,41 @@ func resourceListExtendedCommunityUpdate(d *schema.ResourceData, m interface{}) 
 	request := generateListExtendedCommunityRequest(d, m)
 
 	// Send request to update
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceListExtendedCommunityRead(d, m)
+	return resourceListExtendedCommunityRead(ctx, d, m)
 }
 
-func resourceListExtendedCommunityDelete(d *schema.ResourceData, m interface{}) error {
+func resourceListExtendedCommunityDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete list_extended_community %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")

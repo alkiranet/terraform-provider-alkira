@@ -1,21 +1,24 @@
 package alkira
 
 import (
+	"context"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Credential for GCP.",
-		Create:      resourceCredentialGcpVpc,
-		Read:        resourceCredentialGcpVpcRead,
-		Update:      resourceCredentialGcpVpcUpdate,
-		Delete:      resourceCredentialGcpVpcDelete,
+		Description:   "Manage Credential for GCP.",
+		CreateContext: resourceCredentialGcpVpc,
+		ReadContext:   resourceCredentialGcpVpcRead,
+		UpdateContext: resourceCredentialGcpVpcUpdate,
+		DeleteContext: resourceCredentialGcpVpcDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -82,7 +85,7 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 	}
 }
 
-func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialGcpVpc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialGcpVpc{
@@ -102,18 +105,18 @@ func resourceCredentialGcpVpc(d *schema.ResourceData, meta interface{}) error {
 	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(credentialId)
-	return resourceCredentialGcpVpcRead(d, meta)
+	return resourceCredentialGcpVpcRead(ctx, d, meta)
 }
 
-func resourceCredentialGcpVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialGcpVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialGcpVpc{
@@ -133,13 +136,13 @@ func resourceCredentialGcpVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "gcpvpc", c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCredentialGcpVpcRead(d, meta)
+	return resourceCredentialGcpVpcRead(ctx, d, meta)
 }
 
-func resourceCredentialGcpVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialGcpVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 	id := d.Id()
 
@@ -147,7 +150,7 @@ func resourceCredentialGcpVpcDelete(d *schema.ResourceData, meta interface{}) er
 	err := client.DeleteCredential(id, "gcpvpc")
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Deleted Credential (GCP-VPC %s)\n", id)

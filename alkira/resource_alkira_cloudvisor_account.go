@@ -1,18 +1,22 @@
 package alkira
 
 import (
+	"context"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraCloudVisorAccount() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage CloudVisor Accounts",
-		Create:      resourceCloudVisorAccount,
-		Read:        resourceCloudVisorAccountRead,
-		Update:      resourceCloudVisorAccountUpdate,
-		Delete:      resourceCloudVisorAccountDelete,
+		Description:   "Manage CloudVisor Accounts",
+		CreateContext: resourceCloudVisorAccount,
+		ReadContext:   resourceCloudVisorAccountRead,
+		UpdateContext: resourceCloudVisorAccountUpdate,
+		DeleteContext: resourceCloudVisorAccountDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -48,7 +52,7 @@ func resourceAlkiraCloudVisorAccount() *schema.Resource {
 	}
 }
 
-func resourceCloudVisorAccount(d *schema.ResourceData, m interface{}) error {
+func resourceCloudVisorAccount(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
@@ -56,26 +60,26 @@ func resourceCloudVisorAccount(d *schema.ResourceData, m interface{}) error {
 	request := generateCloudVisorAccountRequest(d, m)
 
 	// Send create request
-	resource, _, err := api.Create(request)
+	resource, _, err, _ := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
 
-	return resourceCloudVisorAccountRead(d, m)
+	return resourceCloudVisorAccountRead(ctx, d, m)
 }
 
-func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error {
+func resourceCloudVisorAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	// Get resource
-	account, err := api.GetById(d.Id())
+	account, _, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", account.Name)
@@ -87,7 +91,7 @@ func resourceCloudVisorAccountRead(d *schema.ResourceData, m interface{}) error 
 	return nil
 }
 
-func resourceCloudVisorAccountUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceCloudVisorAccountUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
@@ -95,23 +99,23 @@ func resourceCloudVisorAccountUpdate(d *schema.ResourceData, m interface{}) erro
 	request := generateCloudVisorAccountRequest(d, m)
 
 	// Send update request
-	_, err := api.Update(d.Id(), request)
+	_, err, _ := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCloudVisorAccountRead(d, m)
+	return resourceCloudVisorAccountRead(ctx, d, m)
 }
 
-func resourceCloudVisorAccountDelete(d *schema.ResourceData, m interface{}) error {
+func resourceCloudVisorAccountDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
-	_, err := api.Delete(d.Id())
+	_, err, _ := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

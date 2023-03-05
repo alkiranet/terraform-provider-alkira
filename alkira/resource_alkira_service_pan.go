@@ -7,6 +7,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -16,13 +17,23 @@ func resourceAlkiraServicePan() *schema.Resource {
 		Description: "Manage Palo Alto Firewall service.\n\n" +
 			"When `panorama_enabled` is set to `true`, `pan_username` and " +
 			"`pan_password` are required.",
-		Create:        resourceServicePanCreate,
-		Read:          resourceServicePanRead,
-		Update:        resourceServicePanUpdate,
-		Delete:        resourceServicePanDelete,
-		CustomizeDiff: resourceServicePanCustomizeDiff,
+		CreateContext: resourceServicePanCreate,
+		ReadContext:   resourceServicePanRead,
+		UpdateContext: resourceServicePanUpdate,
+		DeleteContext: resourceServicePanDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
@@ -356,7 +367,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 	}
 }
 
-func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
+func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
@@ -366,36 +377,44 @@ func resourceServicePanCreate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceServicePanRead(d, m)
+	return resourceServicePanRead(ctx, d, m)
 }
 
-func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
+func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
 	// Get the service
-	pan, err := api.GetById(d.Id())
+	pan, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
@@ -427,16 +446,14 @@ func resourceServicePanRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
@@ -446,57 +463,51 @@ func resourceServicePanUpdate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceServicePanRead(d, m)
+	return resourceServicePanRead(ctx, d, m)
 }
 
-func resourceServicePanDelete(d *schema.ResourceData, m interface{}) error {
+func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// Init
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
 	// Delete resource
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Check provision state
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete service_pan %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")
-	return nil
-}
-
-func resourceServicePanCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
-
-	client := m.(*alkira.AlkiraClient)
-
-	// Handle provision_state
-	old, _ := d.GetChange("provision_state")
-
-	if client.Provision == true && old == "FAILED" {
-		d.SetNew("provision_state", "SUCCESS")
-	}
-
 	return nil
 }
 

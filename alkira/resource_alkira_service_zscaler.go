@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraServiceZscaler() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Zscaler firewall service. (**BETA**)",
-		Create:      resourceZscaler,
-		Read:        resourceZscalerRead,
-		Update:      resourceZscalerUpdate,
-		Delete:      resourceZscalerDelete,
+		Description:   "Manage Zscaler firewall service. (**BETA**)",
+		CreateContext: resourceZscaler,
+		ReadContext:   resourceZscalerRead,
+		UpdateContext: resourceZscalerUpdate,
+		DeleteContext: resourceZscalerDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"connector_internet_exit_id": {
@@ -201,7 +203,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 	}
 }
 
-func resourceZscaler(d *schema.ResourceData, m interface{}) error {
+func resourceZscaler(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
@@ -210,41 +212,49 @@ func resourceZscaler(d *schema.ResourceData, m interface{}) error {
 	request, err := generateZscalerRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourceZscalerRead(d, m)
+	return resourceZscalerRead(ctx, d, m)
 }
 
-func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
+func resourceZscalerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
 	// Get the service
-	z, err := api.GetById(d.Id())
+	z, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(z.Segments, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", z.BillingTags)
@@ -259,16 +269,14 @@ func resourceZscalerRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("tunnel_protocol", z.TunnelType)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceZscalerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
@@ -277,37 +285,45 @@ func resourceZscalerUpdate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateZscalerRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceZscalerRead(d, m)
+	return resourceZscalerRead(ctx, d, m)
 }
 
-func resourceZscalerDelete(d *schema.ResourceData, m interface{}) error {
+func resourceZscalerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceZscaler(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete service_zscaler %s, provision failed", d.Id())
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.FromErr(provErr)
 	}
 
 	d.SetId("")
