@@ -5,16 +5,17 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraSegment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides segment resource.",
-		Create:      resourceSegment,
-		Read:        resourceSegmentRead,
-		Update:      resourceSegmentUpdate,
-		Delete:      resourceSegmentDelete,
+		Description:   "Provides segment resource.",
+		CreateContext: resourceSegment,
+		ReadContext:   resourceSegmentRead,
+		UpdateContext: resourceSegmentUpdate,
+		DeleteContext: resourceSegmentDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -27,7 +28,7 @@ func resourceAlkiraSegment() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,10 +37,11 @@ func resourceAlkiraSegment() *schema.Resource {
 				Required:    true,
 			},
 			"asn": {
-				Description: "The BGP ASN for the segment. Default value is `65514`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     "65514",
+				Description: "The BGP ASN for the segment. Default value" +
+					"is `65514`.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  "65514",
 			},
 			"cidrs": {
 				Description: "The list of CIDR blocks.",
@@ -65,18 +67,19 @@ func resourceAlkiraSegment() *schema.Resource {
 				Default:  false,
 			},
 			"enterprise_dns_server_ip": {
-				Description: "The IP of the DNS server used within the segment. This DNS server " +
-					"may be used by the Alkira CXP to resolve the names of LDAP servers for example " +
-					"which are configured on the Remote Access Connector. (**BETA**)",
+				Description: "The IP of the DNS server used within the segment. " +
+					"This DNS server may be used by the Alkira CXP to resolve " +
+					"the names of LDAP servers for example which are configured " +
+					"on the Remote Access Connector. (**BETA**)",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"reserve_public_ips": {
 				Description: "Default value is `false`. When this is set to " +
-					"`true`. Alkira reserves public IPs " +
-					"which can be used to create underlay tunnels between an " +
-					"external service and Alkira. For example the reserved public IPs " +
-					"may be used to create tunnels to the Akamai Prolexic. (**BETA**)",
+					"`true`. Alkira reserves public IPs which can be used to " +
+					"create underlay tunnels between an external service and " +
+					"Alkira. For example the reserved public IPs may be used " +
+					"to create tunnels to the Akamai Prolexic. (**BETA**)",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -95,7 +98,7 @@ func resourceAlkiraSegment() *schema.Resource {
 	}
 }
 
-func resourceSegment(d *schema.ResourceData, m interface{}) error {
+func resourceSegment(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegment(client)
@@ -104,35 +107,45 @@ func resourceSegment(d *schema.ResourceData, m interface{}) error {
 	segment, err := generateSegmentRequest(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(segment)
+	response, provState, err, provErr := api.Create(segment)
 
 	if err != nil {
-		return err
-	}
-
-	// Set provision state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceSegmentRead(d, m)
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceSegmentRead(ctx, d, m)
 }
 
-func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegment(client)
 
 	// Get the resource
-	segment, err := api.GetById(d.Id())
+	segment, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("asn", segment.Asn)
@@ -150,16 +163,14 @@ func resourceSegmentRead(d *schema.ResourceData, m interface{}) error {
 	setCidrsSegmentRead(d, segment)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegment(client)
@@ -168,40 +179,56 @@ func resourceSegmentUpdate(d *schema.ResourceData, m interface{}) error {
 	segment, err := generateSegmentRequest(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), segment)
+	provState, err, provErr := api.Update(d.Id(), segment)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceSegmentRead(d, m)
+	return resourceSegmentRead(ctx, d, m)
 }
 
-func resourceSegmentDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegment(client)
 
-	provisionState, err := api.Delete(d.Id())
+	// Delete
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete segment %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	// Check provisions state
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 

@@ -11,7 +11,7 @@ import (
 func getSegmentNameById(id string, m interface{}) (string, error) {
 
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
-	segment, err := segmentApi.GetById(id)
+	segment, _, err := segmentApi.GetById(id)
 
 	if err != nil {
 		return "", err

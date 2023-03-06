@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraInternetApplication() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Internet Application.",
-		Create:      resourceInternetApplicationCreate,
-		Read:        resourceInternetApplicationRead,
-		Update:      resourceInternetApplicationUpdate,
-		Delete:      resourceInternetApplicationDelete,
+		Description:   "Manage Internet Application.",
+		CreateContext: resourceInternetApplicationCreate,
+		ReadContext:   resourceInternetApplicationRead,
+		UpdateContext: resourceInternetApplicationUpdate,
+		DeleteContext: resourceInternetApplicationDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -160,43 +162,53 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 	}
 }
 
-func resourceInternetApplicationCreate(d *schema.ResourceData, m interface{}) error {
+func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send request to create
-	response, provisionState, err := api.Create(request)
+	// CREATE
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourceInternetApplicationRead(d, m)
+	return resourceInternetApplicationRead(ctx, d, m)
 }
 
-func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) error {
+func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	app, err := api.GetById(d.Id())
+	// GET
+	app, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", app.BillingTags)
@@ -212,7 +224,7 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("segment_id", segmentId)
@@ -233,58 +245,70 @@ func resourceInternetApplicationRead(d *schema.ResourceData, m interface{}) erro
 	d.Set("targets", targets)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceInternetApplicationUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceInternetApplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	// UPDATE
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceInternetApplicationRead(d, m)
+	return resourceInternetApplicationRead(ctx, d, m)
 }
 
-func resourceInternetApplicationDelete(d *schema.ResourceData, m interface{}) error {
+func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete internet_application %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 

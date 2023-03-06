@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,10 +15,10 @@ func resourceAlkiraListAsPath() *schema.Resource {
 		Description: "This list could be used in a policy rule, a route " +
 			"will match successfully if any one value from the list is " +
 			"included within the AS-PATH of the route.",
-		Create: resourceListAsPath,
-		Read:   resourceListAsPathRead,
-		Update: resourceListAsPathUpdate,
-		Delete: resourceListAsPathDelete,
+		CreateContext: resourceListAsPath,
+		ReadContext:   resourceListAsPathRead,
+		UpdateContext: resourceListAsPathUpdate,
+		DeleteContext: resourceListAsPathDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -29,7 +31,7 @@ func resourceAlkiraListAsPath() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,7 +62,7 @@ func resourceAlkiraListAsPath() *schema.Resource {
 	}
 }
 
-func resourceListAsPath(d *schema.ResourceData, m interface{}) error {
+func resourceListAsPath(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
@@ -69,34 +71,42 @@ func resourceListAsPath(d *schema.ResourceData, m interface{}) error {
 	request, err := generateListAsPathRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send request
-	resource, provisionState, err := api.Create(request)
+	resource, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(resource.Id))
-	return resourceListAsPathRead(d, m)
+	return resourceListAsPathRead(ctx, d, m)
 }
 
-func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
+func resourceListAsPathRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	list, err := api.GetById(d.Id())
+	list, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", list.Name)
@@ -104,16 +114,14 @@ func resourceListAsPathRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("values", list.Values)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceListAsPathUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceListAsPathUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
@@ -122,40 +130,53 @@ func resourceListAsPathUpdate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateListAsPathRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceListAsPathRead(d, m)
+	return resourceListAsPathRead(ctx, d, m)
 }
 
-func resourceListAsPathDelete(d *schema.ResourceData, m interface{}) error {
+func resourceListAsPathDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete list_as_path %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 

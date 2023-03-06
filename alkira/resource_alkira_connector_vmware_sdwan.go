@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage VMWARE SD-WAN Connector.",
-		Create:      resourceConnectorVmwareSdwanCreate,
-		Read:        resourceConnectorVmwareSdwanRead,
-		Update:      resourceConnectorVmwareSdwanUpdate,
-		Delete:      resourceConnectorVmwareSdwanDelete,
+		Description:   "Manage VMWARE SD-WAN Connector.",
+		CreateContext: resourceConnectorVmwareSdwanCreate,
+		ReadContext:   resourceConnectorVmwareSdwanRead,
+		UpdateContext: resourceConnectorVmwareSdwanUpdate,
+		DeleteContext: resourceConnectorVmwareSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -171,8 +173,9 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 	}
 }
 
-func resourceConnectorVmwareSdwanCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorVmwareSdwanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
@@ -180,35 +183,45 @@ func resourceConnectorVmwareSdwanCreate(d *schema.ResourceData, m interface{}) e
 	request, err := generateConnectorVmwareSdwanRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set states
 	d.SetId(string(response.Id))
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorVmwareSdwanRead(d, m)
+	return resourceConnectorVmwareSdwanRead(ctx, d, m)
 }
 
-func resourceConnectorVmwareSdwanRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
-	connector, err := api.GetById(d.Id())
+	// GET
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
@@ -241,58 +254,69 @@ func resourceConnectorVmwareSdwanRead(d *schema.ResourceData, m interface{}) err
 	d.Set("version", connector.Version)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceConnectorVmwareSdwanUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorVmwareSdwanRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	// UPDATE
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorVmwareSdwanRead(d, m)
+	return resourceConnectorVmwareSdwanRead(ctx, d, m)
 }
 
-func resourceConnectorVmwareSdwanDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorVmwareSdwanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	// DELETE
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_vmware_sdwan %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
 
 	return nil
 }

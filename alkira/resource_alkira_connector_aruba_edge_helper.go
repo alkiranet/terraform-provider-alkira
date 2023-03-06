@@ -124,7 +124,7 @@ func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEd
 			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
 		if v, ok := m["aruba_edge_connect_segment_id"].(string); ok {
-			segment, err := api.GetById(v)
+			segment, _, err := api.GetById(v)
 			if err != nil {
 				return nil, err
 			}

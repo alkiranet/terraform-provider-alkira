@@ -1,21 +1,23 @@
 package alkira
 
 import (
-	"log"
+	"context"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides SSH Key Pair credential resource.",
-		Create:      resourceCredentialSshKeyPairCreate,
-		Read:        resourceCredentialSshKeyPairRead,
-		Update:      resourceCredentialSshKeyPairUpdate,
-		Delete:      resourceCredentialSshKeyPairDelete,
+		Description:   "Provides SSH Key Pair credential resource.",
+		CreateContext: resourceCredentialSshKeyPairCreate,
+		ReadContext:   resourceCredentialSshKeyPairRead,
+		UpdateContext: resourceCredentialSshKeyPairUpdate,
+		DeleteContext: resourceCredentialSshKeyPairDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,7 +38,7 @@ func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 	}
 }
 
-func resourceCredentialSshKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialSshKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialKeyPair{
@@ -47,18 +49,18 @@ func resourceCredentialSshKeyPairCreate(d *schema.ResourceData, meta interface{}
 	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeKeyPair, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)
-	return resourceCredentialSshKeyPairRead(d, meta)
+	return resourceCredentialSshKeyPairRead(ctx, d, meta)
 }
 
-func resourceCredentialSshKeyPairRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialSshKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceCredentialSshKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialSshKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialKeyPair{
@@ -66,21 +68,24 @@ func resourceCredentialSshKeyPairUpdate(d *schema.ResourceData, meta interface{}
 		Type:      "IMPORTED",
 	}
 
-	log.Printf("[INFO] Updating Credential (SSH key pair)")
 	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeKeyPair, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCredentialSshKeyPairRead(d, meta)
+	return resourceCredentialSshKeyPairRead(ctx, d, meta)
 }
 
-func resourceCredentialSshKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialSshKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting credential (SSH key pair %s)\n", d.Id())
 	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeKeyPair)
 
-	return err
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }

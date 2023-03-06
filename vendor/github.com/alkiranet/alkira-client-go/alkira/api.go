@@ -15,33 +15,33 @@ type AlkiraAPI[T any] struct {
 }
 
 // Create create a resource
-func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error) {
+func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error, error) {
 
 	// Construct the request
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("Create: failed to marshal: %v", err)
+		return nil, "", fmt.Errorf("api-create: failed to marshal: %v", err), nil
 	}
 
-	data, state, err := a.Client.create(a.Uri, body, a.Provision)
+	data, state, err, errProv := a.Client.create(a.Uri, body, a.Provision)
 
 	if err != nil {
-		return nil, state, err
+		return nil, state, err, errProv
 	}
 
 	var result T
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("Create: failed to unmarshal: %v", err)
+		return nil, state, fmt.Errorf("api-create: failed to unmarshal: %v", err), errProv
 	}
 
-	return &result, state, nil
+	return &result, state, nil, errProv
 }
 
 // Delete delete a resource by its ID
-func (a *AlkiraAPI[T]) Delete(id string) (string, error) {
+func (a *AlkiraAPI[T]) Delete(id string) (string, error, error) {
 
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
@@ -50,7 +50,7 @@ func (a *AlkiraAPI[T]) Delete(id string) (string, error) {
 }
 
 // Update update a resource by its ID
-func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error) {
+func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error, error) {
 
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
@@ -59,7 +59,7 @@ func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error) {
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return "", fmt.Errorf("Update: failed to marshal: %v", err)
+		return "", fmt.Errorf("api-update: failed to marshal: %v", err), nil
 	}
 
 	return a.Client.update(uri, body, a.Provision)
@@ -67,37 +67,37 @@ func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error) {
 
 // GetAll get all resources
 func (a *AlkiraAPI[T]) GetAll() (string, error) {
-	data, err := a.Client.get(a.Uri)
+	data, _, err := a.Client.get(a.Uri)
 	return string(data), err
 }
 
 // GetById get a resource by its ID
-func (a *AlkiraAPI[T]) GetById(id string) (*T, error) {
+func (a *AlkiraAPI[T]) GetById(id string) (*T, string, error) {
 
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
 
-	data, err := a.Client.get(uri)
+	data, provState, err := a.Client.get(uri)
 
 	if err != nil {
-		return nil, err
+		return nil, provState, err
 	}
 
 	var result T
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, fmt.Errorf("Get: failed to unmarshal: %v", err)
+		return nil, provState, fmt.Errorf("api-get-all: failed to unmarshal: %v", err)
 	}
 
-	return &result, nil
+	return &result, provState, nil
 }
 
 // GetByName get a resource by its name
 func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 
 	if len(name) == 0 {
-		return nil, "", fmt.Errorf("GetByName: Invalid resource name")
+		return nil, "", fmt.Errorf("api-get-by-name: Invalid resource name")
 	}
 
 	// Construct single resource URI
@@ -113,11 +113,11 @@ func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("GetbyName: failed to unmarshal: %v", err)
+		return nil, state, fmt.Errorf("api-get-by-name: failed to unmarshal: %v", err)
 	}
 
 	if len(result) != 1 {
-		return nil, state, fmt.Errorf("GetbyName: failed to get resource by name: %s", name)
+		return nil, state, fmt.Errorf("api-get-by-name: failed to get resource by name: %s", name)
 	}
 
 	return &result[0], state, nil

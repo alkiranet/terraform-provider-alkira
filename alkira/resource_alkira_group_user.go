@@ -1,19 +1,22 @@
 package alkira
 
 import (
+	"context"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraGroupUser() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage user groups\n\n",
-		Create:      resourceGroupUser,
-		Read:        resourceGroupUserRead,
-		Update:      resourceGroupUserUpdate,
-		Delete:      resourceGroupUserDelete,
+		Description:   "Manage user groups\n\n",
+		CreateContext: resourceGroupUser,
+		ReadContext:   resourceGroupUserRead,
+		UpdateContext: resourceGroupUserUpdate,
+		DeleteContext: resourceGroupUserDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,7 +33,7 @@ func resourceAlkiraGroupUser() *schema.Resource {
 	}
 }
 
-func resourceGroupUser(d *schema.ResourceData, m interface{}) error {
+func resourceGroupUser(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
 	group := &alkira.UserGroup{
@@ -38,24 +41,24 @@ func resourceGroupUser(d *schema.ResourceData, m interface{}) error {
 		Description: d.Get("description").(string),
 	}
 
-	resource, _, err := api.Create(group)
+	resource, _, err, _ := api.Create(group)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
 
-	return resourceGroupUserRead(d, m)
+	return resourceGroupUserRead(ctx, d, m)
 }
 
-func resourceGroupUserRead(d *schema.ResourceData, m interface{}) error {
+func resourceGroupUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	group, err := api.GetById(d.Id())
+	group, _, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", group.Name)
@@ -64,7 +67,7 @@ func resourceGroupUserRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceGroupUserUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceGroupUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
 	group := &alkira.UserGroup{
@@ -73,22 +76,22 @@ func resourceGroupUserUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Updating User Group (%s)", d.Id())
-	_, err := api.Update(d.Id(), group)
+	_, err, _ := api.Update(d.Id(), group)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceGroupUserDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGroupUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	_, err := api.Delete(d.Id())
+	_, err, _ := api.Delete(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

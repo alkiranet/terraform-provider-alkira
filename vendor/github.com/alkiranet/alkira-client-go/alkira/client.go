@@ -183,7 +183,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 }
 
 // get retrieve a resource by sending a GET request
-func (ac *AlkiraClient) get(uri string) ([]byte, error) {
+func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	logf("DEBUG", "client-get URI: %s\n", uri)
 
 	requestId := "client-" + uuid.New().String()
@@ -195,7 +195,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, fmt.Errorf("client-get %s failed, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get %s failed, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
@@ -203,10 +203,15 @@ func (ac *AlkiraClient) get(uri string) ([]byte, error) {
 	logf("DEBUG", "client-get(%s) RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
 	}
 
-	return data, nil
+	//
+	// If provision is enabled, try to grab the provisioning status
+	//
+	provisionState := response.Header.Get("x-provision-request-state")
+
+	return data, provisionState, nil
 }
 
 // get retrieve a resource by sending a GET request
@@ -245,7 +250,7 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 }
 
 // create send a POST request to create resource
-func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error) {
+func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error, error) {
 	logf("DEBUG", "client-create REQ: %s\n", string(body))
 
 	//
@@ -267,7 +272,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err), nil
 	}
 
 	defer response.Body.Close()
@@ -276,7 +281,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	logf("DEBUG", "client-create(%s) RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data)), nil
 	}
 
 	//
@@ -287,7 +292,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return data, "FAILED", fmt.Errorf("client-create(%s): failed to get provision request ID", requestId)
+			return data, "FAILED", nil, fmt.Errorf("client-create(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -308,21 +313,21 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return data, "FAILED", fmt.Errorf("client-create(%s): provision request %s timed out", requestId, provisionRequestId)
+			return data, "FAILED", nil, fmt.Errorf("client-create(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
 		if err != nil {
-			return data, "FAILED", err
+			return data, "FAILED", nil, err
 		}
 
-		return data, "SUCCESS", nil
+		return data, "SUCCESS", nil, nil
 	}
 
-	return data, "", nil
+	return data, "", nil, nil
 }
 
 // delete send a DELETE request to delete a resource
-func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
+func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error) {
 	logf("DEBUG", "client-delete: URI %s\n", uri)
 
 	//
@@ -344,7 +349,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("client-delete(%s): failed, %v", requestId, err)
+		return "", fmt.Errorf("client-delete(%s): failed, %v", requestId, err), nil
 	}
 
 	defer response.Body.Close()
@@ -355,7 +360,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
 			logf("INFO", "client-delete(%s): resource was already deleted.\n", requestId)
-			return "", nil
+			return "", nil, nil
 		}
 
 		// Retry several more times and see if the delete goes through
@@ -376,11 +381,11 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return "", fmt.Errorf("client-delete(%s): retry timeout, %s", requestId, string(data))
+			return "", fmt.Errorf("client-delete(%s): retry timeout, %s", requestId, string(data)), nil
 		}
 
 		if err != nil {
-			return "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+			return "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data)), nil
 		}
 	}
 
@@ -390,7 +395,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return "", fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
+			return "FAILED", nil, fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -411,17 +416,21 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error) {
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return "FAILED", fmt.Errorf("client-delete(%s): provision request %s timed out", requestId, provisionRequestId)
+			return "FAILED", nil, fmt.Errorf("client-delete(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
-		return "SUCCESS", err
+		if err != nil {
+			return "FAILED", nil, err
+		}
+
+		return "SUCCESS", nil, nil
 	}
 
-	return "", nil
+	return "", nil, nil
 }
 
 // update send a PUT request to update a resource
-func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string, error) {
+func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string, error, error) {
 	logf("DEBUG", "client-update: REQUEST: %s\n", string(body))
 
 	//
@@ -443,7 +452,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("client-update(%s): failed, %v", requestId, err)
+		return "", fmt.Errorf("client-update(%s): failed, %v", requestId, err), nil
 	}
 
 	defer response.Body.Close()
@@ -452,7 +461,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	logf("DEBUG", "client-update(%s): RSP: %s\n", requestId, string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data))
+		return "", fmt.Errorf("%s(%d) %s", requestId, response.StatusCode, string(data)), nil
 	}
 
 	//
@@ -462,7 +471,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return "", fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
+			return "FAILED", nil, fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -483,11 +492,15 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return "FAILED", fmt.Errorf("client-update(%s): provision request %s timed out", requestId, provisionRequestId)
+			return "FAILED", nil, fmt.Errorf("client-update(%s): provision request %s timed out", requestId, provisionRequestId)
 		}
 
-		return "SUCCESS", err
+		if err != nil {
+			return "FAILED", nil, err
+		}
+
+		return "SUCCESS", nil, nil
 	}
 
-	return "", nil
+	return "", nil, nil
 }

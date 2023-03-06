@@ -1,20 +1,25 @@
 package alkira
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraPolicyNat() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage NAT policy.",
-		Create:      resourcePolicyNat,
-		Read:        resourcePolicyNatRead,
-		Update:      resourcePolicyNatUpdate,
-		Delete:      resourcePolicyNatDelete,
+		Description:   "Manage NAT policy.",
+		CreateContext: resourcePolicyNat,
+		ReadContext:   resourcePolicyNatRead,
+		UpdateContext: resourcePolicyNatUpdate,
+		DeleteContext: resourcePolicyNatDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -73,36 +78,52 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 	}
 }
 
-func resourcePolicyNat(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyNat(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
 	request, err := generatePolicyNatRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send request
-	resource, provisionState, err := api.Create(request)
+	resource, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
-	d.Set("provision_state", provisionState)
 
-	return resourcePolicyNatRead(d, m)
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourcePolicyNatRead(ctx, d, m)
 }
 
-func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
-	policy, err := api.GetById(d.Id())
+	policy, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", policy.Name)
@@ -117,49 +138,80 @@ func resourcePolicyNatRead(d *schema.ResourceData, m interface{}) error {
 	segmentId, err := getSegmentIdByName(policy.Segment, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("segment_id", segmentId)
 
+	// Set provision state
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
+	}
+
 	return nil
 }
 
-func resourcePolicyNatUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyNatUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
 	request, err := generatePolicyNatRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	d.Set("provision_state", provisionState)
+	if client.Provision == true {
+		d.Set("provision_state", provState)
 
-	return resourcePolicyNatRead(d, m)
+		if provState == "FAILED" {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourcePolicyNatRead(ctx, d, m)
 }
 
-func resourcePolicyNatDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyNatDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatPolicy(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if provisionState != "SUCCESS" {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION(DLETE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
 	return nil
 }
 

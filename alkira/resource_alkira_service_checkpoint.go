@@ -6,17 +6,19 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraCheckpoint() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage checkpoint services",
-		Create:      resourceCheckpoint,
-		Read:        resourceCheckpointRead,
-		Update:      resourceCheckpointUpdate,
-		Delete:      resourceCheckpointDelete,
+		Description:   "Manage checkpoint services",
+		CreateContext: resourceCheckpoint,
+		ReadContext:   resourceCheckpointRead,
+		UpdateContext: resourceCheckpointUpdate,
+		DeleteContext: resourceCheckpointDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -29,7 +31,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -268,7 +270,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 	}
 }
 
-func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
+func resourceCheckpoint(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
@@ -277,47 +279,57 @@ func resourceCheckpoint(d *schema.ResourceData, m interface{}) error {
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
-	}
-
-	// Set provision state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceCheckpointRead(d, m)
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceCheckpointRead(ctx, d, m)
 }
 
-func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
+func resourceCheckpointRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
-	checkpoint, err := api.GetById(d.Id())
+	checkpoint, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Get segment
 	numOfSegments := len(checkpoint.Segments)
+
 	if numOfSegments == 1 {
 		segmentId, err := getSegmentIdByName(checkpoint.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	d.Set("auto_scale", checkpoint.AutoScale)
@@ -338,16 +350,14 @@ func resourceCheckpointRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("version", checkpoint.Version)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
@@ -356,36 +366,49 @@ func resourceCheckpointUpdate(d *schema.ResourceData, m interface{}) error {
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
-func resourceCheckpointDelete(d *schema.ResourceData, m interface{}) error {
+func resourceCheckpointDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete service_checkpoint %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 

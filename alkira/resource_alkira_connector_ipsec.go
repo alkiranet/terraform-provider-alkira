@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage IPSec Connector.",
-		Create:      resourceConnectorIPSecCreate,
-		Read:        resourceConnectorIPSecRead,
-		Update:      resourceConnectorIPSecUpdate,
-		Delete:      resourceConnectorIPSecDelete,
+		Description:   "Manage IPSec Connector.",
+		CreateContext: resourceConnectorIPSecCreate,
+		ReadContext:   resourceConnectorIPSecRead,
+		UpdateContext: resourceConnectorIPSecUpdate,
+		DeleteContext: resourceConnectorIPSecDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -372,43 +374,53 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 	}
 }
 
-func resourceConnectorIPSecCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorIPSecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send create request
-	response, provisionState, err := api.Create(request)
+	// CREATE
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
-	}
-
-	// Set state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceConnectorIPSecRead(d, m)
+
+	// Set state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceConnectorIPSecRead(ctx, d, m)
 }
 
-func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	connector, err := api.GetById(d.Id())
+	// GET
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
@@ -426,11 +438,11 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	//
@@ -483,10 +495,8 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	d.Set("endpoint", endpoints)
@@ -494,48 +504,62 @@ func resourceConnectorIPSecRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceConnectorIPSecUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorIPSecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorIPSecRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send update request to update connector
-	provisionState, err := api.Update(d.Id(), request)
+	// UPDATE
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorIPSecRead(d, m)
+	return resourceConnectorIPSecRead(ctx, d, m)
 }
 
-func resourceConnectorIPSecDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	// DELETE
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_ipsec %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 
