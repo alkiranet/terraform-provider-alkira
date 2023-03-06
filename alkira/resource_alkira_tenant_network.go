@@ -1,19 +1,22 @@
 package alkira
 
 import (
+	"context"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraTenantNetwork() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTenantNetworkCreate,
-		Read:   resourceTenantNetworkRead,
-		Update: resourceTenantNetworkUpdate,
-		Delete: resourceTenantNetworkDelete,
+		CreateContext: resourceTenantNetworkCreate,
+		ReadContext:   resourceTenantNetworkRead,
+		UpdateContext: resourceTenantNetworkUpdate,
+		DeleteContext: resourceTenantNetworkDelete,
 
 		Schema: map[string]*schema.Schema{
 			"connectors": &schema.Schema{
@@ -35,14 +38,14 @@ func resourceAlkiraTenantNetwork() *schema.Resource {
 	}
 }
 
-func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
+func resourceTenantNetworkCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 
 	state, err := client.ProvisionTenantNetwork()
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to provision tenant network: %s", state)
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Wait for tenant network provisoning to finish
@@ -70,25 +73,25 @@ func resourceTenantNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(client.TenantNetworkId)
-	return resourceTenantNetworkRead(d, m)
+	return resourceTenantNetworkRead(ctx, d, m)
 }
 
-func resourceTenantNetworkRead(d *schema.ResourceData, m interface{}) error {
+func resourceTenantNetworkRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceTenantNetworkUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceTenantNetworkRead(d, m)
+func resourceTenantNetworkUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return resourceTenantNetworkRead(ctx, d, m)
 }
 
-func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {
+func resourceTenantNetworkDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 
 	state, err := client.ProvisionTenantNetwork()
 
 	if err != nil {
 		log.Printf("[ERROR] Failed to deprovision tenant network: %s", state)
-		return err
+		return diag.FromErr(err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -111,7 +114,7 @@ func resourceTenantNetworkDelete(d *schema.ResourceData, m interface{}) error {
 	_, err = stateConf.WaitForState()
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Tenant Network %s deprovisioned", client.TenantNetworkId)

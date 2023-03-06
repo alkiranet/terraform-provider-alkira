@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -13,10 +15,10 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 	return &schema.Resource{
 		Description: "Manage Aruba Edge Connector",
 
-		Create: resourceConnectorArubaEdgeCreate,
-		Read:   resourceConnectorArubaEdgeRead,
-		Update: resourceConnectorArubaEdgeUpdate,
-		Delete: resourceConnectorArubaEdgeDelete,
+		CreateContext: resourceConnectorArubaEdgeCreate,
+		ReadContext:   resourceConnectorArubaEdgeRead,
+		UpdateContext: resourceConnectorArubaEdgeUpdate,
+		DeleteContext: resourceConnectorArubaEdgeDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -29,7 +31,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -169,13 +171,15 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM` or `LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"tunnel_protocol": {
-				Description: "The tunnel protocol to be used. IPSEC and GRE are the only valid options. " +
-					"IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the " +
+				Description: "The tunnel protocol to be used. IPSEC and GRE " +
+					"are the only valid options. IPSEC can only be used with " +
+					"azure. GRE can only be used with AWS. IPSEC is the " +
 					"default selection. ",
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -191,56 +195,66 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 	}
 }
 
-func resourceConnectorArubaEdgeCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorArubaEdgeCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorArubaEdgeRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send create request
-	response, provisionState, err := api.Create(request)
+	// CREATE
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
-	}
-
-	// Set the state
-	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
-	return resourceConnectorArubaEdgeRead(d, m)
+
+	// Set the state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceConnectorArubaEdgeRead(ctx, d, m)
 }
 
-func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Get resource
-	connector, err := api.GetById(d.Id())
+	// GET
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	arubaEdgeMappings, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(connector.Segments, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("aruba_edge_vrf_mapping", arubaEdgeMappings)
@@ -258,59 +272,72 @@ func resourceConnectorArubaEdgeRead(d *schema.ResourceData, m interface{}) error
 	d.Set("version", connector.Version)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
-func resourceConnectorArubaEdgeUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorArubaEdgeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	connector, err := generateConnectorArubaEdgeRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send update request
-	provisionState, err := api.Update(d.Id(), connector)
+	// UPDATE
+	provState, err, provErr := api.Update(d.Id(), connector)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorArubaEdgeRead(d, m)
+	return resourceConnectorArubaEdgeRead(ctx, d, m)
 }
 
-func resourceConnectorArubaEdgeDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorArubaEdgeDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	// DELETE
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_aruba_edge %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
-	return err
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
+	return nil
 }
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {

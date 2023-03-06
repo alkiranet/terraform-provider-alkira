@@ -1,9 +1,12 @@
 package alkira
 
 import (
+	"context"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,12 +17,12 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"environmental variables:\n\n * AK_AZURE_APPLICATION_ID\n " +
 			"* AK_AZURE_SUBSCRIPTION_ID\n * AK_AZURE_SECRET_KEY\n " +
 			"* AK_AZURE_TENANT_ID\n",
-		Create: resourceCredentialAzureVnet,
-		Read:   resourceCredentialAzureVnetRead,
-		Update: resourceCredentialAzureVnetUpdate,
-		Delete: resourceCredentialAzureVnetDelete,
+		CreateContext: resourceCredentialAzureVnet,
+		ReadContext:   resourceCredentialAzureVnetRead,
+		UpdateContext: resourceCredentialAzureVnetUpdate,
+		DeleteContext: resourceCredentialAzureVnetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,7 +67,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 	}
 }
 
-func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAzureVnet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialAzureVnet{
@@ -78,18 +81,18 @@ func resourceCredentialAzureVnet(d *schema.ResourceData, meta interface{}) error
 	id, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)
-	return resourceCredentialAzureVnetRead(d, meta)
+	return resourceCredentialAzureVnetRead(ctx, d, meta)
 }
 
-func resourceCredentialAzureVnetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAzureVnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
 	c := alkira.CredentialAzureVnet{
@@ -103,24 +106,21 @@ func resourceCredentialAzureVnetUpdate(d *schema.ResourceData, meta interface{})
 	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCredentialAzureVnetRead(d, meta)
+	return resourceCredentialAzureVnetRead(ctx, d, meta)
 }
 
-func resourceCredentialAzureVnetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCredentialAzureVnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Id()
 
-	log.Printf("[INFO] Deleting Credential (AZURE-VNET %s)\n", id)
-	err := client.DeleteCredential(id, alkira.CredentialTypeAzureVnet)
+	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeAzureVnet)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Deleted Credential (AZURE-VNET %s)\n", id)
 	d.SetId("")
 	return nil
 }

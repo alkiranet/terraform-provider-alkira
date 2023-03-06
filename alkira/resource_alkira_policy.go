@@ -5,16 +5,18 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAlkiraPolicy() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage policy.",
-		Create:      resourcePolicy,
-		Read:        resourcePolicyRead,
-		Update:      resourcePolicyUpdate,
-		Delete:      resourcePolicyDelete,
+		Description:   "Manage policy.",
+		CreateContext: resourcePolicy,
+		ReadContext:   resourcePolicyRead,
+		UpdateContext: resourcePolicyUpdate,
+		DeleteContext: resourcePolicyDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -27,7 +29,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -78,7 +80,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicy(d *schema.ResourceData, m interface{}) error {
+func resourcePolicy(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
@@ -87,30 +89,38 @@ func resourcePolicy(d *schema.ResourceData, m interface{}) error {
 	request := generatePolicyRequest(d, m)
 
 	// Send request
-	response, provisionState, err := api.Create(request)
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
 	d.SetId(string(response.Id))
-	return resourcePolicyRead(d, m)
+	return resourcePolicyRead(ctx, d, m)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
-	policy, err := api.GetById(d.Id())
+	policy, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("description", policy.Description)
@@ -122,16 +132,14 @@ func resourcePolicyRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("to_groups", policy.ToGroups)
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
@@ -140,36 +148,49 @@ func resourcePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	request := generatePolicyRequest(d, m)
 
 	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourcePolicyRead(d, m)
+	return resourcePolicyRead(ctx, d, m)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete policy %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 

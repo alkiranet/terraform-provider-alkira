@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure VNET Connector.",
-		Create:      resourceConnectorAzureVnetCreate,
-		Read:        resourceConnectorAzureVnetRead,
-		Update:      resourceConnectorAzureVnetUpdate,
-		Delete:      resourceConnectorAzureVnetDelete,
+		Description:   "Manage Azure VNET Connector.",
+		CreateContext: resourceConnectorAzureVnetCreate,
+		ReadContext:   resourceConnectorAzureVnetRead,
+		UpdateContext: resourceConnectorAzureVnetUpdate,
+		DeleteContext: resourceConnectorAzureVnetDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -28,7 +30,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,10 +62,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -71,9 +74,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"name": {
 				Description: "The name of the connector.",
@@ -116,7 +120,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Required:    true,
 						},
 						"routing_options": {
-							Description:  "Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Description: "Routing options for the CIDR, either " +
+								"`ADVERTISE_DEFAULT_ROUTE` or " +
+								"`ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
@@ -193,46 +199,53 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 	}
 }
 
-func resourceConnectorAzureVnetCreate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send create request
-	response, provisionState, err := api.Create(request)
+	// CREATE
+	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set states
 	d.SetId(string(response.Id))
 
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorAzureVnetRead(d, m)
+	return resourceConnectorAzureVnetRead(ctx, d, m)
 }
 
-func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	// Get the resource
-	connector, err := api.GetById(d.Id())
+	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("azure_vnet_id", connector.VnetId)
@@ -255,66 +268,79 @@ func resourceConnectorAzureVnetRead(d *schema.ResourceData, m interface{}) error
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return fmt.Errorf("the number of segments are invalid %n", numOfSegments)
+		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
 	}
 
 	// Set provision state
-	_, provisionState, err := api.GetByName(d.Get("name").(string))
-
-	if client.Provision == true && provisionState != "" {
-		d.Set("provision_state", provisionState)
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-func resourceConnectorAzureVnetUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	// Send update request
-	provisionState, err := api.Update(d.Id(), request)
+	// UPDATE
+	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set provision state
 	if client.Provision == true {
-		d.Set("provision_state", provisionState)
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
 	}
 
-	return resourceConnectorAzureVnetRead(d, m)
+	return resourceConnectorAzureVnetRead(ctx, d, m)
 }
 
-func resourceConnectorAzureVnetDelete(d *schema.ResourceData, m interface{}) error {
+func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	provisionState, err := api.Delete(d.Id())
+	// DELETE
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return err
-	}
-
-	if client.Provision == true && provisionState != "SUCCESS" {
-		return fmt.Errorf("failed to delete connector_azure_vnet %s, provision failed", d.Id())
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
 	return nil
 }
 
