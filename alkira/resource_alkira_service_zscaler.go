@@ -229,7 +229,7 @@ func resourceZscaler(ctx context.Context, d *schema.ResourceData, m interface{})
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -302,7 +302,7 @@ func resourceZscalerUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -322,11 +322,16 @@ func resourceZscalerDelete(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

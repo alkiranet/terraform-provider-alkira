@@ -262,7 +262,7 @@ func resourceInfoblox(ctx context.Context, d *schema.ResourceData, m interface{}
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -294,7 +294,7 @@ func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
@@ -319,7 +319,7 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -339,11 +339,16 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

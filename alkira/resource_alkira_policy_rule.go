@@ -172,7 +172,7 @@ func resourcePolicyRule(ctx context.Context, d *schema.ResourceData, m interface
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -246,7 +246,7 @@ func resourcePolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, m int
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -266,11 +266,16 @@ func resourcePolicyRuleDelete(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

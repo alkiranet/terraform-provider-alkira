@@ -171,13 +171,15 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM` or `LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"tunnel_protocol": {
-				Description: "The tunnel protocol to be used. IPSEC and GRE are the only valid options. " +
-					"IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the " +
+				Description: "The tunnel protocol to be used. IPSEC and GRE " +
+					"are the only valid options. IPSEC can only be used with " +
+					"azure. GRE can only be used with AWS. IPSEC is the " +
 					"default selection. ",
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -195,22 +197,24 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 
 func resourceConnectorArubaEdgeCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorArubaEdgeRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	d.SetId(string(response.Id))
 
 	// Set the state
 	if client.Provision == true {
@@ -219,22 +223,22 @@ func resourceConnectorArubaEdgeCreate(ctx context.Context, d *schema.ResourceDat
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
 	}
 
-	d.SetId(string(response.Id))
 	return resourceConnectorArubaEdgeRead(ctx, d, m)
 }
 
 func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Get resource
+	// GET
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -277,17 +281,17 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceConnectorArubaEdgeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	connector, err := generateConnectorArubaEdgeRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), connector)
 
 	if err != nil {
@@ -301,7 +305,7 @@ func resourceConnectorArubaEdgeUpdate(ctx context.Context, d *schema.ResourceDat
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -312,21 +316,28 @@ func resourceConnectorArubaEdgeUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceConnectorArubaEdgeDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorArubaEdge(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
-	return diag.FromErr(err)
+	return nil
 }
 
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {

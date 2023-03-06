@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -69,7 +68,6 @@ func resourceCredentialSshKeyPairUpdate(ctx context.Context, d *schema.ResourceD
 		Type:      "IMPORTED",
 	}
 
-	log.Printf("[INFO] Updating Credential (SSH key pair)")
 	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeKeyPair, c, 0)
 
 	if err != nil {
@@ -82,8 +80,12 @@ func resourceCredentialSshKeyPairUpdate(ctx context.Context, d *schema.ResourceD
 func resourceCredentialSshKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	log.Printf("[INFO] Deleting credential (SSH key pair %s)\n", d.Id())
 	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeKeyPair)
 
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }

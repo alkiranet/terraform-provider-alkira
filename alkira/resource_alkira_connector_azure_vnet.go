@@ -62,10 +62,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -73,9 +74,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"name": {
 				Description: "The name of the connector.",
@@ -118,7 +120,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Required:    true,
 						},
 						"routing_options": {
-							Description:  "Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
+							Description: "Routing options for the CIDR, either " +
+								"`ADVERTISE_DEFAULT_ROUTE` or " +
+								"`ADVERTISE_CUSTOM_PREFIX`.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
@@ -197,18 +201,17 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 
 func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -224,7 +227,7 @@ func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceDat
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -282,17 +285,17 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorAzureVnetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -306,7 +309,7 @@ func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceDat
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -317,20 +320,27 @@ func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

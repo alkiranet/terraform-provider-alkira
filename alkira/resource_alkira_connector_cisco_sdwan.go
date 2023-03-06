@@ -184,17 +184,17 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 
 func resourceConnectorCiscoSdwanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -210,7 +210,7 @@ func resourceConnectorCiscoSdwanCreate(ctx context.Context, d *schema.ResourceDa
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -221,9 +221,11 @@ func resourceConnectorCiscoSdwanCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
+	// GET
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -269,17 +271,17 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 
 func resourceConnectorCiscoSdwanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorCiscoSdwanRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -293,7 +295,7 @@ func resourceConnectorCiscoSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -304,9 +306,11 @@ func resourceConnectorCiscoSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceConnectorCiscoSdwanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorCiscoSdwan(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
@@ -314,7 +318,11 @@ func resourceConnectorCiscoSdwanDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
 	d.SetId("")

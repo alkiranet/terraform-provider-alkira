@@ -108,8 +108,9 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "SRC_IP"}, false),
 			},
 			"egress_ips": {
-				Description: "The types of egress IPs to use with the connector. Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. " +
-					"If `BYOIP` is one of the options provided `byoip_id` must also be set.",
+				Description: "The types of egress IPs to use with the connector. " +
+					"Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. If `BYOIP` " +
+					"is one of the options provided `byoip_id` must also be set.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -123,17 +124,17 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 
 func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorInternetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -149,7 +150,7 @@ func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.Resource
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -160,6 +161,7 @@ func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.Resource
 
 func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
@@ -208,17 +210,17 @@ func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorInternetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	// Set provision state
@@ -228,7 +230,7 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -239,20 +241,27 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 
 func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

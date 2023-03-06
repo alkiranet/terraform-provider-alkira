@@ -369,7 +369,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
@@ -395,7 +395,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -406,7 +406,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
@@ -455,7 +455,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
@@ -480,7 +480,7 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -491,23 +491,28 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
-	// Delete resource
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	// Check provision state
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

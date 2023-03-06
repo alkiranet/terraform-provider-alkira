@@ -164,17 +164,17 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send request to create
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -188,7 +188,7 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -200,9 +200,11 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
+	// GET
 	app, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -252,17 +254,17 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceInternetApplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateInternetApplicationRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -287,6 +289,7 @@ func resourceInternetApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
@@ -296,11 +299,16 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

@@ -126,7 +126,14 @@ func resourceCredentialAwsVpcDelete(ctx context.Context, d *schema.ResourceData,
 	credentialId := d.Id()
 
 	log.Printf("[INFO] Deleting credential (AWS-VPC %s)\n", credentialId)
-	return diag.FromErr(client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc))
+	err := client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }
 
 func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {

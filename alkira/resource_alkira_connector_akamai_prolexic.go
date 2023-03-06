@@ -113,9 +113,17 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL",
+					"MEDIUM",
+					"LARGE",
+					"2LARGE",
+					"4LARGE",
+					"5LARGE",
+					"10LARGE",
+					"20LARGE"}, false),
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +
@@ -197,7 +205,7 @@ func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.Resour
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -286,7 +294,7 @@ func resourceConnectorAkamaiProlexicUpdate(ctx context.Context, d *schema.Resour
 		if provisionErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provisionErr),
 			}}
 		}
@@ -300,17 +308,22 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	provState, err, provisionErr := api.Delete(d.Id())
+	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provisionErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 
@@ -328,7 +341,7 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 	}
 
 	// Create implict akamai-prolexic credential
-	log.Printf("[INFO] Creating Credential (akamai-prolexic)")
+	log.Printf("[INFO] Creating credential-akamai-prolexic")
 	c := alkira.CredentialAkamaiProlexic{
 		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),
 	}

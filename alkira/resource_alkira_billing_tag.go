@@ -104,5 +104,5 @@ func resourceBillingTagDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId("")
-	return diag.FromErr(err)
+	return nil
 }

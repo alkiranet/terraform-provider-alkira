@@ -221,6 +221,8 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
+	d.SetId(string(response.Id))
+
 	// Set provision state
 	if client.Provision == true {
 		d.Set("provision_state", provState)
@@ -228,13 +230,12 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
 	}
 
-	d.SetId(string(response.Id))
 	return resourcePolicyNatRuleRead(ctx, d, m)
 }
 
@@ -288,7 +289,7 @@ func resourcePolicyNatRuleUpdate(ctx context.Context, d *schema.ResourceData, m 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -308,11 +309,16 @@ func resourcePolicyNatRuleDelete(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

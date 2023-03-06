@@ -178,17 +178,17 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 
 func resourceConnectorGcpVpcCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorGcpVpcRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -204,7 +204,7 @@ func resourceConnectorGcpVpcCreate(ctx context.Context, d *schema.ResourceData, 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -215,9 +215,11 @@ func resourceConnectorGcpVpcCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
+	// GET
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -262,17 +264,17 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceConnectorGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	// Construct request
 	request, err := generateConnectorGcpVpcRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -286,7 +288,7 @@ func resourceConnectorGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -297,20 +299,26 @@ func resourceConnectorGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceConnectorGcpVpcDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
-	}
-
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
 
 	return nil
 }

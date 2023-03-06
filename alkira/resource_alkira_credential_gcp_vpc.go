@@ -144,16 +144,13 @@ func resourceCredentialGcpVpcUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCredentialGcpVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Id()
 
-	log.Printf("[INFO] Deleting Credential (GCP-VPC %s)\n", id)
-	err := client.DeleteCredential(id, "gcpvpc")
+	err := client.DeleteCredential(d.Id(), "gcpvpc")
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Deleted Credential (GCP-VPC %s)\n", id)
 	d.SetId("")
 	return nil
 }

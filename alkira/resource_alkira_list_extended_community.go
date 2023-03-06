@@ -81,6 +81,8 @@ func resourceListExtendedCommunity(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
+	d.SetId(string(response.Id))
+
 	// Set provision state
 	if client.Provision == true {
 		d.Set("provision_state", provState)
@@ -88,13 +90,12 @@ func resourceListExtendedCommunity(ctx context.Context, d *schema.ResourceData, 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
 	}
 
-	d.SetId(string(response.Id))
 	return resourceListExtendedCommunityRead(ctx, d, m)
 }
 
@@ -143,7 +144,7 @@ func resourceListExtendedCommunityUpdate(ctx context.Context, d *schema.Resource
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -163,11 +164,16 @@ func resourceListExtendedCommunityDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

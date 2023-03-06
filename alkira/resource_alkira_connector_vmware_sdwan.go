@@ -175,6 +175,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 
 func resourceConnectorVmwareSdwanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
@@ -201,7 +202,7 @@ func resourceConnectorVmwareSdwanCreate(ctx context.Context, d *schema.ResourceD
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -212,9 +213,11 @@ func resourceConnectorVmwareSdwanCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
+	// GET
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -260,17 +263,17 @@ func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
-	// Construct update request
 	request, err := generateConnectorVmwareSdwanRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -283,7 +286,7 @@ func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceD
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -294,20 +297,26 @@ func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceConnectorVmwareSdwanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVmwareSdwan(m.(*alkira.AlkiraClient))
 
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
-	}
-
 	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
 
 	return nil
 }

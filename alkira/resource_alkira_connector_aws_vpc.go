@@ -185,9 +185,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 						"options": {
 							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, " +
 								"`OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "OVERRIDE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"OVERRIDE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 					},
 				},
@@ -199,18 +202,17 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 func resourceConnectorAwsVpcCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
-	// Create request
 	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send create request
+	// CREATE
 	response, provState, err, provErr := api.Create(request)
 
 	if err != nil {
@@ -226,7 +228,7 @@ func resourceConnectorAwsVpcCreate(ctx context.Context, d *schema.ResourceData, 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -237,11 +239,11 @@ func resourceConnectorAwsVpcCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
-	// Get connector
+	// GET
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -286,18 +288,17 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceConnectorAwsVpcUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
-	// Construct request
 	request, err := generateConnectorAwsVpcRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -311,7 +312,7 @@ func resourceConnectorAwsVpcUpdate(ctx context.Context, d *schema.ResourceData, 
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -322,22 +323,27 @@ func resourceConnectorAwsVpcUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceConnectorAwsVpcDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	// Init
+	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAwsVpc(client)
 
-	// Delete resource
+	// DELETE
 	provState, err, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 

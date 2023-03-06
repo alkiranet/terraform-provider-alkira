@@ -114,16 +114,13 @@ func resourceCredentialAzureVnetUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceCredentialAzureVnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Id()
 
-	log.Printf("[INFO] Deleting Credential (AZURE-VNET %s)\n", id)
-	err := client.DeleteCredential(id, alkira.CredentialTypeAzureVnet)
+	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeAzureVnet)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Deleted Credential (AZURE-VNET %s)\n", id)
 	d.SetId("")
 	return nil
 }

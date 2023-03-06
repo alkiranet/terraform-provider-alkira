@@ -395,7 +395,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return "", nil, fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
+			return "FAILED", nil, fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
@@ -471,7 +471,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
-			return "", nil, fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
+			return "FAILED", nil, fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
 		}
 
 		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {

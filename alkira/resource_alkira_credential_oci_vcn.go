@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -72,7 +71,6 @@ func resourceCredentialOciVcn(ctx context.Context, d *schema.ResourceData, meta 
 
 	c := generateCredentialOciVcnRequest(d)
 
-	log.Printf("[INFO] Creating Credential (OCI-VCN)")
 	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeOciVcn, c, 0)
 
 	if err != nil {
@@ -92,7 +90,6 @@ func resourceCredentialOciVcnUpdate(ctx context.Context, d *schema.ResourceData,
 
 	c := generateCredentialOciVcnRequest(d)
 
-	log.Printf("[INFO] Updating Credential (OCI-VCN)")
 	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeOciVcn, c, 0)
 
 	if err != nil {
@@ -104,16 +101,13 @@ func resourceCredentialOciVcnUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCredentialOciVcnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
-	id := d.Id()
 
-	log.Printf("[INFO] Deleting Credential (OCI-VCN) %s", id)
-	err := client.DeleteCredential(id, alkira.CredentialTypeOciVcn)
+	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeOciVcn)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Deleted Credential (OCI-VCN) %s", id)
 	d.SetId("")
 	return nil
 }

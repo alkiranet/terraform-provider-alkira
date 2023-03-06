@@ -252,7 +252,7 @@ func resourceFortinetCreate(ctx context.Context, d *schema.ResourceData, m inter
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (CREATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -336,7 +336,7 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION FAILED",
+				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -356,17 +356,22 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
+	d.SetId("")
+
 	if client.Provision == true && provState != "SUCCESS" {
-		return diag.FromErr(provErr)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
 	}
 
-	d.SetId("")
 	return nil
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
-	client := m.(*alkira.AlkiraClient)
 
+	client := m.(*alkira.AlkiraClient)
 	fortinetCredId := d.Get("credential_id").(string)
 
 	if 0 == len(fortinetCredId) {
