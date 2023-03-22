@@ -76,9 +76,9 @@ Required:
 
 Optional:
 
-- `gateway_mac_address` (List of String) An array containing the mac addresses of VXLAN gateways reachable through ExpressRoute circuit. The gatewayMacAddresses is only expected if VXLAN tunnel protocol is selected, and 2 gateway mac addresses are expected only if redundant_router is enabled.
+- `gateway_mac_address` (List of String) An array containing the mac addresses of VXLAN gateways reachable through ExpressRoute circuit. The field is only expected if VXLAN tunnel protocol is selected, and 2 gateway MAC addresses are expected only if `redundant_router` is enabled.
 - `redundant_router` (Boolean) Indicates if ExpressRoute Circuit terminates on redundant routers on customer side.
-- `virtual_network_interface` (List of Number) This is an optional field if the tunnel protocol is VXLAN. If not specified Alkira allocates unique VNI from the range [16773023, 16777215].
+- `virtual_network_interface` (List of Number) This is an optional field if the `tunnel_protocol` is `VXLAN`. If not specified Alkira allocates unique VNI from the range `[16773023, 16777215]`.
 
 Read-Only:
 
