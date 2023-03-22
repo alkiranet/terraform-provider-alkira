@@ -55,6 +55,16 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"connection_mode": {
+				Description: "The mode that connector will use to connect to the " +
+					"Alkira CXP. `VNET_GATEWAY` will connect with a Virtual " +
+					"Gateway, `VNET_PEERING` will connect using an Alkira " +
+					"Transit Hub (ATH).",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "VNET_GATEWAY",
+				ValidateFunc: validation.StringInSlice([]string{"VNET_GATEWAY", "VNET_PEERING"}, false),
+			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
 				Type:        schema.TypeBool,
@@ -252,6 +262,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
+	d.Set("connection_mode", connector.ConnectionMode)
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
@@ -367,18 +378,19 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:   convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
-		CXP:           d.Get("cxp").(string),
-		CredentialId:  d.Get("credential_id").(string),
-		Enabled:       d.Get("enabled").(bool),
-		Group:         d.Get("group").(string),
-		Name:          d.Get("name").(string),
-		SecondaryCXPs: convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Segments:      []string{segmentName},
-		Size:          d.Get("size").(string),
-		ServiceTags:   convertTypeListToStringList(d.Get("service_tags").([]interface{})),
-		VnetId:        d.Get("azure_vnet_id").(string),
-		VnetRouting:   routing,
+		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		CXP:            d.Get("cxp").(string),
+		ConnectionMode: d.Get("connection_mode").(string),
+		CredentialId:   d.Get("credential_id").(string),
+		Enabled:        d.Get("enabled").(bool),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:       []string{segmentName},
+		Size:           d.Get("size").(string),
+		ServiceTags:    convertTypeListToStringList(d.Get("service_tags").([]interface{})),
+		VnetId:         d.Get("azure_vnet_id").(string),
+		VnetRouting:    routing,
 	}
 
 	return request, nil

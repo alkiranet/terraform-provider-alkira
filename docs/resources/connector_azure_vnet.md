@@ -112,6 +112,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 ### Optional
 
 - `billing_tag_ids` (List of Number) Tags for billing.
+- `connection_mode` (String) The mode that connector will use to connect to the Alkira CXP. `VNET_GATEWAY` will connect with a Virtual Gateway, `VNET_PEERING` will connect using an Alkira Transit Hub (ATH).
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
