@@ -145,7 +145,11 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, m interfac
 	segment, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO READ RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("asn", segment.Asn)
@@ -218,17 +222,16 @@ func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
-	d.SetId("")
-
 	// Check provisions state
 	if client.Provision == true && provState != "SUCCESS" {
 		return diag.Diagnostics{{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "PROVISION (DELETE) FAILED",
-			Detail:   fmt.Sprintf("%s", provErr),
+			Detail:   fmt.Sprintf("%s: %s", err, provErr),
 		}}
 	}
 
+	d.SetId("")
 	return nil
 }
 

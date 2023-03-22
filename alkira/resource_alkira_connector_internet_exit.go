@@ -168,7 +168,11 @@ func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceDa
 	connector, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO READ RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("billing_tag_ids", connector.BillingTags)
@@ -252,16 +256,15 @@ func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	d.SetId("")
-
 	if client.Provision == true && provState != "SUCCESS" {
 		return diag.Diagnostics{{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "PROVISION (DELETE) FAILED",
 			Detail:   fmt.Sprintf("%s", provErr),
 		}}
 	}
 
+	d.SetId("")
 	return nil
 }
 
