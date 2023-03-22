@@ -269,7 +269,11 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	f, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("auto_scale", f.AutoScale)

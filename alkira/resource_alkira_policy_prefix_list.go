@@ -129,7 +129,11 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 	list, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("name", list.Name)

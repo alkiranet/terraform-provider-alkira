@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -58,7 +59,11 @@ func resourceGroupUserRead(ctx context.Context, d *schema.ResourceData, m interf
 	group, _, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("name", group.Name)
