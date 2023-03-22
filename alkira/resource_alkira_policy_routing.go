@@ -271,7 +271,11 @@ func resourcePolicyRoutingRead(ctx context.Context, d *schema.ResourceData, m in
 	policy, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	if policy.AdvertiseInternetExit != nil {

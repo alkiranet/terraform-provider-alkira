@@ -248,7 +248,11 @@ func resourceZscalerRead(ctx context.Context, d *schema.ResourceData, m interfac
 	z, provState, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	segmentIds, err := convertSegmentNamesToSegmentIds(z.Segments, m)

@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -79,7 +80,11 @@ func resourceCloudVisorAccountRead(ctx context.Context, d *schema.ResourceData, 
 	account, _, err := api.GetById(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 
 	d.Set("name", account.Name)
