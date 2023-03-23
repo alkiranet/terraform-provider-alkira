@@ -240,7 +240,7 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return diag.FromErr(err)
+	return nil
 }
 
 func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
