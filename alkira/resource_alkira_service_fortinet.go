@@ -346,7 +346,7 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		}
 	}
 
-	return diag.FromErr(err)
+	return nil
 }
 
 func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
