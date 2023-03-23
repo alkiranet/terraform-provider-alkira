@@ -107,7 +107,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) Tags for billing.
+- `billing_tag_ids` (List of Number) IDs of billing tags associated with the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `gcp_project_id` (String) GCP Project ID.

@@ -37,7 +37,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
+				Description: "IDs of billing tags associated with the connector.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
@@ -263,7 +263,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 		d.Set("provision_state", provState)
 	}
 
-	return diag.FromErr(err)
+	return nil
 }
 
 func resourceConnectorGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

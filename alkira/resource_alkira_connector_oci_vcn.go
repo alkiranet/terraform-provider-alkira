@@ -288,7 +288,7 @@ func resourceConnectorOciVcnUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return diag.FromErr(err)
+	return nil
 }
 
 func resourceConnectorOciVcnDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

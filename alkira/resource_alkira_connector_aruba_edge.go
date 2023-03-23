@@ -280,7 +280,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("provision_state", provState)
 	}
 
-	return diag.FromErr(err)
+	return nil
 }
 
 func resourceConnectorArubaEdgeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
