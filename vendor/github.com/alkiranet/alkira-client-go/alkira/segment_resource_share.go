@@ -10,6 +10,7 @@ import (
 type SegmentResourceShare struct {
 	Id                  json.Number `json:"id,omitempty"` // response only
 	Name                string      `json:"name"`
+	Description         string      `json:"description,omitempty"`
 	ServiceList         []int       `json:"serviceList"`
 	DesignatedSegment   string      `json:"designatedSegment"`
 	EndAResources       []int       `json:"endAResources"`
