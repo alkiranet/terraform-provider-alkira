@@ -41,6 +41,11 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the segment resource.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
@@ -151,6 +156,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set("name", share.Name)
+	d.Set("description", share.Description)
 	d.Set("service_ids", share.ServiceList)
 	d.Set("designated_segement_id", share.DesignatedSegment)
 	d.Set("end_a_segment_resource_ids", share.EndAResources)
@@ -238,6 +244,7 @@ func generateSegmentResourceShareRequest(d *schema.ResourceData, m interface{}) 
 
 	request := &alkira.SegmentResourceShare{
 		Name:              d.Get("name").(string),
+		Description:       d.Get("description").(string),
 		ServiceList:       convertTypeListToIntList(d.Get("service_ids").([]interface{})),
 		DesignatedSegment: segmentName,
 		EndAResources:     convertTypeListToIntList(d.Get("end_a_segment_resource_ids").([]interface{})),

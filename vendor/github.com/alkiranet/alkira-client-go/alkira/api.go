@@ -75,7 +75,7 @@ func (a *AlkiraAPI[T]) GetAll() (string, error) {
 func (a *AlkiraAPI[T]) GetById(id string) (*T, string, error) {
 
 	// Construct single resource URI
-	uri := fmt.Sprintf("%s/%s", a.Uri, id)
+	uri := fmt.Sprintf("%s/%s?includeMarkedForDeletion=true", a.Uri, id)
 
 	data, provState, err := a.Client.get(uri)
 
