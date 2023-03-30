@@ -18,8 +18,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-// Default client timeout is 60s
+// Default client timeout is 60s and provision timeout is 240m
 const defaultClientTimeout time.Duration = 60 * time.Second
+const defaultProvTimeout time.Duration = 240 * time.Minute
 
 type AlkiraClient struct {
 	Client          *http.Client
@@ -295,7 +296,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			return data, "FAILED", nil, fmt.Errorf("client-create(%s): failed to get provision request ID", requestId)
 		}
 
-		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
+		err := wait.Poll(10*time.Second, defaultProvTimeout, func() (bool, error) {
 			request, err := ac.GetTenantNetworkProvisionRequest(provisionRequestId)
 
 			if err != nil {
@@ -398,7 +399,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 			return "FAILED", nil, fmt.Errorf("client-delete(%s): failed to get provision request ID", requestId)
 		}
 
-		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
+		err := wait.Poll(10*time.Second, defaultProvTimeout, func() (bool, error) {
 			request, err := ac.GetTenantNetworkProvisionRequest(provisionRequestId)
 
 			if err != nil {
@@ -474,7 +475,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 			return "FAILED", nil, fmt.Errorf("client-update(%s): failed to get provision request ID", requestId)
 		}
 
-		err := wait.Poll(10*time.Second, 120*time.Minute, func() (bool, error) {
+		err := wait.Poll(10*time.Second, defaultProvTimeout, func() (bool, error) {
 			request, err := ac.GetTenantNetworkProvisionRequest(provisionRequestId)
 
 			if err != nil {
