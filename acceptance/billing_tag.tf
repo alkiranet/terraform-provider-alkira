@@ -10,3 +10,6 @@ resource "alkira_billing_tag" "test3" {
   name = "acceptance-test3"
 }
 
+data "alkira_billing_tag" "tag1" {
+  name = "acceptance-data-tag1"
+}
