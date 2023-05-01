@@ -48,3 +48,7 @@ resource "alkira_list_global_cidr" "checkpoint" {
   values      = ["172.16.1.0/24"]
   cxp         = "US-WEST-1"
 }
+
+data "alkira_policy_prefix_list" "prefix1" {
+  name = "acceptance-data-prefix1"
+}
