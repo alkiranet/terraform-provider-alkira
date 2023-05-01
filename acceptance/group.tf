@@ -19,3 +19,7 @@ resource "alkira_group" "test4" {
 resource "alkira_group" "test5" {
   name = "acceptance-group5"
 }
+
+data "alkira_group" "group1" {
+  name = "acceptance-data-group1"
+}
