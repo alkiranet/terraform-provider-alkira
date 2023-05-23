@@ -61,6 +61,7 @@ type CredentialAzureVnet struct {
 	SecretKey      string `json:"secretKey"`
 	SubscriptionId string `json:"subscriptionId"`
 	TenantId       string `json:"tenantId"`
+	Environment    string `json:"environment,omitempty"`
 }
 
 type CredentialCheckPointFwService struct {
