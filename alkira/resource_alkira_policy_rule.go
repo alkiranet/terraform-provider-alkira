@@ -144,6 +144,13 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
+			"rule_action_flow_collector_ids": {
+				Description: "Based on the flow collector IDs, flows observed would " +
+					"be collected and sent to configured destination.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -219,6 +226,7 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("rule_action", rule.RuleAction.Action)
 	d.Set("rule_action_service_types", rule.RuleAction.ServiceTypeList)
 	d.Set("rule_action_service_ids", rule.RuleAction.ServiceList)
+	d.Set("rule_action_flow_collector_ids", rule.RuleAction.FlowCollectors)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -305,6 +313,7 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.Tr
 			Action:          d.Get("rule_action").(string),
 			ServiceTypeList: convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{})),
 			ServiceList:     convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{})),
+			FlowCollectors:  convertTypeListToIntList(d.Get("rule_action_flow_collector_ids").([]interface{})),
 		},
 	}
 
