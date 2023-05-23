@@ -1,7 +1,7 @@
 resource "alkira_service_checkpoint" "test" {
   name       = "acceptance-checkpoint"
   auto_scale = "ON"
-  cxp        = "US-WEST-1"
+  cxp        = local.cxp
 
   license_type = "PAY_AS_YOU_GO"
   size         = "SMALL"
@@ -22,10 +22,11 @@ resource "alkira_service_checkpoint" "test" {
     global_cidr_list_id = alkira_list_global_cidr.checkpoint.id
     segment_id          = alkira_segment.test1.id
 
-    user_name                  = "checkpoint_user"
-    management_server_password = "abcd1234"
+    username = "checkpoint_user"
+    password = "abcd1234"
 
-    # domain only required when configuration_mode is AUTOMATED and when type is MDS.
+    # domain only required when configuration_mode is AUTOMATED and
+    # when type is MDS.
     domain = "test.alkira.com"
   }
 
@@ -37,5 +38,44 @@ resource "alkira_service_checkpoint" "test" {
   instance {
     name    = "ins2"
     sic_key = "abcd12345"
+  }
+}
+
+resource "alkira_service_checkpoint" "test2" {
+  name               = "acceptance-checkpoint-2"
+  auto_scale         = "OFF"
+  cxp                = local.cxp
+
+  billing_tag_ids    = [alkira_billing_tag.test1.id]
+  license_type       = "BRING_YOUR_OWN"
+  max_instance_count = 1
+  min_instance_count = 1
+
+  password           = "xxxxxxxx"
+  pdp_ips            = ["10.1.1.116"]
+  segment_id         = alkira_segment.test1.id
+  size               = "LARGE"
+  tunnel_protocol    = "IPSEC"
+  version            = "R81"
+
+  instance {
+    name          = "acceptance-checkpoint-2"
+    sic_key       = "ak12345678"
+  }
+
+  management_server {
+    configuration_mode         = "AUTOMATED"
+    global_cidr_list_id        = alkira_list_global_cidr.checkpoint.id
+    ips                        = ["54.69.129.30"]
+    username                   = "checkpoint_user"
+    password                   = "Alkira2023"
+    reachability               = "PUBLIC"
+    type                       = "SMS"
+  }
+
+  segment_options {
+    groups     = [alkira_group.test1.name]
+    segment_id = alkira_segment.test1.id
+    zone_name  = "DEFAULT"
   }
 }
