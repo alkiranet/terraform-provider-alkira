@@ -10,6 +10,7 @@ import (
 type SegmentResource struct {
 	Id            json.Number                  `json:"id"`
 	Name          string                       `json:"name"`
+	Description   string                       `json:"description,omitempty"`
 	Segment       string                       `json:"segment"`
 	GroupId       int                          `json:"groupId,omitempty"` // response only
 	GroupPrefixes []SegmentResourceGroupPrefix `json:"groupPrefixes"`

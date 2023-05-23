@@ -9,3 +9,7 @@ terraform {
 provider "alkira" {
   portal = "terraform.preprod.alkira3.net"
 }
+
+locals {
+  cxp = "US-WEST-1"
+}

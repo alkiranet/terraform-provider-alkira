@@ -114,15 +114,15 @@ Required:
 - `configuration_mode` (String) The configuration_mode specifies whether the firewall is to be automatically configured by Alkira or not. To automatically configure the firewall Alkira needs access to the CheckPoint management server. If you choose to use manual configuration Alkira will provide the customer information about the Checkpoint instances so that you can manually configure the firewall.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the management server.
 - `ips` (List of String) Management server IPs.
+- `type` (String) The type of the management server. either `SMS` or `MDS`.
 
 Optional:
 
 - `domain` (String) Management server domain.
-- `management_server_password` (String) The password of the management server.
+- `password` (String) The password of the management server.
 - `reachability` (String) Specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
 - `segment_id` (String) The IDs of the segment to be used to access the management server.
-- `type` (String) The type of the management server. either `SMS` or `MDS`.
-- `user_name` (String) The username of the management server.
+- `username` (String) The username of the management server.
 
 Read-Only:
 

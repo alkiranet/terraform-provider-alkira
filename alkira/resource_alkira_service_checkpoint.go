@@ -173,15 +173,15 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"type": {
 							Description:  "The type of the management server. either `SMS` or `MDS`.",
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"SMS", "MDS"}, false),
 						},
-						"user_name": {
+						"username": {
 							Description: "The username of the management server.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
-						"management_server_password": {
+						"password": {
 							Description: "The password of the management server.",
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -423,7 +423,6 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	chpfwCredId := d.Get("credential_id").(string)
 
 	if 0 == len(chpfwCredId) {
-
 		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
 
 		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
@@ -434,7 +433,6 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 			return nil, err
 		}
 		d.Set("credential_id", credentialId)
-
 	}
 
 	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)

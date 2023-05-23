@@ -33,6 +33,7 @@ type PolicyRuleAction struct {
 	Action          string   `json:"action"`
 	ServiceTypeList []string `json:"serviceTypeList"`
 	ServiceList     []int    `json:"serviceList"`
+	FlowCollectors  []int    `json:"flowCollectors,omitempty"`
 }
 
 // NewTrafficPolicyRule new traffic policy rule
