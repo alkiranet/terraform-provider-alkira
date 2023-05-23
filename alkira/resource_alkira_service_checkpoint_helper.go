@@ -29,7 +29,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 		if v, ok := cfg["configuration_mode"].(string); ok {
 			mg.ConfigurationMode = v
 		}
-		if v, ok := cfg["management_server_password"].(string); ok {
+		if v, ok := cfg["password"].(string); ok {
 			manServerPass = v
 		}
 		if v, ok := cfg["credential_id"].(string); ok {
@@ -60,19 +60,20 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 			mg.Reachability = v
 		}
 		if v, ok := cfg["segment_id"].(string); ok {
+			if v != "" {
+				segment, err := getSegmentNameById(v, m)
 
-			segment, err := getSegmentNameById(v, m)
+				if err != nil {
+					return nil, err
+				}
 
-			if err != nil {
-				return nil, err
+				mg.Segment = segment
 			}
-
-			mg.Segment = segment
 		}
 		if v, ok := cfg["type"].(string); ok {
 			mg.Type = v
 		}
-		if v, ok := cfg["user_name"].(string); ok {
+		if v, ok := cfg["username"].(string); ok {
 			mg.UserName = v
 		}
 	}

@@ -49,7 +49,7 @@ type CheckpointManagementServer struct {
 	GlobalCidrListId  int      `json:"globalCidrListId"`
 	Ips               []string `json:"ips"`
 	Reachability      string   `json:"reachability"`
-	Segment           string   `json:"segment"`
+	Segment           string   `json:"segment,omitempty"`
 	Type              string   `json:"type"`
 	UserName          string   `json:"userName"`
 }
