@@ -61,15 +61,12 @@ func generateGCPUserInputPrefixes(subnets *schema.Set) ([]alkira.UserInputPrefix
 			r := alkira.UserInputPrefixes{}
 			t := subnet.(map[string]interface{})
 
-			if (t["id"] == "" && t["fq_id"] == "") || t["cidr"] == "" {
-				log.Printf("[ERROR] both id %s and cidr %s must be populated", t["id"], t["cidr"])
-				return nil, fmt.Errorf("[ERROR] both id %s and cidr %s must be populated", t["id"], t["cidr"])
+			if t["id"] == "" || t["cidr"] == "" {
+				log.Printf("[ERROR] both subnetwork ID %s and cidr %s must be provided", t["id"], t["cidr"])
+				return nil, fmt.Errorf("[ERROR] both subnetwork ID %s and cidr %s must be provided", t["id"], t["cidr"])
 			}
 
 			if v, ok := t["id"].(string); ok {
-				r.Id = v
-			}
-			if v, ok := t["fq_id"].(string); ok {
 				r.FqId = v
 			}
 			if v, ok := t["cidr"].(string); ok {

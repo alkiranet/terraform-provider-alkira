@@ -1,7 +1,6 @@
 resource "alkira_connector_gcp_vpc" "gcp_routing" {
   name           = "example-vpc1"
   gcp_region     = "us-west1"
-  gcp_vpc_id     = "0000000000000"
   gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
   size           = "SMALL"
