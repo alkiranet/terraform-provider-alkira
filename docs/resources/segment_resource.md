@@ -58,6 +58,7 @@ resource "alkira_segment_resource" "test" {
 
 ### Optional
 
+- `description` (String) The description of the segment resource.
 - `segment_id` (String) The segment ID.
 
 ### Read-Only
