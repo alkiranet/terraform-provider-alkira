@@ -22,7 +22,6 @@ connector.
 resource "alkira_connector_gcp_vpc" "gcp_vpc1" {
   name           = "example-vpc1"
   gcp_region     = "us-west1"
-  gcp_vpc_id     = "0000000000000"
   gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
   size           = "SMALL"
@@ -40,7 +39,6 @@ You could adjust routing options on VPC level by using
 resource "alkira_connector_gcp_vpc" "gcp_routing" {
   name           = "example-vpc1"
   gcp_region     = "us-west1"
-  gcp_vpc_id     = "0000000000000"
   gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
   size           = "SMALL"
@@ -61,7 +59,6 @@ Moreover, to select part of the GCP VPC to be onboarded, you could use `vpc_subn
 resource "alkira_connector_gcp_vpc" "gcp_subnet" {
   name           = "example-vpc1"
   gcp_region     = "us-west1"
-  gcp_vpc_id     = "0000000000000"
   gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
   size           = "SMALL"
@@ -75,17 +72,17 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
   }
 
   vpc_subnet {
-    id   =  "11111111111"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.100.1.0/24"
   }
 
   vpc_subnet {
-    id   =  "11111111111"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.100.2.0/24"
   }
 
   vpc_subnet {
-    id   =  "22222222222"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.200.1.0/24"
   }
 }
@@ -99,7 +96,6 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 - `credential_id` (String) ID of credential managed by Credential Manager.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `gcp_region` (String) GCP region where VPC resides.
-- `gcp_vpc_id` (String) GCP VPC ID.
 - `gcp_vpc_name` (String) GCP VPC name.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment associated with the connector.
@@ -136,8 +132,7 @@ Required:
 Optional:
 
 - `cidr` (String) The CIDR of the subnet.
-- `fq_id` (String) The fully-qualified ID of the subnet with the format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. This is the ID returned by the GCP Terraform provider.
-- `id` (String) The numeric ID of the subnet. This is the ID returned by the GCP REST API.
+- `id` (String) An identifier for the subnetwork resource with format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. This is the ID used in Google Cloud Platform Provider.
 
 ## Import
 

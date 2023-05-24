@@ -1,7 +1,6 @@
 resource "alkira_connector_gcp_vpc" "gcp_subnet" {
   name           = "example-vpc1"
   gcp_region     = "us-west1"
-  gcp_vpc_id     = "0000000000000"
   gcp_vpc_name   = "example-vpc1"
   cxp            = "US-WEST"
   size           = "SMALL"
@@ -15,17 +14,17 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
   }
 
   vpc_subnet {
-    id   =  "11111111111"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.100.1.0/24"
   }
 
   vpc_subnet {
-    id   =  "11111111111"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.100.2.0/24"
   }
 
   vpc_subnet {
-    id   =  "22222222222"
+    id   =  "projects/{{project}}/regions/{{region}}/subnetworks/{{name}}"
     cidr = "10.200.1.0/24"
   }
 }
