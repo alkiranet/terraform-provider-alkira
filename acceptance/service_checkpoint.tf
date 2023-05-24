@@ -42,35 +42,35 @@ resource "alkira_service_checkpoint" "test" {
 }
 
 resource "alkira_service_checkpoint" "test2" {
-  name               = "acceptance-checkpoint-2"
-  auto_scale         = "OFF"
-  cxp                = local.cxp
+  name       = "acceptance-checkpoint-2"
+  auto_scale = "OFF"
+  cxp        = local.cxp
 
   billing_tag_ids    = [alkira_billing_tag.test1.id]
   license_type       = "BRING_YOUR_OWN"
   max_instance_count = 1
   min_instance_count = 1
 
-  password           = "xxxxxxxx"
-  pdp_ips            = ["10.1.1.116"]
-  segment_id         = alkira_segment.test1.id
-  size               = "LARGE"
-  tunnel_protocol    = "IPSEC"
-  version            = "R81"
+  password        = "xxxxxxxx"
+  pdp_ips         = ["10.1.1.116"]
+  segment_id      = alkira_segment.test1.id
+  size            = "LARGE"
+  tunnel_protocol = "IPSEC"
+  version         = "R81"
 
   instance {
-    name          = "acceptance-checkpoint-2"
-    sic_key       = "ak12345678"
+    name    = "acceptance-checkpoint-2"
+    sic_key = "ak12345678"
   }
 
   management_server {
-    configuration_mode         = "AUTOMATED"
-    global_cidr_list_id        = alkira_list_global_cidr.checkpoint.id
-    ips                        = ["54.69.129.30"]
-    username                   = "checkpoint_user"
-    password                   = "Alkira2023"
-    reachability               = "PUBLIC"
-    type                       = "SMS"
+    configuration_mode  = "AUTOMATED"
+    global_cidr_list_id = alkira_list_global_cidr.checkpoint.id
+    ips                 = ["54.69.129.30"]
+    username            = "checkpoint_user"
+    password            = "Alkira2023"
+    reachability        = "PUBLIC"
+    type                = "SMS"
   }
 
   segment_options {
