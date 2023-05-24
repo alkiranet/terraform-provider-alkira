@@ -71,19 +71,16 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			},
 			"vpc_subnet": {
 				Description: "The list of subnets of the target GCP VPC for routing purpose. " +
-					"Given GCP VPC supports multiple prefixes per subnet, each prefix under a subnet will be a new entry.",
+					"Given GCP VPC supports multiple prefixes per subnet, each prefix under a " +
+					"subnet will be a new entry.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description: "The numeric ID of the subnet. This is the ID returned by the GCP REST API.",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-						"fq_id": {
-							Description: "The fully-qualified ID of the subnet with the format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. " +
-								"This is the ID returned by the GCP Terraform provider.",
+							Description: "An identifier for the subnetwork resource with format " +
+								"`projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. " +
+								"This is the ID used in Google Cloud Platform Provider.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -128,11 +125,6 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			},
 			"gcp_region": {
 				Description: "GCP region where VPC resides.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"gcp_vpc_id": {
-				Description: "GCP VPC ID.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -237,7 +229,6 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("gcp_project_id", connector.ProjectId)
-	d.Set("gcp_vpc_id", connector.VpcId)
 	d.Set("gcp_vpc_name", connector.VpcName)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
@@ -361,7 +352,6 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Segments:       []string{segmentName},
 		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
 		Size:           d.Get("size").(string),
-		VpcId:          d.Get("gcp_vpc_id").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),
 	}
 
