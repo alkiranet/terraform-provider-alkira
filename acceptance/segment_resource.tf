@@ -1,6 +1,7 @@
 resource "alkira_segment_resource" "test1" {
-  name       = "acceptance-seg-res-test1"
-  segment_id = alkira_segment.test1.id
+  name        = "acceptance-seg-res-test1"
+  description = "acceptance test seg resource"
+  segment_id  = alkira_segment.test1.id
 
   group_prefix {
     group_id       = -1

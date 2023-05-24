@@ -38,6 +38,11 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the segment resource.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the resource.",
 				Type:        schema.TypeString,
@@ -130,6 +135,7 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	d.Set("name", resource.Name)
+	d.Set("description", resource.Description)
 	d.Set("implicit_group_id", resource.GroupId)
 
 	//
@@ -243,6 +249,7 @@ func generateSegmentResourceRequest(d *schema.ResourceData, m interface{}) (*alk
 	// Assemble request
 	resource := alkira.SegmentResource{
 		Name:          d.Get("name").(string),
+		Description:   d.Get("description").(string),
 		Segment:       segmentName,
 		GroupPrefixes: groupPrefixes,
 	}
