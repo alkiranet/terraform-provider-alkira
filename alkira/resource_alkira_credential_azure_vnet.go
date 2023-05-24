@@ -16,7 +16,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"You could also provide your credentials via the following " +
 			"environmental variables:\n\n * AK_AZURE_APPLICATION_ID\n " +
 			"* AK_AZURE_SUBSCRIPTION_ID\n * AK_AZURE_SECRET_KEY\n " +
-			"* AK_AZURE_TENANT_ID\n",
+			"* AK_AZURE_TENANT_ID\n * AK_AZURE_ENVIRONMENT\n ",
 		CreateContext: resourceCredentialAzureVnet,
 		ReadContext:   resourceCredentialAzureVnetRead,
 		UpdateContext: resourceCredentialAzureVnetUpdate,
@@ -63,6 +63,14 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"AK_AZURE_TENANT_ID",
 					nil),
 			},
+			"environment": &schema.Schema{
+				Description: "Azure environment can be `AZURE`, `AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The default value is `AZURE`.",
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_AZURE_ENVIRONMENT",
+					nil),
+			},
 		},
 	}
 }
@@ -75,6 +83,7 @@ func resourceCredentialAzureVnet(ctx context.Context, d *schema.ResourceData, me
 		SecretKey:      d.Get("secret_key").(string),
 		SubscriptionId: d.Get("subscription_id").(string),
 		TenantId:       d.Get("tenant_id").(string),
+		Environment:    d.Get("environment").(string),
 	}
 
 	log.Printf("[INFO] Creating Credential (AZURE-VNET)")
@@ -100,6 +109,7 @@ func resourceCredentialAzureVnetUpdate(ctx context.Context, d *schema.ResourceDa
 		SecretKey:      d.Get("secret_key").(string),
 		SubscriptionId: d.Get("subscription_id").(string),
 		TenantId:       d.Get("tenant_id").(string),
+		Environment:    d.Get("environment").(string),
 	}
 
 	log.Printf("[INFO] Updating Credential (AZURE-VNET)")
