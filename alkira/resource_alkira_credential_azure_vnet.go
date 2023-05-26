@@ -64,9 +64,11 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					nil),
 			},
 			"environment": &schema.Schema{
-				Description: "Azure environment can be `AZURE`, `AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The default value is `AZURE`.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "Azure environment can be `AZURE`, " +
+					"`AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The " +
+					"default value is `AZURE`.",
+				Type:     schema.TypeString,
+				Optional: true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AK_AZURE_ENVIRONMENT",
 					nil),
