@@ -41,6 +41,14 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_defult_route": {
+							Description: "Enables or disables access to the internet " +
+								"when traffic arrives via this connector. The default " +
+								"value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"advertise_on_prem_routes": {
 							Description: "Allow routes from the branch/premises " +
 								"to be advertised to the cloud. The default " +
@@ -59,14 +67,6 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Description: "The segment ID of the Aruba Edge connector.",
 							Type:        schema.TypeString,
 							Required:    true,
-						},
-						"disable_internet_exit": {
-							Description: "Enables or disables access to the internet " +
-								"when traffic arrives via this connector. The default " +
-								"value is False.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
 						},
 						"gateway_gbp_asn": {
 							Description: "The gateway BGP ASN.",

@@ -68,8 +68,8 @@ Required:
 
 Optional:
 
-- `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes.
-- `allow_nat_exit` (Boolean) Allow NAT exit.
+- `advertise_default_route` (Boolean) Whether advertise default route of internet connector. Default value is `false`.
+- `advertise_on_prem_routes` (Boolean) Whether advertising On Prem Routes. Default value is `false`.
 - `gateway_bgp_asn` (Number) BGP ASN on the customer premise side. A typical value for 2 byte segment is `64523` and `4200064523` for 4 byte segment.
 
 

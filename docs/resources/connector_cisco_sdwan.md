@@ -89,8 +89,8 @@ Required:
 
 Optional:
 
-- `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes.
-- `allow_nat_exit` (Boolean) Allow NAT exit.
+- `advertise_default_route` (Boolean) Whether advertise default route of internet connector. Default value is `false`.
+- `advertise_on_prem_routes` (Boolean) Advertise On Prem Routes. Default value is `false`.
 
 ## Import
 

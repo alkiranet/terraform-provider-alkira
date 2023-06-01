@@ -336,18 +336,21 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"allow_nat_exit": {
-							Description: "Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     true,
+						"advertise_default_route": {
+							Description: "Enable or disable access to the internet " +
+								"when traffic arrives via this connector. Default " +
+								"is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 
 						"advertise_on_prem_routes": {
-							Description: "Additional options for each segment associated with the connector. Default is `false`.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Description: "Additional options for each segment " +
+								"associated with the connector. Default is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
