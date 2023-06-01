@@ -86,7 +86,7 @@ func expandVmwareSdwanVrfMappings(in *schema.Set) []alkira.VmwareSdwanVrfMapping
 		if v, ok := t["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := t["allow_nat_exit"].(bool); ok {
+		if v, ok := t["advertise_default_route"].(bool); ok {
 			r.DisableInternetExit = !v
 		}
 		if v, ok := t["gateway_bgp_asn"].(int); ok {

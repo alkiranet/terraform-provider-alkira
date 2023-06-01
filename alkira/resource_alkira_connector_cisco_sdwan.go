@@ -147,16 +147,18 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advertise_on_prem_routes": {
-							Description: "Advertise On Prem Routes.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Description: "Advertise On Prem Routes. Default value " +
+								"is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
-						"allow_nat_exit": {
-							Description: "Allow NAT exit.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     true,
+						"advertise_default_route": {
+							Description: "Whether advertise default route of " +
+								"internet connector. Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"customer_asn": {
 							Description: "BGP ASN on the customer premise side. A typical value for 2 byte segment " +
@@ -254,7 +256,7 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	for _, m := range connector.CiscoEdgeVrfMappings {
 		mapping := map[string]interface{}{
 			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
-			"allow_nat_exit":           m.DisableInternetExit,
+			"advertise_default_route":  !m.DisableInternetExit,
 			"customer_asn":             m.CustomerAsn,
 			"segment_id":               m.SegmentId,
 			"vrf_id":                   m.Vrf,
@@ -377,8 +379,8 @@ func expandCiscoSdwanVrfMappings(in *schema.Set) []alkira.CiscoSdwanEdgeVrfMappi
 		if v, ok := t["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := t["allow_nat_exit"].(bool); ok {
-			r.DisableInternetExit = v
+		if v, ok := t["advertise_default_route"].(bool); ok {
+			r.DisableInternetExit = !v
 		}
 		if v, ok := t["customer_asn"].(int); ok {
 			r.CustomerAsn = v

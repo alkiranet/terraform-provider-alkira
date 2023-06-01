@@ -5,12 +5,6 @@ resource "alkira_connector_ipsec" "test" {
   size       = "SMALL"
   vpn_mode   = "ROUTE_BASED"
 
-  # segment_options {
-  #   name = "seg1"
-  #   disable_internet_exit = false
-  #   disable_advertise_on_prem_routes = false
-  # }
-
   routing_options {
     type                 = "DYNAMIC"
     customer_gateway_asn = "65512"

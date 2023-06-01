@@ -156,7 +156,7 @@ func expandConnectorIPSecSegmentOptions(in *schema.Set) (interface{}, error) {
 		segmentName, _ := segmentOptionsInput["name"].(string)
 		var segmentOption alkira.ConnectorIPSecSegmentOptions
 
-		if v, ok := segmentOptionsInput["allow_nat_exit"].(bool); ok {
+		if v, ok := segmentOptionsInput["advertise_default_route"].(bool); ok {
 			t := !v
 			segmentOption.DisableInternetExit = &t
 		}

@@ -135,16 +135,18 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advertise_on_prem_routes": {
-							Description: "Advertise On Prem Routes.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Description: "Whether advertising On Prem Routes. " +
+								"Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
-						"allow_nat_exit": {
-							Description: "Allow NAT exit.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     true,
+						"advertise_default_route": {
+							Description: "Whether advertise default route of " +
+								"internet connector. Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"gateway_bgp_asn": {
 							Description: "BGP ASN on the customer premise side. " +
@@ -246,7 +248,7 @@ func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceDat
 	for _, m := range connector.VmWareSdWanVRFMappings {
 		mapping := map[string]interface{}{
 			"advertise_on_prem_routes":   m.AdvertiseOnPremRoutes,
-			"allow_nat_exit":             m.DisableInternetExit,
+			"advertise_default_route":    !m.DisableInternetExit,
 			"gateway_bgp_asn":            m.GatewayBgpAsn,
 			"segment_id":                 m.SegmentId,
 			"vmware_sdwang_segment_name": m.VmWareSdWanSegmentName,
