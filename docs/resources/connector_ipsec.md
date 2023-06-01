@@ -194,8 +194,8 @@ Required:
 
 Optional:
 
+- `advertise_default_route` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `false`.
 - `advertise_on_prem_routes` (Boolean) Additional options for each segment associated with the connector. Default is `false`.
-- `allow_nat_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `true`.
 
 ## Import
 

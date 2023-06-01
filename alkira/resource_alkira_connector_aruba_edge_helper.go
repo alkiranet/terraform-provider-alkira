@@ -92,7 +92,7 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{})
 			"advertise_on_prem_routes":      vrfmapping.AdvertiseOnPremRoutes,
 			"segment_id":                    strconv.Itoa(vrfmapping.AlkiraSegmentId),
 			"aruba_edge_connect_segment_id": arcSeg.Id,
-			"disable_internet_exit":         vrfmapping.DisableInternetExit,
+			"advertise_default_route":       !vrfmapping.DisableInternetExit,
 			"gateway_gbp_asn":               vrfmapping.GatewayBgpAsn,
 		}
 		mappings = append(mappings, i)
@@ -131,8 +131,8 @@ func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEd
 
 			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = segment.Name
 		}
-		if v, ok := m["disable_internet_exit"].(bool); ok {
-			arubaEdgeVRFMapping.DisableInternetExit = v
+		if v, ok := m["advertise_default_route"].(bool); ok {
+			arubaEdgeVRFMapping.DisableInternetExit = !v
 		}
 		if v, ok := m["gateway_gbp_asn"].(int); ok {
 			arubaEdgeVRFMapping.GatewayBgpAsn = v
