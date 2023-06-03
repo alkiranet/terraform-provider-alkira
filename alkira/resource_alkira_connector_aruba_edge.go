@@ -41,7 +41,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"advertise_defult_route": {
+						"advertise_default_route": {
 							Description: "Enables or disables access to the internet " +
 								"when traffic arrives via this connector. The default " +
 								"value is `false`.",
