@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -100,7 +99,7 @@ func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface
 func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) {
 
 	if in == nil || in.Len() == 0 {
-		return nil, fmt.Errorf("[ERROR] Invalid route policy rule")
+		return nil, nil
 	}
 
 	rules := make([]alkira.RoutePolicyRules, in.Len())
