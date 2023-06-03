@@ -19,7 +19,7 @@ type RoutePolicy struct {
 	AdvertiseInternetExit         *bool              `json:"advertiseInternetExit"`
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
 	AdvertiseCustomRoutesPrefixId int                `json:"advertiseCustomRoutesPrefixId,omitempty"`
-	Rules                         []RoutePolicyRules `json:"rules"`
+	Rules                         []RoutePolicyRules `json:"rules,omitempty"`
 }
 
 type RoutePolicyRules struct {
