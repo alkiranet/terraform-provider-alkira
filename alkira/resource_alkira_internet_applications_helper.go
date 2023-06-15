@@ -57,3 +57,25 @@ func expandInternetApplicationTargets(in *schema.Set) []alkira.InternetApplicati
 
 	return targets
 }
+
+func expandInternetApplicationSourceNatPool(in *schema.Set) []*alkira.InternetApplicationSnatIpv4 {
+	if in == nil {
+		return nil
+	}
+
+	pool := make([]*alkira.InternetApplicationSnatIpv4, in.Len())
+
+	for i, ips := range in.List() {
+		r := alkira.InternetApplicationSnatIpv4{}
+		content := ips.(map[string]interface{})
+		if v, ok := content["start_ip"].(string); ok {
+			r.StartIp = v
+		}
+		if v, ok := content["end_ip"].(string); ok {
+			r.EndIp = v
+		}
+		pool[i] = &r
+	}
+
+	return pool
+}

@@ -57,6 +57,7 @@ type ConnectorAwsVpc struct {
 	VpcId                              string          `json:"vpcId"`
 	VpcOwnerId                         string          `json:"vpcOwnerId"`
 	VpcRouting                         interface{}     `json:"vpcRouting"`
+	TgwConnectEnabled                  bool            `json:"tgwConnectEnabled"`
 }
 
 // NewConnectorAwsVpc new connector-aws-vpc

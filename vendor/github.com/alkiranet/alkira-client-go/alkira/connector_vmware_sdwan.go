@@ -35,6 +35,7 @@ type ConnectorVmwareSdwan struct {
 	TunnelProtocol          string                  `json:"tunnelProtocol"`
 	Version                 string                  `json:"version"`
 	VmWareSdWanVRFMappings  []VmwareSdwanVrfMapping `json:"vmWareSdWanVRFMappings"`
+	Enabled                 bool                    `json:"enabled"`
 }
 
 // NewConnectorVmwareSdwan new connector
