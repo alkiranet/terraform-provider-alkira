@@ -131,6 +131,28 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
+			"source_nat_ip_pool": {
+				Description: "A IP range to use for source NAT with this internet " +
+					"application. It could be only one defined for now. The endpoints " +
+					"of each range are inclusive. Source NAT can only be used if " +
+					"`inbound_connector_type` is `DEFAULT`.",
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"start_ip": {
+							Description: "The start IP of the range.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"end_ip": {
+							Description: "The end IP of the range.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
+				Optional: true,
+			},
 			"target": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
@@ -233,6 +255,19 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("segment_id", segmentId)
 
+	// Source NAT IP pool
+	var pool []map[string]interface{}
+
+	for _, ipRange := range app.SnatIpv4Ranges {
+		i := map[string]interface{}{
+			"start_ip": ipRange.StartIp,
+			"end_ip":   ipRange.EndIp,
+		}
+		pool = append(pool, i)
+	}
+
+	d.Set("source_nat_ip_pool", pool)
+
 	// targets
 	var targets []map[string]interface{}
 
@@ -330,6 +365,11 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	//
 	// Targets
 	//
+	pool := expandInternetApplicationSourceNatPool(d.Get("source_nat_ip_pool").(*schema.Set))
+
+	//
+	// Targets
+	//
 	targets := expandInternetApplicationTargets(d.Get("target").(*schema.Set))
 
 	// Assemble request
@@ -344,6 +384,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		Name:                 d.Get("name").(string),
 		PublicIps:            convertTypeListToStringList(d.Get("public_ips").([]interface{})),
 		SegmentName:          segmentName,
+		SnatIpv4Ranges:       pool,
 		Size:                 d.Get("size").(string),
 		Targets:              targets,
 	}
