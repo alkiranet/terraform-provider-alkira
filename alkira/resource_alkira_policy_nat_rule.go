@@ -56,12 +56,12 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Computed:    true,
 			},
 			"category": {
-				Description: "The category of NAT rule, options are " +
-					"`DEFAULT` or `INTERNET_CONNECTOR`. A empty " +
-					"value in this field will be treated the same " +
-					"as a value of `DEFAULT`.",
+				Description: "The category of NAT rule. The value could be " +
+					"`DEFAULT` or `INTERNET_CONNECTOR`. Default value is " +
+					"`DEFAULT`.",
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      "DEFAULT",
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
 			"match": {

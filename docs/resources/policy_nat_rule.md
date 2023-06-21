@@ -27,7 +27,7 @@ This resource is usually used along with policy resources:`policy_nat_policy`.
 
 ### Optional
 
-- `category` (String) The category of NAT rule, options are `DEFAULT` or `INTERNET_CONNECTOR`. A empty value in this field will be treated the same as a value of `DEFAULT`.
+- `category` (String) The category of NAT rule. The value could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy rule.
 
 ### Read-Only
