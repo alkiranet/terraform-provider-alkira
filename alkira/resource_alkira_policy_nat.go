@@ -33,6 +33,16 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"category": {
+				Description: "The category of NAT policy. " +
+					"The vaule could be `DEFAULT` or " +
+					"`INTERNET_CONNECTOR`. Default value is " +
+					"`DEFAULT`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+			},
 			"type": {
 				Description:  "The type of NAT policy, currently only `INTRA_SEGMENT`is supported.",
 				Type:         schema.TypeString,
@@ -66,13 +76,6 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
-			},
-			"category": {
-				Description: "The category of NAT policy, options are `DEFAULT` or `INTERNET_CONNECTOR`. A empty value in this field " +
-					"will be treated the same as a value of `DEFAULT`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
 		},
 	}
