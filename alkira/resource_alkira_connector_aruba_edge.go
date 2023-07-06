@@ -166,7 +166,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			"segment_ids": {
 				Description: "The IDs of the segments associated with the" +
 					"Aruba Edge connector.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
