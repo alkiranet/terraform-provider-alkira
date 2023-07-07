@@ -191,6 +191,12 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"enabled": {
+				Description: "Is the connector enabled. Default is `true`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 		},
 	}
 }
@@ -274,6 +280,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("version", connector.Version)
+	d.Set("enabled", connector.Enabled)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -386,5 +393,6 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		Size:                d.Get("size").(string),
 		TunnelProtocol:      d.Get("tunnel_protocol").(string),
 		Version:             d.Get("version").(string),
+		Enabled:             d.Get("enabled").(bool),
 	}, nil
 }
