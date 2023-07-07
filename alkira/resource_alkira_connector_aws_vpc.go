@@ -113,6 +113,15 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
+			"tgw_connect_enabled": {
+				Description: "On setting tgwConnectEnabled to true Alkira will use TGW Connect attachments to build connection to AWS Transit gateway." +
+            		"Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance," +
+            		"and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments." + 
+            		"This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
 			"tgw_attachment": {
 				Description: "TGW attachment.",
 				Type:        schema.TypeSet,
@@ -267,6 +276,7 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("vpc_id", connector.VpcId)
+	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -395,6 +405,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Segments:                           []string{segmentName},
 		SecondaryCXPs:                      convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
 		Size:                               d.Get("size").(string),
+		TgwConnectEnabled:                  d.Get("tgw_connect_enabled").(bool),
 		TgwAttachments:                     tgwAttachments,
 		VpcId:                              d.Get("vpc_id").(string),
 		VpcOwnerId:                         d.Get("aws_account_id").(string),
