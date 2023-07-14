@@ -115,12 +115,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			},
 			"tgw_connect_enabled": {
 				Description: "On setting tgwConnectEnabled to true Alkira will use TGW Connect attachments to build connection to AWS Transit gateway." +
-            		"Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance," +
-            		"and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments." + 
-            		"This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+					"Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance," +
+					"and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments." +
+					"This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"tgw_attachment": {
 				Description: "TGW attachment.",
