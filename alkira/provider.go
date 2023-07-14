@@ -19,16 +19,22 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_PORTAL"),
 			},
 			"username": {
-				Description: "Your Tenant Username.",
+				Description: "Your Tenant Username. If this is not provided then `api_key` must have a value.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_USERNAME"),
 			},
 			"password": {
-				Description: "Your Tenant Password.",
+				Description: "Your Tenant Password. If this is not provided then `api_key` must have a value.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
+			},
+			"api_key": {
+				Description: "Your Alkira API key. If thie is not provided then `username` and `password` must have a value.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: envDefaultFunc("ALKIRA_API_KEY"),
 			},
 			"provision": {
 				Description: "With provision or not.",
@@ -126,7 +132,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 }
 
 func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string), d.Get("provision").(bool))
+	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string), d.Get("api_key").(string), d.Get("provision").(bool))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")

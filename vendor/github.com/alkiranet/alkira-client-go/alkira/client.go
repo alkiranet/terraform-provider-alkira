@@ -48,7 +48,7 @@ func (s *Session) Cookies(u *url.URL) []*http.Cookie {
 }
 
 // NewAlkiraClient creates a new API client
-func NewAlkiraClient(hostname string, username string, password string, provision bool) (*AlkiraClient, error) {
+func NewAlkiraClient(hostname string, username string, password string, secret string, provision bool) (*AlkiraClient, error) {
 
 	// Construct the portal URI
 	url := "https://" + hostname
@@ -66,11 +66,11 @@ func NewAlkiraClient(hostname string, username string, password string, provisio
 	}
 
 	logf("DEBUG", "PROVISION: %v", provision)
-	return NewAlkiraClientInternal(url, username, password, clientTimeout, provision)
+	return NewAlkiraClientInternal(url, username, password, secret, clientTimeout, provision)
 }
 
 // NewAlkiraClientInternal creates a new internal Alkira client
-func NewAlkiraClientInternal(url string, username string, password string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
+func NewAlkiraClientInternal(url string, username string, password string, secret string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
 
 	// Construct the portal URI based on the given endpoint
 	apiUrl := url + "/api"
@@ -78,6 +78,7 @@ func NewAlkiraClientInternal(url string, username string, password string, timeo
 	loginRequestBody, err := json.Marshal(map[string]string{
 		"userName": username,
 		"password": password,
+		"secret":   secret,
 	})
 
 	// Login to the portal
