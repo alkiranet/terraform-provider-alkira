@@ -22,6 +22,7 @@ const (
 	CredentialTypeCiscoSdwan                              = "ciscosdwan"
 	CredentialTypeFortinet                                = "ftntfw"
 	CredentialTypeFortinetInstance                        = "ftntfw-instance"
+	CredentialTypeFortinetSdwanInstance                   = "ftnt-sdwan-connector-instance"
 	CredentialTypeGcpVpc                                  = "gcpvpc"
 	CredentialTypeInfoblox                                = "infoblox"
 	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
@@ -113,6 +114,13 @@ type CredentialFortinet struct {
 type CredentialFortinetInstance struct {
 	LicenseType string `json:"licenseType"`
 	LicenseKey  string `json:"licenseKey"`
+}
+
+type CredentialFortinetSdwanInstance struct {
+	LicenseType string `json:"licenseType"`
+	LicenseKey  string `json:"licenseKey"`
+	Password    string `json:"password"`
+	Username    string `json:"userName"`
 }
 
 type CredentialInfoblox struct {

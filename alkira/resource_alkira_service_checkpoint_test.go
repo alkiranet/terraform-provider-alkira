@@ -10,9 +10,7 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
-//
 // TEST HELPER
-//
 func serveCheckpoint(t *testing.T, c *alkira.Checkpoint) *alkira.AlkiraClient {
 	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, req *http.Request) {
