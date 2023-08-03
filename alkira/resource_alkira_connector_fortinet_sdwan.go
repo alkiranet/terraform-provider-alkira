@@ -40,7 +40,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated " +
+				Description: "A list of Billing Tag IDs associated " +
 					"with the connector.",
 				Type:     schema.TypeList,
 				Optional: true,
@@ -105,9 +105,11 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							Computed:    true,
 						},
 						"username": {
-							Description: "The username of the WAN Edge instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The username of the WAN Edge instance. The " +
+								"default value is `admin`.",
+							Type:     schema.TypeString,
+							Required: true,
+							Default:  "admin",
 						},
 						"password": {
 							Description: "The password of the WAN Edge instance.",
@@ -125,9 +127,12 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							Computed:    true,
 						},
 						"license_type": {
-							Description: "The license type of WAN Edge instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The type of license. Either `PAY_AS_YOU_GO` " +
+								"or `BRING_YOUR_OWN`.",
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"PAY_AS_YOU_GO", "BRING_YOUR_OWN"}, false),
 						},
 						"serial_number": &schema.Schema{
 							Description: "Serial Number of the WAN Edge. It's " +

@@ -13,8 +13,8 @@ cloud.google.com/go/storage
 # github.com/agext/levenshtein v1.2.2
 ## explicit
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v1.41.0
-## explicit; go 1.18
+# github.com/alkiranet/alkira-client-go v1.42.0
+## explicit; go 1.20
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-cidr v1.0.1
 ## explicit
