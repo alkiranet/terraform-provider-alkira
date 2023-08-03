@@ -8,15 +8,16 @@ import (
 )
 
 type NatPolicy struct {
-	Name           string      `json:"name"`
-	Description    string      `json:"description"`
-	Type           string      `json:"type"`
-	Segment        string      `json:"segment"`
-	IncludedGroups []int       `json:"includedGroups"`
-	ExcludedGroups []int       `json:"excludedGroups"`
-	Id             json.Number `json:"id,omitempty"`
-	NatRuleIds     []int       `json:"natRuleIds"`
-	Category       string      `json:"category"`
+	Name                               string      `json:"name"`
+	Description                        string      `json:"description"`
+	Type                               string      `json:"type"`
+	Segment                            string      `json:"segment"`
+	IncludedGroups                     []int       `json:"includedGroups"`
+	ExcludedGroups                     []int       `json:"excludedGroups"`
+	Id                                 json.Number `json:"id,omitempty"`
+	NatRuleIds                         []int       `json:"natRuleIds"`
+	Category                           string      `json:"category"`
+	AllowOverlappingTranslatedPrefixes *bool       `json:"allowOverlappingTranslatedPrefixes,omitempty"`
 }
 
 // NewNatPolicy new nat policy
