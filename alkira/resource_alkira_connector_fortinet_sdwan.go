@@ -108,7 +108,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							Description: "The username of the WAN Edge instance. The " +
 								"default value is `admin`.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							Default:  "admin",
 						},
 						"password": {
