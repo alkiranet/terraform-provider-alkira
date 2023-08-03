@@ -43,8 +43,8 @@ github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki
 github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412/go.mod h1:WPjqKcmVOxf0XSf3YxCJs6N6AOSrOx3obionmG7T0y0=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
-github.com/alkiranet/alkira-client-go v1.41.0 h1:J0tzS60kWH+QQYfZpR0yrKac+SZY76j3kvbpTd+8Gg4=
-github.com/alkiranet/alkira-client-go v1.41.0/go.mod h1:wZZ6wETqhS7ED5JfTosY3fzXhslH0avHOiWr1I+wm8k=
+github.com/alkiranet/alkira-client-go v1.42.0 h1:ii1xvRCKvGvvskNPlpMQ6+GP1byM5RhuTCjOgMNueHE=
+github.com/alkiranet/alkira-client-go v1.42.0/go.mod h1:Iryak0JYVm3iddCTbgXUvgMIJPb41woD/lfBhY6qchg=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/apparentlymart/go-cidr v1.0.1 h1:NmIwLZ/KdsjIUlhf+/Np40atNXm/+lZ5txfTJ/SpF+U=

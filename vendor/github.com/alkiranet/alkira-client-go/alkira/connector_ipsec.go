@@ -49,7 +49,6 @@ type ConnectorIPSecPolicyOptions struct {
 	CxpTSPrefixListIds    []int `json:"cxpTSPrefixListIds"`
 }
 
-//
 // From the current version of API, the routing option is enforced and
 // you have to set it.
 //
@@ -57,7 +56,6 @@ type ConnectorIPSecPolicyOptions struct {
 //	  staticRouting: {}
 //	  dynamicRouting: {}
 //	}
-//
 type ConnectorIPSecStaticRouting struct {
 	Availability string `json:"availability"`
 	PrefixListId int    `json:"prefixListId"`
@@ -74,11 +72,9 @@ type ConnectorIPSecRoutingOptions struct {
 	StaticRouting  *ConnectorIPSecStaticRouting  `json:"staticRouting"`
 }
 
-//
 // SegmentOptions block is dynamic and so can't be put into a
 // structure. It needs to be marshalled from
 // map[string]ConnectorIPSecSegmentOptions
-//
 type ConnectorIPSecSegmentOptions struct {
 	AdvertiseOnPremRoutes *bool `json:"advertiseOnPremRoutes,omitempty"`
 	DisableInternetExit   *bool `json:"disableInternetExit,omitempty"`

@@ -1,9 +1,7 @@
 // Copyright (C) 2021-2023 Alkira Inc. All Rights Reserved.
 //
-//
 // Implementation of the generic lists with common structure. For
 // special lists, it's implementated separately as its own.
-//
 package alkira
 
 import (
