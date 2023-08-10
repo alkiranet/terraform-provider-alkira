@@ -13,6 +13,7 @@ type FlowCollector struct {
 	Description          string      `json:"description,omitempty"`
 	CollectorType        string      `json:"collectorType"`
 	Enabled              bool        `json:"enabled"`
+	Segment              string      `json:"segment,omitempty"`
 	DestinationIp        string      `json:"destinationIp,omitempty"`
 	DestinationFqdn      string      `json:"destinationFqdn,omitempty"`
 	DestinationPort      int         `json:"destinationPort"`

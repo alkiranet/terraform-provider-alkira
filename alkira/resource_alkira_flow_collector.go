@@ -59,6 +59,14 @@ func resourceAlkiraFlowCollector() *schema.Resource {
 				Type:        schema.TypeBool,
 				Required:    true,
 			},
+			"segment_id": {
+				Description: "Segment ID of the segment on which flow export destination is reachable. " +
+					"This is optional and should not be used when destination is reachable via internet. " +
+					"Also, segment can only be used with destination_ip, destination_fqdn is not supported " +
+					"on segment.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"destination_ip": {
 				Description: "The destination IP of the flow collector where flow would be sent. " +
 					"Must provide either destination_ip or destination_fqdn.",
@@ -113,7 +121,11 @@ func resourceFlowCollector(ctx context.Context, d *schema.ResourceData, m interf
 	api := alkira.NewFlowCollector(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateFlowCollectorRequest(d, m)
+	request, err := generateFlowCollectorRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Send create request
 	response, provState, err, provErr := api.Create(request)
@@ -168,6 +180,16 @@ func resourceFlowCollectorRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("flow_record_template_id", flowCollector.FlowRecordTemplateId)
 	d.Set("cxps", flowCollector.Cxps)
 
+	var segmentId string
+	if flowCollector.Segment != "" {
+		segmentId, err = getSegmentIdByName(flowCollector.Segment, m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	d.Set("segment_id", segmentId)
+
 	// Set provision state
 	if client.Provision == true && provState != "" {
 		d.Set("provision_state", provState)
@@ -182,7 +204,11 @@ func resourceFlowCollectorUpdate(ctx context.Context, d *schema.ResourceData, m 
 	api := alkira.NewFlowCollector(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateFlowCollectorRequest(d, m)
+	request, err := generateFlowCollectorRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Send update request
 	provState, err, provErr := api.Update(d.Id(), request)
@@ -230,7 +256,18 @@ func resourceFlowCollectorDelete(ctx context.Context, d *schema.ResourceData, m 
 	return nil
 }
 
-func generateFlowCollectorRequest(d *schema.ResourceData, m interface{}) *alkira.FlowCollector {
+func generateFlowCollectorRequest(d *schema.ResourceData, m interface{}) (*alkira.FlowCollector, error) {
+
+	var segmentName string
+	var err error
+	segmentId := d.Get("segment_id")
+	if segmentId != "" {
+		segmentName, err = getSegmentNameById(d.Get("segment_id").(string), m)
+	}
+
+	if err != nil {
+		return nil, err
+	}
 
 	request := &alkira.FlowCollector{
 		Name:                 d.Get("name").(string),
@@ -244,7 +281,8 @@ func generateFlowCollectorRequest(d *schema.ResourceData, m interface{}) *alkira
 		ExportType:           d.Get("export_type").(string),
 		FlowRecordTemplateId: d.Get("flow_record_template_id").(int),
 		Cxps:                 convertTypeListToStringList(d.Get("cxps").([]interface{})),
+		Segment:              segmentName,
 	}
 
-	return request
+	return request, nil
 }
