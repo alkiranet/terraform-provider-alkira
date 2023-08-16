@@ -77,6 +77,12 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Required:    true,
 			},
+			"allow_overlapping_translated_source_addresses": {
+				Description: "Allow overlapping translated source address. Default is `false`.",
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -140,6 +146,7 @@ func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interf
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
 	d.Set("nat_rule_ids", policy.NatRuleIds)
 	d.Set("category", policy.Category)
+	d.Set("allow_overlapping_translated_source_address", policy.AllowOverlappingTranslatedPrefixes)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(policy.Segment, m)
@@ -233,16 +240,23 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		return nil, err
 	}
 
+	allowOverlappingTranslatedPrefixes := new(bool)
+
+	if d.Get("allow_overlapping_translated_source_address") != nil {
+		*allowOverlappingTranslatedPrefixes = d.Get("allow_overlapping_translated_source_address").(bool)
+	}
+
 	// Assemble request
 	policy := &alkira.NatPolicy{
-		Name:           d.Get("name").(string),
-		Description:    d.Get("description").(string),
-		Type:           d.Get("type").(string),
-		Segment:        segmentName,
-		IncludedGroups: convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
-		ExcludedGroups: convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
-		NatRuleIds:     convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{})),
-		Category:       d.Get("category").(string),
+		Name:                               d.Get("name").(string),
+		Description:                        d.Get("description").(string),
+		Type:                               d.Get("type").(string),
+		Segment:                            segmentName,
+		IncludedGroups:                     convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
+		ExcludedGroups:                     convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
+		NatRuleIds:                         convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{})),
+		Category:                           d.Get("category").(string),
+		AllowOverlappingTranslatedPrefixes: allowOverlappingTranslatedPrefixes,
 	}
 
 	return policy, nil
