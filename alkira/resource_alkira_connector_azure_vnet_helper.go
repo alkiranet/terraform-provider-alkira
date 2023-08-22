@@ -15,8 +15,8 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
 		if prefixes.Type == "SUBNET" {
 			vnetSubnet := map[string]interface{}{
-				"subnet_id":   prefixes.Id
-				"subnet_cidr": prefixes.Value
+				"subnet_id":   prefixes.Id,
+				"subnet_cidr": prefixes.Value,
 			}
 
 			for _, importOptions := range routingOptions.ImportOptions.Subnets {
@@ -28,7 +28,7 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 
 			for _, serviceRoutes := range routingOptions.ServiceRoutes.Subnets {
 				if vnetSubnet["subnet_id"] == serviceRoutes.Id {
-					vnetSubnet["service_tags"] = importOptions.ServiceTags
+					vnetSubnet["service_tags"] = serviceRoutes.ServiceTags
 				}
 			}
 			vnetSubnets = append(vnetSubnets, vnetSubnet)
@@ -36,27 +36,28 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 	}
 
 	// Set vnet_chdir
-	for _, prefixes := range routingOptions.exportOptions.UserInputPrefixes {
+	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
 		if prefixes.Type == "CIDR" {
-			vnetCidr := map[string]interface{} {
-				"cidr": prefixes.Value
+			vnetCidr := map[string]interface{}{
+				"cidr": prefixes.Value,
 			}
 
 			for _, importOptions := range routingOptions.ImportOptions.Cidrs {
-				if vnetCidr["cidr"] == importOptions.Id {
-					vnetCidr["prefix_list_ids"] = importOptions.PrefixListIds
-				}
+				vnetCidr["prefix_list_ids"] = importOptions.PrefixListIds
 			}
 
 			for _, serviceRoutes := range routingOptions.ServiceRoutes.Cidrs {
 				if vnetCidr["cidr"] == serviceRoutes.Id {
-					vnetCidr["service_tags"] = importOptions.ServiceTags
+					vnetCidr["service_tags"] = serviceRoutes.ServiceTags
 				}
 			}
 
 			vnetCidrs = append(vnetCidrs, vnetCidr)
 		}
 	}
+
+	d.Set("vnet_subnets", vnetSubnets)
+	d.Set("vnet_cidr", vnetCidrs)
 }
 
 // constructVnetRouting construct connector_azure_vnet routing options

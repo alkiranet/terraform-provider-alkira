@@ -277,6 +277,8 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
 
+	setVnetRouting(d, connector.VnetRouting)
+
 	// Get segment
 	numOfSegments := len(connector.Segments)
 	if numOfSegments == 1 {
