@@ -5,6 +5,61 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// setVnetRouting set vnet_cidr and vnet_subnet block values
+func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnetRouting) {
+
+	var vnetSubnets []map[string]interface{}
+	var vnetCidrs []map[string]interface{}
+
+	// Set vnet_subnet
+	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
+		if prefixes.Type == "SUBNET" {
+			vnetSubnet := map[string]interface{}{
+				"subnet_id":   prefixes.Id,
+				"subnet_cidr": prefixes.Value,
+			}
+
+			for _, importOptions := range routingOptions.ImportOptions.Subnets {
+				if vnetSubnet["subnet_id"] == importOptions.Id {
+					vnetSubnet["routing_options"] = importOptions.RouteImportMode
+					vnetSubnet["prefix_list_ids"] = importOptions.PrefixListIds
+				}
+			}
+
+			for _, serviceRoutes := range routingOptions.ServiceRoutes.Subnets {
+				if vnetSubnet["subnet_id"] == serviceRoutes.Id {
+					vnetSubnet["service_tags"] = serviceRoutes.ServiceTags
+				}
+			}
+			vnetSubnets = append(vnetSubnets, vnetSubnet)
+		}
+	}
+
+	// Set vnet_chdir
+	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
+		if prefixes.Type == "CIDR" {
+			vnetCidr := map[string]interface{}{
+				"cidr": prefixes.Value,
+			}
+
+			for _, importOptions := range routingOptions.ImportOptions.Cidrs {
+				vnetCidr["prefix_list_ids"] = importOptions.PrefixListIds
+			}
+
+			for _, serviceRoutes := range routingOptions.ServiceRoutes.Cidrs {
+				if vnetCidr["cidr"] == serviceRoutes.Id {
+					vnetCidr["service_tags"] = serviceRoutes.ServiceTags
+				}
+			}
+
+			vnetCidrs = append(vnetCidrs, vnetCidr)
+		}
+	}
+
+	d.Set("vnet_subnets", vnetSubnets)
+	d.Set("vnet_cidr", vnetCidrs)
+}
+
 // constructVnetRouting construct connector_azure_vnet routing options
 func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting, error) {
 
