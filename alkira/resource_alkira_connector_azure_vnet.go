@@ -99,20 +99,6 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"routing_options": {
-				Description: " Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` " +
-					"or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "ADVERTISE_DEFAULT_ROUTE",
-				ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
-			},
-			"routing_prefix_list_ids": {
-				Description: "Prefix List IDs.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-			},
 			"segment_id": {
 				Description: "The ID of the segment assoicated with the connector.",
 				Type:        schema.TypeString,
@@ -272,8 +258,6 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
-	d.Set("routing_options", connector.VnetRouting.ImportOptions.RouteImportMode)
-	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
 
