@@ -43,11 +43,12 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 			}
 
 			for _, importOptions := range routingOptions.ImportOptions.Cidrs {
+				vnetCidr["routing_options"] = importOptions.RouteImportMode
 				vnetCidr["prefix_list_ids"] = importOptions.PrefixListIds
 			}
 
 			for _, serviceRoutes := range routingOptions.ServiceRoutes.Cidrs {
-				if vnetCidr["cidr"] == serviceRoutes.Id {
+				if vnetCidr["cidr"] == serviceRoutes.Value {
 					vnetCidr["service_tags"] = serviceRoutes.ServiceTags
 				}
 			}
