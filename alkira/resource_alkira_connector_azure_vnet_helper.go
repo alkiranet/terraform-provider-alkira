@@ -112,7 +112,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 		}
 
 		// Processing service routes for subnet
-		if len(content["service_tags"].([]interface{})) > 0 {
+		if content["service_tags"].(*schema.Set).Len() > 0 {
 			subnetServiceRoute := alkira.ConnectorVnetServiceRoute{}
 
 			if v, ok := content["subnet_id"].(string); ok {
@@ -123,7 +123,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 				subnetServiceRoute.Value = v
 			}
 
-			subnetServiceRoute.ServiceTags = convertTypeListToStringList(content["service_tags"].([]interface{}))
+			subnetServiceRoute.ServiceTags = convertTypeSetToStringList(content["service_tags"].(*schema.Set))
 
 			serviceRoutes.Subnets = append(serviceRoutes.Subnets, subnetServiceRoute)
 		}
@@ -161,14 +161,14 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 		}
 
 		// Processing service routes for CIDR
-		if len(content["service_tags"].([]interface{})) > 0 {
+		if content["service_tags"].(*schema.Set).Len() > 0 {
 			cidrServiceRoute := alkira.ConnectorVnetServiceRoute{}
 
 			if v, ok := content["cidr"].(string); ok {
 				cidrServiceRoute.Value = v
 			}
 
-			cidrServiceRoute.ServiceTags = convertTypeListToStringList(content["service_tags"].([]interface{}))
+			cidrServiceRoute.ServiceTags = convertTypeSetToStringList(content["service_tags"].(*schema.Set))
 
 			serviceRoutes.Cidrs = append(serviceRoutes.Cidrs, cidrServiceRoute)
 		}
