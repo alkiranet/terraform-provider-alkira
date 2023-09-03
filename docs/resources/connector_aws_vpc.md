@@ -110,6 +110,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `tgw_attachment` (Block Set) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
+- `tgw_connect_enabled` (Boolean) On setting tgwConnectEnabled to true Alkira will use TGW Connect attachments to build connection to AWS Transit gateway.Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance,and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments.This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
 - `vpc_route_table` (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
 - `vpc_subnet` (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
