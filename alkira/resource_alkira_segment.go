@@ -84,6 +84,16 @@ func resourceAlkiraSegment() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"service_traffic_distribution": {
+				Description: "Enable traffic distribution in a segment to " +
+					"instances in a service using source IP hashing. " +
+					"When enabled, traffic will be hashed and distributed " +
+					"only by source IP of the packet. Default behavior is " +
+					"based on 5 tuples in a network packet. Default is `false`. (**BETA**)",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"src_ipv4_pool_start_ip": {
 				Description: "The start IP address of IPv4 pool.",
 				Type:        schema.TypeString,
@@ -162,6 +172,11 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if segment.SrcIpv4PoolList != nil && len(segment.SrcIpv4PoolList) > 0 {
 		d.Set("src_ipv4_pool_start_ip", segment.SrcIpv4PoolList[0].StartIp)
 		d.Set("src_ipv4_pool_end_ip", segment.SrcIpv4PoolList[0].EndIp)
+	}
+
+	if segment.ServiceTrafficDistribution.Algorithm == "HASHING" &&
+		segment.ServiceTrafficDistribution.AlgorithmAttributes.Keys == "SRC_IP" {
+		d.Set("service_traffic_distribution", true)
 	}
 
 	setCidrsSegmentRead(d, segment)
@@ -253,6 +268,13 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 		srcIpv4PoolList = nil
 	}
 
+	serviceTrafficDistribution := alkira.ServiceTrafficDistribution{}
+
+	if d.Get("service_traffic_distribution").(bool) == true {
+		serviceTrafficDistribution.Algorithm = "HASHING"
+		serviceTrafficDistribution.AlgorithmAttributes.Keys = "SRC_IP"
+	}
+
 	seg := &alkira.Segment{
 		Asn:                         d.Get("asn").(int),
 		Description:                 d.Get("description").(string),
@@ -260,6 +282,7 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
 		Name:                        d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
+		ServiceTrafficDistribution:                 serviceTrafficDistribution,
 		IpBlocks: alkira.SegmentIpBlocks{
 			Values: cidrs,
 		},
