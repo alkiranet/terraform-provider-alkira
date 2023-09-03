@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Credential for interacting with Azure.
   You could also provide your credentials via the following environmental variables:
-  AKAZUREAPPLICATION_IDAKAZURESUBSCRIPTION_IDAKAZURESECRET_KEYAKAZURETENANT_ID
+  AKAZUREAPPLICATION_IDAKAZURESUBSCRIPTION_IDAKAZURESECRET_KEYAKAZURETENANT_IDAKAZUREENVIRONMENT
 ---
 
 # alkira_credential_azure_vnet (Resource)
@@ -18,6 +18,7 @@ You could also provide your credentials via the following environmental variable
  * AK_AZURE_SUBSCRIPTION_ID
  * AK_AZURE_SECRET_KEY
  * AK_AZURE_TENANT_ID
+ * AK_AZURE_ENVIRONMENT
 
 ## Example Usage
 
@@ -42,6 +43,7 @@ resource "alkira_credential_azure_vnet" "test" {
 
 ### Optional
 
+- `environment` (String) Azure environment can be `AZURE`, `AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The default value is `AZURE`.
 - `subscription_id` (String) Azure subscription ID.
 
 ### Read-Only
