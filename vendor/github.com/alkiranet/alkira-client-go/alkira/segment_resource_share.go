@@ -21,6 +21,7 @@ type SegmentResourceShare struct {
 	DesignatedSegmentId int         `json:"designatedSegmentId,omitempty"` // response only
 	EndASegmentId       int         `json:"endASegmentId,omitempty"`       // response only
 	EndBSegmentId       int         `json:"endBSegmentId,omitempty"`       // response only
+	RuleListId          int         `json:"ruleListId,omitempty"`
 }
 
 // NewSegmentResourceShare new segment resource share
