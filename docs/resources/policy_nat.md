@@ -63,6 +63,7 @@ resource "alkira_policy_nat" "test" {
 
 ### Optional
 
+- `allow_overlapping_translated_source_addresses` (Boolean) Allow overlapping translated source address. Default is `false`. (**BETA**)
 - `category` (String) The category of NAT policy. The vaule could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy.
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`.Implicit group ID of a branch/on-premise connector for which a userdefined group is used in `included_groups` can be used here.
