@@ -45,6 +45,7 @@ resource "alkira_segment_resource_share" "test" {
 - `description` (String) The description of the segment resource.
 - `end_a_route_limit` (Number) The End-A route limit. The default value is `100`.
 - `end_b_route_limit` (Number) The End-B route limit. The default value is `100`.
+- `policy_rule_list_id` (Number) The ID of a `policy_rule_list` that is to be used for the inter-segment policy generated for this resource. (**BETA**)
 - `traffic_direction` (String) Specify the direction in which traffic is orignated at both Resource End-A and Resource End-B. The default value is `BIDIRECTIONAL`.
 
 ### Read-Only
