@@ -83,6 +83,7 @@ resource "alkira_policy_rule" "rule" {
 - `dst_prefix_list_id` (Number) The ID of prefix list as destination associated with the rule.
 - `internet_application_id` (Number) The ID of the `internet_application` associated with the rule. When an internet applciation is selected, destination IP and port will be the private IP and port of the application.
 - `rule_action` (String) The action that is applied on matched traffic, either `ALLOW` or `DROP`. The default value is `ALLOW`.
+- `rule_action_flow_collector_ids` (List of Number) Based on the flow collector IDs, flows observed would be collected and sent to configured destination.
 - `rule_action_service_ids` (List of Number) Based on the service IDs, traffic is routed to the specified services. For service chaining, both `service_pan` and `service_zscaler`'s IDs can be added here, but ID of `service_pan` must be by followed by ID of `service_zscaler`.
 - `rule_action_service_types` (List of String) Based on the service type, traffic is routed to service of the given type. For service chaining, both PAN and ZIA service types can be selected but must follow order.
 - `src_ip` (String) A single source IP as The match condition of the rule.

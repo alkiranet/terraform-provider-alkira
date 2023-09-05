@@ -78,7 +78,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Required:    true,
 			},
 			"allow_overlapping_translated_source_addresses": {
-				Description: "Allow overlapping translated source address. Default is `false`.",
+				Description: "Allow overlapping translated source address. Default is `false`. (**BETA**)",
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
