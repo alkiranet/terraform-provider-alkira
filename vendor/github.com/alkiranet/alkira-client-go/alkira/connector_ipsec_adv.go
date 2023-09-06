@@ -32,44 +32,31 @@ type ConnectorAdvIPSecAdvanced struct {
 }
 
 type ConnectorAdvIPSecTunnelCustomerEnd struct {
-	OverlayIpReservationId string `json:"OverlayIpReservationId"`
+	OverlayIpReservationId string `json:"overlayIpReservationId"`
 }
 
 type ConnectorAdvIPSecTunnelCxpEnd struct {
-	PublicIpReservationId  string `json:"PublicIpReservationId"`
-	OverlayIpReservationId string `json:"OverlayIpReservationId"`
+	OverlayIpReservationId string `json:"overlayIpReservationId"`
+	PublicIpReservationId  string `json:"publicIpReservationId"`
 }
 
 type ConnectorAdvIPSecTunnel struct {
-	Id           int                                `json:"id,omitempty"`
-	TunnelNo     int                                `json:"tunnelNo"`
-	PresharedKey string                             `json:"preSharedKey"`
-	ProfileId    string                             `json:"profileId"`
+	Advanced     *ConnectorAdvIPSecAdvanced         `json:"advanced,omitempty"`
 	CustomerEnd  ConnectorAdvIPSecTunnelCustomerEnd `json:"customerEnd"`
 	CxpEnd       ConnectorAdvIPSecTunnelCxpEnd      `json:"cxpEnd"`
-
-	Advanced *ConnectorAdvIPSecAdvanced `json:"advanced,omitempty"`
+	Id           int                                `json:"id,omitempty"`
+	PresharedKey string                             `json:"preSharedKey"`
+	ProfileId    int                                `json:"profileId,omitempty"`
+	TunnelNo     int                                `json:"tunnelNo"`
 }
-type ConnectorAdvIPSecTunnelGateway struct {
-	Id           int                        `json:"id,omitempty"`
-	Name         string                     `json:"name"`
+
+// Gateway
+type ConnectorAdvIPSecGateway struct {
 	CustomerGwIp string                     `json:"customerGwIp"`
 	HaMode       string                     `json:"haMode,omitempty"`
+	Id           int                        `json:"id,omitempty"`
+	Name         string                     `json:"name"`
 	Tunnels      []*ConnectorAdvIPSecTunnel `json:"tunnels,omitempty"`
-}
-
-// gateway
-type ConnectorAdvIPSecGateway struct {
-	Advanced               *ConnectorAdvIPSecAdvanced `json:"advanced,omitempty"`
-	BillingTags            []int                      `json:"billingTags,omitempty"`
-	CustomerGwAsn          string                     `json:"customerGwAsn,omitempty"`
-	CustomerGwIp           string                     `json:"customerGwIp"`
-	EnableTunnelRedundancy bool                       `json:"enableTunnelRedundancy"`
-	GatewayIpType          string                     `json:"gatewayIpType,omitempty"`
-	HaMode                 string                     `json:"haMode,omitempty"`
-	Id                     int                        `json:"id,omitempty"` // response only
-	Name                   string                     `json:"name"`
-	PresharedKeys          []string                   `json:"presharedKeys"`
 }
 
 // Policy Options
@@ -91,22 +78,22 @@ type ConnectorAdvIPSecDynamicRouting struct {
 }
 
 type ConnectorAdvIPSecRoutingOptions struct {
-	DynamicRouting *ConnectorIPSecDynamicRouting `json:"dynamicRouting"`
-	StaticRouting  *ConnectorIPSecStaticRouting  `json:"staticRouting"`
+	DynamicRouting *ConnectorAdvIPSecDynamicRouting `json:"dynamicRouting"`
+	StaticRouting  *ConnectorAdvIPSecStaticRouting  `json:"staticRouting"`
 }
 
 // Top Level
 type ConnectorAdvIPSec struct {
-	AdvertiseDefaultRoute *bool                            `json:"advertiseDefaultRoute,omitempty"`
-	AdvertiseOnPremRoutes *bool                            `json:"advertiseOnPremRoutes,omitempty"`
+	AdvertiseDefaultRoute bool                             `json:"advertiseDefaultRoute"`
+	AdvertiseOnPremRoutes bool                             `json:"advertiseOnPremRoutes"`
 	BillingTags           []int                            `json:"billingTags"`
 	CXP                   string                           `json:"cxp"`
 	Enabled               bool                             `json:"enabled"`
 	DestinationType       string                           `json:"destinationType"`
-	Gateways              []ConnectorAdvIPSecGateway       `json:"gateways"`
+	Gateways              []*ConnectorAdvIPSecGateway      `json:"gateways"`
 	Group                 string                           `json:"group,omitempty"`
-	Id                    json.Number                      `json:"id,omitempty"`              // response only
-	ImplicitGroupId       int                              `json:"implicitGroupId,omitempty"` // response only
+	Id                    json.Number                      `json:"id,omitempty"`
+	ImplicitGroupId       int                              `json:"implicitGroupId,omitempty"`
 	Name                  string                           `json:"name"`
 	PolicyOptions         *ConnectorAdvIPSecPolicyOptions  `json:"policyOptions"`
 	RoutingOptions        *ConnectorAdvIPSecRoutingOptions `json:"routingOptions"`
