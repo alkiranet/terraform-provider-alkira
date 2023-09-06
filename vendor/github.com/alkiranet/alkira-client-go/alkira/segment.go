@@ -17,12 +17,12 @@ type SegmentSrcIpv4PoolList struct {
 }
 
 type ServceTrafficDistributionAlgorthmAttributes struct {
-	Keys string `json:"keys"`
+	Keys string `json:"keys,omitempty"`
 }
 
 type ServiceTrafficDistribution struct {
-	Algorithm           string                                      `json:"algorithm"`
-	AlgorithmAttributes ServceTrafficDistributionAlgorthmAttributes `json:"algorithmAttributes"`
+	Algorithm           string                                      `json:"algorithm,omitempty"`
+	AlgorithmAttributes ServceTrafficDistributionAlgorthmAttributes `json:"algorithmAttributes,omitempty"`
 }
 
 type Segment struct {
