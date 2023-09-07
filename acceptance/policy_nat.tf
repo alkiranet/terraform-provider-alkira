@@ -1,7 +1,7 @@
 resource "alkira_policy_nat_rule" "test1" {
-  name          = "acceptance-basic"
-  description   = "acceptance basic NAT rule"
-  enabled       = false
+  name        = "acceptance-basic"
+  description = "acceptance basic NAT rule"
+  enabled     = false
 
   match {
     src_prefixes = ["any"]
