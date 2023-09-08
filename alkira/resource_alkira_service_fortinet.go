@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -35,12 +36,13 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"auto_scale": {
-				Description: "Indicate if auto_scale should be enabled for your Fortinet " +
-					"firewall. `ON` and `OFF` are accepted values. `OFF` is the default if " +
-					"field is omitted",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
+				Description: "Whether enable auto scale for Fortinet firewall. " +
+					"It could be either `ON` and `OFF`. Default value is `OFF`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "OFF",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ON", "OFF"}, false),
 			},
 			"billing_tag_ids": {
 				Description: "Billing tag IDs to associate with the service.",
@@ -77,13 +79,14 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"instances": {
 				Type:     schema.TypeList,
 				Required: true,
-				Description: "An array containing properties for each Fortinet Firewall instance " +
-					"that needs to be deployed. The number of instances should be equal to " +
-					"`max_instance_count`.",
+				Description: "An array containing properties for each Fortinet " +
+					"Firewall instance that needs to be deployed. The number of " +
+					"instances should be equal to `max_instance_count`.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "The name of the Fortinet Firewall instance.",
+							Description: "The name of the Fortinet Firewall " +
+								"instance.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -133,35 +136,40 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				},
 			},
 			"license_type": {
-				Description: "Fortinet license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
+				Description: "Fortinet license type, either `BRING_YOUR_OWN`" +
+					"or `PAY_AS_YOU_GO`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
 					false,
 				),
 			},
 			"management_server_ip": {
-				Description: "The IP addresses used to access the management server.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The IP addresses used to access the management " +
+					"server.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"management_server_segment_id": {
-				Description: "The segment ID used to access the management server. This segment " +
-					"must be present in the list of segments assigned to this Fortinet Firewall service.",
+				Description: "The segment ID used to access the management " +
+					"server. This segment must be present in the list of " +
+					"segments assigned to this Fortinet Firewall service.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"max_instance_count": {
-				Description: "The maximum number of Fortinet Firewall instances that should be " +
-					"deployed when auto-scale is enabled. Note that auto-scale is not supported " +
-					"with Fortinet at this time. max_instance_count must be greater than or " +
-					"equal to min_instance_count.",
+				Description: "The maximum number of Fortinet Firewall instances " +
+					"that should be deployed when auto-scale is enabled. Note " +
+					"that auto-scale is not supported with Fortinet at this " +
+					"time. `max_instance_count` must be greater than or " +
+					"equal to `min_instance_count`.",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"min_instance_count": {
-				Description: "The minimum number of Fortinet Firewall instances that should be " +
-					" deployed at any point in time.",
+				Description: "The minimum number of Fortinet Firewall instances " +
+					"that should be deployed at any point in time.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -282,29 +290,38 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
 	d.Set("management_server_ip", f.ManagementServer.IpAddress)
-	d.Set("management_server_segment_id", f.ManagementServer.Segment)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
-	d.Set("segment_ids", f.Segments)
 	d.Set("segment_options", deflateSegmentOptions(f.SegmentOptions))
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
 
-	var instances []map[string]interface{}
+	// Set management server segment
+	managementServerSegmentId, err := getSegmentIdByName(f.ManagementServer.Segment, m)
 
-	for _, instance := range f.Instances {
-		i := map[string]interface{}{
-			"id":            instance.Id,
-			"name":          instance.Name,
-			"serial_number": instance.SerialNumber,
-			"credential_id": instance.CredentialId,
-		}
-		instances = append(instances, i)
+	if err != nil {
+		return diag.FromErr(err)
 	}
+	d.Set("management_server_segment_id", managementServerSegmentId)
 
-	d.Set("instances", instances)
+	// Set segments
+	segments := make([]int, len(f.Segments))
+
+	for _, seg := range f.Segments {
+		seg, err := getSegmentIdByName(seg, m)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		segId, _ := strconv.Atoi(seg)
+		segments = append(segments, segId)
+	}
+	d.Set("segment_ids", segments)
+
+	// Set instances
+	setInstance(d, f)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {

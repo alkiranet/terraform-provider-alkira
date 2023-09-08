@@ -10,6 +10,73 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// setInstance set instance block values
+func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
+	var instances []map[string]interface{}
+
+	//
+	// Go through all instance blocks from the config firstly to find a
+	// match, instance's ID should be uniquely identifying an instance
+	// block.
+	//
+	// On the first read call at the end of the create call, Terraform
+	// didn't track any instance IDs yet.
+	//
+	for _, instance := range d.Get("instances").([]interface{}) {
+		instanceConfig := instance.(map[string]interface{})
+
+		for _, info := range service.Instances {
+			if instanceConfig["id"].(int) == info.Id || instanceConfig["name"].(string) == info.Name {
+				i := map[string]interface{}{
+					"id":                    info.Id,
+					"credential_id":         info.CredentialId,
+					"name":                  info.Name,
+					"license_key_file_path": instanceConfig["license_key_file_path"].(string),
+					"license_key":           instanceConfig["license_key"].(string),
+					"serial_number":         info.SerialNumber,
+				}
+				instances = append(instances, i)
+				break
+			}
+		}
+	}
+
+	//
+	// Go through all instances from the API response one more
+	// time to find any instance that has not been tracked from Terraform
+	// config.
+	//
+	for _, info := range service.Instances {
+		new := true
+
+		// Check if the instance already exists in the Terraform config
+		for _, instance := range d.Get("instances").([]interface{}) {
+			instanceConfig := instance.(map[string]interface{})
+
+			if instanceConfig["id"].(int) == info.Id || instanceConfig["name"].(string) == info.Name {
+				new = false
+				break
+			}
+		}
+
+		// If the instance is new, add it to the tail of the list,
+		// this will generate a diff
+		if new {
+			i := map[string]interface{}{
+				"id":            info.Id,
+				"credential_id": info.CredentialId,
+				"name":          info.Name,
+				"serial_number": info.SerialNumber,
+			}
+			instances = append(instances, i)
+			break
+		}
+	}
+
+	d.Set("instance", instances)
+
+}
+
 func expandFortinetInstances(licenseType string, in []interface{}, m interface{}) ([]alkira.FortinetInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
