@@ -56,6 +56,7 @@ resource "alkira_internet_application" "test" {
 
 ### Optional
 
+- `bi_directional_az` (String) Bi-directional IFA AZ. The value could be either `AZ0` or `AZ1`
 - `billing_tag_ids` (List of Number) IDs of billing tags.
 - `byoip_id` (Number) BYOIP ID.
 - `inbound_connector_id` (String) Inbound connector ID. When `inbound_connector_type` is `DEFAULT`, it could be left empty.

@@ -40,6 +40,12 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
+			"bi_directional_az": {
+				Description: "Bi-directional IFA AZ. The value could be either " +
+					"`AZ0` or `AZ1`",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"byoip_id": {
 				Description: "BYOIP ID.",
 				Type:        schema.TypeInt,
@@ -238,6 +244,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("billing_tag_ids", app.BillingTags)
+	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
 	d.Set("connector_id", app.ConnectorId)
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
@@ -374,19 +381,20 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 
 	// Assemble request
 	request := &alkira.InternetApplication{
-		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
-		ConnectorId:          d.Get("connector_id").(int),
-		ConnectorType:        d.Get("connector_type").(string),
-		FqdnPrefix:           d.Get("fqdn_prefix").(string),
-		InboundConnectorId:   d.Get("inbound_connector_id").(string),
-		InboundConnectorType: d.Get("inbound_connector_type").(string),
-		InternetProtocol:     d.Get("internet_protocol").(string),
-		Name:                 d.Get("name").(string),
-		PublicIps:            convertTypeListToStringList(d.Get("public_ips").([]interface{})),
-		SegmentName:          segmentName,
-		SnatIpv4Ranges:       pool,
-		Size:                 d.Get("size").(string),
-		Targets:              targets,
+		BillingTags:                   convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BiDirectionalAvailabilityZone: d.Get("bi_directional_az").(string),
+		ConnectorId:                   d.Get("connector_id").(int),
+		ConnectorType:                 d.Get("connector_type").(string),
+		FqdnPrefix:                    d.Get("fqdn_prefix").(string),
+		InboundConnectorId:            d.Get("inbound_connector_id").(string),
+		InboundConnectorType:          d.Get("inbound_connector_type").(string),
+		InternetProtocol:              d.Get("internet_protocol").(string),
+		Name:                          d.Get("name").(string),
+		PublicIps:                     convertTypeListToStringList(d.Get("public_ips").([]interface{})),
+		SegmentName:                   segmentName,
+		SnatIpv4Ranges:                pool,
+		Size:                          d.Get("size").(string),
+		Targets:                       targets,
 	}
 
 	return request, nil

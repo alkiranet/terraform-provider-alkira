@@ -3,14 +3,13 @@
 package alkira
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
 type UserGroup struct {
-	Id          json.Number `json:"id,omitempty"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 // NewUserGroup new user group
