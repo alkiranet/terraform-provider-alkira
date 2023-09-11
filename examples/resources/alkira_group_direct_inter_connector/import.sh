@@ -1,0 +1,1 @@
+terraform import alkira_group_direct_inter_connector.example GROUP_ID

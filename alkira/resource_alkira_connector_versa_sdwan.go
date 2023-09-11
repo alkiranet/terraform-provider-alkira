@@ -76,9 +76,9 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			"global_tenant_id": {
 				Description: "The global tenant ID of Versa SD-WAN. Default " +
 					"value is `1`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     1,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
 			},
 			"local_id": {
 				Description: "The local ID.",
@@ -88,9 +88,9 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			"local_public_shared_key": {
 				Description: "The local public shared key. Default value is" +
 					"`1234`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "1234",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1234",
 			},
 			"remote_id": {
 				Description: "The remote ID.",
@@ -100,9 +100,9 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			"remote_public_shared_key": {
 				Description: "The remote public shared key. Default value is" +
 					"`1234`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "1234",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1234",
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
