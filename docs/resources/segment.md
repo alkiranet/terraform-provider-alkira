@@ -38,6 +38,7 @@ resource "alkira_segment" "test" {
 - `enable_ipv6_to_ipv4_translation` (Boolean) Enable IPv6 to IPv4 translation in the segment for internet application traffic. (**BETA**)
 - `enterprise_dns_server_ip` (String) The IP of the DNS server used within the segment. This DNS server may be used by the Alkira CXP to resolve the names of LDAP servers for example which are configured on the Remote Access Connector. (**BETA**)
 - `reserve_public_ips` (Boolean) Default value is `false`. When this is set to `true`. Alkira reserves public IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved public IPs may be used to create tunnels to the Akamai Prolexic. (**BETA**)
+- `service_traffic_distribution` (Boolean) Enable traffic distribution in a segment to instances in a service using source IP hashing. When enabled, traffic will be hashed and distributed only by source IP of the packet. Default behavior is based on 5 tuples in a network packet. Default is `false`. (**BETA**)
 - `src_ipv4_pool_end_ip` (String) The end IP address of IPv4 pool.
 - `src_ipv4_pool_start_ip` (String) The start IP address of IPv4 pool.
 

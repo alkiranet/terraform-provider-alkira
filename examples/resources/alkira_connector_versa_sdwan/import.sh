@@ -1,0 +1,1 @@
+terraform import alkira_connector_versa_sdwan.example CONNECTOR_ID

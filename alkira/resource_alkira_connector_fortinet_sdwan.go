@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage Fortinet SD-WAN Connector.",
+		Description:   "Manage Fortinet SD-WAN Connector. (**BETA**)",
 		CreateContext: resourceConnectorFortinetSdwanCreate,
 		ReadContext:   resourceConnectorFortinetSdwanRead,
 		UpdateContext: resourceConnectorFortinetSdwanUpdate,
