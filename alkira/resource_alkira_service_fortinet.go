@@ -87,8 +87,8 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 						"name": {
 							Description: "The name of the Fortinet Firewall " +
 								"instance.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"license_key_file_path": {
 							Description: "Fortinet license key file path. The path to the desired " +
