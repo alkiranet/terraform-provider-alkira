@@ -1,21 +1,20 @@
-name: Acceptance Test
+name: acceptance-test-preprod-key
 
+# Only trigger, when the normal acceptance test passed
 on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-
+  workflow_run:
+    workflows: ["acceptance-test-preprod"]
+    types:
+      - completed
 env:
-  ALKIRA_USERNAME: ${{ secrets.SANITY_ALKIRA_USERNAME }}
-  ALKIRA_PASSWORD: ${{ secrets.SANITY_ALKIRA_PASSWORD }}
+  ALKIRA_API_KEY: ${{ secrets.PREPROD_TERRAFORM_API_KEY }}
 
 jobs:
-  acceptance_test:
+  acceptance-test-preprod-key:
     runs-on: ubuntu-latest
 
     steps:
-      - 
+      -
         name: Pull Terraform CLI
         uses: hashicorp/setup-terraform@v2
       -
@@ -26,14 +25,14 @@ jobs:
                     }
                     direct {}
                   }' > ~/.terraformrc
-      - 
+      -
         name: Checkout Repo
         uses: actions/checkout@v3
       -
         name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.20
       -
         name: Build Terraform Provider
         run: |
