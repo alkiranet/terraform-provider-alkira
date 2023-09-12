@@ -1,16 +1,18 @@
-name: acceptance-test-preprod-key
+name: acceptance-test-prod
 
-# Only trigger, when the normal acceptance test passed
 on:
-  workflow_run:
-    workflows: ["acceptance-test-preprod"]
-    types:
-      - completed
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
 env:
-  ALKIRA_API_KEY: ${{ secrets.PREPROD_TERRAFORM_ALKIRA_KEY }}
+  ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
+  ALKIRA_USERNAME: ${{ secrets.PROD_TERRAFORM_USERNAME }}
+  ALKIRA_PASSWORD: ${{ secrets.PROD_TERRAFORM_PASSWORD }}
 
 jobs:
-  acceptance-test-preprod-key:
+  acceptance-test-prod:
     runs-on: ubuntu-latest
 
     steps:
