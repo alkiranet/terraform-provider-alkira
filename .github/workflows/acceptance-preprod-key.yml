@@ -7,7 +7,7 @@ on:
     types:
       - completed
 env:
-  ALKIRA_API_KEY: ${{ secrets.PREPROD_TERRAFORM_API_KEY }}
+  ALKIRA_API_KEY: ${{ secrets.PREPROD_TERRAFORM_ALKIRA_KEY }}
 
 jobs:
   acceptance-test-preprod-key:
