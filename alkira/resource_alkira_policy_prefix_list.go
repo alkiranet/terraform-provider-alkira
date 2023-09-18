@@ -49,7 +49,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			},
 			"prefixes": {
 				Description: "A list of prefixes.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
@@ -74,7 +74,8 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 						},
 						"ge": {
 							Description: "Integer less than `32` but " +
-								"greater than mask `m` in prefix and less than `le`.",
+								"greater than mask `m` in prefix and less " +
+								"than `le`.",
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -218,7 +219,7 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	list := &alkira.PolicyPrefixList{
 		Description:  d.Get("description").(string),
 		Name:         d.Get("name").(string),
-		Prefixes:     convertTypeListToStringList(d.Get("prefixes").([]interface{})),
+		Prefixes:     convertTypeSetToStringList(d.Get("prefixes").(*schema.Set)),
 		PrefixRanges: prefixRanges,
 	}
 
