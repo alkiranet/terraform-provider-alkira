@@ -35,7 +35,7 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 		}
 	}
 
-	// Set vnet_chdir
+	// Set vnet_cidr
 	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
 		if prefixes.Type == "CIDR" {
 			vnetCidr := map[string]interface{}{
