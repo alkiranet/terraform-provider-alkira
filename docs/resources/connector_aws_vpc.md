@@ -104,13 +104,13 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) Tags for billing.
+- `billing_tag_ids` (Set of Number) Tags for billing.
 - `direct_inter_vpc_communication` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
-- `enabled` (Boolean) Is the connector enabled. Default is `true`.
-- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
+- `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
+- `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
-- `tgw_attachment` (Block Set) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
-- `tgw_connect_enabled` (Boolean) On setting tgwConnectEnabled to true Alkira will use TGW Connect attachments to build connection to AWS Transit gateway.Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance,and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments.This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.
+- `tgw_attachment` (Block List) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
+- `tgw_connect_enabled` (Boolean) When it's set to `true`, Alkira will use TGW Connect attachments to build connection to AWS Transit Gateway. Connect Attachments suppport GRE tunnel protocol for high performance and BGP for dynamic routing. This applies to all TGW attachments. This field can be set to `true` only if the VPC is in the same AWS region as the Alkira CXP it is being deployed onto.
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
 - `vpc_route_table` (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
 - `vpc_subnet` (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
@@ -136,8 +136,8 @@ Required:
 Optional:
 
 - `id` (String) The Id of the route table
-- `options` (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
-- `prefix_list_ids` (List of Number) Prefix List IDs
+- `options` (String) Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, `OVERRIDE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
+- `prefix_list_ids` (Set of Number) Prefix List IDs
 
 
 <a id="nestedblock--vpc_subnet"></a>

@@ -46,7 +46,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			},
 			"billing_tag_ids": {
 				Description: "Tags for billing.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -56,26 +56,29 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The CXP where the connector should be " +
+					"provisioned.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"direct_inter_vpc_communication": {
-				Description: "Enable direct inter-vpc communication. Default is set to `false`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Enable direct inter-vpc communication. " +
+					"Default is set to `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"enabled": {
-				Description: "Is the connector enabled. Default is `true`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
+				Description: "Whether the connector is enabled. Default is " +
+					"`true`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"failover_cxps": {
 				Description: "A list of additional CXPs where the connector " +
 					"should be provisioned for failover.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -109,22 +112,27 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE", "2LARGE",
+					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"tgw_connect_enabled": {
-				Description: "On setting tgwConnectEnabled to true Alkira will use TGW Connect attachments to build connection to AWS Transit gateway." +
-					"Connect Attachments suppport Generic Routing Encapsulation (GRE) tunnel protocol for high performance," +
-					"and Border Gateway Protocol (BGP) for dynamic routing. This applies to all tgw attachments." +
-					"This field can be set to true, only if the vpc is in the same AWS region as the Alkira CXP it is being onboarded onto.",
+				Description: "When it's set to `true`, Alkira will use TGW Connect " +
+					"attachments to build connection to AWS Transit Gateway. " +
+					"Connect Attachments suppport GRE tunnel protocol for high " +
+					"performance and BGP for dynamic routing. This applies to " +
+					"all TGW attachments. This field can be set to `true` only " +
+					"if the VPC is in the same AWS region as the Alkira CXP " +
+					"it is being deployed onto.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"tgw_attachment": {
 				Description: "TGW attachment.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -147,16 +155,18 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"vpc_cidr": {
-				Description: "The list of CIDR attached to the target VPC for routing " +
-					"purpose. It could be only specified if `vpc_subnet` is not specified.",
+				Description: "The list of CIDR attached to the target VPC for " +
+					"routing purpose. It could be only specified if " +
+					"`vpc_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_subnet": {
-				Description: "The list of subnets of the target VPC for routing purpose. " +
-					"It could only specified if `vpc_cidr` is not specified.",
+				Description: "The list of subnets of the target VPC for " +
+					"routing purpose. It could only specified if `vpc_cidr` " +
+					"is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"vpc_cidr"},
@@ -187,13 +197,15 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 						"options": {
-							Description: "Routing options, one of `ADVERTISE_DEFAULT_ROUTE`, " +
-								"`OVERRIDE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.",
+							Description: "Routing options, one of " +
+								"`ADVERTISE_DEFAULT_ROUTE`, " +
+								"`OVERRIDE_DEFAULT_ROUTE` or " +
+								"`ADVERTISE_CUSTOM_PREFIX`.",
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -359,58 +371,4 @@ func resourceConnectorAwsVpcDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
-}
-
-// generateConnectorAwsVpcRequest generate request for connector-aws-vpc
-func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
-
-	//
-	// Segment
-	//
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	inputPrefixes, err := generateUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
-
-	if err != nil {
-		return nil, err
-	}
-
-	exportOptions := alkira.ExportOptions{
-		Mode:     "USER_INPUT_PREFIXES",
-		Prefixes: inputPrefixes,
-	}
-
-	routeTables := expandAwsVpcRouteTables(d.Get("vpc_route_table").(*schema.Set))
-	tgwAttachments := expandAwsVpcTgwAttachments(d.Get("tgw_attachment").(*schema.Set))
-
-	vpcRouting := alkira.ConnectorAwsVpcRouting{
-		Export: exportOptions,
-		Import: alkira.ImportOptions{routeTables},
-	}
-
-	request := &alkira.ConnectorAwsVpc{
-		BillingTags:                        convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
-		CXP:                                d.Get("cxp").(string),
-		CredentialId:                       d.Get("credential_id").(string),
-		CustomerName:                       m.(*alkira.AlkiraClient).Username,
-		CustomerRegion:                     d.Get("aws_region").(string),
-		DirectInterVPCCommunicationEnabled: d.Get("direct_inter_vpc_communication").(bool),
-		Enabled:                            d.Get("enabled").(bool),
-		Group:                              d.Get("group").(string),
-		Name:                               d.Get("name").(string),
-		Segments:                           []string{segmentName},
-		SecondaryCXPs:                      convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Size:                               d.Get("size").(string),
-		TgwConnectEnabled:                  d.Get("tgw_connect_enabled").(bool),
-		TgwAttachments:                     tgwAttachments,
-		VpcId:                              d.Get("vpc_id").(string),
-		VpcOwnerId:                         d.Get("aws_account_id").(string),
-		VpcRouting:                         vpcRouting,
-	}
-
-	return request, nil
 }
