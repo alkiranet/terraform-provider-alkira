@@ -26,7 +26,7 @@ resource "alkira_policy_prefix_list" "test" {
 ### Required
 
 - `name` (String) The name of the prefix list.
-- `prefixes` (List of String) A list of prefixes.
+- `prefixes` (Set of String) A list of prefixes.
 
 ### Optional
 
