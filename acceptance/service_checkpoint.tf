@@ -1,7 +1,7 @@
 resource "alkira_service_checkpoint" "test" {
   name       = "acceptance-checkpoint"
   auto_scale = "ON"
-  cxp        = local.cxp
+  cxp        = var.cxp
 
   license_type = "PAY_AS_YOU_GO"
   size         = "SMALL"
@@ -44,7 +44,7 @@ resource "alkira_service_checkpoint" "test" {
 resource "alkira_service_checkpoint" "test2" {
   name       = "acceptance-checkpoint-2"
   auto_scale = "OFF"
-  cxp        = local.cxp
+  cxp        = var.cxp
 
   billing_tag_ids    = [alkira_billing_tag.test1.id]
   license_type       = "BRING_YOUR_OWN"

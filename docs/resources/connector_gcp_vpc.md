@@ -103,13 +103,13 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) IDs of billing tags associated with the connector.
+- `billing_tag_ids` (Set of Number) IDs of billing tags associated with the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
-- `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
+- `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `gcp_project_id` (String) GCP Project ID.
-- `gcp_routing` (Block Set) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. gcpRouting provides a customized routing specification. When gcpRouting is not provided i.e when gcpRouting is null/empty then all traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
+- `gcp_routing` (Block List) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. When routing option is not provided, the traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
 - `group` (String) The group of the connector.
-- `vpc_subnet` (Block Set) The list of subnets of the target GCP VPC for routing purpose. Given GCP VPC supports multiple prefixes per subnet, each prefix under a subnet will be a new entry. (see [below for nested schema](#nestedblock--vpc_subnet))
+- `vpc_subnet` (Block Set) The list of subnets of the target GCP VPC for routing purpose. Given connector supports multiple prefixes per subnet, each prefix under a subnet will be a new entry. (see [below for nested schema](#nestedblock--vpc_subnet))
 
 ### Read-Only
 
@@ -122,8 +122,8 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 Required:
 
-- `custom_prefix` (String) custom_prefix is an instruction which specifies the source of the routes that need to be imported. Only `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.
-- `prefix_list_ids` (List of Number) Ids of prefix lists defined on the network.
+- `custom_prefix` (String) Specifies the source of the routes that need to be imported. The value could be `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
+- `prefix_list_ids` (List of Number) IDs of prefix lists defined on the network.
 
 
 <a id="nestedblock--vpc_subnet"></a>
@@ -132,7 +132,7 @@ Required:
 Optional:
 
 - `cidr` (String) The CIDR of the subnet.
-- `id` (String) An identifier for the subnetwork resource with format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. This is the ID used in Google Cloud Platform Provider.
+- `id` (String) An identifier for the subnetwork resource with format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`.
 
 ## Import
 

@@ -7,13 +7,14 @@ import (
 	"log"
 )
 
-func convertGcpRouting(in *schema.Set, subnets *schema.Set) (*alkira.ConnectorGcpVpcRouting, error) {
+func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorGcpVpcRouting, error) {
+
 	importOptions := alkira.ConnectorGcpVpcImportOptions{
 		RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
 	}
 
-	if in != nil && in.Len() == 1 {
-		for _, option := range in.List() {
+	if in != nil && len(in) == 1 {
+		for _, option := range in {
 			cfg := option.(map[string]interface{})
 
 			if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
@@ -85,12 +86,56 @@ func generateGCPUserInputPrefixes(subnets *schema.Set) ([]alkira.UserInputPrefix
 }
 
 func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) {
+
+	if c == nil {
+		return
+	}
+
 	in := make(map[string]interface{})
+
 	in["prefix_list_ids"] = c.ImportOptions.PrefixListIds
 	in["custom_prefix"] = c.ImportOptions.RouteImportMode
 
-	r := resourceAlkiraConnectorGcpVpc()
-	f := schema.HashResource(r)
-	s := schema.NewSet(f, []interface{}{in})
-	d.Set("gcp_routing", s)
+	d.Set("gcp_routing", in)
+}
+
+func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
+
+	//
+	// Routing
+	//
+	gcpRouting, err := expandGcpRouting(d.Get("gcp_routing").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to convert gcp routing")
+		return nil, err
+	}
+
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble request
+	connector := &alkira.ConnectorGcpVpc{
+		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		CXP:            d.Get("cxp").(string),
+		CredentialId:   d.Get("credential_id").(string),
+		GcpRouting:     gcpRouting,
+		CustomerRegion: d.Get("gcp_region").(string),
+		Enabled:        d.Get("enabled").(bool),
+		Group:          d.Get("group").(string),
+		Name:           d.Get("name").(string),
+		ProjectId:      d.Get("gcp_project_id").(string),
+		Segments:       []string{segmentName},
+		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Size:           d.Get("size").(string),
+		VpcName:        d.Get("gcp_vpc_name").(string),
+	}
+
+	return connector, nil
 }

@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -38,7 +37,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
 				Description: "IDs of billing tags associated with the connector.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -59,10 +58,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"gcp_project_id": {
 				Description: "GCP Project ID.",
@@ -70,17 +70,17 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 			},
 			"vpc_subnet": {
-				Description: "The list of subnets of the target GCP VPC for routing purpose. " +
-					"Given GCP VPC supports multiple prefixes per subnet, each prefix under a " +
-					"subnet will be a new entry.",
+				Description: "The list of subnets of the target GCP VPC for " +
+					"routing purpose. Given connector supports multiple prefixes " +
+					"per subnet, each prefix under a subnet will be a new entry.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description: "An identifier for the subnetwork resource with format " +
-								"`projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. " +
-								"This is the ID used in Google Cloud Platform Provider.",
+							Description: "An identifier for the subnetwork " +
+								"resource with format " +
+								"`projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -93,25 +93,27 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				},
 			},
 			"gcp_routing": {
-				Description: "GCP Routing describes the routes that are to be imported to the VPC " +
-					"from the CXP. This essentially controls how traffic is routed between the " +
-					"CXP and the VPC. gcpRouting provides a customized routing specification. " +
-					"When gcpRouting is not provided i.e when gcpRouting is null/empty then all " +
-					"traffic exiting the VPC will be sent to the CXP (i.e a default route to " +
+				Description: "GCP Routing describes the routes that are to be " +
+					"imported to the VPC from the CXP. This essentially controls " +
+					"how traffic is routed between the CXP and the VPC. " +
+					"When routing option is not provided, the traffic exiting " +
+					"the VPC will be sent to the CXP (i.e a default route to " +
 					"CXP will be added to all route tables on that VPC)",
-				Type: schema.TypeSet,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix_list_ids": {
-							Description: "Ids of prefix lists defined on the network.",
-							Type:        schema.TypeList,
-							Required:    true,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Description: "IDs of prefix lists defined on the " +
+								"network.",
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"custom_prefix": {
-							Description: "custom_prefix is an instruction which specifies " +
-								"the source of the routes that need to be imported. Only " +
-								"`ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX` are valid inputs.",
+							Description: "Specifies the source of the routes " +
+								"that need to be imported. The value could be " +
+								"`ADVERTISE_DEFAULT_ROUTE` and " +
+								"`ADVERTISE_CUSTOM_PREFIX`.",
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -139,9 +141,10 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"name": {
 				Description: "The name of the connector.",
@@ -154,15 +157,20 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Computed:    true,
 			},
 			"segment_id": {
-				Description: "The ID of the segment associated with the connector.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The ID of the segment associated with the " +
+					"connector.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
+					"`10LARGE`, `20LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE", "2LARGE",
+					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 		},
 	}
@@ -316,44 +324,4 @@ func resourceConnectorGcpVpcDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
-}
-
-func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
-
-	//
-	// Routing
-	//
-	gcpRouting, err := convertGcpRouting(d.Get("gcp_routing").(*schema.Set), d.Get("vpc_subnet").(*schema.Set))
-	if err != nil {
-		log.Printf("[ERROR] failed to convert gcp routing")
-		return nil, err
-	}
-
-	//
-	// Segment
-	//
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Assemble request
-	connector := &alkira.ConnectorGcpVpc{
-		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
-		CXP:            d.Get("cxp").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		GcpRouting:     gcpRouting,
-		CustomerRegion: d.Get("gcp_region").(string),
-		Enabled:        d.Get("enabled").(bool),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		ProjectId:      d.Get("gcp_project_id").(string),
-		Segments:       []string{segmentName},
-		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Size:           d.Get("size").(string),
-		VpcName:        d.Get("gcp_vpc_name").(string),
-	}
-
-	return connector, nil
 }
