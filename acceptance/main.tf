@@ -8,7 +8,3 @@ terraform {
 
 provider "alkira" {
 }
-
-locals {
-  cxp = "US-WEST-1"
-}

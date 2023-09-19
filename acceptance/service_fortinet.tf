@@ -1,7 +1,7 @@
 resource "alkira_service_fortinet" "test1" {
   username                     = "admin"
   password                     = "Ak12345678"
-  cxp                          = "US-WEST-1"
+  cxp                          = var.cxp
   license_type                 = "BRING_YOUR_OWN"
   management_server_segment_id = alkira_segment.test1.id
   max_instance_count           = 1
