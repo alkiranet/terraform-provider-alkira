@@ -7,6 +7,7 @@ on:
       - main
 
 env:
+  ALKIRA_PORTAL:   ${{ secrets.PREPROD_TERRAFORM_PORTAL }}
   ALKIRA_USERNAME: ${{ secrets.PREPROD_TERRAFORM_USERNAME }}
   ALKIRA_PASSWORD: ${{ secrets.PREPROD_TERRAFORM_PASSWORD }}
 
