@@ -1,6 +1,6 @@
 # resource "alkira_connector_versa_sdwan" "test1" {
 #   name  = "tf-test-1"
-#   cxp   = "US-WEST-1"
+#   cxp   = var.cxp
 #   group = alkira_group.test1.name
 #   size  = "SMALL"
 
@@ -25,7 +25,7 @@
 
 # resource "alkira_connector_versa_sdwan" "test2" {
 #   name  = "tf-test-2"
-#   cxp   = "US-WEST-1"
+#   cxp   = var.cxp
 #   group = alkira_group.test1.name
 #   size  = "SMALL"
 

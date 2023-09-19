@@ -38,7 +38,7 @@ resource "alkira_list_global_cidr" "ciscofdtv" {
   name        = "acceptance-test"
   description = "terraform test global cidr list for cisco ftdv"
   values      = ["10.0.0.0/25"]
-  cxp         = "US-WEST-1"
+  cxp         = var.cxp
   tags        = ["CISCO_FTDV_FW"]
 }
 
@@ -46,7 +46,7 @@ resource "alkira_list_global_cidr" "checkpoint" {
   name        = "acceptance-checkpoint"
   description = "global cidr list for checkpoint"
   values      = ["172.16.1.0/24"]
-  cxp         = "US-WEST-1"
+  cxp         = var.cxp
 }
 
 data "alkira_policy_prefix_list" "prefix1" {

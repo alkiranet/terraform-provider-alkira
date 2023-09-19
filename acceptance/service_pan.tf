@@ -1,6 +1,6 @@
 resource "alkira_service_pan" "test" {
   name         = "acceptance"
-  cxp          = "US-WEST-1"
+  cxp          = var.cxp
   license_type = "PAY_AS_YOU_GO"
 
   pan_username = "admin"

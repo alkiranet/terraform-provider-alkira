@@ -3,7 +3,7 @@ resource "alkira_service_cisco_ftdv" "cisco_ftdv_test" {
   auto_scale          = "OFF"
   size                = "SMALL"
   tunnel_protocol     = "IPSEC"
-  cxp                 = "US-WEST-1"
+  cxp                 = var.cxp
   global_cidr_list_id = alkira_list_global_cidr.ciscofdtv.id
   max_instance_count  = 1
   min_instance_count  = 1

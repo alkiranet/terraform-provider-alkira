@@ -1,7 +1,7 @@
 resource "alkira_service_zscaler" "test1" {
   name        = "acceptance-zia-1"
   description = "acceptance zia"
-  cxp         = "US-WEST-1"
+  cxp         = var.cxp
 
   connector_internet_exit_id = alkira_connector_internet_exit.test1.id
   primary_public_edge_ip     = "11.11.11.11"

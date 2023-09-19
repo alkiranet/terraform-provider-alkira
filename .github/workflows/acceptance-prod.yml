@@ -10,6 +10,7 @@ env:
   ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
   ALKIRA_USERNAME: ${{ secrets.PROD_TERRAFORM_USERNAME }}
   ALKIRA_PASSWORD: ${{ secrets.PROD_TERRAFORM_PASSWORD }}
+  ALKIRA_CXP:      "US-WEST"
 
 jobs:
   acceptance-test-prod:
@@ -44,7 +45,7 @@ jobs:
         name: Run Terraform Apply
         run: |
           cd acceptance
-          terraform apply --auto-approve
+          terraform apply --auto-approve -var cxp=$ALKIRA_CXP
       -
         name: Run Terraform Destroy
         if: ${{ always() }}

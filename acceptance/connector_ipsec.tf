@@ -1,6 +1,6 @@
 resource "alkira_connector_ipsec" "test" {
   name       = "acceptance-ipsec-test1"
-  cxp        = "US-WEST-1"
+  cxp        = var.cxp
   segment_id = alkira_segment.test1.id
   size       = "SMALL"
   vpn_mode   = "ROUTE_BASED"
