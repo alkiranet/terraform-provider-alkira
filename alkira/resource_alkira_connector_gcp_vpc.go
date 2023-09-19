@@ -37,7 +37,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
 				Description: "IDs of billing tags associated with the connector.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -58,10 +58,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Default:     true,
 			},
 			"failover_cxps": {
-				Description: "A list of additional CXPs where the connector should be provisioned for failover.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of additional CXPs where the connector " +
+					"should be provisioned for failover.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"gcp_project_id": {
 				Description: "GCP Project ID.",
@@ -69,17 +70,17 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional:    true,
 			},
 			"vpc_subnet": {
-				Description: "The list of subnets of the target GCP VPC for routing purpose. " +
-					"Given GCP VPC supports multiple prefixes per subnet, each prefix under a " +
-					"subnet will be a new entry.",
+				Description: "The list of subnets of the target GCP VPC for " +
+					"routing purpose. Given connector supports multiple prefixes " +
+					"per subnet, each prefix under a subnet will be a new entry.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description: "An identifier for the subnetwork resource with format " +
-								"`projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`. " +
-								"This is the ID used in Google Cloud Platform Provider.",
+							Description: "An identifier for the subnetwork " +
+								"resource with format " +
+								"`projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -98,7 +99,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					"When routing option is not provided, the traffic exiting " +
 					"the VPC will be sent to the CXP (i.e a default route to " +
 					"CXP will be added to all route tables on that VPC)",
-				Type: schema.TypeSet,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix_list_ids": {

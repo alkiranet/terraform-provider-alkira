@@ -7,13 +7,14 @@ import (
 	"log"
 )
 
-func convertGcpRouting(in *schema.Set, subnets *schema.Set) (*alkira.ConnectorGcpVpcRouting, error) {
+func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorGcpVpcRouting, error) {
+
 	importOptions := alkira.ConnectorGcpVpcImportOptions{
 		RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
 	}
 
-	if in != nil && in.Len() == 1 {
-		for _, option := range in.List() {
+	if in != nil && len(in) == 1 {
+		for _, option := range in {
 			cfg := option.(map[string]interface{})
 
 			if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
@@ -95,11 +96,7 @@ func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceDa
 	in["prefix_list_ids"] = c.ImportOptions.PrefixListIds
 	in["custom_prefix"] = c.ImportOptions.RouteImportMode
 
-	r := resourceAlkiraConnectorGcpVpc()
-	f := schema.HashResource(r)
-	s := schema.NewSet(f, []interface{}{in})
-
-	d.Set("gcp_routing", s)
+	d.Set("gcp_routing", in)
 }
 
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
@@ -107,7 +104,8 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	//
 	// Routing
 	//
-	gcpRouting, err := convertGcpRouting(d.Get("gcp_routing").(*schema.Set), d.Get("vpc_subnet").(*schema.Set))
+	gcpRouting, err := expandGcpRouting(d.Get("gcp_routing").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
+
 	if err != nil {
 		log.Printf("[ERROR] failed to convert gcp routing")
 		return nil, err
