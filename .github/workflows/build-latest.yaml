@@ -10,6 +10,7 @@ env:
   AWS_REGION: us-east-1
   BUILD_DIR: /home/runner/work/terraform-provider-alkira/terraform-provider-alkira
   BUILD_ARTIFACTS_PATH: s3://downloads.alkira.com/dev/terraform-provider-alkira/latest
+  CGO_ENABLED: 0
 
 jobs:
   latest:
