@@ -8,8 +8,8 @@ description: |-
 
 # Alkira Provider
 
-Lifecycle management of Alkira Cloud Services Exchange. The following
-ENV variables are supported:
+Lifecycle management of Alkira Cloud Services Exchange. For the
+proivder, the following ENV variables are supported:
 
 * `ALKIRA_PORTAL`
 * `ALKIRA_USERNAME`
@@ -38,20 +38,21 @@ and `ALKIRA_PASSWORD`, environment variables, representing your Alkira
 tenant portal URI, username and password, respectively. For example,
 
 ```hcl
+export ALKIRA_PORTAL="tenant.portal.alkira.com"
 export ALKIRA_USERNAME=XXX
 export ALKIRA_PASSWORD=XXX
 ```
 
-Then initialize the provider like this:
+Then you could initialize the provider like this:
 
 ```hcl
 provider "alkira" {
-  portal = "tenant.portal.alkira.com"
 }
 ```
 
-Or you could use Alkira API key. It could be managed from *Portal* ->
-*Settings* -> *User Management*. To use API key:
+Another method to authenticate is using Alkira API key, which could be
+managed from *Portal* -> *Settings* -> *User Management*. Once it's
+created, the API key could be used directly like this:
 
 ```hcl
 provider "alkira" {
@@ -77,7 +78,8 @@ provider "alkira" {
 ```
 
 In this way, all applicable resources in the configuration will be
-automatically provisioned when doing `terraform apply`.
+automatically provisioned when doing `terraform apply`. Notice that it
+may take a much longer time to apply when provisioning is enabled.
 
 {{ .SchemaMarkdown | trimspace }}
 
