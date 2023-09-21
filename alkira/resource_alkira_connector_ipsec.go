@@ -82,25 +82,31 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Required: true,
 						},
 						"enable_tunnel_redundancy": {
-							Description: "Disable this if all tunnels will not be configured or enabled " +
-								"on the on-premise device. If disabled, connector health will be shown " +
-								"as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels " +
-								"need to be `UP` for the connector health to be shown as `UP`.",
+							Description: "Disable this if all tunnels will not " +
+								"be configured or enabled on the on-premise " +
+								"device. If disabled, connector health will be " +
+								"shown as `UP` if at least one of the tunnels " +
+								"is `UP`. If enabled, all tunnels need to be " +
+								"`UP` for the connector health to be shown as `UP`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
 						"billing_tag_ids": {
-							Description: "A list of IDs of billing tag associated with the endpoint.",
-							Type:        schema.TypeList,
-							Optional:    true,
+							Description: "A list of IDs of billing tag associated " +
+								"with the endpoint.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeInt,
 							},
 						},
 						"ha_mode": {
-							Description: "The value could be `ACTIVE` or `STANDBY`. A endpoint in `STANDBY` mode will not " +
-								"be used for traffic unless all other endpoints for the connector are down. There can only " +
-								"be one endpoint in `STANDBY` mode per connector and there must be at least one endpoint " +
+							Description: "The value could be `ACTIVE` or `STANDBY`. " +
+								"A endpoint in `STANDBY` mode will not be used for " +
+								"traffic unless all other endpoints for the " +
+								"connector are down. There can only be one " +
+								"endpoint in `STANDBY` mode per connector and " +
+								"there must be at least one endpoint " +
 								"that isn't in `STANDBY` mode per connector.",
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -112,23 +118,26 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dpd_delay": {
-										Description: "Interval to check the liveness of a peer.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Interval to check the " +
+											"liveness of a peer.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"dpd_timeout": {
-										Description: "Timeouts to check the liveness of a peer. IKEv1 only.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Timeouts to check the " +
+											"liveness of a peer. `IKEv1` only.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"esp_rekey_time": {
-										Description: "IPsec SA rekey time in seconds.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "IPsec SA rekey time in " +
+											"seconds.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"esp_life_time": {
-										Description: "Maximum IPsec ESP lifetime if the IPsec " +
-											"ESP does not rekey.",
+										Description: "Maximum IPsec ESP lifetime " +
+											"if the IPsec ESP does not rekey.",
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -180,13 +189,15 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:    true,
 									},
 									"ike_over_time": {
-										Description: "Maximum IKE SA lifetime if the IKE SA does not rekey.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Maximum IKE SA lifetime if " +
+											"the IKE SA does not rekey.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"ike_random_time": {
-										Description: "Time range from which to choose a random value to " +
-											"subtract from rekey times.",
+										Description: "Time range from which to " +
+											"choose a random value to subtract " +
+											"from rekey times.",
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -216,9 +227,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Description: "Local-ID type - IKE identity to use for " +
 											"authentication round, one of `FQDN`, `USER_FQDN`, " +
 											"`KEYID`, `IP_ADDR`.",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
 									},
 									"local_auth_value": {
 										Description: "Local-ID value.",
@@ -229,9 +241,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Description: "Remote-ID type - IKE identity to use for " +
 											"authentication round, one of `FQDN`, `USER_FQDN`, " +
 											"`KEYID`, `IP_ADDR`.",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
 									},
 									"remote_auth_value": {
 										Description: "Remote-ID value.",
@@ -257,9 +270,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
@@ -267,8 +281,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Computed:    true,
 			},
 			"policy_options": {
-				Description: "Policy options, both on-prem and cxp prefix" +
-					"list ids must be provided if vpnMode is `POLICY_BASED`",
+				Description: "Policy options, both `on_prem_prefix_list_ids` " +
+					"and `cxp_prefix_list_ids` must be provided if `vpn_mode` " +
+					"is `POLICY_BASED`.",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -295,40 +310,49 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Description: "Routing type, one of `STATIC`, `DYNAMIC`, or `BOTH`.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "Routing type, one of `STATIC`, " +
+								"`DYNAMIC`, or `BOTH`.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"availability": {
-							Description: "The method to determine the availability of the routes. The value could be " +
-								"`IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`. (**BETA**)",
-							Type:         schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
-							Optional:     true,
-							Default:      "IPSEC_INTERFACE_PING",
+							Description: "The method to determine the " +
+								"availability of the routes. The value " +
+								"could be `IKE_STATUS` or " +
+								"`IPSEC_INTERFACE_PING`. Default value is " +
+								"`IPSEC_INTERFACE_PING`.",
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
+							Optional: true,
+							Default:  "IPSEC_INTERFACE_PING",
 						},
 						"prefix_list_id": {
-							Description: "The ID of prefix list to use for static route propagation.",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "The ID of prefix list to use for " +
+								"static route propagation.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"customer_gateway_asn": {
-							Description: "The customer gateway ASN to use for dynamic route propagation.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description: "The customer gateway ASN to use for " +
+								"dynamic route propagation.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"bgp_auth_key": {
-							Description: " BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description: " BGP MD5 auth key for Alkira to " +
+								"authenticate Alkira CXP (On Premise Gateway).",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
 				Optional: true,
 			},
 			"segment_options": {
-				Description: "Additional options for each segment associated with the connector",
-				Type:        schema.TypeSet,
+				Description: "Additional options for each segment associated " +
+					"with the connector.",
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -362,16 +386,29 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Required:    true,
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
+					"`10LARGE` and `20LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{
+						"SMALL",
+						"MEDIUM",
+						"LARGE",
+						"2LARGE",
+						"4LARGE",
+						"5LARGE",
+						"10LARGE",
+						"20LARGE"}, false),
 			},
 			"vpn_mode": &schema.Schema{
-				Description:  "The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ROUTE_BASED", "POLICY_BASED"}, false),
+				Description: "The mode can be configured either as `ROUTE_BASED` " +
+					"or `POLICY_BASED`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"ROUTE_BASED", "POLICY_BASED"}, false),
 			},
 		},
 	}

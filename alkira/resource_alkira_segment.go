@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraSegment() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Provides segment resource.",
+		Description:   "Manages segment.",
 		CreateContext: resourceSegment,
 		ReadContext:   resourceSegmentRead,
 		UpdateContext: resourceSegmentUpdate,

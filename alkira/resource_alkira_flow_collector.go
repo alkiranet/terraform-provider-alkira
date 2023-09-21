@@ -11,7 +11,7 @@ import (
 
 func resourceAlkiraFlowCollector() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Provide flow collector resource.",
+		Description:   "Manage flow collector.",
 		CreateContext: resourceFlowCollector,
 		ReadContext:   resourceFlowCollectorRead,
 		UpdateContext: resourceFlowCollectorUpdate,
@@ -60,56 +60,63 @@ func resourceAlkiraFlowCollector() *schema.Resource {
 				Required:    true,
 			},
 			"segment_id": {
-				Description: "Segment ID of the segment on which flow export destination is reachable. " +
-					"This is optional and should not be used when destination is reachable via internet. " +
-					"Also, segment can only be used with destination_ip, destination_fqdn is not supported " +
-					"on segment.",
+				Description: "The segment on which flow export destination is " +
+					"reachable. This should not be specified when destination " +
+					"is reachable via internet. Also, segment can only be used " +
+					"when `destination_ip` is provided, `destination_fqdn` is " +
+					"not supported.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"destination_ip": {
-				Description: "The destination IP of the flow collector where flow would be sent. " +
-					"Must provide either destination_ip or destination_fqdn.",
+				Description: "The destination IP of the flow collector where " +
+					"flow would be sent. Either `destination_ip` or " +
+					"`destination_fqdn` are required.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"destination_fqdn": {
-				Description: "The destination FQDN of the flow collector where flow would be sent. " +
-					"Must provide either destination_ip or destination_fqdn.",
+				Description: "The destination FQDN of the flow collector where " +
+					"flow would be sent. Either `destination_ip` or " +
+					"`destination_fqdn` are required.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"destination_port": {
-				Description: "The destination port of the flow collector where flow would be sent.",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "The destination port of the flow collector where " +
+					"flow would be sent.",
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"transport_protocol": {
-				Description: "The transport protocol to send the flow records to destination." +
-					"Must provide either destination_ip or destination_fqdn.",
+				Description: "The transport protocol to send the flow records " +
+					"to destination.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "UDP",
 				ValidateFunc: validation.StringInSlice([]string{"UDP"}, false),
 			},
 			"export_type": {
-				Description:  "The flow records export type, Currently only IPFIX is supported.",
+				Description: "The flow records export type. Only `IPFIX` is " +
+					"supported for now.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPFIX",
 				ValidateFunc: validation.StringInSlice([]string{"IPFIX"}, false),
 			},
 			"flow_record_template_id": {
-				Description: "The flow records template id. Currently only default template (id=1) is supported",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     1,
+				Description: "The flow records template ID. Currently only " +
+					"default template ID `1` is supported",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
 			},
 			"cxps": {
-				Description: "A list of CXPs where the collector should be provisioned for flow collection.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of CXPs where the collector should be " +
+					"provisioned for flow collecting.",
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

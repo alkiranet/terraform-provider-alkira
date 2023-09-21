@@ -2,14 +2,14 @@
 page_title: "alkira_segment Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Provides segment resource.
+  Manages segment.
 ---
 
 # alkira_segment (Resource)
 
-Provides segment resource.
+Manages segment.
 
-A Segment is a section of a network isolated from one another to make it possible
+A segment is a section of a network isolated from one another to make it possible
 to more effectively control who has access to what. Segmentation also allows for
 segregation of resources between segments for security and isolation purposes.
 

@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraServiceZscaler() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage Zscaler firewall service. (**BETA**)",
+		Description:   "Manage Zscaler firewall service.",
 		CreateContext: resourceZscaler,
 		ReadContext:   resourceZscalerRead,
 		UpdateContext: resourceZscalerUpdate,
@@ -78,38 +78,42 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 							Description: "The IPSEC phase 2 DH Group to be " +
 								"used. Input value must be either `MODP1024`" +
 								"or `MODP2048`. The default value is `MODP1024`",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "MODP1024",
-							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "MODP1024",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"MODP1024", "MODP2048"}, false),
 						},
 						"esp_encryption_algorithm": {
 							Description: "The IPSEC phase 2 Encryption " +
 								"Algorithm to be used. Input value must " +
 								"be either `NULL` or `AES256CBC`. The " +
 								"default value is `NULL`",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "NULL",
-							ValidateFunc: validation.StringInSlice([]string{"NULL", "AES256CBC"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NULL",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"NULL", "AES256CBC"}, false),
 						},
 						"esp_integrity_algorithm": {
 							Description: "The IPSEC phase 2 Integrity " +
 								"Algorithm to be used. Input value must " +
 								"be either `MD5` or `SHA256`. The default " +
 								"value is `MD5`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "MD5",
-							ValidateFunc: validation.StringInSlice([]string{"MD5", "SHA256"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "MD5",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"MD5", "SHA256"}, false),
 						},
 						"health_check_type": {
 							Description: "The type of health check. Input " +
 								"values must be either `IKE_STATUS` " +
 								"`PING_PROBE` or `HTTP_PROBE`",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"IKE_STATUS", "PING_PROBE", "HTTP_PROBE"}, false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"IKE_STATUS", "PING_PROBE", "HTTP_PROBE"}, false),
 						},
 						"http_probe_url": {
 							Description: "The url to check connection to " +
@@ -122,28 +126,31 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 							Description: "The IPSEC phase 1 DH Group to be " +
 								"used. Input value must either be `MODP1024` " +
 								"or `MODP2048`. The default is `MODP1024`",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "MODP1024",
-							ValidateFunc: validation.StringInSlice([]string{"MODP1024", "MODP2048"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "MODP1024",
+							ValidateFunc: validation.StringInSlice([]string{
+								"MODP1024", "MODP2048"}, false),
 						},
 						"ike_encryption_algorithm": {
 							Description: "The IPSEC phase 1 Encryption " +
 								"Algorithm to be used. Only `AES256CBC` " +
 								"is allowed. The default value is `AES256CBC`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "AES256CBC",
-							ValidateFunc: validation.StringInSlice([]string{"AES256CBC"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "AES256CBC",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"AES256CBC"}, false),
 						},
 						"ike_integrity_algorithm": {
 							Description: "The IPSEC phase 1 Integrity " +
 								"Algorithm to be used. Only `SHA256` " +
 								"is allowed. The default value is `SHA256`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "SHA256",
-							ValidateFunc: validation.StringInSlice([]string{"SHA256"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "SHA256",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"SHA256"}, false),
 						},
 						"local_fpdn_id": {
 							Description: "The local FQDN Id.",
@@ -171,12 +178,12 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Required:    true,
 			},
 			"primary_public_edge_ip": {
-				Description: "The IP for closest Zscaler PoP to `cxp` region.",
+				Description: "The IP for closest Zscaler PoP to CXP region.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"secondary_public_edge_ip": {
-				Description: "The ip for standby Zscaler PoP to `cxp` region.",
+				Description: "The IP for standby Zscaler PoP to CXP region.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -187,17 +194,21 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
-				Description:  "The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				Description: "The size of the service one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
-				Description:  "The type of tunnel protocol to be used to connect to Zscaler PoP.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPSEC",
-				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+				Description: "The type of tunnel protocol to be used to connect " +
+					"to Zscaler PoP.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPSEC",
+				ValidateFunc: validation.StringInSlice(
+					[]string{"IPSEC", "GRE"}, false),
 			},
 		},
 	}

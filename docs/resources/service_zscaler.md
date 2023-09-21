@@ -3,12 +3,12 @@
 page_title: "alkira_service_zscaler Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Zscaler firewall service. (BETA)
+  Manage Zscaler firewall service.
 ---
 
 # alkira_service_zscaler (Resource)
 
-Manage Zscaler firewall service. (**BETA**)
+Manage Zscaler firewall service.
 
 ## Example Usage
 
@@ -49,8 +49,8 @@ resource "alkira_service_zscaler" "test1" {
 - `cxp` (String) The CXP where the service should be provisioned.
 - `ipsec_configuration` (Block Set, Min: 1) The IPSEC tunnel configuration. This field should only be set when `tunnel_type` is `IPSEC`. (see [below for nested schema](#nestedblock--ipsec_configuration))
 - `name` (String) The name of the zscaler firewall.
-- `primary_public_edge_ip` (String) The IP for closest Zscaler PoP to `cxp` region.
-- `secondary_public_edge_ip` (String) The ip for standby Zscaler PoP to `cxp` region.
+- `primary_public_edge_ip` (String) The IP for closest Zscaler PoP to CXP region.
+- `secondary_public_edge_ip` (String) The IP for standby Zscaler PoP to CXP region.
 - `segment_ids` (Set of String) IDs of segment associated with the service.
 - `size` (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.
 

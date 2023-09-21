@@ -96,15 +96,15 @@ resource "alkira_connector_ipsec" "ipsec" {
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment associated with the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
-- `vpn_mode` (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
+- `vpn_mode` (String) The mode can be configured either as `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
 
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `policy_options` (Block Set) Policy options, both on-prem and cxp prefixlist ids must be provided if vpnMode is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
+- `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED`. (see [below for nested schema](#nestedblock--policy_options))
 - `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
-- `segment_options` (Block Set) Additional options for each segment associated with the connector (see [below for nested schema](#nestedblock--segment_options))
+- `segment_options` (Block Set) Additional options for each segment associated with the connector. (see [below for nested schema](#nestedblock--segment_options))
 
 ### Read-Only
 
@@ -138,7 +138,7 @@ Read-Only:
 Required:
 
 - `dpd_delay` (Number) Interval to check the liveness of a peer.
-- `dpd_timeout` (Number) Timeouts to check the liveness of a peer. IKEv1 only.
+- `dpd_timeout` (Number) Timeouts to check the liveness of a peer. `IKEv1` only.
 - `esp_dh_group_numbers` (List of String) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.
 - `esp_encryption_algorithms` (List of String) Encryption algorithms to use for IPsec SA. Value could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` `3DESCBC`, or `NULL`.
 - `esp_integrity_algorithms` (List of String) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
@@ -179,7 +179,7 @@ Required:
 
 Optional:
 
-- `availability` (String) The method to determine the availability of the routes. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`. (**BETA**)
+- `availability` (String) The method to determine the availability of the routes. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
 - `bgp_auth_key` (String) BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).
 - `customer_gateway_asn` (String) The customer gateway ASN to use for dynamic route propagation.
 - `prefix_list_id` (Number) The ID of prefix list to use for static route propagation.

@@ -3,13 +3,13 @@
 page_title: "alkira_connector_akamai_prolexic Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Connector for Akamai Prolexic. (BETA)
+  Manage Connector for Akamai Prolexic.
   This resource is still under active development. It may have further changes in the near future. Today, to use this connector, you will need to have onboarded a BYOIP with Do Not Advertise set to true. Also, the segment with public IPs needs to be reported to Akamai Representative.
 ---
 
 # alkira_connector_akamai_prolexic (Resource)
 
-Manage Connector for Akamai Prolexic. (BETA)
+Manage Connector for Akamai Prolexic.
 
 This resource is still under active development. It may have further changes in the near future. Today, to use this connector, you will need to have onboarded a BYOIP with Do Not Advertise set to `true`. Also, the segment with public IPs needs to be reported to Akamai Representative.
 

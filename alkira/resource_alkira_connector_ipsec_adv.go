@@ -193,25 +193,26 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									},
 									"customer_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
-											"id of the customer end of the tunnel.",
+											"ID of the customer end of the tunnel.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"cxp_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
-											"id of the CXP end of the tunnel.",
+											"ID of the CXP end of the tunnel.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"cxp_end_public_ip_reservation_id": {
 										Description: "The public IP reservation " +
-											"id of the CXP end of the tunnel.",
+											"ID of the CXP end of the tunnel.",
 										Type:     schema.TypeString,
 										Required: true,
 									},
 									"advanced_options": {
-										Description: "Advanced options for the IPSec gateway.",
-										Type:        schema.TypeList,
+										Description: "Advanced options for the " +
+											"IPSec gateway.",
+										Type: schema.TypeList,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"dpd_delay": {
@@ -382,8 +383,9 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Required: true,
 			}, // gateway
 			"policy_options": {
-				Description: "Policy options, both on-prem and cxp prefix" +
-					"list ids must be provided if vpnMode is `POLICY_BASED`",
+				Description: "Policy options, both `branch_ts_prefix_list_ids` " +
+					"and `cxp_prefix_list_ids` must be provided if `vpn_mode` " +
+					"is `POLICY_BASED`",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
