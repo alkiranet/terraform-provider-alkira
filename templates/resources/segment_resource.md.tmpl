@@ -9,26 +9,28 @@ description: |-
 
 {{ .Description | trimspace }}
 
-To use this resource, you will need to use or create `alkira_group`,
-alkira_segment` and `alkira_policy_prefix_list`.  There could be
-multiple `group_prefix` section defined as needed. The `group_prefix`
-should be defined like this:
+To use this resource, you will need to use or create resource
+`alkira_group`, `alkira_segment` and `alkira_policy_prefix_list`
+firstly.
 
-* ANY -> ANY: where `group_id` must be `-1` and prefix_list_id must be
-`-1`. When an ANY -> ANY mapping is present then it should be the only
-mapping in the group_prefix
+There could be multiple `group_prefix` section defined as needed. The
+`group_prefix` should be defined like this:
 
-* EXPLICIT Group -> ANY: where `group_id` must be the ID of group of
-type EXPLICIT and prefix_list_id MUST be `-1`.
+* **ANY -> ANY**: where `group_id` must be `-1` and prefix_list_id
+must be `-1`. When an **ANY -> ANY** mapping is present then it should
+be the only mapping in the `group_prefix`.
 
-* IMPLICIT Group -> ANY: where group_id must be the ID of group of
-type IMPLICIT, this is also known as a Connector Group and
-`prefix_list_id` must be `-1`. If an IMPLICIT group is mapped to ANY
+* **EXPLICIT Group -> ANY**: where `group_id` must be the ID of group
+of type `EXPLICIT` and `prefix_list_id` MUST be `-1`.
+
+* **IMPLICIT Group -> ANY**: where `group_id` must be the ID of group
+of type `IMPLICIT`, this is also known as a Connector Group and
+`prefix_list_id` must be `-1`. If an `IMPLICIT` group is mapped to ANY
 `prefix_list_id`, then an IMPLICIT Group -> `prefix_list_id` must NOT
 be present in `group_prefix`.
 
-* IMPLICIT Group -> PrefixList ID: where `group_id` must be the ID of
-group of type IMPLICIT and `prefix_list_id` MUST be the ID of an
+* **IMPLICIT Group -> PrefixList ID**: where `group_id` must be the ID
+of group of type `IMPLICIT` and `prefix_list_id` MUST be the ID of an
 existing `prefix_list_id`.
 
 * SERVICE Group -> ANY: where `group_id` must be the ID of group of

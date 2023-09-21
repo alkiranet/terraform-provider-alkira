@@ -1,0 +1,1 @@
+terraform import alkira_flow_collector.example COLLECTOR_ID

@@ -55,18 +55,18 @@ resource "alkira_policy_nat" "test" {
 
 ### Required
 
-- `included_group_ids` (List of Number) Defines the scope for the policy. Connector associatedwith group IDs metioned here is where this policy would be applied.Group IDs that associated with branch/on-premise connectors can beused here. These group should not contain any cloud connector.
+- `included_group_ids` (List of Number) Defines the scope for the policy. Connector associated with groups defined here is where this policy would be applied. Groups that associated with branch or on-premise connectors can be used here. These group should not contain any cloud connector.
 - `name` (String) The name of the policy.
 - `nat_rule_ids` (List of Number) The list of NAT rules to be applied by the policy.
-- `segment_id` (String) IDs of segments that will define the policy scope.
-- `type` (String) The type of NAT policy, currently only `INTRA_SEGMENT`is supported.
+- `segment_id` (String) IDs of the segment that will define the policyscope.
+- `type` (String) The type of NAT policy, currently only `INTRA_SEGMENT` is supported.
 
 ### Optional
 
-- `allow_overlapping_translated_source_addresses` (Boolean) Allow overlapping translated source address. Default is `false`. (**BETA**)
+- `allow_overlapping_translated_source_addresses` (Boolean) Allow overlapping translated source address. Default value is `false`. (**BETA**)
 - `category` (String) The category of NAT policy. The vaule could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy.
-- `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`.Implicit group ID of a branch/on-premise connector for which a userdefined group is used in `included_groups` can be used here.
+- `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. Implicit group of a branch or on-premise connector for which a user defined group is used in `included_groups` can be used here.
 
 ### Read-Only
 

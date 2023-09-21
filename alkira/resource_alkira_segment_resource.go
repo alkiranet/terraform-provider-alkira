@@ -64,14 +64,16 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"group_id": {
-							Description: "The connector group ID associated with segment resource.",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "The connector group ID associated " +
+								"with the segment resource.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"prefix_list_id": {
-							Description: "The Prefix List ID associated with segment resource.",
-							Type:        schema.TypeInt,
-							Optional:    true,
+							Description: "The Prefix List ID associated with " +
+								"the segment resource.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},

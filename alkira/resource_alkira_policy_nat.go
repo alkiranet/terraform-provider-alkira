@@ -38,35 +38,40 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 					"The vaule could be `DEFAULT` or " +
 					"`INTERNET_CONNECTOR`. Default value is " +
 					"`DEFAULT`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "DEFAULT",
-				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{
+					"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
 			"type": {
-				Description:  "The type of NAT policy, currently only `INTRA_SEGMENT`is supported.",
+				Description: "The type of NAT policy, currently only " +
+					"`INTRA_SEGMENT` is supported.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"INTRA_SEGMENT"}, false),
 			},
 			"segment_id": {
-				Description: "IDs of segments that will define the policy scope.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "IDs of the segment that will define the policy" +
+					"scope.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"included_group_ids": {
-				Description: "Defines the scope for the policy. Connector associated" +
-					"with group IDs metioned here is where this policy would be applied." +
-					"Group IDs that associated with branch/on-premise connectors can be" +
-					"used here. These group should not contain any cloud connector.",
+				Description: "Defines the scope for the policy. Connector " +
+					"associated with groups defined here is where this policy " +
+					"would be applied. Groups that associated with branch or " +
+					"on-premise connectors can be used here. These group should " +
+					"not contain any cloud connector.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"excluded_group_ids": {
-				Description: "Excludes given associated connector from `included_groups`." +
-					"Implicit group ID of a branch/on-premise connector for which a user" +
-					"defined group is used in `included_groups` can be used here.",
+				Description: "Excludes given associated connector from " +
+					"`included_groups`. Implicit group of a branch or on-premise " +
+					"connector for which a user defined group is used in " +
+					"`included_groups` can be used here.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
@@ -78,10 +83,11 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Required:    true,
 			},
 			"allow_overlapping_translated_source_addresses": {
-				Description: "Allow overlapping translated source address. Default is `false`. (**BETA**)",
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
+				Description: "Allow overlapping translated source address. " +
+					"Default value is `false`. (**BETA**)",
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
 			},
 		},
 	}

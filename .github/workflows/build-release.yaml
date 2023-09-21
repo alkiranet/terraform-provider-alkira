@@ -14,6 +14,10 @@ on:
   push:
     tags:
       - 'v*'
+
+env:
+  CGO_ENABLED: 0
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest

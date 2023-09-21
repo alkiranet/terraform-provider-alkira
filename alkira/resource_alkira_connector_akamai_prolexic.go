@@ -13,11 +13,13 @@ import (
 
 func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Connector for Akamai Prolexic. (BETA)\n\n" +
-			"This resource is still under active development. It may have further " +
-			"changes in the near future. Today, to use this connector, you will need " +
-			"to have onboarded a BYOIP with Do Not Advertise set to `true`. Also, the " +
-			"segment with public IPs needs to be reported to Akamai Representative.",
+		Description: "Manage Connector for Akamai Prolexic.\n\n" +
+			"This resource is still under active development. It may have" +
+			" further changes in the near future. Today, to use this " +
+			"connector, you will need to have onboarded a BYOIP with " +
+			"Do Not Advertise set to `true`. Also, the " +
+			"segment with public IPs needs to be reported to " +
+			"Akamai Representative.",
 		CreateContext: resourceConnectorAkamaiProlexicCreate,
 		ReadContext:   resourceConnectorAkamaiProlexicRead,
 		UpdateContext: resourceConnectorAkamaiProlexicUpdate,
@@ -73,20 +75,23 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				},
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated with the connector.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "A list of Billing Tag by ID associated with the " +
+					"connector.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
-				Description: "The credential ID for storing Akamai BGP authentication key.",
-				Type:        schema.TypeString,
-				Computed:    true,
+				Description: "The credential ID for storing Akamai BGP " +
+					"authentication key.",
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The CXP where the connector should be " +
+					"provisioned.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -158,14 +163,16 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 										Required: true,
 									},
 									"alkira_overlay_tunnel_ip": {
-										Description: "The overlay IP of the GRE tunnel on the Alkira side.",
-										Type:        schema.TypeString,
-										Required:    true,
+										Description: "The overlay IP of the GRE " +
+											"tunnel on the Alkira side.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"akamai_overlay_tunnel_ip": {
-										Description: "The overlay IP of the GRE tunnel on the Alkira side.",
-										Type:        schema.TypeString,
-										Required:    true,
+										Description: "The overlay IP of the GRE " +
+											"tunnel on the Alkira side.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
