@@ -105,7 +105,8 @@ resource "alkira_connector_aws_vpc" "connector" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) Tags for billing.
-- `direct_inter_vpc_communication` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
+- `direct_inter_vpc_communication_enabled` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
+- `direct_inter_vpc_communication_group` (String) Direct inter-vpc communication group.
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.

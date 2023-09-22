@@ -61,12 +61,17 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"direct_inter_vpc_communication": {
+			"direct_inter_vpc_communication_enabled": {
 				Description: "Enable direct inter-vpc communication. " +
 					"Default is set to `false`.",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"direct_inter_vpc_communication_group": {
+				Description: "Direct inter-vpc communication group.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"enabled": {
 				Description: "Whether the connector is enabled. Default is " +
@@ -280,7 +285,8 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
-	d.Set("direct_inter_vpc_communication", connector.DirectInterVPCCommunicationEnabled)
+	d.Set("direct_inter_vpc_communication_enabled", connector.DirectInterVPCCommunicationEnabled)
+	d.Set("direct_inter_vpc_communication_group", connector.DirectInterVPCCommunicationGroup)
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("group", connector.Group)
