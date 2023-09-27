@@ -122,7 +122,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 
 	// Assemble request
 	connector := &alkira.ConnectorGcpVpc{
-		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		GcpRouting:     gcpRouting,
@@ -132,7 +132,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Name:           d.Get("name").(string),
 		ProjectId:      d.Get("gcp_project_id").(string),
 		Segments:       []string{segmentName},
-		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		SecondaryCXPs:  convertTypeSetToStringList(d.Get("failover_cxps").(*schema.Set)),
 		Size:           d.Get("size").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),
 	}
