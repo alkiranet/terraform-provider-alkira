@@ -245,6 +245,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("billing_tag_ids", app.BillingTags)
 	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
+	d.Set("byoip_id", app.ByoipId)
 	d.Set("connector_id", app.ConnectorId)
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
@@ -383,6 +384,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 	request := &alkira.InternetApplication{
 		BillingTags:                   convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
 		BiDirectionalAvailabilityZone: d.Get("bi_directional_az").(string),
+		ByoipId:                       d.Get("byoip_id").(int),
 		ConnectorId:                   d.Get("connector_id").(int),
 		ConnectorType:                 d.Get("connector_type").(string),
 		FqdnPrefix:                    d.Get("fqdn_prefix").(string),
