@@ -166,13 +166,15 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 							Computed:    true,
 						},
 						"tunnel": {
-							Description: "Tunnel of the gateway.",
-							Type:        schema.TypeList,
+							Description: "Tunnel of the gateway. The number " +
+								"of the tunnels should be equal to " +
+								"`tunnel_per_gateway`.",
+							Type: schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Description: "The ID of the tunnel.",
-										Type:        schema.TypeInt,
+										Type:        schema.TypeString,
 										Computed:    true,
 									},
 									"number": {
@@ -212,7 +214,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									"advanced_options": {
 										Description: "Advanced options for the " +
 											"IPSec gateway.",
-										Type: schema.TypeList,
+										Type:     schema.TypeList,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"dpd_delay": {
@@ -376,7 +379,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									}, // advanced_options
 								},
 							},
-							Optional: true,
+							Required: true,
 						}, // tunnel
 					},
 				},
@@ -512,7 +515,7 @@ func resourceConnectorIPSecAdvRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
-	d.Set("destiation_type", connector.DestinationType)
+	d.Set("destination_type", connector.DestinationType)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -521,7 +524,10 @@ func resourceConnectorIPSecAdvRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpn_mode", connector.VpnMode)
 
 	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))
-	d.Set("policy_options", deflateConnectorAdvIPSecPolicyOptions(connector.PolicyOptions))
+
+	if connector.PolicyOptions != nil {
+		d.Set("policy_options", deflateConnectorAdvIPSecPolicyOptions(connector.PolicyOptions))
+	}
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(connector.Segment, m)
@@ -649,6 +655,7 @@ func generateConnectorIPSecAdvRequest(d *schema.ResourceData, m interface{}) (*a
 	connector := &alkira.ConnectorAdvIPSec{
 		AdvertiseDefaultRoute: d.Get("advertise_default_route").(bool),
 		AdvertiseOnPremRoutes: d.Get("advertise_on_prem_routes").(bool),
+		BillingTags:           convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CXP:                   d.Get("cxp").(string),
 		Enabled:               d.Get("enabled").(bool),
 		DestinationType:       d.Get("destination_type").(string),

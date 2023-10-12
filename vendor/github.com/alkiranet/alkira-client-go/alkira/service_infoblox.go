@@ -23,6 +23,7 @@ type ServiceInfoblox struct {
 	ServiceGroupId   int                `json:"serviceGroupId,omitempty"`
 	ServiceGroupName string             `json:"serviceGroupName"`
 	Size             string             `json:"size,omitempty"`
+	AllowListId      int                `json:"allowListId,omitempty"`
 }
 
 type InfobloxAnycast struct {
