@@ -44,7 +44,7 @@ type ConnectorAdvIPSecTunnel struct {
 	Advanced     *ConnectorAdvIPSecAdvanced         `json:"advanced,omitempty"`
 	CustomerEnd  ConnectorAdvIPSecTunnelCustomerEnd `json:"customerEnd"`
 	CxpEnd       ConnectorAdvIPSecTunnelCxpEnd      `json:"cxpEnd"`
-	Id           int                                `json:"id,omitempty"`
+	Id           string                             `json:"id,omitempty"`
 	PresharedKey string                             `json:"preSharedKey"`
 	ProfileId    int                                `json:"profileId,omitempty"`
 	TunnelNo     int                                `json:"tunnelNo"`

@@ -110,7 +110,7 @@ func expandConnectorAdvIPSecTunnel(in []interface{}) []*alkira.ConnectorAdvIPSec
 		r.CustomerEnd.OverlayIpReservationId = config["customer_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.OverlayIpReservationId = config["cxp_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.PublicIpReservationId = config["cxp_end_public_ip_reservation_id"].(string)
-		r.Id = config["id"].(int)
+		r.Id = config["id"].(string)
 		r.PresharedKey = config["preshared_key"].(string)
 		r.ProfileId = config["profile_id"].(int)
 		r.TunnelNo = config["number"].(int)
@@ -308,33 +308,30 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 		return nil
 	}
 
-	var advanced []map[string]interface{}
+	advancedConfig := make(map[string]interface{})
 
 	if tunnelConfig.Advanced != nil {
-		config := map[string]interface{}{
-			"dpd_delay":                 tunnelConfig.Advanced.DPDDelay,
-			"dpd_timeout":               tunnelConfig.Advanced.DPDTimeout,
-			"esp_dh_group_numbers":      tunnelConfig.Advanced.EspDHGroupNumbers,
-			"esp_encryption_algorithms": tunnelConfig.Advanced.EspEncryptionAlgorithms,
-			"esp_integrity_algorithms":  tunnelConfig.Advanced.EspIntegrityAlgorithms,
-			"esp_life_time":             tunnelConfig.Advanced.EspLifeTime,
-			"esp_random_time":           tunnelConfig.Advanced.EspRandomTime,
-			"esp_rekey_time":            tunnelConfig.Advanced.EspRekeyTime,
-			"ike_dh_group_numbers":      tunnelConfig.Advanced.IkeDHGroupNumbers,
-			"ike_encryption_algorithms": tunnelConfig.Advanced.IkeEncryptionAlgorithms,
-			"ike_integrity_algorithms":  tunnelConfig.Advanced.IkeIntegrityAlgorithms,
-			"ike_over_time":             tunnelConfig.Advanced.IkeOverTime,
-			"ike_random_time":           tunnelConfig.Advanced.IkeRandomTime,
-			"ike_rekey_time":            tunnelConfig.Advanced.IkeRekeyTime,
-			"ike_version":               tunnelConfig.Advanced.IkeVersion,
-			"initiator":                 tunnelConfig.Advanced.Initiator,
-			"local_auth_type":           tunnelConfig.Advanced.LocalAuthType,
-			"local_auth_value":          tunnelConfig.Advanced.LocalAuthValue,
-			"remote_auth_type":          tunnelConfig.Advanced.RemoteAuthType,
-			"remote_auth_value":         tunnelConfig.Advanced.RemoteAuthValue,
-			"replay_window_size":        tunnelConfig.Advanced.ReplayWindowSize,
-		}
-		advanced = append(advanced, config)
+		advancedConfig["dpd_delay"] = tunnelConfig.Advanced.DPDDelay
+		advancedConfig["dpd_timeout"] = tunnelConfig.Advanced.DPDTimeout
+		advancedConfig["esp_dh_group_numbers"] = tunnelConfig.Advanced.EspDHGroupNumbers
+		advancedConfig["esp_encryption_algorithms"] = tunnelConfig.Advanced.EspEncryptionAlgorithms
+		advancedConfig["esp_integrity_algorithms"] = tunnelConfig.Advanced.EspIntegrityAlgorithms
+		advancedConfig["esp_life_time"] = tunnelConfig.Advanced.EspLifeTime
+		advancedConfig["esp_random_time"] = tunnelConfig.Advanced.EspRandomTime
+		advancedConfig["esp_rekey_time"] = tunnelConfig.Advanced.EspRekeyTime
+		advancedConfig["ike_dh_group_numbers"] = tunnelConfig.Advanced.IkeDHGroupNumbers
+		advancedConfig["ike_encryption_algorithms"] = tunnelConfig.Advanced.IkeEncryptionAlgorithms
+		advancedConfig["ike_integrity_algorithms"] = tunnelConfig.Advanced.IkeIntegrityAlgorithms
+		advancedConfig["ike_over_time"] = tunnelConfig.Advanced.IkeOverTime
+		advancedConfig["ike_random_time"] = tunnelConfig.Advanced.IkeRandomTime
+		advancedConfig["ike_rekey_time"] = tunnelConfig.Advanced.IkeRekeyTime
+		advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
+		advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
+		advancedConfig["local_auth_type"] = tunnelConfig.Advanced.LocalAuthType
+		advancedConfig["local_auth_value"] = tunnelConfig.Advanced.LocalAuthValue
+		advancedConfig["remote_auth_type"] = tunnelConfig.Advanced.RemoteAuthType
+		advancedConfig["remote_auth_value"] = tunnelConfig.Advanced.RemoteAuthValue
+		advancedConfig["replay_window_size"] = tunnelConfig.Advanced.ReplayWindowSize
 	}
 
 	tunnel := map[string]interface{}{
@@ -345,7 +342,7 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 		"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
 		"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
 		"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
-		"advanced_options":                       advanced,
+		"advanced_options":                       []interface{}{advancedConfig},
 	}
 
 	return tunnel
@@ -358,11 +355,11 @@ func deflateConnectorAdvIPSecGatewayInstance(gatewayConfig *alkira.ConnectorAdvI
 		return nil
 	}
 
-	var tunnels []map[string]interface{}
+	tunnels := make([]interface{}, len(gatewayConfig.Tunnels), len(gatewayConfig.Tunnels))
 
-	for _, t := range gatewayConfig.Tunnels {
+	for i, t := range gatewayConfig.Tunnels {
 		config := deflateConnectorAdvIPSecTunnel(t)
-		tunnels = append(tunnels, config)
+		tunnels[i] = config
 	}
 
 	gateway := map[string]interface{}{
@@ -370,61 +367,20 @@ func deflateConnectorAdvIPSecGatewayInstance(gatewayConfig *alkira.ConnectorAdvI
 		"ha_mode":             gatewayConfig.HaMode,
 		"id":                  gatewayConfig.Id,
 		"name":                gatewayConfig.Name,
-		"tunnels":             tunnels,
+		"tunnel":              tunnels,
 	}
 
 	return gateway
 }
 
 // deflateConnectorAdvIPSecGateway
-func deflateConnectorAdvIPSecGateway(connector *alkira.ConnectorAdvIPSec, d *schema.ResourceData) []map[string]interface{} {
-	//
-	// Go through all gateways from the config firstly to find a
-	// match, either gateway's ID or gateway's name should be
-	// uniquely identifying an gateway.
-	//
-	// On the first read call at the end of the create call, Terraform
-	// didn't track any gateway IDs yet.
-	//
-	var gateways []map[string]interface{}
+func deflateConnectorAdvIPSecGateway(connector *alkira.ConnectorAdvIPSec, d *schema.ResourceData) []interface{} {
 
-	for _, gateway := range d.Get("gateway").([]interface{}) {
-		gatewayConfig := gateway.(map[string]interface{})
+	gateways := make([]interface{}, len(connector.Gateways), len(connector.Gateways))
 
-		for _, gw := range connector.Gateways {
-			if gatewayConfig["id"].(int) == gw.Id || gatewayConfig["name"].(string) == gw.Name {
-				gateway := deflateConnectorAdvIPSecGatewayInstance(gw)
-				gateways = append(gateways, gateway)
-				break
-			}
-		}
-	}
-
-	//
-	// Go through all gateways from the API response one more time to
-	// find any gateway that has not been tracked from Terraform
-	// config.
-	//
-	for _, gw := range connector.Gateways {
-		new := true
-
-		// Check if the gateway already exists in the Terraform config
-		for _, gateway := range d.Get("gateway").([]interface{}) {
-			gatewayConfig := gateway.(map[string]interface{})
-
-			if gatewayConfig["id"].(int) == gw.Id || gatewayConfig["name"].(string) == gw.Name {
-				new = false
-				break
-			}
-		}
-
-		// If the gateway is new, add it to the tail of the list,
-		// this will generate a diff
-		if new {
-			gateway := deflateConnectorAdvIPSecGatewayInstance(gw)
-			gateways = append(gateways, gateway)
-			break
-		}
+	for i, gw := range connector.Gateways {
+		gateway := deflateConnectorAdvIPSecGatewayInstance(gw)
+		gateways[i] = gateway
 	}
 
 	return gateways
