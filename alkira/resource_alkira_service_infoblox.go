@@ -230,6 +230,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
+			"allow_list_id": {
+				Description: "The ID of the prefix list to be used to whitelist prefixes for the service.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -420,5 +425,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Name:             name,
 		Segments:         segmentNames,
 		ServiceGroupName: d.Get("service_group_name").(string),
+		AllowListId:      d.Get("allow_list_id").(int),
 	}, nil
 }
