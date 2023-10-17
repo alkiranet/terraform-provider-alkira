@@ -99,6 +99,13 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Default:      "BIDIRECTIONAL",
 				ValidateFunc: validation.StringInSlice([]string{"UNIDIRECTIONAL", "BIDIRECTIONAL"}, false),
 			},
+			"traffic_from_end": {
+				Description: "The end from which traffic originates. This field " +
+					"is only applicable when `traffic_direction` is set to " +
+					"`UNIDIRECTIONAL`.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"policy_rule_list_id": {
 				Description: "The ID of a `policy_rule_list` that is to be used " +
 					"for the inter-segment policy generated for this resource. (**BETA**)",
@@ -170,6 +177,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("end_a_route_limit", share.EndARouteLimit)
 	d.Set("end_b_route_limit", share.EndBRouteLimit)
 	d.Set("traffic_direction", share.Direction)
+	d.Set("traffic_from_end", share.FromEnd)
 	d.Set("policy_rule_list_id", share.RuleListId)
 
 	// Set provision state
@@ -258,6 +266,7 @@ func generateSegmentResourceShareRequest(d *schema.ResourceData, m interface{}) 
 		EndBResources:     convertTypeListToIntList(d.Get("end_b_segment_resource_ids").([]interface{})),
 		EndARouteLimit:    d.Get("end_a_route_limit").(int),
 		EndBRouteLimit:    d.Get("end_b_route_limit").(int),
+		FromEnd:           d.Get("traffic_from_end").(string),
 		Direction:         d.Get("traffic_direction").(string),
 		RuleListId:        d.Get("policy_rule_list_id").(int),
 	}

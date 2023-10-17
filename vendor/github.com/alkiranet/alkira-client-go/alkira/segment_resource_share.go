@@ -17,6 +17,7 @@ type SegmentResourceShare struct {
 	EndBResources       []int       `json:"endBResources"`
 	EndARouteLimit      int         `json:"endARouteLimit"`
 	EndBRouteLimit      int         `json:"endBRouteLimit"`
+	FromEnd             string      `json:"fromEnd,omitempty"`
 	Direction           string      `json:"direction"`
 	DesignatedSegmentId int         `json:"designatedSegmentId,omitempty"` // response only
 	EndASegmentId       int         `json:"endASegmentId,omitempty"`       // response only

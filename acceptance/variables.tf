@@ -1,4 +1,4 @@
 variable "cxp" {
   description = "Alkira CXP"
-  default     = "US-WEST"
+  default     = "US-WEST-1"
 }
