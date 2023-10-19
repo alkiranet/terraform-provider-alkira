@@ -1,4 +1,5 @@
-![test](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance.yml/badge.svg)
+![acceptance-preprod](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance-test-preprod.yml/badge.svg)
+![acceptance-prod](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance-test-prod.yml/badge.svg)
 
 
 # Terraform Provider for Alkira
