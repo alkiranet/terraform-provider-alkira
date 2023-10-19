@@ -231,7 +231,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"allow_list_id": {
-				Description: "The ID of the prefix list to be used to whitelist prefixes for the service.",
+				Description: "The ID of the `alkira_policy_prefix_list` to be used to whitelist prefixes for the service.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
