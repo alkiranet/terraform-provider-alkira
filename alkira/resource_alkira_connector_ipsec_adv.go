@@ -386,19 +386,19 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Required: true,
 			}, // gateway
 			"policy_options": {
-				Description: "Policy options, both `branch_ts_prefix_list_ids` " +
+				Description: "Policy options, both `on_prem_prefix_list_ids` " +
 					"and `cxp_prefix_list_ids` must be provided if `vpn_mode` " +
 					"is `POLICY_BASED`",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"branch_ts_prefix_list_ids": {
-							Description: "Branch Prefix List IDs.",
+						"on_prem_prefix_list_ids": {
+							Description: "On-Prem Prefix List IDs.",
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
-						"cxp_ts_prefix_list_ids": {
+						"cxp_prefix_list_ids": {
 							Description: "CXP Prefix List IDs.",
 							Type:        schema.TypeSet,
 							Required:    true,
