@@ -32,7 +32,7 @@ Manage Advanced IPSec Connector. (**BETA**)
 - `destination_type` (String) The destination type of the connector. The value could be `IPSEC_ENDPOINT`, `AWS_VPN_CONNECTION`, `AZURE_VPN_CONNECTION`. The default value is `IPSEC_ENDPOINT`.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `policy_options` (Block Set) Policy options, both `branch_ts_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
+- `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
 - `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
 - `tunnels_per_gateway` (Number) The number of tunnels per gateway instance. Default is `1`.
 
@@ -114,8 +114,8 @@ Required:
 
 Required:
 
-- `branch_ts_prefix_list_ids` (Set of Number) Branch Prefix List IDs.
-- `cxp_ts_prefix_list_ids` (Set of Number) CXP Prefix List IDs.
+- `cxp_prefix_list_ids` (Set of Number) CXP Prefix List IDs.
+- `on_prem_prefix_list_ids` (Set of Number) On-Prem Prefix List IDs.
 
 
 <a id="nestedblock--routing_options"></a>

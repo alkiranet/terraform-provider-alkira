@@ -181,8 +181,8 @@ func expandConnectorAdvIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorAdvI
 	for _, input := range in.List() {
 		policyOptionsInput := input.(map[string]interface{})
 
-		policyOptions.BranchTSPrefixListIds = convertTypeListToIntList(policyOptionsInput["branch_ts_prefix_list_ids"].([]interface{}))
-		policyOptions.CxpTSPrefixListIds = convertTypeListToIntList(policyOptionsInput["cxp_ts_prefix_list_ids"].([]interface{}))
+		policyOptions.BranchTSPrefixListIds = convertTypeSetToIntList(policyOptionsInput["on_prem_prefix_list_ids"].(*schema.Set))
+		policyOptions.CxpTSPrefixListIds = convertTypeSetToIntList(policyOptionsInput["cxp_prefix_list_ids"].(*schema.Set))
 	}
 
 	return &policyOptions, nil
@@ -294,8 +294,8 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 // deflateConnectorAdvIPSecPolicyOptions
 func deflateConnectorAdvIPSecPolicyOptions(cfg *alkira.ConnectorAdvIPSecPolicyOptions) map[string]interface{} {
 	option := map[string]interface{}{
-		"branch_ts_prefix_list_ids": cfg.BranchTSPrefixListIds,
-		"cxp_ts_prefix_list_ids":    cfg.CxpTSPrefixListIds,
+		"on_prem_prefix_list_ids": cfg.BranchTSPrefixListIds,
+		"cxp_prefix_list_ids":     cfg.CxpTSPrefixListIds,
 	}
 
 	return option
