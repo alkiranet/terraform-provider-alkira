@@ -147,9 +147,10 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"src_addr_translation_match_and_invalidate": {
-							Description: "Whether the translation match and invalidate.",
+							Description: "Whether the translation match and invalidate. Default is `true`.",
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     true,
 						},
 						"dst_addr_translation_type": {
 							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.",

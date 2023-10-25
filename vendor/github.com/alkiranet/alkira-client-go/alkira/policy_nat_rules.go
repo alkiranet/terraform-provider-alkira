@@ -38,7 +38,7 @@ type NatRuleActionSrcTranslation struct {
 	TranslatedPrefixes      []string `json:"translatedPrefixes,omitempty"`
 	TranslatedPrefixListIds []int    `json:"translatedPrefixListIds,omitempty"`
 	Bidirectional           bool     `json:"bidirectional,omitempty"`
-	MatchAndInvalidate      bool     `json:"matchAndInvalidate,omitempty"`
+	MatchAndInvalidate      bool     `json:"matchAndInvalidate"`
 }
 
 type NatRuleActionDstTranslation struct {
