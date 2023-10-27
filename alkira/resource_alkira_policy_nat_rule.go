@@ -59,10 +59,11 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Description: "The category of NAT rule. The value could be " +
 					"`DEFAULT` or `INTERNET_CONNECTOR`. Default value is " +
 					"`DEFAULT`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "DEFAULT",
-				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "DEFAULT",
+				ValidateFunc: validation.StringInSlice(
+					[]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
 			"match": {
 				Description: "Match condition for the rule.",
@@ -109,9 +110,10 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 						"protocol": {
 							Description: "The following protocols are supported, " +
 								"`icmp`, `tcp`, `udp` or `any`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"icmp", "tcp", "udp", "any"}, false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"icmp", "tcp", "udp", "any"}, false),
 						},
 					},
 				},
@@ -123,11 +125,14 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_addr_translation_type": {
-							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "NONE",
-							ValidateFunc: validation.StringInSlice([]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
+							Description: "The translation type are: `STATIC_IP`, " +
+								"`DYNAMIC_IP_AND_PORT` and `NONE`. Default value " +
+								"is `NONE`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NONE",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
 						},
 						"src_addr_translation_prefixes": {
 							Description: "The list of prefixes.",
@@ -141,22 +146,22 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
-						"src_addr_translation_bidirectional": {
-							Description: "Is the translation bidirectional.",
-							Type:        schema.TypeBool,
-							Optional:    true,
-						},
 						"src_addr_translation_match_and_invalidate": {
-							Description: "Whether the translation match and invalidate.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Whether the translation match and " +
+								"invalidate. Default is `true`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 						"dst_addr_translation_type": {
-							Description:  "The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "NONE",
-							ValidateFunc: validation.StringInSlice([]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
+							Description: "The translation type are: `STATIC_IP`, " +
+								"`DYNAMIC_IP_AND_PORT` and `NONE`. Default " +
+								"value is `NONE`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NONE",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
 						},
 						"dst_addr_translation_prefixes": {
 							Description: "The list of prefixes.",
@@ -171,29 +176,27 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"dst_addr_translation_ports": {
-							Description: "The port list to translate the destination prefixes to.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Optional:    true,
-						},
-						"dst_addr_translation_bidirectional": {
-							Description: "Is the translation bidirectional.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "The port list to translate the " +
+								"destination prefixes to.",
+							Type:     schema.TypeList,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
 						},
 						"dst_addr_translation_advertise_to_connector": {
 							Description: "Whether the destination address " +
 								"should be advertised to connector.",
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"egress_type": {
 							Description: "The egress type to use with the " +
 								"match. Options are are `ALKIRA_PUBLIC_IP` " +
 								"or `BYOIP`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
 						},
 					},
 				},

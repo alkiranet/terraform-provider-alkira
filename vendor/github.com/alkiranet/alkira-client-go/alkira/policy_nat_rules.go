@@ -37,8 +37,8 @@ type NatRuleActionSrcTranslation struct {
 	TranslationType         string   `json:"translationType"`
 	TranslatedPrefixes      []string `json:"translatedPrefixes,omitempty"`
 	TranslatedPrefixListIds []int    `json:"translatedPrefixListIds,omitempty"`
-	Bidirectional           bool     `json:"bidirectional,omitempty"`
-	MatchAndInvalidate      bool     `json:"matchAndInvalidate,omitempty"`
+	Bidirectional           *bool    `json:"bidirectional,omitempty"`
+	MatchAndInvalidate      *bool    `json:"matchAndInvalidate,omitempty"`
 }
 
 type NatRuleActionDstTranslation struct {
@@ -46,8 +46,8 @@ type NatRuleActionDstTranslation struct {
 	TranslatedPrefixes      []string `json:"translatedPrefixes,omitempty"`
 	TranslatedPrefixListIds []int    `json:"translatedPrefixListIds,omitempty"`
 	TranslatedPortList      []string `json:"translatedPortList,omitempty"`
-	Bidirectional           bool     `json:"bidirectional,omitempty"`
-	AdvertiseToConnector    bool     `json:"advertiseToConnector,omitempty"`
+	Bidirectional           *bool    `json:"bidirectional,omitempty"`
+	AdvertiseToConnector    *bool    `json:"advertiseToConnector,omitempty"`
 }
 
 type EgressAction struct {
