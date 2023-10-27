@@ -70,11 +70,17 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		if v, ok := actionValue["src_addr_translation_prefix_list_ids"].([]interface{}); ok {
 			st.TranslatedPrefixListIds = convertTypeListToIntList(v)
 		}
-		if v, ok := actionValue["src_addr_translation_bidirectional"].(bool); ok {
-			st.Bidirectional = v
-		}
 		if v, ok := actionValue["src_addr_translation_match_and_invalidate"].(bool); ok {
-			st.MatchAndInvalidate = v
+			//
+			// This flag is only available when TranslationType is not
+			// "NONE". Otherwise, API will fail with
+			// validation. However, the default value is "true".
+			//
+			if st.TranslationType != "NONE" {
+				matchAndInvalidate := new(bool)
+				*matchAndInvalidate = v
+				st.MatchAndInvalidate = matchAndInvalidate
+			}
 		}
 		if v, ok := actionValue["dst_addr_translation_type"].(string); ok {
 			dt.TranslationType = v
@@ -88,14 +94,37 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		if v, ok := actionValue["dst_addr_translation_ports"].([]interface{}); ok {
 			dt.TranslatedPortList = convertTypeListToStringList(v)
 		}
-		if v, ok := actionValue["dst_addr_translation_bidirectional"].(bool); ok {
-			dt.Bidirectional = v
-		}
 		if v, ok := actionValue["dst_addr_translation_advertise_to_connector"].(bool); ok {
-			dt.AdvertiseToConnector = v
+			//
+			// This flag is only available when TranslationType is not
+			// "NONE". Otherwise, API will fail with
+			// validation. However, the default value is "true".
+			//
+			if dt.TranslationType != "NONE" {
+				t := new(bool)
+				*t = v
+				dt.AdvertiseToConnector = t
+			}
 		}
 		if v, ok := actionValue["egress_type"].(string); ok {
 			e.IpType = v
+		}
+
+		//
+		// This field has a fixed value based on the translation type.
+		//
+		if st.TranslationType == "STATIC_IP" {
+			st.Bidirectional = func() *bool { b := true; return &b }()
+		} else if st.TranslationType == "DYNAMIC_IP" {
+			st.Bidirectional = func() *bool { b := false; return &b }()
+		} else {
+		}
+
+		if dt.TranslationType == "STATIC_IP" {
+			dt.Bidirectional = func() *bool { b := true; return &b }()
+		} else if st.TranslationType == "DYNAMIC_IP" {
+			dt.Bidirectional = func() *bool { b := false; return &b }()
+		} else {
 		}
 	}
 

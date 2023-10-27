@@ -41,14 +41,12 @@ This resource is usually used along with policy resources:`policy_nat_policy`.
 Optional:
 
 - `dst_addr_translation_advertise_to_connector` (Boolean) Whether the destination address should be advertised to connector.
-- `dst_addr_translation_bidirectional` (Boolean) Is the translation bidirectional.
 - `dst_addr_translation_ports` (List of String) The port list to translate the destination prefixes to.
 - `dst_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `dst_addr_translation_prefixes` (List of String) The list of prefixes.
 - `dst_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.
 - `egress_type` (String) The egress type to use with the match. Options are are `ALKIRA_PUBLIC_IP` or `BYOIP`.
-- `src_addr_translation_bidirectional` (Boolean) Is the translation bidirectional.
-- `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate.
+- `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate. Default is `true`.
 - `src_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `src_addr_translation_prefixes` (List of String) The list of prefixes.
 - `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.
