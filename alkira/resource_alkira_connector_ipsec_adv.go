@@ -122,12 +122,13 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Default:  1,
 			},
 			"vpn_mode": &schema.Schema{
-				Description: "The connector can be configured " +
-					"either in `ROUTE_BASED` or `POLICY_BASED`.",
+				Description: "The VPN mode could be only set to `ROUTE_BASED` " +
+					"for now.",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "ROUTE_BASED",
 				ValidateFunc: validation.StringInSlice([]string{
-					"ROUTE_BASED", "POLICY_BASED"}, false),
+					"ROUTE_BASED"}, false),
 			},
 			"gateway": &schema.Schema{
 				Description: "The gateway.",
