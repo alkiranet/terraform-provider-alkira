@@ -22,7 +22,6 @@ Manage Advanced IPSec Connector. (**BETA**)
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment associated with the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
-- `vpn_mode` (String) The connector can be configured either in `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
 
@@ -35,6 +34,7 @@ Manage Advanced IPSec Connector. (**BETA**)
 - `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED` (see [below for nested schema](#nestedblock--policy_options))
 - `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
 - `tunnels_per_gateway` (Number) The number of tunnels per gateway instance. Default is `1`.
+- `vpn_mode` (String) The VPN mode could be only set to `ROUTE_BASED` for now.
 
 ### Read-Only
 
