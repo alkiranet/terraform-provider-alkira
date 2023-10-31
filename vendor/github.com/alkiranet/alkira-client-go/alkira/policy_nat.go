@@ -17,7 +17,7 @@ type NatPolicy struct {
 	Id                                 json.Number `json:"id,omitempty"`
 	NatRuleIds                         []int       `json:"natRuleIds"`
 	Category                           string      `json:"category"`
-	AllowOverlappingTranslatedPrefixes *bool       `json:"allowOverlappingTranslatedPrefixes,omitempty"`
+	AllowOverlappingTranslatedPrefixes *bool       `json:"allowOverlappingTranslatedPrefixes"`
 }
 
 // NewNatPolicy new nat policy
