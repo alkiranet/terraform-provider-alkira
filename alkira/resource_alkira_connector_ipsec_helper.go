@@ -120,6 +120,10 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 			r.PresharedKeys = convertTypeListToStringList(v)
 		}
 
+		if v, ok := siteConfig["enable_tunnel_redundancy"].(bool); ok {
+			r.EnableTunnelRedundancy = v
+		}
+
 		if v, ok := siteConfig["advanced_options"].([]interface{}); ok {
 
 			var err error

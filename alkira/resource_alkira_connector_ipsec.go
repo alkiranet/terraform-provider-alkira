@@ -84,12 +84,14 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						"enable_tunnel_redundancy": {
 							Description: "Disable this if all tunnels will not " +
 								"be configured or enabled on the on-premise " +
-								"device. If disabled, connector health will be " +
-								"shown as `UP` if at least one of the tunnels " +
-								"is `UP`. If enabled, all tunnels need to be " +
-								"`UP` for the connector health to be shown as `UP`.",
+								"device. If it's set to `false`, connector " +
+								"health will be shown as `UP` if at least " +
+								"one of the tunnels is `UP`. If enabled, " +
+								"all tunnels need to be `UP` for the connector" +
+								"health to be shown as `UP`.",
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"billing_tag_ids": {
 							Description: "A list of IDs of billing tag associated " +
