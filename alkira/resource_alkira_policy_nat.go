@@ -248,8 +248,8 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 
 	allowOverlappingTranslatedPrefixes := new(bool)
 
-	if d.Get("allow_overlapping_translated_source_address") != nil {
-		*allowOverlappingTranslatedPrefixes = d.Get("allow_overlapping_translated_source_address").(bool)
+	if d.Get("allow_overlapping_translated_source_addresses") != nil {
+		*allowOverlappingTranslatedPrefixes = d.Get("allow_overlapping_translated_source_addresses").(bool)
 	}
 
 	// Assemble request
