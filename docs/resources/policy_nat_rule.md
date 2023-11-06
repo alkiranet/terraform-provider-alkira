@@ -49,6 +49,9 @@ Optional:
 - `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate. Default is `true`.
 - `src_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `src_addr_translation_prefixes` (List of String) The list of prefixes.
+- `src_addr_translation_routing_track_invalidate_prefixes` (Boolean) Whether to invalidate the track prefixes.
+- `src_addr_translation_routing_track_prefix_list_ids` (List of Number) The list of prefix list IDs.
+- `src_addr_translation_routing_track_prefixes` (List of String) The list of prefixes to track.
 - `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.
 
 

@@ -110,6 +110,24 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 			e.IpType = v
 		}
 
+		if v, ok := actionValue["src_addr_translation_routing_track_prefixes"].([]interface{}); ok {
+			list := convertTypeListToStringList(v)
+			if len(list) > 0 {
+				st.RoutingOptions.TrackPrefixes = list
+			}
+		}
+		if v, ok := actionValue["src_addr_translation_routing_track_prefix_list_ids"].([]interface{}); ok {
+			list := convertTypeListToIntList(v)
+			if len(list) > 0 {
+				st.RoutingOptions.TrackPrefixListIds = list
+			}
+		}
+		if v, ok := actionValue["src_addr_translation_routing_track_invalidate_prefixes"].(bool); ok {
+			invalidateRoutingTrackPrefixes := new(bool)
+			*invalidateRoutingTrackPrefixes = v
+			st.RoutingOptions.InvalidateRoutingTrackPrefixes = invalidateRoutingTrackPrefixes
+		}
+
 		//
 		// This field has a fixed value based on the translation type.
 		//
@@ -128,6 +146,10 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		}
 	}
 
+	if st.RoutingOptions.InvalidateRoutingTrackPrefixes != nil {
+		st.MatchAndInvalidate = nil
+	}
+
 	action := alkira.NatRuleAction{
 		SourceAddressTranslation:      st,
 		DestinationAddressTranslation: dt,
@@ -135,4 +157,18 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 	}
 
 	return &action
+}
+
+func setNatRuleActionOptions(a alkira.NatRuleAction, d *schema.ResourceData) {
+	var action []map[string]interface{}
+
+	in := map[string]interface{}{
+		"src_addr_translation_routing_track_prefixes":            a.SourceAddressTranslation.RoutingOptions.TrackPrefixes,
+		"src_addr_translation_routing_track_prefix_list_ids":     a.SourceAddressTranslation.RoutingOptions.TrackPrefixListIds,
+		"src_addr_translation_routing_track_invalidate_prefixes": a.SourceAddressTranslation.RoutingOptions.InvalidateRoutingTrackPrefixes,
+	}
+
+	action = append(action, in)
+
+	d.Set("action", action)
 }
