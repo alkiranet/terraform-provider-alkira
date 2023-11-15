@@ -205,6 +205,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
+			"customer_asn": {
+				Description: "A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updated" +
+					"once the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -276,6 +282,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("routing_prefix_list_ids", connector.VnetRouting.ImportOptions.PrefixListIds)
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
+	d.Set("customer_asn", connector.CustomerASN)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -397,6 +404,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		ServiceTags:    convertTypeListToStringList(d.Get("service_tags").([]interface{})),
 		VnetId:         d.Get("azure_vnet_id").(string),
 		VnetRouting:    routing,
+		CustomerASN:    d.Get("customer_asn").(int),
 	}
 
 	return request, nil

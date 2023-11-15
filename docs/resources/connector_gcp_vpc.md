@@ -104,6 +104,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of billing tags associated with the connector.
+- `customer_asn` (Number) A specific BGP ASN for the connector. This field cannot be updatedonce the connector has been provisioned. The ASN can be any private ASN (`64512 - 65534`, `4200000000 - 4294967294`) that is not used elsewhere in the network.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `gcp_project_id` (String) GCP Project ID.
