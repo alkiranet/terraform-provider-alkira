@@ -181,7 +181,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									"number": {
 										Description: "The number of the tunnel.",
 										Type:        schema.TypeInt,
-										Required:    true,
+										Computed:    true,
 									},
 									"preshared_key": {
 										Description:  "The preshared key of the tunnel ",
