@@ -67,7 +67,6 @@ Required:
 - `customer_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the customer end of the tunnel.
 - `cxp_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the CXP end of the tunnel.
 - `cxp_end_public_ip_reservation_id` (String) The public IP reservation ID of the CXP end of the tunnel.
-- `number` (Number) The number of the tunnel.
 - `preshared_key` (String) The preshared key of the tunnel
 
 Optional:
@@ -78,6 +77,7 @@ Optional:
 Read-Only:
 
 - `id` (String) The ID of the tunnel.
+- `number` (Number) The number of the tunnel.
 
 <a id="nestedblock--gateway--tunnel--advanced_options"></a>
 ### Nested Schema for `gateway.tunnel.advanced_options`
