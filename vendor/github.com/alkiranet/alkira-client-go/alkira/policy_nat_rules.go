@@ -34,11 +34,12 @@ type NatRuleAction struct {
 }
 
 type NatRuleActionSrcTranslation struct {
-	TranslationType         string   `json:"translationType"`
-	TranslatedPrefixes      []string `json:"translatedPrefixes,omitempty"`
-	TranslatedPrefixListIds []int    `json:"translatedPrefixListIds,omitempty"`
-	Bidirectional           *bool    `json:"bidirectional,omitempty"`
-	MatchAndInvalidate      *bool    `json:"matchAndInvalidate,omitempty"`
+	TranslationType         string                `json:"translationType"`
+	TranslatedPrefixes      []string              `json:"translatedPrefixes,omitempty"`
+	TranslatedPrefixListIds []int                 `json:"translatedPrefixListIds,omitempty"`
+	Bidirectional           *bool                 `json:"bidirectional,omitempty"`
+	MatchAndInvalidate      *bool                 `json:"matchAndInvalidate,omitempty"`
+	RoutingOptions          NatRuleRoutingOptions `json:"routingOptions,omitempty"`
 }
 
 type NatRuleActionDstTranslation struct {
@@ -48,6 +49,12 @@ type NatRuleActionDstTranslation struct {
 	TranslatedPortList      []string `json:"translatedPortList,omitempty"`
 	Bidirectional           *bool    `json:"bidirectional,omitempty"`
 	AdvertiseToConnector    *bool    `json:"advertiseToConnector,omitempty"`
+}
+
+type NatRuleRoutingOptions struct {
+	TrackPrefixes                  []string `json:"trackPrefixes,omitempty"`
+	TrackPrefixListIds             []int    `json:"trackPrefixListIds,omitempty"`
+	InvalidateRoutingTrackPrefixes *bool    `json:"invalidateRoutingTrackPrefixes,omitempty"`
 }
 
 type EgressAction struct {
