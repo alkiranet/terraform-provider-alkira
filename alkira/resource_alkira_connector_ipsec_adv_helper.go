@@ -107,6 +107,7 @@ func expandConnectorAdvIPSecTunnel(in []interface{}) []*alkira.ConnectorAdvIPSec
 		config := t.(map[string]interface{})
 		r := alkira.ConnectorAdvIPSecTunnel{}
 
+		r.CustomerEnd.OverlayIp = config["customer_end_overlay_ip"].(string)
 		r.CustomerEnd.OverlayIpReservationId = config["customer_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.OverlayIpReservationId = config["cxp_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.PublicIpReservationId = config["cxp_end_public_ip_reservation_id"].(string)
@@ -339,6 +340,7 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 		"preshared_key":                          tunnelConfig.PresharedKey,
 		"profile_id":                             tunnelConfig.ProfileId,
 		"id":                                     tunnelConfig.Id,
+		"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
 		"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
 		"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
 		"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
