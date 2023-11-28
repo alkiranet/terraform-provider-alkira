@@ -1,0 +1,40 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Overlay IP Addresses
+
+The overlay IP address of the customer end of the tunnel can be
+provided as an input when the IP address to be used does not fit into
+the ranges available with IP reservation.
+
+When the overlay IP address is povided, it MUST NOT overlap the
+following blocks:
+
+* The IP Blocks of the segment
+* The Link Local block (`169.254.0.0/16`)
+* The Multicast Block (`224.0.0.0/4`)
+* The Broadcast Block (`255.255.255.255/32`)
+* The Loopback Block (`127.0.0.0/8`)
+
+Also when the overlay IP address is provided, the overlay IP
+reservation used on the Alkira side MUST be for a `/32` address
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_connector_ipsec_adv/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

@@ -194,6 +194,12 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 										Type:        schema.TypeInt,
 										Optional:    true,
 									},
+									"customer_end_overlay_ip": {
+										Description: "The overlay IP address of " +
+											"the customer end of the tunnel.",
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"customer_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
 											"ID of the customer end of the tunnel.",
