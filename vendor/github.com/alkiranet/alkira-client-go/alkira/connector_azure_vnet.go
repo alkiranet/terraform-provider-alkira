@@ -73,6 +73,7 @@ type ConnectorAzureVnet struct {
 	VnetId            string                `json:"vnetId"`
 	ConnectionMode    string                `json:"connectionMode,omitempty"`
 	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
+	CustomerASN       int                   `json:"customerAsn,omitempty"`
 }
 
 // NewConnectorAzureVnet initalize a new connector

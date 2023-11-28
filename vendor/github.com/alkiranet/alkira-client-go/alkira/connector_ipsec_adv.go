@@ -32,6 +32,7 @@ type ConnectorAdvIPSecAdvanced struct {
 }
 
 type ConnectorAdvIPSecTunnelCustomerEnd struct {
+	OverlayIp              string `json:"overlayIp,omitempty"`
 	OverlayIpReservationId string `json:"overlayIpReservationId"`
 }
 
