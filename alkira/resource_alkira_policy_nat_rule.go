@@ -151,7 +151,23 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 								"invalidate. Default is `true`.",
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+						},
+						"src_addr_translation_routing_track_prefixes": {
+							Description: "The list of prefixes to track.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"src_addr_translation_routing_track_prefix_list_ids": {
+							Description: "The list of prefix list IDs.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"src_addr_translation_routing_track_invalidate_prefixes": {
+							Description: "Whether to invalidate the track prefixes.",
+							Type:        schema.TypeBool,
+							Optional:    true,
 						},
 						"dst_addr_translation_type": {
 							Description: "The translation type are: `STATIC_IP`, " +
@@ -261,6 +277,8 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("description", rule.Description)
 	d.Set("enabled", rule.Enabled)
 	d.Set("category", rule.Category)
+
+	setNatRuleActionOptions(rule.Action, d)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
