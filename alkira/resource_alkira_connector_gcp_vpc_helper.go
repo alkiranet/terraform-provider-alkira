@@ -135,6 +135,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		SecondaryCXPs:  convertTypeSetToStringList(d.Get("failover_cxps").(*schema.Set)),
 		Size:           d.Get("size").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),
+		CustomerASN:    d.Get("customer_asn").(int),
 	}
 
 	return connector, nil
