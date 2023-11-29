@@ -172,6 +172,12 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					"SMALL", "MEDIUM", "LARGE", "2LARGE",
 					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
+			"customer_asn": {
+				Description: "A specific BGP ASN for the connector. This field cannot be updated" +
+					"once the connector has been provisioned. The ASN can be any private ASN (`64512 - 65534`, `4200000000 - 4294967294`) that is not used elsewhere in the network.",
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -242,6 +248,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
+	d.Set("customer_asn", connector.CustomerASN)
 	setGcpRoutingOptions(connector.GcpRouting, d)
 
 	// Get segment
