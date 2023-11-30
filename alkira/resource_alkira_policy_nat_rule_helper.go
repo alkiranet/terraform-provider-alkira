@@ -146,6 +146,9 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		}
 	}
 
+	if len(st.RoutingOptions.TrackPrefixes) == 0 && len(st.RoutingOptions.TrackPrefixListIds) == 0 {
+		st.RoutingOptions.InvalidateRoutingTrackPrefixes = nil
+	}
 	if st.RoutingOptions.InvalidateRoutingTrackPrefixes != nil {
 		st.MatchAndInvalidate = nil
 	}
