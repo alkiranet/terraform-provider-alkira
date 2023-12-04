@@ -1,0 +1,1 @@
+terraform import alkira_list_dns_server.example LIST_ID

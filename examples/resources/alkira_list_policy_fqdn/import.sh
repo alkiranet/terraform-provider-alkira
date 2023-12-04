@@ -1,0 +1,1 @@
+terraform import alkira_list_policy_fqdn.example LIST_ID
