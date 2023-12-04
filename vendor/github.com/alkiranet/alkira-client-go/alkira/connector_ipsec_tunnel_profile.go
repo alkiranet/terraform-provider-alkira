@@ -28,8 +28,8 @@ type ConnectorIPSecTunnelProfile struct {
 }
 
 // NewConnectorIPSec initialize a new connector
-func NewConnectorIPSecTunnelProfile(ac *AlkiraClient) *AlkiraAPI[ConnectorIPSec] {
+func NewConnectorIPSecTunnelProfile(ac *AlkiraClient) *AlkiraAPI[ConnectorIPSecTunnelProfile] {
 	uri := fmt.Sprintf("%s/v1/tenantnetworks/%s/ipsec-tunnel-profiles", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorIPSec]{ac, uri, true}
+	api := &AlkiraAPI[ConnectorIPSecTunnelProfile]{ac, uri, true}
 	return api
 }
