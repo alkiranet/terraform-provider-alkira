@@ -1,0 +1,192 @@
+package alkira
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func resourceAlkiraListPolicyFqdn() *schema.Resource {
+	return &schema.Resource{
+		Description:   "Policy FQDN list.",
+		CreateContext: resourceListPolicyFqdn,
+		ReadContext:   resourceListPolicyFqdnRead,
+		UpdateContext: resourceListPolicyFqdnUpdate,
+		DeleteContext: resourceListPolicyFqdnDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Description: "Name of the list.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"description": {
+				Description: "Description for the list.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"fqdns": {
+				Description: "A list of FQDNs.",
+				Type:        schema.TypeSet,
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"list_dns_server_id": {
+				Description: "ID of `list_dns_server` resource.",
+				Type:        schema.TypeInt,
+				Required:    true,
+			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+		},
+	}
+}
+
+func resourceListPolicyFqdn(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
+
+	// Construct requst
+	request := generateListPolicyFqdnRequest(d, m)
+
+	// Send request
+	resource, provState, err, provErr := api.Create(request)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(string(resource.Id))
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (CREATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceListPolicyFqdnRead(ctx, d, m)
+}
+
+func resourceListPolicyFqdnRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
+
+	list, provState, err := api.GetById(d.Id())
+
+	if err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
+	}
+
+	d.Set("name", list.Name)
+	d.Set("description", list.Description)
+	d.Set("fqdns", list.Fqdns)
+	d.Set("list_dns_server_id", list.DnsServerListId)
+
+	// Set provision state
+	if client.Provision == true && provState != "" {
+		d.Set("provision_state", provState)
+	}
+
+	return nil
+}
+
+func resourceListPolicyFqdnUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
+
+	// Construct request
+	request := generateListPolicyFqdnRequest(d, m)
+
+	// Send request
+	provState, err, provErr := api.Update(d.Id(), request)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Set provision state
+	if client.Provision == true {
+		d.Set("provision_state", provState)
+
+		if provErr != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+				Detail:   fmt.Sprintf("%s", provErr),
+			}}
+		}
+	}
+
+	return resourceListPolicyFqdnRead(ctx, d, m)
+}
+
+func resourceListPolicyFqdnDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
+
+	provState, err, provErr := api.Delete(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+
+	if client.Provision == true && provState != "SUCCESS" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "PROVISION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", provErr),
+		}}
+	}
+
+	return nil
+}
+
+func generateListPolicyFqdnRequest(d *schema.ResourceData, m interface{}) *alkira.PolicyFqdnList {
+
+	request := &alkira.PolicyFqdnList{
+		Name:            d.Get("name").(string),
+		Description:     d.Get("description").(string),
+		Fqdns:           convertTypeSetToStringList(d.Get("fqdns").(*schema.Set)),
+		DnsServerListId: d.Get("list_dns_server_id").(int),
+	}
+
+	return request
+}
