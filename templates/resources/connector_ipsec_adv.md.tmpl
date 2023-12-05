@@ -27,6 +27,12 @@ following blocks:
 Also when the overlay IP address is provided, the overlay IP
 reservation used on the Alkira side MUST be for a `/32` address
 
+## IPSec Tunnel Advanced Options
+
+To set `advanced_options` of the `tunnel`, The IPSec Tunnel Profile
+(resource `alkira_connector_ipsec_tunnel_profile`) is mandatory.
+
+
 ## Example Usage
 
 {{ tffile "examples/resources/alkira_connector_ipsec_adv/resource.tf" }}

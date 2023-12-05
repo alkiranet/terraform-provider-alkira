@@ -27,6 +27,12 @@ following blocks:
 Also when the overlay IP address is provided, the overlay IP
 reservation used on the Alkira side MUST be for a `/32` address
 
+## IPSec Tunnel Advanced Options
+
+To set `advanced_options` of the `tunnel`, The IPSec Tunnel Profile
+(resource `alkira_connector_ipsec_tunnel_profile`) is mandatory.
+
+
 ## Example Usage
 
 ```terraform
@@ -94,13 +100,13 @@ resource "alkira_connector_ipsec_adv" "test" {
 
 Required:
 
-- `customer_gateway_ip` (String) The IP address of the customer gateway. This should be `0.0.0.0` to signify that this is a dynamic gateway.
+- `customer_gateway_ip` (String) The IP address of the customer gateway. This should be `0.0.0.0` to indicate that this is a dynamic gateway.
 - `name` (String) The name of the endpoint.
 - `tunnel` (Block List, Min: 1) Tunnel of the gateway. The number of the tunnels should be equal to `tunnel_per_gateway`. (see [below for nested schema](#nestedblock--gateway--tunnel))
 
 Optional:
 
-- `ha_mode` (String) The value could be `ACTIVE` or`STANDBY`. A gateway in `STANDBY` mode will not be used for traffic unless all other gateway for the connector are down. There can only be one gateway in `STANDBY` mode per connector and there must be at least one gateway that isn't in `STANDBY` mode per connector.
+- `ha_mode` (String) The value could be `ACTIVE` or`STANDBY`. A gateway in `STANDBY` mode will not be used for traffic unless all other gateways for the connector are down. There can only be one gateway in `STANDBY` mode per connector and there must be at least one gateway that isn't in `STANDBY` mode per connector.
 
 Read-Only:
 
@@ -114,13 +120,13 @@ Required:
 - `customer_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the customer end of the tunnel.
 - `cxp_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the CXP end of the tunnel.
 - `cxp_end_public_ip_reservation_id` (String) The public IP reservation ID of the CXP end of the tunnel.
-- `preshared_key` (String) The preshared key of the tunnel
+- `preshared_key` (String) The pre-shared key of the tunnel.
 
 Optional:
 
 - `advanced_options` (Block List, Max: 1) Advanced options for the IPSec gateway. (see [below for nested schema](#nestedblock--gateway--tunnel--advanced_options))
 - `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel.
-- `profile_id` (Number) The profile ID of the tunnel.
+- `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`).
 
 Read-Only:
 
@@ -132,27 +138,10 @@ Read-Only:
 
 Required:
 
-- `dpd_delay` (Number) Interval to check the liveness of a peer.
-- `dpd_timeout` (Number) Timeouts to check the liveness of a peer. IKEv1 only.
-- `esp_dh_group_numbers` (List of String) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.
-- `esp_encryption_algorithms` (List of String) Encryption algorithms to use for IPsec SA. Value could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` `3DESCBC`, or `NULL`.
-- `esp_integrity_algorithms` (List of String) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
-- `esp_life_time` (Number) Maximum IPsec ESP lifetimeif the IPsec ESP does not rekey.
-- `esp_random_time` (Number) Time range from which to choose a random value to subtract from rekey times in seconds.
-- `esp_rekey_time` (Number) IPsec SA rekey time in seconds.
-- `ike_dh_group_numbers` (List of String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
-- `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`,`AES128CBC` and `3DESCBC`.
-- `ike_integrity_algorithms` (List of String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
-- `ike_over_time` (Number) Maximum IKE SA lifetime if the IKE SA does not rekey.
-- `ike_random_time` (Number) Time range from which to choose a random value to subtract from rekey times.
-- `ike_rekey_time` (Number) IKE tunnel rekey time.
 - `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
 - `initiator` (Boolean) When true CXP will initiate the IKE connection and if false then the customer gateway should initiate IKE. When `gateway_ip_type` is `DYNAMIC`,initiator must be `true`.
-- `local_auth_type` (String) Local-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
-- `local_auth_value` (String) Local-ID value.
 - `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
 - `remote_auth_value` (String) Remote-ID value.
-- `replay_window_size` (Number) IPsec replay window for the IPsec SA.
 
 
 

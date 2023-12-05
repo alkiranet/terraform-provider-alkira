@@ -26,68 +26,17 @@ func expandConnectorAdvIPSecAdvancedOptions(in []interface{}) (*alkira.Connector
 	for _, input := range in {
 		config := input.(map[string]interface{})
 
-		if v, ok := config["dpd_delay"].(int); ok {
-			advanced.DPDDelay = v
-		}
-		if v, ok := config["dpd_timeout"].(int); ok {
-			advanced.DPDTimeout = v
-		}
-		if v, ok := config["esp_dh_group_numbers"].([]interface{}); ok {
-			advanced.EspDHGroupNumbers = convertTypeListToStringList(v)
-		}
-		if v, ok := config["esp_encryption_algorithms"].([]interface{}); ok {
-			advanced.EspEncryptionAlgorithms = convertTypeListToStringList(v)
-		}
-		if v, ok := config["esp_integrity_algorithms"].([]interface{}); ok {
-			advanced.EspIntegrityAlgorithms = convertTypeListToStringList(v)
-		}
-		if v, ok := config["esp_life_time"].(int); ok {
-			advanced.EspLifeTime = v
-		}
-		if v, ok := config["esp_random_time"].(int); ok {
-			advanced.EspRandomTime = v
-		}
-		if v, ok := config["esp_rekey_time"].(int); ok {
-			advanced.EspRekeyTime = v
-		}
-		if v, ok := config["ike_dh_group_numbers"].([]interface{}); ok {
-			advanced.IkeDHGroupNumbers = convertTypeListToStringList(v)
-		}
-		if v, ok := config["ike_encryption_algorithms"].([]interface{}); ok {
-			advanced.IkeEncryptionAlgorithms = convertTypeListToStringList(v)
-		}
-		if v, ok := config["ike_integrity_algorithms"].([]interface{}); ok {
-			advanced.IkeIntegrityAlgorithms = convertTypeListToStringList(v)
-		}
-		if v, ok := config["ike_over_time"].(int); ok {
-			advanced.IkeOverTime = v
-		}
-		if v, ok := config["ike_random_time"].(int); ok {
-			advanced.IkeRandomTime = v
-		}
-		if v, ok := config["ike_rekey_time"].(int); ok {
-			advanced.IkeRekeyTime = v
-		}
 		if v, ok := config["ike_version"].(string); ok {
 			advanced.IkeVersion = v
 		}
 		if v, ok := config["initiator"].(bool); ok {
 			advanced.Initiator = v
 		}
-		if v, ok := config["local_auth_type"].(string); ok {
-			advanced.LocalAuthType = v
-		}
-		if v, ok := config["local_auth_value"].(string); ok {
-			advanced.LocalAuthValue = v
-		}
 		if v, ok := config["remote_auth_type"].(string); ok {
 			advanced.RemoteAuthType = v
 		}
 		if v, ok := config["remote_auth_value"].(string); ok {
 			advanced.RemoteAuthValue = v
-		}
-		if v, ok := config["replay_window_size"].(int); ok {
-			advanced.ReplayWindowSize = v
 		}
 	}
 
@@ -312,27 +261,10 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 	advancedConfig := make(map[string]interface{})
 
 	if tunnelConfig.Advanced != nil {
-		advancedConfig["dpd_delay"] = tunnelConfig.Advanced.DPDDelay
-		advancedConfig["dpd_timeout"] = tunnelConfig.Advanced.DPDTimeout
-		advancedConfig["esp_dh_group_numbers"] = tunnelConfig.Advanced.EspDHGroupNumbers
-		advancedConfig["esp_encryption_algorithms"] = tunnelConfig.Advanced.EspEncryptionAlgorithms
-		advancedConfig["esp_integrity_algorithms"] = tunnelConfig.Advanced.EspIntegrityAlgorithms
-		advancedConfig["esp_life_time"] = tunnelConfig.Advanced.EspLifeTime
-		advancedConfig["esp_random_time"] = tunnelConfig.Advanced.EspRandomTime
-		advancedConfig["esp_rekey_time"] = tunnelConfig.Advanced.EspRekeyTime
-		advancedConfig["ike_dh_group_numbers"] = tunnelConfig.Advanced.IkeDHGroupNumbers
-		advancedConfig["ike_encryption_algorithms"] = tunnelConfig.Advanced.IkeEncryptionAlgorithms
-		advancedConfig["ike_integrity_algorithms"] = tunnelConfig.Advanced.IkeIntegrityAlgorithms
-		advancedConfig["ike_over_time"] = tunnelConfig.Advanced.IkeOverTime
-		advancedConfig["ike_random_time"] = tunnelConfig.Advanced.IkeRandomTime
-		advancedConfig["ike_rekey_time"] = tunnelConfig.Advanced.IkeRekeyTime
 		advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
 		advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
-		advancedConfig["local_auth_type"] = tunnelConfig.Advanced.LocalAuthType
-		advancedConfig["local_auth_value"] = tunnelConfig.Advanced.LocalAuthValue
 		advancedConfig["remote_auth_type"] = tunnelConfig.Advanced.RemoteAuthType
 		advancedConfig["remote_auth_value"] = tunnelConfig.Advanced.RemoteAuthValue
-		advancedConfig["replay_window_size"] = tunnelConfig.Advanced.ReplayWindowSize
 	}
 
 	tunnel := map[string]interface{}{

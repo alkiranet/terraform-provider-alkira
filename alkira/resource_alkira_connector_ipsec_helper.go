@@ -26,12 +26,6 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 	for _, input := range in {
 		config := input.(map[string]interface{})
 
-		if v, ok := config["dpd_delay"].(int); ok {
-			advanced.DPDDelay = v
-		}
-		if v, ok := config["dpd_timeout"].(int); ok {
-			advanced.DPDTimeout = v
-		}
 		if v, ok := config["esp_dh_group_numbers"].([]interface{}); ok {
 			advanced.EspDHGroupNumbers = convertTypeListToStringList(v)
 		}
@@ -40,15 +34,6 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 		}
 		if v, ok := config["esp_integrity_algorithms"].([]interface{}); ok {
 			advanced.EspIntegrityAlgorithms = convertTypeListToStringList(v)
-		}
-		if v, ok := config["esp_life_time"].(int); ok {
-			advanced.EspLifeTime = v
-		}
-		if v, ok := config["esp_random_time"].(int); ok {
-			advanced.EspRandomTime = v
-		}
-		if v, ok := config["esp_rekey_time"].(int); ok {
-			advanced.EspRekeyTime = v
 		}
 		if v, ok := config["ike_dh_group_numbers"].([]interface{}); ok {
 			advanced.IkeDHGroupNumbers = convertTypeListToStringList(v)
@@ -59,35 +44,17 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 		if v, ok := config["ike_integrity_algorithms"].([]interface{}); ok {
 			advanced.IkeIntegrityAlgorithms = convertTypeListToStringList(v)
 		}
-		if v, ok := config["ike_over_time"].(int); ok {
-			advanced.IkeOverTime = v
-		}
-		if v, ok := config["ike_random_time"].(int); ok {
-			advanced.IkeRandomTime = v
-		}
-		if v, ok := config["ike_rekey_time"].(int); ok {
-			advanced.IkeRekeyTime = v
-		}
 		if v, ok := config["ike_version"].(string); ok {
 			advanced.IkeVersion = v
 		}
 		if v, ok := config["initiator"].(bool); ok {
 			advanced.Initiator = v
 		}
-		if v, ok := config["local_auth_type"].(string); ok {
-			advanced.LocalAuthType = v
-		}
-		if v, ok := config["local_auth_value"].(string); ok {
-			advanced.LocalAuthValue = v
-		}
 		if v, ok := config["remote_auth_type"].(string); ok {
 			advanced.RemoteAuthType = v
 		}
 		if v, ok := config["remote_auth_value"].(string); ok {
 			advanced.RemoteAuthValue = v
-		}
-		if v, ok := config["replay_window_size"].(int); ok {
-			advanced.ReplayWindowSize = v
 		}
 	}
 
@@ -312,27 +279,16 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 
 	if site.Advanced != nil {
 		advancedConfig := map[string]interface{}{
-			"dpd_delay":                 site.Advanced.DPDDelay,
-			"dpd_timeout":               site.Advanced.DPDTimeout,
 			"esp_dh_group_numbers":      site.Advanced.EspDHGroupNumbers,
 			"esp_encryption_algorithms": site.Advanced.EspEncryptionAlgorithms,
 			"esp_integrity_algorithms":  site.Advanced.EspIntegrityAlgorithms,
-			"esp_life_time":             site.Advanced.EspLifeTime,
-			"esp_random_time":           site.Advanced.EspRandomTime,
-			"esp_rekey_time":            site.Advanced.EspRekeyTime,
 			"ike_dh_group_numbers":      site.Advanced.IkeDHGroupNumbers,
 			"ike_encryption_algorithms": site.Advanced.IkeEncryptionAlgorithms,
 			"ike_integrity_algorithms":  site.Advanced.IkeIntegrityAlgorithms,
-			"ike_over_time":             site.Advanced.IkeOverTime,
-			"ike_random_time":           site.Advanced.IkeRandomTime,
-			"ike_rekey_time":            site.Advanced.IkeRekeyTime,
 			"ike_version":               site.Advanced.IkeVersion,
 			"initiator":                 site.Advanced.Initiator,
-			"local_auth_type":           site.Advanced.LocalAuthType,
-			"local_auth_value":          site.Advanced.LocalAuthValue,
 			"remote_auth_type":          site.Advanced.RemoteAuthType,
 			"remote_auth_value":         site.Advanced.RemoteAuthValue,
-			"replay_window_size":        site.Advanced.ReplayWindowSize,
 		}
 		advanced = append(advanced, advancedConfig)
 	}

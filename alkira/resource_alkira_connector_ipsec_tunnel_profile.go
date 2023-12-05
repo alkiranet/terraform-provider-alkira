@@ -69,21 +69,21 @@ func resourceAlkiraConnectorIpsecTunnelProfile() *schema.Resource {
 				Required: true,
 			},
 			"ike_encryption_algorithm": {
-				Description: "ESP encryption algorithm used with IKE tunnel. " +
+				Description: "IKE encryption algorithm used with IPSec tunnel. " +
 					"The value could be: `AES256CBC`, `AES192CBC`, `AES128CBC`, " +
 					"`3DESCBC`, `AES256GCM16`, `AES192GCM16`, `AES128GCM16`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"ike_integrity_algorithm": {
-				Description: "ESP integrity algorithm used with IKE tunnel. " +
+				Description: "IKE integrity algorithm used with IPSec tunnel. " +
 					"The value could be: `SHA1`, `SHA256`, `SHA384`, `SHA512` " +
 					"and `MD5`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"ike_dh_group": {
-				Description: "ESP DH group number of the IKE tunnel. The value " +
+				Description: "IKE DH group number of the IPSec tunnel. The value " +
 					"could be: `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, " +
 					"`MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, " +
 					"`CURVE25519`.",
