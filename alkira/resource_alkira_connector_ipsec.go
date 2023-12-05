@@ -119,36 +119,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dpd_delay": {
-										Description: "Interval to check the " +
-											"liveness of a peer.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"dpd_timeout": {
-										Description: "Timeouts to check the " +
-											"liveness of a peer. `IKEv1` only.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"esp_rekey_time": {
-										Description: "IPsec SA rekey time in " +
-											"seconds.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"esp_life_time": {
-										Description: "Maximum IPsec ESP lifetime " +
-											"if the IPsec ESP does not rekey.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"esp_random_time": {
-										Description: "Time range from which to choose " +
-											"a random value to subtract from rekey times in seconds.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
 									"esp_encryption_algorithms": {
 										Description: "Encryption algorithms to use for IPsec SA. Value " +
 											"could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` " +
@@ -185,24 +155,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"IKEv1", "IKEv2"}, false),
 									},
-									"ike_rekey_time": {
-										Description: "IKE tunnel rekey time.",
-										Type:        schema.TypeInt,
-										Required:    true,
-									},
-									"ike_over_time": {
-										Description: "Maximum IKE SA lifetime if " +
-											"the IKE SA does not rekey.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"ike_random_time": {
-										Description: "Time range from which to " +
-											"choose a random value to subtract " +
-											"from rekey times.",
-										Type:     schema.TypeInt,
-										Required: true,
-									},
 									"ike_encryption_algorithms": {
 										Description: "Encryption algorithms to use for IKE SA, one of " +
 											"`AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.",
@@ -225,20 +177,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
-									"local_auth_type": {
-										Description: "Local-ID type - IKE identity to use for " +
-											"authentication round, one of `FQDN`, `USER_FQDN`, " +
-											"`KEYID`, `IP_ADDR`.",
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
-									},
-									"local_auth_value": {
-										Description: "Local-ID value.",
-										Type:        schema.TypeString,
-										Required:    true,
-									},
 									"remote_auth_type": {
 										Description: "Remote-ID type - IKE identity to use for " +
 											"authentication round, one of `FQDN`, `USER_FQDN`, " +
@@ -251,11 +189,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 									"remote_auth_value": {
 										Description: "Remote-ID value.",
 										Type:        schema.TypeString,
-										Required:    true,
-									},
-									"replay_window_size": {
-										Description: "IPsec replay window for the IPsec SA.",
-										Type:        schema.TypeInt,
 										Required:    true,
 									},
 								},
