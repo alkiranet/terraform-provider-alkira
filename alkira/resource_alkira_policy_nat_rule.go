@@ -171,13 +171,13 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 						},
 						"dst_addr_translation_type": {
 							Description: "The translation type are: `STATIC_IP`, " +
-								"`DYNAMIC_IP_AND_PORT` and `NONE`. Default " +
+								"`STATIC_IP_AND_PORT` , `STATIC_PORT` and `NONE`. Default " +
 								"value is `NONE`.",
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "NONE",
 							ValidateFunc: validation.StringInSlice(
-								[]string{"STATIC_IP", "DYNAMIC_IP_AND_PORT", "NONE"}, false),
+								[]string{"STATIC_IP", "STATIC_IP_AND_PORT", "STATIC_PORT", "NONE"}, false),
 						},
 						"dst_addr_translation_prefixes": {
 							Description: "The list of prefixes.",
