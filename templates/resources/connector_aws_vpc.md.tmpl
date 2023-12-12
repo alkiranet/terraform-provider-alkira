@@ -25,6 +25,9 @@ traffic will be routed to Alkira CXP.  When `ADVERTISE_CUSTOM_PREFIX`
 is specified, you need to provide a list of prefixes for which traffic
 must be routed to Alkira CXP.
 
+When `vpc_cidr` is used, `vpc_route_tables` should be also specified
+to ensure that the traffic is attracted to the CXP.
+
 
 ## Tips
 
