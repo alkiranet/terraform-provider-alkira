@@ -94,6 +94,9 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 		if v, ok := actionValue["dst_addr_translation_ports"].([]interface{}); ok {
 			dt.TranslatedPortList = convertTypeListToStringList(v)
 		}
+		if v, ok := actionValue["dst_addr_translation_list_policy_fqdn_id"].(int); ok {
+			dt.TranslatedPolicyFqdnListId = v
+		}
 		if v, ok := actionValue["dst_addr_translation_advertise_to_connector"].(bool); ok {
 			//
 			// This flag is only available when TranslationType is not
