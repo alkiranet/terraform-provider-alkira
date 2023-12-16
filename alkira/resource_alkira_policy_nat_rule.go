@@ -198,6 +198,11 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 						},
+						"dst_addr_translation_list_policy_fqdn_id": {
+							Description: "The ID of policy FQDN list.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
 						"dst_addr_translation_advertise_to_connector": {
 							Description: "Whether the destination address " +
 								"should be advertised to connector.",

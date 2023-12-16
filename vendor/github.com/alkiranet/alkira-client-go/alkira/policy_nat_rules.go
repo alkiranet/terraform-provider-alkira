@@ -43,12 +43,13 @@ type NatRuleActionSrcTranslation struct {
 }
 
 type NatRuleActionDstTranslation struct {
-	TranslationType         string   `json:"translationType"`
-	TranslatedPrefixes      []string `json:"translatedPrefixes,omitempty"`
-	TranslatedPrefixListIds []int    `json:"translatedPrefixListIds,omitempty"`
-	TranslatedPortList      []string `json:"translatedPortList,omitempty"`
-	Bidirectional           *bool    `json:"bidirectional,omitempty"`
-	AdvertiseToConnector    *bool    `json:"advertiseToConnector,omitempty"`
+	TranslationType            string   `json:"translationType"`
+	TranslatedPrefixes         []string `json:"translatedPrefixes,omitempty"`
+	TranslatedPrefixListIds    []int    `json:"translatedPrefixListIds,omitempty"`
+	TranslatedPortList         []string `json:"translatedPortList,omitempty"`
+	TranslatedPolicyFqdnListId int      `json:"translatedPolicyFqdnListId,omitempty"`
+	Bidirectional              *bool    `json:"bidirectional,omitempty"`
+	AdvertiseToConnector       *bool    `json:"advertiseToConnector,omitempty"`
 }
 
 type NatRuleRoutingOptions struct {
