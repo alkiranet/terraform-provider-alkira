@@ -143,8 +143,10 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 
 		if dt.TranslationType == "STATIC_IP" {
 			dt.Bidirectional = func() *bool { b := true; return &b }()
-		} else if st.TranslationType == "DYNAMIC_IP" {
-			dt.Bidirectional = func() *bool { b := false; return &b }()
+		} else if dt.TranslationType == "STATIC_IP_AND_PORT" {
+			dt.Bidirectional = func() *bool { b := true; return &b }()
+		} else if dt.TranslationType == "STATIC_PORT" {
+			dt.Bidirectional = func() *bool { b := true; return &b }()
 		} else {
 		}
 	}
