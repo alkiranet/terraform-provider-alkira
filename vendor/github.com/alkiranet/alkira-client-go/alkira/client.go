@@ -5,7 +5,6 @@ package alkira
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -25,13 +24,11 @@ const defaultProvTimeout time.Duration = 240 * time.Minute
 
 type AlkiraClient struct {
 	Client          *http.Client
-	URI             string
-	Username        string
 	Password        string
-	Secret          string
-	Authorization   string
 	Provision       bool
 	TenantNetworkId string
+	URI             string
+	Username        string
 }
 
 type Session struct {
@@ -75,25 +72,9 @@ func NewAlkiraClient(hostname string, username string, password string, secret s
 // NewAlkiraClientInternal creates a new internal Alkira client
 func NewAlkiraClientInternal(url string, username string, password string, secret string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
 
-	// Firstly, construct the portal URI based on the given endpoint
+	// Construct the portal URI based on the given endpoint
 	apiUrl := url + "/api"
 
-	// Generate Authorization header string
-	auth := ""
-
-	if len(secret) > 0 {
-		authStr := secret
-		auth = "api-key " + base64.StdEncoding.EncodeToString([]byte(authStr))
-	} else {
-		authStr := username + ":" + password
-		auth = "basic " + base64.StdEncoding.EncodeToString([]byte(authStr))
-	}
-
-	if len(auth) == 0 {
-		return nil, fmt.Errorf("invalid credentials to authenticate")
-	}
-
-	// Construct the login request
 	loginRequestBody, err := json.Marshal(map[string]string{
 		"userName": username,
 		"password": password,
@@ -192,14 +173,12 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 
 	// Construct our client with all information
 	client := &AlkiraClient{
-		Client:          httpClient,
 		URI:             apiUrl,
 		Username:        username,
 		Password:        password,
-		Secret:          secret,
-		Authorization:   auth,
-		Provision:       provision,
 		TenantNetworkId: strconv.Itoa(tenantNetworkId),
+		Client:          httpClient,
+		Provision:       provision,
 	}
 
 	return client, nil
@@ -213,7 +192,6 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	request, _ := http.NewRequest("GET", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
 	response, err := ac.Client.Do(request)
@@ -246,7 +224,6 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	request, _ := http.NewRequest("GET", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
 	response, err := ac.Client.Do(request)
@@ -292,7 +269,6 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	request, _ := http.NewRequest("POST", uri, bytes.NewBuffer(body))
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
 	response, err := ac.Client.Do(request)
@@ -370,7 +346,6 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	request, _ := http.NewRequest("DELETE", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
 	response, err := ac.Client.Do(request)
@@ -474,7 +449,6 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	request, _ := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
 	response, err := ac.Client.Do(request)
