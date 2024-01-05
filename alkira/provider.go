@@ -74,6 +74,7 @@ func Provider() *schema.Provider {
 			"alkira_group_user":                     resourceAlkiraGroupUser(),
 			"alkira_group_direct_inter_connector":   resourceAlkiraDirectInterConnectorGroup(),
 			"alkira_internet_application":           resourceAlkiraInternetApplication(),
+			"alkira_ip_reservation":                 resourceAlkiraIpReservation(),
 			"alkira_list_as_path":                   resourceAlkiraListAsPath(),
 			"alkira_list_community":                 resourceAlkiraListCommunity(),
 			"alkira_list_dns_server":                resourceAlkiraListDnsServer(),
