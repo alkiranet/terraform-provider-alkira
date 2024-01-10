@@ -87,9 +87,8 @@ func (l *List) Get(capability Capability) []string {
 // Set sets a capability removing the previous values
 func (l *List) Set(capability Capability, values ...string) error {
 	if _, ok := l.m[capability]; ok {
-		delete(l.m, capability)
+		l.m[capability].Values = l.m[capability].Values[:0]
 	}
-
 	return l.Add(capability, values...)
 }
 

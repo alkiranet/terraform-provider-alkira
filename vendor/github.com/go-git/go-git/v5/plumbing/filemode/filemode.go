@@ -118,7 +118,7 @@ func isSetSymLink(m os.FileMode) bool {
 func (m FileMode) Bytes() []byte {
 	ret := make([]byte, 4)
 	binary.LittleEndian.PutUint32(ret, uint32(m))
-	return ret[:]
+	return ret
 }
 
 // IsMalformed returns if the FileMode should not appear in a git packfile,
@@ -133,7 +133,7 @@ func (m FileMode) IsMalformed() bool {
 		m != Submodule
 }
 
-// String returns the FileMode as a string in the standatd git format,
+// String returns the FileMode as a string in the standard git format,
 // this is, an octal number padded with ceros to 7 digits.  Malformed
 // modes are printed in that same format, for easier debugging.
 //

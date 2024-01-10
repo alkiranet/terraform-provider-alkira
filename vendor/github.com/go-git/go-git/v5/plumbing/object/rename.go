@@ -403,10 +403,16 @@ func min(a, b int) int {
 	return b
 }
 
+const maxMatrixSize = 10000
+
 func buildSimilarityMatrix(srcs, dsts []*Change, renameScore int) (similarityMatrix, error) {
 	// Allocate for the worst-case scenario where every pair has a score
 	// that we need to consider. We might not need that many.
-	matrix := make(similarityMatrix, 0, len(srcs)*len(dsts))
+	matrixSize := len(srcs) * len(dsts)
+	if matrixSize > maxMatrixSize {
+		matrixSize = maxMatrixSize
+	}
+	matrix := make(similarityMatrix, 0, matrixSize)
 	srcSizes := make([]int64, len(srcs))
 	dstSizes := make([]int64, len(dsts))
 	dstTooLarge := make(map[int]bool)
@@ -536,7 +542,7 @@ var errIndexFull = errors.New("index is full")
 // between two files.
 // To save space in memory, this index uses a space efficient encoding which
 // will not exceed 1MiB per instance. The index starts out at a smaller size
-// (closer to 2KiB), but may grow as more distinct blocks withing the scanned
+// (closer to 2KiB), but may grow as more distinct blocks within the scanned
 // file are discovered.
 // see: https://github.com/eclipse/jgit/blob/master/org.eclipse.jgit/src/org/eclipse/jgit/diff/SimilarityIndex.java
 type similarityIndex struct {
@@ -709,7 +715,7 @@ func (i *similarityIndex) common(dst *similarityIndex) uint64 {
 }
 
 func (i *similarityIndex) add(key int, cnt uint64) error {
-	key = int(uint32(key)*0x9e370001 >> 1)
+	key = int(uint32(key) * 0x9e370001 >> 1)
 
 	j := i.slot(key)
 	for {
@@ -735,10 +741,7 @@ func (i *similarityIndex) add(key int, cnt uint64) error {
 			// It's the same key, so increment the counter.
 			var err error
 			i.hashes[j], err = newKeyCountPair(key, v.count()+cnt)
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		} else if j+1 >= len(i.hashes) {
 			j = 0
 		} else {
@@ -769,7 +772,7 @@ func (i *similarityIndex) slot(key int) int {
 	// We use 31 - hashBits because the upper bit was already forced
 	// to be 0 and we want the remaining high bits to be used as the
 	// table slot.
-	return int(uint32(key) >> uint(31 - i.hashBits))
+	return int(uint32(key) >> uint(31-i.hashBits))
 }
 
 func shouldGrowAt(hashBits int) int {

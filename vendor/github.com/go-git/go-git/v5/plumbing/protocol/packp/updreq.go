@@ -19,6 +19,7 @@ var (
 type ReferenceUpdateRequest struct {
 	Capabilities *capability.List
 	Commands     []*Command
+	Options      []*Option
 	Shallow      *plumbing.Hash
 	// Packfile contains an optional packfile reader.
 	Packfile io.ReadCloser
@@ -58,7 +59,7 @@ func NewReferenceUpdateRequestFromCapabilities(adv *capability.List) *ReferenceU
 	r := NewReferenceUpdateRequest()
 
 	if adv.Supports(capability.Agent) {
-		r.Capabilities.Set(capability.Agent, capability.DefaultAgent)
+		r.Capabilities.Set(capability.Agent, capability.DefaultAgent())
 	}
 
 	if adv.Supports(capability.ReportStatus) {
@@ -68,12 +69,12 @@ func NewReferenceUpdateRequestFromCapabilities(adv *capability.List) *ReferenceU
 	return r
 }
 
-func (r *ReferenceUpdateRequest) validate() error {
-	if len(r.Commands) == 0 {
+func (req *ReferenceUpdateRequest) validate() error {
+	if len(req.Commands) == 0 {
 		return ErrEmptyCommands
 	}
 
-	for _, c := range r.Commands {
+	for _, c := range req.Commands {
 		if err := c.validate(); err != nil {
 			return err
 		}
@@ -86,9 +87,9 @@ type Action string
 
 const (
 	Create  Action = "create"
-	Update         = "update"
-	Delete         = "delete"
-	Invalid        = "invalid"
+	Update  Action = "update"
+	Delete  Action = "delete"
+	Invalid Action = "invalid"
 )
 
 type Command struct {
@@ -119,4 +120,9 @@ func (c *Command) validate() error {
 	}
 
 	return nil
+}
+
+type Option struct {
+	Key   string
+	Value string
 }
