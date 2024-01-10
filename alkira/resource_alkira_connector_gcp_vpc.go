@@ -173,10 +173,14 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"customer_asn": {
-				Description: "A specific BGP ASN for the connector. This field cannot be updated" +
-					"once the connector has been provisioned. The ASN can be any private ASN (`64512 - 65534`, `4200000000 - 4294967294`) that is not used elsewhere in the network.",
+				Description: "A specific BGP ASN for the connector. This " +
+					"field cannot be updated once the connector has been " +
+					"provisioned. The ASN can be any private ASN (`64512 " +
+					"- 65534`, `4200000000 - 4294967294`) that is not used " +
+					"elsewhere in the network.",
 				Type:     schema.TypeInt,
 				Optional: true,
+				Default:  64522,
 			},
 		},
 	}
