@@ -9,38 +9,40 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/capability"
 )
 
-var (
-	zeroHashString = plumbing.ZeroHash.String()
-)
-
 // Encode writes the ReferenceUpdateRequest encoding to the stream.
-func (r *ReferenceUpdateRequest) Encode(w io.Writer) error {
-	if err := r.validate(); err != nil {
+func (req *ReferenceUpdateRequest) Encode(w io.Writer) error {
+	if err := req.validate(); err != nil {
 		return err
 	}
 
 	e := pktline.NewEncoder(w)
 
-	if err := r.encodeShallow(e, r.Shallow); err != nil {
+	if err := req.encodeShallow(e, req.Shallow); err != nil {
 		return err
 	}
 
-	if err := r.encodeCommands(e, r.Commands, r.Capabilities); err != nil {
+	if err := req.encodeCommands(e, req.Commands, req.Capabilities); err != nil {
 		return err
 	}
 
-	if r.Packfile != nil {
-		if _, err := io.Copy(w, r.Packfile); err != nil {
+	if req.Capabilities.Supports(capability.PushOptions) {
+		if err := req.encodeOptions(e, req.Options); err != nil {
+			return err
+		}
+	}
+
+	if req.Packfile != nil {
+		if _, err := io.Copy(w, req.Packfile); err != nil {
 			return err
 		}
 
-		return r.Packfile.Close()
+		return req.Packfile.Close()
 	}
 
 	return nil
 }
 
-func (r *ReferenceUpdateRequest) encodeShallow(e *pktline.Encoder,
+func (req *ReferenceUpdateRequest) encodeShallow(e *pktline.Encoder,
 	h *plumbing.Hash) error {
 
 	if h == nil {
@@ -51,7 +53,7 @@ func (r *ReferenceUpdateRequest) encodeShallow(e *pktline.Encoder,
 	return e.Encodef("%s%s", shallow, objId)
 }
 
-func (r *ReferenceUpdateRequest) encodeCommands(e *pktline.Encoder,
+func (req *ReferenceUpdateRequest) encodeCommands(e *pktline.Encoder,
 	cmds []*Command, cap *capability.List) error {
 
 	if err := e.Encodef("%s\x00%s",
@@ -72,4 +74,16 @@ func formatCommand(cmd *Command) string {
 	o := cmd.Old.String()
 	n := cmd.New.String()
 	return fmt.Sprintf("%s %s %s", o, n, cmd.Name)
+}
+
+func (req *ReferenceUpdateRequest) encodeOptions(e *pktline.Encoder,
+	opts []*Option) error {
+
+	for _, opt := range opts {
+		if err := e.Encodef("%s=%s", opt.Key, opt.Value); err != nil {
+			return err
+		}
+	}
+
+	return e.Flush()
 }
