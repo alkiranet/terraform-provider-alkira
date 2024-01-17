@@ -43,6 +43,12 @@ func Provider() *schema.Provider {
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
 			},
+			"auth": {
+				Description: "Authentication Method.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: envDefaultFunc("ALKIRA_AUTH"),
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -140,7 +146,13 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 }
 
 func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
-	alkiraClient, err := alkira.NewAlkiraClient(d.Get("portal").(string), d.Get("username").(string), d.Get("password").(string), d.Get("api_key").(string), d.Get("provision").(bool))
+	alkiraClient, err := alkira.NewAlkiraClient(
+		d.Get("portal").(string),
+		d.Get("username").(string),
+		d.Get("password").(string),
+		d.Get("api_key").(string),
+		d.Get("provision").(bool),
+		d.Get("auth").(string))
 
 	if err != nil {
 		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")
