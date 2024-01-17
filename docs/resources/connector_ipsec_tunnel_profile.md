@@ -35,7 +35,7 @@ resource "alkira_connector_ipsec_tunnel_profile" "tunnel1" {
 - `ike_dh_group` (String) IKE DH group number of the IPSec tunnel. The value could be: `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
 - `ike_encryption_algorithm` (String) IKE encryption algorithm used with IPSec tunnel. The value could be: `AES256CBC`, `AES192CBC`, `AES128CBC`, `3DESCBC`, `AES256GCM16`, `AES192GCM16`, `AES128GCM16`.
 - `ike_integrity_algorithm` (String) IKE integrity algorithm used with IPSec tunnel. The value could be: `SHA1`, `SHA256`, `SHA384`, `SHA512` and `MD5`.
-- `ipsec_dh_group` (String) ESP DH group number of the IPSec tunnel. The value could be: `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
+- `ipsec_dh_group` (String) ESP DH group number of the IPSec tunnel. The value could be: `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519` and `NONE`.
 - `ipsec_encryption_algorithm` (String) ESP encryption algorithm of the IPSec Tunnel. The value could be: `AES256CBC`, `AES192CBC`, `AES128CBC`, `3DESCBC`, `AES256GCM16`, `AES192GCM16`, `AES128GCM16`.
 - `name` (String) The name of the profile.
 
