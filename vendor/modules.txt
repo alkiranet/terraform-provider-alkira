@@ -53,7 +53,7 @@ github.com/ProtonMail/go-crypto/openpgp/s2k
 # github.com/agext/levenshtein v1.2.2
 ## explicit
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v1.45.6
+# github.com/alkiranet/alkira-client-go v1.46.0
 ## explicit; go 1.20
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-cidr v1.0.1
