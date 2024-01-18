@@ -137,7 +137,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 									"esp_dh_group_numbers": {
 										Description: "Diffie Hellman groups to use for IPsec SA. Value could " +
 											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
-											"`MODP8192`, `ECP256`, `ECP384`, `ECP521` and `CURVE25519`.",
+											"`MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519` and `NONE`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
