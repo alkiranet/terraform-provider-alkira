@@ -19,7 +19,7 @@ resource "alkira_service_pan" "test" {
 
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"
-  registration_pin_expiry = "2023-12-31"
+  registration_pin_expiry = "2025-12-31"
 
   # master_key_enabled = true
   # master_key         = "1234567890ABCDEF"
