@@ -54,7 +54,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "downloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-arm64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-linux-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-windows-amd64.zip\n"
+                    "text": "downloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-darwin-arm64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-linux-amd64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-linux-arm64.tar.gz\ndownloads.alkira.com/dev/terraform-provider-alkira/latest/terraform-provider-alkira-${{ env.latest_version }}-windows-amd64.zip\n"
                   }
                 }
               ]
