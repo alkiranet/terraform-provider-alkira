@@ -26,8 +26,12 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 		instanceConfig := instance.(map[string]interface{})
 
 		for _, info := range service.Instances {
-			if instanceConfig["id"].(int) == info.Id || instanceConfig["name"].(string) == info.Name {
-				i := map[string]interface{}{
+
+			if instanceConfig["id"].(int) == info.Id ||
+				instanceConfig["name"].(string) == info.Name {
+
+				log.Printf("[DEBUG] Found instance [%v|%v]", info.Id, info.Name)
+				instance := map[string]interface{}{
 					"id":                    info.Id,
 					"credential_id":         info.CredentialId,
 					"name":                  info.Name,
@@ -35,7 +39,8 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 					"license_key":           instanceConfig["license_key"].(string),
 					"serial_number":         info.SerialNumber,
 				}
-				instances = append(instances, i)
+
+				instances = append(instances, instance)
 				break
 			}
 		}
@@ -53,7 +58,8 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 		for _, instance := range d.Get("instances").([]interface{}) {
 			instanceConfig := instance.(map[string]interface{})
 
-			if instanceConfig["id"].(int) == info.Id || instanceConfig["name"].(string) == info.Name {
+			if instanceConfig["id"].(int) == info.Id ||
+				instanceConfig["name"].(string) == info.Name {
 				new = false
 				break
 			}
@@ -73,8 +79,7 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 		}
 	}
 
-	d.Set("instance", instances)
-
+	d.Set("instances", instances)
 }
 
 func expandFortinetInstances(licenseType string, in []interface{}, m interface{}) ([]alkira.FortinetInstance, error) {
@@ -92,6 +97,7 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 	for i, instance := range in {
 		r := alkira.FortinetInstance{}
 		instanceCfg := instance.(map[string]interface{})
+
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
 		}
@@ -200,4 +206,86 @@ func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath str
 	}
 
 	return string(b), nil
+}
+
+func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
+
+	client := m.(*alkira.AlkiraClient)
+	fortinetCredId := d.Get("credential_id").(string)
+
+	if 0 == len(fortinetCredId) {
+		log.Printf("[INFO] Creating Fortinet FW Credential")
+
+		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
+		fortinetCred := alkira.CredentialPan{
+			Username: d.Get("username").(string),
+			Password: d.Get("password").(string),
+		}
+
+		credentialId, err := client.CreateCredential(
+			fortinetCredName,
+			alkira.CredentialTypeFortinet,
+			fortinetCred,
+			0,
+		)
+		if err != nil {
+			return nil, err
+		}
+		d.Set("credential_id", credentialId)
+	}
+
+	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+
+	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	managementServer := &alkira.FortinetManagmentServer{
+		IpAddress: d.Get("management_server_ip").(string),
+		Segment:   mgmtSegName,
+	}
+
+	instances, err := expandFortinetInstances(
+		d.Get("license_type").(string),
+		d.Get("instances").([]interface{}),
+		m,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert segment IDs to segment names
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	service := &alkira.ServiceFortinet{
+		AutoScale:        d.Get("auto_scale").(string),
+		BillingTags:      billingTagIds,
+		CredentialId:     d.Get("credential_id").(string),
+		Cxp:              d.Get("cxp").(string),
+		Instances:        instances,
+		LicenseType:      d.Get("license_type").(string),
+		ManagementServer: managementServer,
+		MaxInstanceCount: d.Get("max_instance_count").(int),
+		MinInstanceCount: d.Get("min_instance_count").(int),
+		Name:             d.Get("name").(string),
+		Segments:         segmentNames,
+		SegmentOptions:   segmentOptions,
+		Size:             d.Get("size").(string),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		Version:          d.Get("version").(string),
+	}
+
+	return service, nil
 }

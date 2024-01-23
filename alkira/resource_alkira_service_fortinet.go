@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -160,16 +159,14 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			},
 			"max_instance_count": {
 				Description: "The maximum number of Fortinet Firewall instances " +
-					"that should be deployed when auto-scale is enabled. Note " +
-					"that auto-scale is not supported with Fortinet at this " +
-					"time. `max_instance_count` must be greater than or " +
-					"equal to `min_instance_count`.",
+					"that should be deployed. `max_instance_count` must be " +
+					"greater than or equal to `min_instance_count`.",
 				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"min_instance_count": {
 				Description: "The minimum number of Fortinet Firewall instances " +
-					"that should be deployed at any point in time.",
+					"that should be deployed.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -202,22 +199,25 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 							Required:    true,
 						},
 						"groups": {
-							Description: "The list of Groups associated with the zone.",
-							Type:        schema.TypeList,
-							Required:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "The list of groups associated with " +
+								"the zone.",
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
+				Description: "The size of the service, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
-				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
+				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
+					"it could be either `IPSEC` or `GRE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPSEC",
@@ -388,86 +388,4 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	return nil
-}
-
-func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
-
-	client := m.(*alkira.AlkiraClient)
-	fortinetCredId := d.Get("credential_id").(string)
-
-	if 0 == len(fortinetCredId) {
-		log.Printf("[INFO] Creating Fortinet FW Credential")
-
-		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
-		fortinetCred := alkira.CredentialPan{
-			Username: d.Get("username").(string),
-			Password: d.Get("password").(string),
-		}
-
-		credentialId, err := client.CreateCredential(
-			fortinetCredName,
-			alkira.CredentialTypeFortinet,
-			fortinetCred,
-			0,
-		)
-		if err != nil {
-			return nil, err
-		}
-		d.Set("credential_id", credentialId)
-	}
-
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
-
-	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	managementServer := &alkira.FortinetManagmentServer{
-		IpAddress: d.Get("management_server_ip").(string),
-		Segment:   mgmtSegName,
-	}
-
-	instances, err := expandFortinetInstances(
-		d.Get("license_type").(string),
-		d.Get("instances").([]interface{}),
-		m,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert segment IDs to segment names
-	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	service := &alkira.ServiceFortinet{
-		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      billingTagIds,
-		CredentialId:     d.Get("credential_id").(string),
-		Cxp:              d.Get("cxp").(string),
-		Instances:        instances,
-		LicenseType:      d.Get("license_type").(string),
-		ManagementServer: managementServer,
-		MaxInstanceCount: d.Get("max_instance_count").(int),
-		MinInstanceCount: d.Get("min_instance_count").(int),
-		Name:             d.Get("name").(string),
-		Segments:         segmentNames,
-		SegmentOptions:   segmentOptions,
-		Size:             d.Get("size").(string),
-		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		Version:          d.Get("version").(string),
-	}
-
-	return service, nil
 }
