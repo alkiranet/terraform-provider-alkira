@@ -115,7 +115,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	}
 
 	var result []TenantNetworkId
-	tenantNetworkUrl := apiUrl + "/tenantnetworks"
+	tenantNetworkUrl := apiUrl + "/tenantnetworksummaries"
 
 	tenantNetworkRequest, _ := http.NewRequest("GET", tenantNetworkUrl, nil)
 	tenantNetworkRequest.Header.Set("Content-Type", "application/json")
@@ -129,7 +129,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("TRACE", "tenant network: %s\n", string(data))
+	logf("TRACE", "tenant network: %v\n", data)
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -246,7 +246,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("TRACE", "tenant network: %s\n", string(data))
+	logf("TRACE", "tenant network: %v\n", data)
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -294,11 +294,11 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) RSP: %s\n", requestId, string(data))
+	logf("DEBUG", "client-get(%s) RSP: %v\n", requestId, data)
 
 	if response.StatusCode != 200 {
 		if response.StatusCode < 500 {
-			return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
+			return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
 		}
 
 		if response.StatusCode == 429 {
@@ -327,9 +327,9 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %s", requestId, string(data))
+					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %v", requestId, data)
 				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
+					return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
 				}
 			}
 		} else {
@@ -352,9 +352,9 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %s", requestId, string(data))
+					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %v", requestId, data)
 				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
+					return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
 				}
 			}
 		}
@@ -387,10 +387,10 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) RSP: %s\n", requestId, string(data))
+	logf("DEBUG", "client-get(%s) RSP: %v\n", requestId, data)
 
 	if response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("%s(%d): %v", requestId, response.StatusCode, data)
 	}
 
 	//
@@ -434,12 +434,12 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-create(%s) RSP: %s\n", requestId, string(data))
+	logf("DEBUG", "client-create(%s) RSP: %v\n", requestId, data)
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
 
 		if response.StatusCode < 500 {
-			return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+			return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
 		}
 
 		if response.StatusCode == 429 {
@@ -468,9 +468,9 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %s", requestId, string(data)), nil
+					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %v", requestId, data), nil
 				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+					return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
 				}
 			}
 		} else {
@@ -493,9 +493,9 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %s", requestId, string(data)), nil
+					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %v", requestId, data), nil
 				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+					return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
 				}
 			}
 		}
@@ -573,7 +573,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-delete(%s): RSP: %s\n", requestId, string(data))
+	logf("DEBUG", "client-delete(%s): RSP: %v\n", requestId, data)
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
@@ -602,11 +602,11 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 		})
 
 		if err == wait.ErrWaitTimeout {
-			return "", fmt.Errorf("client-delete(%s): retry timeout, %s", requestId, string(data)), nil
+			return "", fmt.Errorf("client-delete(%s): retry timeout", requestId), nil
 		}
 
 		if err != nil {
-			return "", fmt.Errorf("client-delete(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+			return "", fmt.Errorf("client-delete(%s): %d", requestId, response.StatusCode), nil
 		}
 	}
 
@@ -680,11 +680,11 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-update(%s): RSP: %s\n", requestId, string(data))
+	logf("DEBUG", "client-update(%s): RSP: %v\n", requestId, data)
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode < 500 {
-			return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+			return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
 		}
 
 		if response.StatusCode == 429 {
@@ -713,9 +713,9 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return "", fmt.Errorf("client-update(%s): retry timeout, %s", requestId, string(data)), nil
+					return "", fmt.Errorf("client-update(%s): retry timeout, %v", requestId, data), nil
 				} else {
-					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+					return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
 				}
 			}
 		} else {
@@ -738,9 +738,9 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return "", fmt.Errorf("client-update(%s): retry timeout, %s", requestId, string(data)), nil
+					return "", fmt.Errorf("client-update(%s): retry timeout", requestId), nil
 				} else {
-					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+					return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
 				}
 			}
 		}
