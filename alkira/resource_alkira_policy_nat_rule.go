@@ -284,6 +284,7 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("category", rule.Category)
 
 	setNatRuleActionOptions(rule.Action, d)
+	setNatRuleMatch(rule.Match, d)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -350,21 +351,4 @@ func resourcePolicyNatRuleDelete(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	return nil
-}
-
-func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicyRule, error) {
-
-	match := expandPolicyNatRuleMatch(d.Get("match").(*schema.Set))
-	action := expandPolicyNatRuleAction(d.Get("action").(*schema.Set))
-
-	request := &alkira.NatPolicyRule{
-		Name:        d.Get("name").(string),
-		Description: d.Get("description").(string),
-		Enabled:     d.Get("enabled").(bool),
-		Category:    d.Get("category").(string),
-		Match:       *match,
-		Action:      *action,
-	}
-
-	return request, nil
 }
