@@ -68,7 +68,7 @@ func NewAlkiraClient(hostname string, username string, password string, secret s
 		clientTimeout, err = time.ParseDuration(t)
 
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
+			return nil, fmt.Errorf("failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
 		}
 	}
 
@@ -100,7 +100,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	}
 
 	if len(auth) == 0 {
-		return nil, fmt.Errorf("Invalid credentials to authenticate")
+		return nil, fmt.Errorf("invalid credentials to authenticate")
 	}
 
 	// Get the tenant network ID
@@ -129,7 +129,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("TRACE", "tenant network: %v\n", data)
+	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -233,7 +233,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 
 	// Get the tenant network ID
 	var result []TenantNetworkId
-	tenantNetworkUrl := apiUrl + "/tenantnetworks"
+	tenantNetworkUrl := apiUrl + "/tenantnetworksummaries"
 
 	tenantNetworkRequest, _ := http.NewRequest("GET", tenantNetworkUrl, nil)
 	tenantNetworkRequest.Header.Set("Content-Type", "application/json")
@@ -246,7 +246,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	defer tenantNetworkResponse.Body.Close()
 
 	data, _ := ioutil.ReadAll(tenantNetworkResponse.Body)
-	logf("TRACE", "tenant network: %v\n", data)
+	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -289,7 +289,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get(%s) %d failed, %v", requestId, response.StatusCode, err)
+		return nil, "", fmt.Errorf("client-get(%s) failed to send request, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
@@ -382,7 +382,7 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get(%s): %d failed, %v", requestId, response.StatusCode, err)
+		return nil, "", fmt.Errorf("client-get(%s): failed to send request, %v", requestId, err)
 	}
 
 	defer response.Body.Close()
@@ -464,7 +464,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): $d, retry timeout", requestId, response.StatusCode), nil
+					return nil, "", fmt.Errorf("client-create(%s): %d retry timeout", requestId, response.StatusCode), nil
 				} else {
 					return nil, "", fmt.Errorf("client-create(%s): %d failed to create.", requestId, response.StatusCode), nil
 				}
@@ -567,7 +567,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("client-delete(%s): failed, %v", requestId, err), nil
+		return "", fmt.Errorf("client-delete(%s): failed to send request, %v", requestId, err), nil
 	}
 
 	defer response.Body.Close()
@@ -652,7 +652,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 
 // update send a PUT request to update a resource
 func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string, error, error) {
-	logf("DEBUG", "client-update: REQUEST: %s\n", string(body))
+	logf("DEBUG", "client-update: REQ: %s\n", string(body))
 
 	//
 	// There are two knobs here to support turning provision on/off
@@ -674,7 +674,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("client-update(%s): failed, %v", requestId, err), nil
+		return "", fmt.Errorf("client-update(%s): failed to send request, %v", requestId, err), nil
 	}
 
 	defer response.Body.Close()
