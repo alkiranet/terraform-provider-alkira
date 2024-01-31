@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// expandPolicyNatRuleMatch expand "match" block for generating request
 func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
 	if in == nil || in.Len() == 0 || in.Len() > 1 {
 		log.Printf("[ERROR] invalid match section (%d)", in.Len())
@@ -46,7 +47,7 @@ func expandPolicyNatRuleMatch(in *schema.Set) *alkira.NatRuleMatch {
 	return &match
 }
 
-// expandPolicyNatRuleAction expand "action" section
+// expandPolicyNatRuleAction expand "action" block for generating request
 func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 	if in == nil || in.Len() == 0 || in.Len() > 1 {
 		log.Printf("[ERROR] invalid action section (%d)", in.Len())
@@ -167,16 +168,62 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 	return &action
 }
 
+// setNatRuleMatch set "match" block when reading
+func setNatRuleMatch(m alkira.NatRuleMatch, d *schema.ResourceData) {
+	var match []map[string]interface{}
+
+	in := map[string]interface{}{
+		"src_prefixes":        m.SourcePrefixes,
+		"src_prefix_list_ids": m.SourcePrefixListIds,
+		"src_ports":           m.SourcePortList,
+		"dst_prefixes":        m.DestPrefixes,
+		"dst_prefix_list_ids": m.DestPrefixListIds,
+		"dst_ports":           m.DestPortList,
+		"protocol":            m.Protocol,
+	}
+	match = append(match, in)
+}
+
+// setNatRuleActionOptions set "action" block when reading
 func setNatRuleActionOptions(a alkira.NatRuleAction, d *schema.ResourceData) {
 	var action []map[string]interface{}
 
 	in := map[string]interface{}{
+		"src_addr_translation_type":                              a.SourceAddressTranslation.TranslationType,
+		"src_addr_translation_prefixes":                          a.SourceAddressTranslation.TranslatedPrefixes,
+		"src_addr_translation_prefix_list_ids":                   a.SourceAddressTranslation.TranslatedPrefixListIds,
+		"src_addr_translation_match_and_invalidate":              a.SourceAddressTranslation.MatchAndInvalidate,
 		"src_addr_translation_routing_track_prefixes":            a.SourceAddressTranslation.RoutingOptions.TrackPrefixes,
 		"src_addr_translation_routing_track_prefix_list_ids":     a.SourceAddressTranslation.RoutingOptions.TrackPrefixListIds,
 		"src_addr_translation_routing_track_invalidate_prefixes": a.SourceAddressTranslation.RoutingOptions.InvalidateRoutingTrackPrefixes,
+		"dst_addr_translation_type":                              a.DestinationAddressTranslation.TranslationType,
+		"dst_addr_translation_prefixes":                          a.DestinationAddressTranslation.TranslatedPrefixes,
+		"dst_addr_translation_prefix_list_ids":                   a.DestinationAddressTranslation.TranslatedPrefixListIds,
+		"dst_addr_translation_ports":                             a.DestinationAddressTranslation.TranslatedPortList,
+		"dst_addr_translation_list_policy_fqdn_id":               a.DestinationAddressTranslation.TranslatedPolicyFqdnListId,
+		"dst_addr_translation_advertise_to_connector":            a.DestinationAddressTranslation.AdvertiseToConnector,
+		"egress_type": a.Egress.IpType,
 	}
 
 	action = append(action, in)
 
 	d.Set("action", action)
+}
+
+// generatePolicyNatRuleRequest generate request
+func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicyRule, error) {
+
+	match := expandPolicyNatRuleMatch(d.Get("match").(*schema.Set))
+	action := expandPolicyNatRuleAction(d.Get("action").(*schema.Set))
+
+	request := &alkira.NatPolicyRule{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+		Enabled:     d.Get("enabled").(bool),
+		Category:    d.Get("category").(string),
+		Match:       *match,
+		Action:      *action,
+	}
+
+	return request, nil
 }

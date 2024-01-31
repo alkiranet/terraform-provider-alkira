@@ -71,7 +71,7 @@ resource "alkira_service_fortinet" "test1" {
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be deployed.
 - `password` (String) Fortinet password.
 - `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
-- `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
+- `tunnel_protocol` (String) Tunnel Protocol. The default value is `IPSEC`. it could be either `IPSEC` or `GRE`.
 - `username` (String) Fortinet username.
 
 ### Read-Only
@@ -107,7 +107,7 @@ Read-Only:
 
 Required:
 
-- `groups` (List of String) The list of Groups associated with the zone.
+- `groups` (List of String) The list of groups associated with the zone.
 - `segment_id` (String) The ID of the segment.
 - `zone_name` (String) The name of the associated zone.
 
