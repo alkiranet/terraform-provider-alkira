@@ -68,7 +68,7 @@ func NewAlkiraClient(hostname string, username string, password string, secret s
 		clientTimeout, err = time.ParseDuration(t)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
+			return nil, fmt.Errorf("Failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
 		}
 	}
 
@@ -100,7 +100,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	}
 
 	if len(auth) == 0 {
-		return nil, fmt.Errorf("invalid credentials to authenticate")
+		return nil, fmt.Errorf("Invalid credentials to authenticate")
 	}
 
 	// Get the tenant network ID
@@ -289,22 +289,18 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get %s failed, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s) %d failed, %v", requestId, response.StatusCode, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) RSP: %v\n", requestId, data)
+	logf("DEBUG", "client-get(%s) %d RSP: %s\n", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 {
-		if response.StatusCode < 500 {
-			return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
-		}
-
 		if response.StatusCode == 429 {
 			retryAfter := response.Header.Get("Retry-After") + "s"
 
-			logf("WARN", "client-get(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
+			logf("ERROR", "client-get(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
 			retryAfterSec, _ := time.ParseDuration(retryAfter)
 			retryInterval := retryAfterSec * time.Second
 			retryTimeout := 60 * time.Second
@@ -322,17 +318,21 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 					return true, nil
 				}
 
-				logf("WARN", "client-get(%s): %d retrying...", requestId, response.StatusCode)
+				logf("ERROR", "client-get(%s): %d retrying...", requestId, response.StatusCode)
 				return false, nil
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %v", requestId, data)
+					return nil, "", fmt.Errorf("client-get(%s): %d retry timeout", requestId, response.StatusCode)
 				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
+					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
 				}
 			}
 		} else {
+			if response.StatusCode < 500 {
+				return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
+			}
+
 			err := wait.Poll(defaultRetryInterval, defaultRetryTimeout, func() (bool, error) {
 				response, err = ac.Client.Do(request)
 
@@ -352,9 +352,9 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): retry timeout, %v", requestId, data)
+					return nil, "", fmt.Errorf("client-get(%s): %d retry timeout", requestId, response.StatusCode)
 				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %v", requestId, response.StatusCode, data)
+					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
 				}
 			}
 		}
@@ -382,12 +382,12 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get(%s): failed, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s): %d failed, %v", requestId, response.StatusCode, err)
 	}
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) RSP: %v\n", requestId, data)
+	logf("DEBUG", "client-get(%s) %d RSP: %v\n", requestId, response.StatusCode, data)
 
 	if response.StatusCode != 200 {
 		return nil, "", fmt.Errorf("%s(%d): %v", requestId, response.StatusCode, data)
@@ -434,18 +434,14 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-create(%s) RSP: %v\n", requestId, data)
+	logf("DEBUG", "client-create(%s) %d RSP: %s\n", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
-
-		if response.StatusCode < 500 {
-			return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
-		}
 
 		if response.StatusCode == 429 {
 			retryAfter := response.Header.Get("Retry-After") + "s"
 
-			logf("WARN", "client-create(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
+			logf("ERROR", "client-create(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
 			retryAfterSec, _ := time.ParseDuration(retryAfter)
 			retryInterval := retryAfterSec * time.Second
 			retryTimeout := 60 * time.Second
@@ -463,17 +459,21 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 					return true, nil
 				}
 
-				logf("WARN", "client-create(%s): %d retrying...", requestId, response.StatusCode)
+				logf("ERROR", "client-create(%s): %d retrying...", requestId, response.StatusCode)
 				return false, nil
 			})
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %v", requestId, data), nil
+					return nil, "", fmt.Errorf("client-create(%s): $d, retry timeout", requestId, response.StatusCode), nil
 				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
+					return nil, "", fmt.Errorf("client-create(%s): %d failed to create.", requestId, response.StatusCode), nil
 				}
 			}
 		} else {
+			if response.StatusCode < 500 {
+				return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil
+			}
+
 			err := wait.Poll(defaultRetryInterval, defaultRetryTimeout, func() (bool, error) {
 				response, err = ac.Client.Do(request)
 
@@ -487,15 +487,15 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 					return true, nil
 				}
 
-				logf("WARN", "client-create(%s): %d retrying...", requestId, response.StatusCode)
+				logf("ERROR", "client-create(%s): %d retrying...", requestId, response.StatusCode)
 				return false, nil
 			})
 
 			if err != nil {
 				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): retry timeout, %v", requestId, data), nil
+					return nil, "", fmt.Errorf("client-create(%s): retry timeout", requestId), nil
 				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d %v", requestId, response.StatusCode, data), nil
+					return nil, "", fmt.Errorf("client-create(%s): %d failed to create.", requestId, response.StatusCode), nil
 				}
 			}
 		}
@@ -573,11 +573,11 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-delete(%s): RSP: %v\n", requestId, data)
+	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode == 404 {
-			logf("INFO", "client-delete(%s): resource was already deleted.\n", requestId)
+			logf("INFO", "client-delete(%s): %d resource was already deleted.\n", requestId, response.StatusCode)
 			return "", nil, nil
 		}
 
@@ -680,11 +680,11 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-update(%s): RSP: %v\n", requestId, data)
+	logf("DEBUG", "client-update(%s): %d RSP: %v\n", requestId, response.StatusCode, data)
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
 		if response.StatusCode < 500 {
-			return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
+			return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
 		}
 
 		if response.StatusCode == 429 {
@@ -715,7 +715,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 				if err == wait.ErrWaitTimeout {
 					return "", fmt.Errorf("client-update(%s): retry timeout, %v", requestId, data), nil
 				} else {
-					return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
+					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
 				}
 			}
 		} else {
@@ -740,7 +740,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 				if err == wait.ErrWaitTimeout {
 					return "", fmt.Errorf("client-update(%s): retry timeout", requestId), nil
 				} else {
-					return "", fmt.Errorf("client-update(%s): %d %v", requestId, response.StatusCode, data), nil
+					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
 				}
 			}
 		}
