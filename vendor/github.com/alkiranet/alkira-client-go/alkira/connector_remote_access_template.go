@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2024 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -8,69 +8,58 @@ import (
 )
 
 type ConnectorRemoteAccessTemplate struct {
-	AdvancedOptions       RemoteAccessConnectorTemplateAdvancedOptions  `json:"advancedOptions"`
-	Arguments             []RemoteAccessConnectorTemplateArguments      `json:"arguments"`
-	AuthenticationOptions RemoteAccessConnectorTemplateAuthOptions      `json:"authenticationOptions"`
-	DocState              string                                        `json:"docState,omitempty"`
-	Id                    json.Number                                   `json:"id"`
-	InternalName          string                                        `json:"internalName,omitempty"`
-	Name                  string                                        `json:"name"`
-	SamlIDPMetadata       string                                        `json:"samlIDPMetadata"`
-	SegmentIds            []int                                         `json:"segmentIds"`
-	SegmentOptions        []RemoteAccessConnectorTemplateSegmentOptions `json:"segmentOptions"`
-	Segments              []string                                      `json:"segments"`
-	State                 string                                        `json:"state,omitempty"`
+	AdvancedOptions       ConnectorRemoteAccessAdvancedOptions  `json:"advancedOptions"`
+	Arguments             []ConnectorRemoteAccessArguments      `json:"arguments"`
+	AuthenticationOptions ConnectorRemoteAccessAuthOptions      `json:"authenticationOptions"`
+	Id                    json.Number                           `json:"id,omitempty"`
+	Name                  string                                `json:"name"`
+	SegmentOptions        []ConnectorRemoteAccessSegmentOptions `json:"segmentOptions"`
+	Segments              []string                              `json:"segments,omitempty"`
 }
 
-type RemoteAccessConnectorTemplateAdvancedOptions struct {
+type ConnectorRemoteAccessAdvancedOptions struct {
 	EnableDynamicRegionMapping bool   `json:"enableDynamicRegionMapping"`
 	MaxActiveUsersThreshold    int    `json:"maxActiveUsersThreshold"`
 	NameServer                 string `json:"nameServer"`
 }
 
-type RemoteAccessConnectorTemplateArguments struct {
+type ConnectorRemoteAccessArguments struct {
 	BillingTags []int  `json:"billingTags,omitempty"`
 	Cxp         string `json:"cxp"`
 	Size        string `json:"size"`
 }
 
-type RemoteAccessConnectorTemplateAuthOptions struct {
-	LdapSettings   *RemoteAccessTemplateLdapSettings `json:"ldapSettings,omitempty"`
-	SupportedModes []string                          `json:"supportedModes"`
+type ConnectorRemoteAccessAuthOptions struct {
+	LdapSettings   *ConnectorRemoteAccessLdapSettings `json:"ldapSettings,omitempty"`
+	SupportedModes []string                           `json:"supportedModes"`
 }
 
-type RemoteAccessTemplateLdapSettings struct {
-	BindUserDomain     string `json:"bindUserDomain,omitempty"`
-	CredentialID       string `json:"credentialId,omitempty"`
-	DestinationAddress string `json:"destinationAddress,omitempty"`
-	LdapType           string `json:"ldapType,omitempty"`
-	ManagementSegment  string `json:"managementSegment,omitempty"`
-	SearchScopeDomain  string `json:"searchScopeDomain,omitempty"`
+type ConnectorRemoteAccessLdapSettings struct {
+	BindUserDomain      string `json:"bindUserDomain,omitempty"`
+	DestinationAddress  string `json:"destinationAddress,omitempty"`
+	LdapType            string `json:"ldapType,omitempty"`
+	ManagementSegmentId string `json:"managementSegmentId,omitempty"`
+	SearchScopeDomain   string `json:"searchScopeDomain,omitempty"`
 }
 
-type RemoteAccessConnectorTemplateSegmentOptions struct {
-	Name              string                                  `json:"name"`
-	SegmentId         int                                     `json:"segmentId"`
-	UserGroupMappings []RemoteAccessTemplateUserGroupMappings `json:"userGroupMappings"`
+type ConnectorRemoteAccessSegmentOptions struct {
+	SegmentId         int                                      `json:"segmentId"`
+	UserGroupMappings []ConnectorRemoteAccessUserGroupMappings `json:"userGroupMappings"`
 }
 
-type RemoteAccessTemplateCxpToSubnetMappings struct {
-	Cxp     string   `json:"cxp"`
-	Subnets []string `json:"subnets"`
+type ConnectorRemoteAccessUserGroupMappings struct {
+	BillingTag          int                                       `json:"billingTag,omitempty"`
+	Name                string                                    `json:"name"`
+	SplitTunneling      bool                                      `json:"splitTunneling"`
+	CxpToSubnetsMapping []ConnectorRemoteAccessCxpToSubnetMapping `json:"cxpToSubnetsMapping"`
 }
 
-type RemoteAccessTemplateUserGroupMappings struct {
-	BillingTag         int                                       `json:"billingTag,omitempty"`
-	CxpToSubnetMapping []RemoteAccessTemplateCxpToSubnetMappings `json:"cxpToSubnetsMapping"`
-	GroupID            int                                       `json:"groupId,omitempty"`
-	Name               string                                    `json:"name"`
-	PrefixListID       *int                                      `json:"prefixListId"`
-	RoutingTagID       int                                       `json:"routingTagId,omitempty"`
-	SplitTunneling     bool                                      `json:"splitTunneling"`
-	UserGroupID        int                                       `json:"userGroupId,omitempty"`
+type ConnectorRemoteAccessCxpToSubnetMapping struct {
+	Cxp         string `json:"cxp"`
+	Subnets     []string `json:"subnets"`
 }
 
-// NewConnectorRemoteAccess new connector
+// NewConnectorRemoteAccessTemplate
 func NewConnectorRemoteAccessTemplate(ac *AlkiraClient) *AlkiraAPI[ConnectorRemoteAccessTemplate] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/alkira-remote-access-connector-templates", ac.URI, ac.TenantNetworkId)
 	api := &AlkiraAPI[ConnectorRemoteAccessTemplate]{ac, uri, true}
