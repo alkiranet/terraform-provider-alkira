@@ -315,6 +315,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				},
 				Optional: true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"segment_id": {
 				Description: "The ID of the segment associated with the connector.",
 				Type:        schema.TypeString,
@@ -408,6 +413,7 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("size", connector.Size)
 	d.Set("vpn_mode", connector.VpnMode)
 
@@ -607,6 +613,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		SegmentOptions: segmentOptions,
 		Segments:       []string{segmentName},
 		Sites:          sites,
+		ScaleGroupId:   d.Get("scale_group_id").(string),
 		Size:           d.Get("size").(string),
 		VpnMode:        vpnMode,
 	}

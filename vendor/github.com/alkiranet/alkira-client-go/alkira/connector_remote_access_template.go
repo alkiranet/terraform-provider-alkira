@@ -55,8 +55,8 @@ type ConnectorRemoteAccessUserGroupMappings struct {
 }
 
 type ConnectorRemoteAccessCxpToSubnetMapping struct {
-	Cxp         string `json:"cxp"`
-	Subnets     []string `json:"subnets"`
+	Cxp     string   `json:"cxp"`
+	Subnets []string `json:"subnets"`
 }
 
 // NewConnectorRemoteAccessTemplate
