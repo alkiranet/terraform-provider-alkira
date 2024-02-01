@@ -95,6 +95,7 @@ type ConnectorIPSec struct {
 	Sites           []*ConnectorIPSecSite         `json:"sites,omitempty"`
 	Size            string                        `json:"size"`
 	VpnMode         string                        `json:"vpnMode"`
+	ScaleGroupId    string                        `json:"scaleGroupId,omitempty"`
 }
 
 // NewConnectorIPSec initialize a new connector
