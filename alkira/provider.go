@@ -68,6 +68,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_ipsec":                resourceAlkiraConnectorIPSec(),
 			"alkira_connector_ipsec_adv":            resourceAlkiraConnectorIPSecAdv(),
 			"alkira_connector_ipsec_tunnel_profile": resourceAlkiraConnectorIpsecTunnelProfile(),
+			"alkira_connector_remote_access":        resourceAlkiraConnectorRemoteAccess(),
 			"alkira_connector_versa_sdwan":          resourceAlkiraConnectorVersaSdwan(),
 			"alkira_connector_vmware_sdwan":         resourceAlkiraConnectorVmwareSdwan(),
 			"alkira_credential_aws_vpc":             resourceAlkiraCredentialAwsVpc(),
