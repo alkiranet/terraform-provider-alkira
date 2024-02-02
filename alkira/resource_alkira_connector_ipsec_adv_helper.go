@@ -81,7 +81,7 @@ func expandConnectorAdvIPSecTunnel(in []interface{}) []*alkira.ConnectorAdvIPSec
 	return tunnels
 }
 
-// expandConnectorAdvIPSecGateway expand IPSEC gateway
+// expandConnectorAdvIPSecGateway expand "gateway" block
 func expandConnectorAdvIPSecGateway(in []interface{}) []*alkira.ConnectorAdvIPSecGateway {
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty IPSec gateway input")
@@ -115,7 +115,7 @@ func expandConnectorAdvIPSecGateway(in []interface{}) []*alkira.ConnectorAdvIPSe
 	return gws
 }
 
-// expandConnectorAdvIPSecPolicyOptions expand policy_options
+// expandConnectorAdvIPSecPolicyOptions expand "policy_options" block
 func expandConnectorAdvIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorAdvIPSecPolicyOptions, error) {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] Empty policy options of IPSec connector.")
@@ -138,7 +138,7 @@ func expandConnectorAdvIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorAdvI
 	return &policyOptions, nil
 }
 
-// expandConnectorAdvIPSecRoutingOptions expand routing_options
+// expandConnectorAdvIPSecRoutingOptions expand "routing_options" block
 func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdvIPSecRoutingOptions, error) {
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] Empty routing options of IPSec connector.")
@@ -241,11 +241,117 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 	return &routingOptions, nil
 }
 
+// generateConnectorIPSecAdvRequest generate request for connector-ipsec
+func generateConnectorIPSecAdvRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAdvIPSec, error) {
+
+	gateways := expandConnectorAdvIPSecGateway(d.Get("gateway").([]interface{}))
+
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Construct Policy Options and Routing Options
+	//
+	// Base on the vpn_mode, switch what options to use
+	//
+	vpnMode := d.Get("vpn_mode").(string)
+
+	var policyOptions *alkira.ConnectorAdvIPSecPolicyOptions
+	var routingOptions *alkira.ConnectorAdvIPSecRoutingOptions
+
+	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
+	case "ROUTE_BASED":
+		{
+			routingOptions, err = expandConnectorAdvIPSecRoutingOptions(
+				d.Get("routing_options").(*schema.Set))
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	case "POLICY_BASED":
+		{
+			policyOptions, err = expandConnectorAdvIPSecPolicyOptions(
+				d.Get("policy_options").(*schema.Set))
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Construct the request
+	connector := &alkira.ConnectorAdvIPSec{
+		AdvertiseDefaultRoute: d.Get("advertise_default_route").(bool),
+		AdvertiseOnPremRoutes: d.Get("advertise_on_prem_routes").(bool),
+		BillingTags:           convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		CXP:                   d.Get("cxp").(string),
+		Enabled:               d.Get("enabled").(bool),
+		DestinationType:       d.Get("destination_type").(string),
+		Group:                 d.Get("group").(string),
+		Name:                  d.Get("name").(string),
+		Segment:               segmentName,
+		Size:                  d.Get("size").(string),
+		TunnelsPerGateway:     d.Get("tunnels_per_gateway").(int),
+		VpnMode:               vpnMode,
+		Gateways:              gateways,
+		PolicyOptions:         policyOptions,
+		RoutingOptions:        routingOptions,
+	}
+
+	return connector, nil
+}
+
 // deflateConnectorAdvIPSecPolicyOptions
 func deflateConnectorAdvIPSecPolicyOptions(cfg *alkira.ConnectorAdvIPSecPolicyOptions) map[string]interface{} {
 	option := map[string]interface{}{
 		"on_prem_prefix_list_ids": cfg.BranchTSPrefixListIds,
 		"cxp_prefix_list_ids":     cfg.CxpTSPrefixListIds,
+	}
+
+	return option
+}
+
+// deflateConnectorAdvIPSecRoutingOptions
+func deflateConnectorAdvIPSecRoutingOptions(routingOptions *alkira.ConnectorAdvIPSecRoutingOptions) map[string]interface{} {
+
+	var option map[string]interface{}
+
+	// If the routing type is "BOTH"
+	if routingOptions.StaticRouting != nil && routingOptions.DynamicRouting != nil {
+		log.Printf("[DEBUG] routing_type is BOTH")
+
+		option = map[string]interface{}{
+			"type":                 "BOTH",
+			"prefix_list_id":       routingOptions.StaticRouting.PrefixListId,
+			"availability":         routingOptions.StaticRouting.Availability,
+			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
+		}
+	} else if routingOptions.DynamicRouting == nil {
+		log.Printf("[DEBUG] routing_type is STATIC")
+
+		option = map[string]interface{}{
+			"type":           "STATIC",
+			"prefix_list_id": routingOptions.StaticRouting.PrefixListId,
+			"availability":   routingOptions.StaticRouting.Availability,
+		}
+	} else if routingOptions.StaticRouting == nil {
+		log.Printf("[DEBUG] routing_type is DYNAMIC")
+
+		option = map[string]interface{}{
+			"type":                 "DYNAMIC",
+			"availability":         routingOptions.DynamicRouting.Availability,
+			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
+			"bgp_auth_key":         routingOptions.DynamicRouting.BgpAuthKeyAlkira,
+		}
+	} else {
+		log.Printf("[DEBUG] no routing options")
 	}
 
 	return option
@@ -318,4 +424,42 @@ func deflateConnectorAdvIPSecGateway(connector *alkira.ConnectorAdvIPSec, d *sch
 	}
 
 	return gateways
+}
+
+// setConnectorAdvIPSec
+func setConnectorAdvIPSec(connector *alkira.ConnectorAdvIPSec, d *schema.ResourceData, m interface{}) error {
+
+	d.Set("advertise_default_route", connector.AdvertiseDefaultRoute)
+	d.Set("advertise_on_prem_routes", connector.AdvertiseOnPremRoutes)
+	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("cxp", connector.CXP)
+	d.Set("destination_type", connector.DestinationType)
+	d.Set("enabled", connector.Enabled)
+	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
+	d.Set("name", connector.Name)
+	d.Set("size", connector.Size)
+	d.Set("tunnels_per_gateway", connector.TunnelsPerGateway)
+	d.Set("vpn_mode", connector.VpnMode)
+
+	// gateway block
+	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))
+
+	// policy_options block
+	if connector.PolicyOptions != nil {
+		d.Set("policy_options", deflateConnectorAdvIPSecPolicyOptions(connector.PolicyOptions))
+	}
+
+	// routing_options block
+	d.Set("routing_options", deflateConnectorAdvIPSecRoutingOptions(connector.RoutingOptions))
+
+	// segment
+	segmentId, err := getSegmentIdByName(connector.Segment, m)
+
+	if err != nil {
+		return err
+	}
+	d.Set("segment_id", segmentId)
+
+	return nil
 }

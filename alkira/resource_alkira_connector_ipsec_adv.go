@@ -193,7 +193,9 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									},
 									"profile_id": {
 										Description: "The ID of the IPSec Tunnel " +
-											"Profile (`connector_ipsec_tunnel_profile`).",
+											"Profile (`connector_ipsec_tunnel_profile`). " +
+											"`advanced_options` block is required when " +
+											"this is used.",
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -397,32 +399,12 @@ func resourceConnectorIPSecAdvRead(ctx context.Context, d *schema.ResourceData, 
 		}}
 	}
 
-	d.Set("advertise_default_route", connector.AdvertiseDefaultRoute)
-	d.Set("advertise_on_prem_routes", connector.AdvertiseOnPremRoutes)
-	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("cxp", connector.CXP)
-	d.Set("enabled", connector.Enabled)
-	d.Set("destination_type", connector.DestinationType)
-	d.Set("group", connector.Group)
-	d.Set("implicit_group_id", connector.ImplicitGroupId)
-	d.Set("name", connector.Name)
-	d.Set("size", connector.Size)
-	d.Set("tunnels_per_gateway", connector.TunnelsPerGateway)
-	d.Set("vpn_mode", connector.VpnMode)
-
-	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))
-
-	if connector.PolicyOptions != nil {
-		d.Set("policy_options", deflateConnectorAdvIPSecPolicyOptions(connector.PolicyOptions))
-	}
-
-	// Get segment
-	segmentId, err := getSegmentIdByName(connector.Segment, m)
+	// READ and SET
+	err = setConnectorAdvIPSec(connector, d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.Set("segment_id", segmentId)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -489,73 +471,4 @@ func resourceConnectorIPSecAdvDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return nil
-}
-
-// generateConnectorIPSecAdvRequest generate request for connector-ipsec
-func generateConnectorIPSecAdvRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAdvIPSec, error) {
-
-	gateways := expandConnectorAdvIPSecGateway(d.Get("gateway").([]interface{}))
-
-	//
-	// Segment
-	//
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct Policy Options and Routing Options
-	//
-	// Base on the vpn_mode, switch what options to use
-	//
-	vpnMode := d.Get("vpn_mode").(string)
-
-	var policyOptions *alkira.ConnectorAdvIPSecPolicyOptions
-	var routingOptions *alkira.ConnectorAdvIPSecRoutingOptions
-
-	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
-	case "ROUTE_BASED":
-		{
-			routingOptions, err = expandConnectorAdvIPSecRoutingOptions(
-				d.Get("routing_options").(*schema.Set))
-
-			if err != nil {
-				return nil, err
-			}
-		}
-	case "POLICY_BASED":
-		{
-			policyOptions, err = expandConnectorAdvIPSecPolicyOptions(
-				d.Get("policy_options").(*schema.Set))
-
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	//
-	// Construct the request
-	//
-	connector := &alkira.ConnectorAdvIPSec{
-		AdvertiseDefaultRoute: d.Get("advertise_default_route").(bool),
-		AdvertiseOnPremRoutes: d.Get("advertise_on_prem_routes").(bool),
-		BillingTags:           convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		CXP:                   d.Get("cxp").(string),
-		Enabled:               d.Get("enabled").(bool),
-		DestinationType:       d.Get("destination_type").(string),
-		Group:                 d.Get("group").(string),
-		Name:                  d.Get("name").(string),
-		Segment:               segmentName,
-		Size:                  d.Get("size").(string),
-		TunnelsPerGateway:     d.Get("tunnels_per_gateway").(int),
-		VpnMode:               vpnMode,
-		Gateways:              gateways,
-		PolicyOptions:         policyOptions,
-		RoutingOptions:        routingOptions,
-	}
-
-	return connector, nil
 }
