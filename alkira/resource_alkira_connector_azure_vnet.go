@@ -60,10 +60,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 					"Alkira CXP. `VNET_GATEWAY` will connect with a Virtual " +
 					"Gateway, `VNET_PEERING` will connect using an Alkira " +
 					"Transit Hub (ATH).",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "VNET_GATEWAY",
-				ValidateFunc: validation.StringInSlice([]string{"VNET_GATEWAY", "VNET_PEERING"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "VNET_GATEWAY",
+				ValidateFunc: validation.StringInSlice([]string{
+					"VNET_GATEWAY", "VNET_PEERING"}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -100,12 +101,15 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Computed:    true,
 			},
 			"routing_options": {
-				Description: " Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` " +
-					"or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "ADVERTISE_DEFAULT_ROUTE",
-				ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+				Description: " Routing options for the entire VNET, either " +
+					"`ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. " +
+					"Default value is `AVERTISE_DEFAULT_ROUTE`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "ADVERTISE_DEFAULT_ROUTE",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ADVERTISE_DEFAULT_ROUTE",
+					"ADVERTISE_CUSTOM_PREFIX"}, false),
 			},
 			"routing_prefix_list_ids": {
 				Description: "Prefix List IDs.",
@@ -133,9 +137,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Description: "Routing options for the CIDR, either " +
 								"`ADVERTISE_DEFAULT_ROUTE` or " +
 								"`ADVERTISE_CUSTOM_PREFIX`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -169,10 +175,14 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 						},
 						"routing_options": {
-							Description:  "Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ADVERTISE_DEFAULT_ROUTE", "ADVERTISE_CUSTOM_PREFIX"}, false),
+							Description: "Routing options for the subnet, " +
+								"either `ADVERTISE_DEFAULT_ROUTE` " +
+								"or `ADVERTISE_CUSTOM_PREFIX`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ADVERTISE_DEFAULT_ROUTE",
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -190,7 +200,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				},
 			},
 			"service_tags": {
-				Description: "list of service tags from Azure. Providing a service tag here, " +
+				Description: "list of service tags from Azure. Providing a service tag here " +
 					"would result in service tag route configuration on VNET route table, so " +
 					"that the traffic toward the service would directly steer towards those " +
 					"services, and would not go via Alkira network.",
@@ -201,13 +211,17 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE", `2LARGE`,
+					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
 			"customer_asn": {
-				Description: "A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updated" +
-					"once the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
+				Description: "A specific BGP ASN for the connector. This cannot be specified " +
+					"when `connection_mode` is `VNET_PEERING`. This field cannot be updated " +
+					"once the connector has been provisioned. The ASN cannot be value that " +
+					"is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},

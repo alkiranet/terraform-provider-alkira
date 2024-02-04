@@ -113,13 +113,13 @@ resource "alkira_connector_azure_vnet" "subnet" {
 
 - `billing_tag_ids` (List of Number) Tags for billing.
 - `connection_mode` (String) The mode that connector will use to connect to the Alkira CXP. `VNET_GATEWAY` will connect with a Virtual Gateway, `VNET_PEERING` will connect using an Alkira Transit Hub (ATH).
-- `customer_asn` (Number) A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updatedonce the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).
+- `customer_asn` (Number) A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updated once the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
-- `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default is `AVERTISE_DEFAULT_ROUTE`.
+- `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default value is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.
-- `service_tags` (List of String) list of service tags from Azure. Providing a service tag here, would result in service tag route configuration on VNET route table, so that the traffic toward the service would directly steer towards those services, and would not go via Alkira network.
+- `service_tags` (List of String) list of service tags from Azure. Providing a service tag here would result in service tag route configuration on VNET route table, so that the traffic toward the service would directly steer towards those services, and would not go via Alkira network.
 - `vnet_cidr` (Block Set) Configure routing options on specified VNET CIDR. (see [below for nested schema](#nestedblock--vnet_cidr))
 - `vnet_subnet` (Block Set) Configure routing options on the specified VNET subnet. (see [below for nested schema](#nestedblock--vnet_subnet))
 
