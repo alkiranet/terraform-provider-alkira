@@ -104,7 +104,6 @@ func Provider() *schema.Provider {
 			"alkira_service_infoblox":               resourceAlkiraInfoblox(),
 			"alkira_service_zscaler":                resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                    resourceAlkiraServicePan(),
-			"alkira_tenant_network":                 resourceAlkiraTenantNetwork(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":                  dataSourceAlkiraBillingTag(),

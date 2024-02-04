@@ -75,10 +75,9 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Computed:    true,
 			},
 			"inbound_connector_id": {
-				Description: "Inbound connector ID. When `inbound_connector_type` " +
-					"is `DEFAULT`, it could be left empty.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "Inbound connector ID.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"inbound_connector_type": {
 				Description: "The inbound connector type specifies how the internet application " +
@@ -87,22 +86,26 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					"this inbound internet connector implicitly. If instead inbound access is via " +
 					"the `AKAMAI_PROLEXIC` connector, then you need to create and configure " +
 					"that connector and use it with the internet application.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "DEFAULT",
-				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "AKAMAI_PROLEXIC"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "DEFAULT",
+				ValidateFunc: validation.StringInSlice([]string{
+					"DEFAULT", "AKAMAI_PROLEXIC"}, false),
 			},
 			"internet_protocol": {
-				Description: "Internet Protocol to be associated with the internet application. " +
-					"The value could be: `IPV4`, `IPV6` or `BOTH`. " +
-					"In order to use the option IPV6 or BOTH, `enable_ipv6_to_ipv4_translation` " +
-					"should be enabled on the associated segment and a valid IP pool range should " +
-					"be provided. `IPV6` and `BOTH` options are only available to Internet " +
+				Description: "Internet Protocol to be associated with the " +
+					"internet application. The value could be: `IPV4`, " +
+					"`IPV6` or `BOTH`. In order to use the option `IPV6` or " +
+					"`BOTH`, `enable_ipv6_to_ipv4_translation` " +
+					"should be enabled on the associated segment " +
+					"and a valid IP pool range should be provided. " +
+					"`IPV6` and `BOTH` options are only available to Internet " +
 					"Applications on AWS CXPs. (**BETA**)",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPV4",
-				ValidateFunc: validation.StringInSlice([]string{"IPV4", "IPV6", "BOTH"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPV4",
+				ValidateFunc: validation.StringInSlice([]string{
+					"IPV4", "IPV6", "BOTH"}, false),
 			},
 			"name": {
 				Description: "The name of the internet application.",
@@ -133,9 +136,10 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			"size": {
 				Description: "The size of the internet application, one of " +
 					"`SMALL`, `MEDIUM` and `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"source_nat_ip_pool": {
 				Description: "A IP range to use for source NAT with this internet " +
