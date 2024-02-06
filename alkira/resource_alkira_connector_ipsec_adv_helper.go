@@ -12,12 +12,12 @@ import (
 func expandConnectorAdvIPSecAdvancedOptions(in []interface{}) (*alkira.ConnectorAdvIPSecAdvanced, error) {
 
 	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] empty IPSec endpoint advanced")
+		log.Printf("[DEBUG] empty connector-ipsec-adv advanced options")
 		return nil, nil
 	}
 
 	if in == nil || len(in) > 1 {
-		log.Printf("[DEBUG] invalid IPSec endpoint advanced")
+		log.Printf("[DEBUG] invalid connector-ipsec-adv endpoint advanced")
 		return nil, nil
 	}
 
@@ -308,81 +308,114 @@ func generateConnectorIPSecAdvRequest(d *schema.ResourceData, m interface{}) (*a
 	return connector, nil
 }
 
-// deflateConnectorAdvIPSecPolicyOptions
-func deflateConnectorAdvIPSecPolicyOptions(cfg *alkira.ConnectorAdvIPSecPolicyOptions) map[string]interface{} {
-	option := map[string]interface{}{
-		"on_prem_prefix_list_ids": cfg.BranchTSPrefixListIds,
-		"cxp_prefix_list_ids":     cfg.CxpTSPrefixListIds,
+// setConnectorAdvIPSecPolicyOptions
+func setConnectorAdvIPSecPolicyOptions(policyOptions *alkira.ConnectorAdvIPSecPolicyOptions, d *schema.ResourceData) {
+
+	if policyOptions == nil {
+		log.Printf("[DEBUG] empty policy options")
+		return
 	}
 
-	return option
+	var options []map[string]interface{}
+
+	option := map[string]interface{}{
+		"on_prem_prefix_list_ids": policyOptions.BranchTSPrefixListIds,
+		"cxp_prefix_list_ids":     policyOptions.CxpTSPrefixListIds,
+	}
+
+	options = append(options, option)
+	d.Set("policy_options", options)
 }
 
-// deflateConnectorAdvIPSecRoutingOptions
-func deflateConnectorAdvIPSecRoutingOptions(routingOptions *alkira.ConnectorAdvIPSecRoutingOptions) map[string]interface{} {
+// setConnectorAdvIPSecRoutingOptions
+func setConnectorAdvIPSecRoutingOptions(routingOptions *alkira.ConnectorAdvIPSecRoutingOptions, d *schema.ResourceData) {
 
-	var option map[string]interface{}
+	if routingOptions == nil {
+		log.Printf("[DEBUG] empty routing options")
+		return
+	}
+
+	var options []map[string]interface{}
 
 	// If the routing type is "BOTH"
 	if routingOptions.StaticRouting != nil && routingOptions.DynamicRouting != nil {
 		log.Printf("[DEBUG] routing_type is BOTH")
 
-		option = map[string]interface{}{
+		option := map[string]interface{}{
 			"type":                 "BOTH",
 			"prefix_list_id":       routingOptions.StaticRouting.PrefixListId,
 			"availability":         routingOptions.StaticRouting.Availability,
 			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
 		}
+		options = append(options, option)
 	} else if routingOptions.DynamicRouting == nil {
 		log.Printf("[DEBUG] routing_type is STATIC")
 
-		option = map[string]interface{}{
+		option := map[string]interface{}{
 			"type":           "STATIC",
 			"prefix_list_id": routingOptions.StaticRouting.PrefixListId,
 			"availability":   routingOptions.StaticRouting.Availability,
 		}
+		options = append(options, option)
 	} else if routingOptions.StaticRouting == nil {
 		log.Printf("[DEBUG] routing_type is DYNAMIC")
 
-		option = map[string]interface{}{
+		option := map[string]interface{}{
 			"type":                 "DYNAMIC",
 			"availability":         routingOptions.DynamicRouting.Availability,
 			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
 			"bgp_auth_key":         routingOptions.DynamicRouting.BgpAuthKeyAlkira,
 		}
+		options = append(options, option)
 	} else {
 		log.Printf("[DEBUG] no routing options")
+		return
 	}
 
-	return option
+	d.Set("routing_options", options)
 }
 
 // deflateConnectorAdvIPSecTunnel
 func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel) map[string]interface{} {
+
 	if tunnelConfig == nil {
 		log.Printf("[ERROR] invalid IPSec tunnel")
 		return nil
 	}
 
-	advancedConfig := make(map[string]interface{})
+	var tunnel map[string]interface{}
 
+	// If advanced_option is not there, don't set it
 	if tunnelConfig.Advanced != nil {
+		var advancedConfig map[string]interface{}
+
 		advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
 		advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
 		advancedConfig["remote_auth_type"] = tunnelConfig.Advanced.RemoteAuthType
 		advancedConfig["remote_auth_value"] = tunnelConfig.Advanced.RemoteAuthValue
-	}
 
-	tunnel := map[string]interface{}{
-		"number":                                 tunnelConfig.TunnelNo,
-		"preshared_key":                          tunnelConfig.PresharedKey,
-		"profile_id":                             tunnelConfig.ProfileId,
-		"id":                                     tunnelConfig.Id,
-		"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
-		"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
-		"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
-		"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
-		"advanced_options":                       []interface{}{advancedConfig},
+		tunnel = map[string]interface{}{
+			"number":                                 tunnelConfig.TunnelNo,
+			"preshared_key":                          tunnelConfig.PresharedKey,
+			"profile_id":                             tunnelConfig.ProfileId,
+			"id":                                     tunnelConfig.Id,
+			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
+			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
+			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
+			"advanced_options":                       []interface{}{advancedConfig},
+		}
+	} else {
+		tunnel = map[string]interface{}{
+			"number":                                 tunnelConfig.TunnelNo,
+			"preshared_key":                          tunnelConfig.PresharedKey,
+			"profile_id":                             tunnelConfig.ProfileId,
+			"id":                                     tunnelConfig.Id,
+			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
+			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
+			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
+		}
 	}
 
 	return tunnel
@@ -446,12 +479,10 @@ func setConnectorAdvIPSec(connector *alkira.ConnectorAdvIPSec, d *schema.Resourc
 	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))
 
 	// policy_options block
-	if connector.PolicyOptions != nil {
-		d.Set("policy_options", deflateConnectorAdvIPSecPolicyOptions(connector.PolicyOptions))
-	}
+	setConnectorAdvIPSecPolicyOptions(connector.PolicyOptions, d)
 
 	// routing_options block
-	d.Set("routing_options", deflateConnectorAdvIPSecRoutingOptions(connector.RoutingOptions))
+	setConnectorAdvIPSecRoutingOptions(connector.RoutingOptions, d)
 
 	// segment
 	segmentId, err := getSegmentIdByName(connector.Segment, m)
