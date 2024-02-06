@@ -294,7 +294,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) %d RSP: %s\n", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 {
 		if response.StatusCode == 429 {
@@ -387,10 +387,10 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
-	logf("DEBUG", "client-get(%s) %d RSP: %v\n", requestId, response.StatusCode, data)
+	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("%s(%d): %v", requestId, response.StatusCode, data)
+		return nil, "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
 	}
 
 	//
@@ -406,7 +406,7 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 
 // create send a POST request to create resource
 func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error, error) {
-	logf("DEBUG", "client-create REQ: %s\n", string(body))
+	logf("DEBUG", "client-create REQ: %s", string(body))
 
 	//
 	// There are two knobs here to support turning provision on/off
@@ -434,7 +434,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	defer response.Body.Close()
 	data, _ := ioutil.ReadAll(response.Body)
 
-	logf("DEBUG", "client-create(%s) %d RSP: %s\n", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
 
