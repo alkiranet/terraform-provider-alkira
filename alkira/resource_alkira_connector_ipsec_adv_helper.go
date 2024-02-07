@@ -387,7 +387,7 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 
 	// If advanced_option is not there, don't set it
 	if tunnelConfig.Advanced != nil {
-		var advancedConfig map[string]interface{}
+		advancedConfig := make(map[string]interface{})
 
 		advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
 		advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
