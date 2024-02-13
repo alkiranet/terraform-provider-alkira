@@ -42,11 +42,6 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
-			"application_family_ids": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-				Optional: true,
-			},
 			"name": {
 				Description: "The name of the policy rule.",
 				Type:        schema.TypeString,
@@ -219,7 +214,6 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("dst_ports", rule.MatchCondition.DstPortList)
 
 	d.Set("application_ids", rule.MatchCondition.ApplicationList)
-	d.Set("application_family_ids", rule.MatchCondition.ApplicationFamilyList)
 
 	d.Set("internet_application_id", rule.MatchCondition.InternetApplicationId)
 
@@ -307,7 +301,6 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.Tr
 			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
 			InternetApplicationId: d.Get("internet_application_id").(int),
 			ApplicationList:       convertTypeListToIntList(d.Get("application_ids").([]interface{})),
-			ApplicationFamilyList: convertTypeListToIntList(d.Get("application_family_ids").([]interface{})),
 		},
 		RuleAction: alkira.PolicyRuleAction{
 			Action:          d.Get("rule_action").(string),
