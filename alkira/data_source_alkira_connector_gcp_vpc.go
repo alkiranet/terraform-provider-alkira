@@ -13,9 +13,14 @@ func dataSourceAlkiraConnectorGcpVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Gcp Vpc connector.",
+				Description: "The name of the GCP VPC connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -24,12 +29,14 @@ func dataSourceAlkiraConnectorGcpVpc() *schema.Resource {
 func dataSourceAlkiraConnectorGcpVpcRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewConnectorGcpVpc(m.(*alkira.AlkiraClient))
 
-	group, _, err := api.GetByName(d.Get("name").(string))
+	connector, _, err := api.GetByName(d.Get("name").(string))
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(string(connector.Id))
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
+
 	return nil
 }

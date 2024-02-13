@@ -17,6 +17,11 @@ func dataSourceAlkiraConnectorOciVcn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -31,5 +36,7 @@ func dataSourceAlkiraConnectorOciVcnRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	d.SetId(string(resource.Id))
+	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }

@@ -13,9 +13,14 @@ func dataSourceAlkiraConnectorArubaEdge() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Aruba Edge connector.",
+				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -31,5 +36,7 @@ func dataSourceAlkiraConnectorArubaEdgeRead(d *schema.ResourceData, m interface{
 	}
 
 	d.SetId(string(connector.Id))
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
+
 	return nil
 }

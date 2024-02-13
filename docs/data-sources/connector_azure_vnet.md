@@ -3,12 +3,12 @@
 page_title: "alkira_connector_azure_vnet Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get an existing Azure Vnet connector.
+  Use this data source to get an existing Azure VNET connector.
 ---
 
 # alkira_connector_azure_vnet (Data Source)
 
-Use this data source to get an existing Azure Vnet connector.
+Use this data source to get an existing Azure VNET connector.
 
 ## Example Usage
 
@@ -23,10 +23,11 @@ data "alkira_connector_azure_vnet" "test" {
 
 ### Required
 
-- `name` (String) The name of the Azure Vnet connector.
+- `name` (String) The name of the connector.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (String) The implicit group associated with the connector.
 
 
