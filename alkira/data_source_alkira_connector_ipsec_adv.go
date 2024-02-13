@@ -37,5 +37,6 @@ func dataSourceAlkiraConnectorIpsecAdvRead(d *schema.ResourceData, m interface{}
 
 	d.SetId(string(resource.Id))
 	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }

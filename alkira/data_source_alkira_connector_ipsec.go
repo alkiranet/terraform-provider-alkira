@@ -17,6 +17,11 @@ func dataSourceAlkiraConnectorIpsec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -31,5 +36,7 @@ func dataSourceAlkiraConnectorIpsecRead(d *schema.ResourceData, m interface{}) e
 	}
 
 	d.SetId(string(resource.Id))
+	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }

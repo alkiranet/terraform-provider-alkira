@@ -23,10 +23,11 @@ data "alkira_connector_gcp_vpc" "test" {
 
 ### Required
 
-- `name` (String) The name of the Gcp Vpc connector.
+- `name` (String) The name of the GCP VPC connector.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (String) The implicit group associated with the connector.
 
 

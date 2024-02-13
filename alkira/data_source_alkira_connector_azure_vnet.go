@@ -7,15 +7,21 @@ import (
 
 func dataSourceAlkiraConnectorAzureVnet() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Azure Vnet connector.",
+		Description: "Use this data source to get an existing Azure VNET " +
+			"connector.",
 
 		Read: dataSourceAlkiraConnectorAzureVnetRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Azure Vnet connector.",
+				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -31,5 +37,7 @@ func dataSourceAlkiraConnectorAzureVnetRead(d *schema.ResourceData, m interface{
 	}
 
 	d.SetId(string(resource.Id))
+	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }

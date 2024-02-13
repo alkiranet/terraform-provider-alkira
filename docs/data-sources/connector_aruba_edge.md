@@ -23,10 +23,11 @@ data "alkira_connector_aruba_edge" "test" {
 
 ### Required
 
-- `name` (String) The name of the Aruba Edge connector.
+- `name` (String) The name of the connector.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (String) The implicit group associated with the connector.
 
 

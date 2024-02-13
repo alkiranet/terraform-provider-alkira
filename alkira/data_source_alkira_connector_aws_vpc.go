@@ -13,9 +13,14 @@ func dataSourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the AWS-VPC connector.",
+				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -31,5 +36,7 @@ func dataSourceAlkiraConnectorAwsVpcRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	d.SetId(string(resource.Id))
+	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }
