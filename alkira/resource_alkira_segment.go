@@ -84,12 +84,21 @@ func resourceAlkiraSegment() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"reserve_public_ips_for_cxps": {
+				Description: "Alkira reserves public IPs which can be used " +
+					"to create underlay tunnels between an external service " +
+					"to the specified Alkira CXPs. (**BETA**)",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"service_traffic_distribution": {
 				Description: "Enable traffic distribution in a segment to " +
 					"instances in a service using source IP hashing. " +
 					"When enabled, traffic will be hashed and distributed " +
 					"only by source IP of the packet. Default behavior is " +
-					"based on 5 tuples in a network packet. Default is `false`. (**BETA**)",
+					"based on 5 tuples in a network packet. Default is " +
+					"`false`. (**BETA**)",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -168,6 +177,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, m interfac
 	d.Set("enterprise_dns_server_ip", segment.EnterpriseDNSServerIP)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
+	d.Set("reserve_public_ips_for_cxps", segment.ReservePublicIPsForUserAndSiteConnectivityForCXPs)
 
 	if segment.SrcIpv4PoolList != nil && len(segment.SrcIpv4PoolList) > 0 {
 		d.Set("src_ipv4_pool_start_ip", segment.SrcIpv4PoolList[0].StartIp)
@@ -254,6 +264,7 @@ func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, m interf
 func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 
 	cidrs := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
+	cxps := convertTypeSetToStringList(d.Get("reserve_public_ips_for_cxps").(*schema.Set))
 
 	// Special handle for pool list, otherwise, request will simply fail
 	srcIpv4PoolList := []alkira.SegmentSrcIpv4PoolList{}
@@ -281,8 +292,9 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
 		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
 		Name:                        d.Get("name").(string),
-		ReservePublicIPsForUserAndSiteConnectivity: d.Get("reserve_public_ips").(bool),
-		ServiceTrafficDistribution:                 serviceTrafficDistribution,
+		ReservePublicIPsForUserAndSiteConnectivity:        d.Get("reserve_public_ips").(bool),
+		ReservePublicIPsForUserAndSiteConnectivityForCXPs: cxps,
+		ServiceTrafficDistribution:                        serviceTrafficDistribution,
 		IpBlocks: alkira.SegmentIpBlocks{
 			Values: cidrs,
 		},
