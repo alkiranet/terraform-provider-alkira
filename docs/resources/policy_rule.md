@@ -75,7 +75,6 @@ resource "alkira_policy_rule" "rule" {
 
 ### Optional
 
-- `application_family_ids` (List of Number)
 - `application_ids` (List of Number)
 - `description` (String) The description of the policy rule.
 - `dst_ip` (String) A single destination IP as The match condition of the rule.
