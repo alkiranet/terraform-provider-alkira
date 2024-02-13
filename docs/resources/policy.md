@@ -9,6 +9,30 @@ description: |-
 
 Manage policy.
 
+
+## Including Connector in Policy
+
+When each connector was created, there will be an `implicit_group`
+automatically created along with the connector. This group could be
+used in policy like the normal `group`.
+
+The following connectors have the `implicit_group` created
+automatically:
+
+* alkira_connector_azure_expressroute
+* alkira_connector_akamai_prolexic
+* alkira_connector_gcp_vpc
+* alkira_connector_ipsec
+* alkira_connector_azure_vnet
+* alkira_connector_aws_vpc
+* alkira_connector_ipsec_adv
+* alkira_connector_aruba_edge
+* alkira_connector_cisco_sdwan
+* alkira_connector_internet_exit
+* alkira_connector_oci_vcn
+
+The field is also available from `data_source`.
+
 ## Example Usage
 
 `alkira_policy` always has dependency on resource
