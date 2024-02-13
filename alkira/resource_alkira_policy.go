@@ -44,10 +44,11 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Required:    true,
 			},
 			"from_groups": {
-				Description: "IDs of groups that will define source in the policy scope",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "IDs of groups that will define source in the " +
+					"policy scope",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 			"name": {
 				Description: "The name of the policy.",
@@ -71,10 +72,11 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Required:    true,
 			},
 			"to_groups": {
-				Description: "IDs of groups that will define destination in the policy scope.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "IDs of groups that will define destination in " +
+					"the policy scope.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 		},
 	}

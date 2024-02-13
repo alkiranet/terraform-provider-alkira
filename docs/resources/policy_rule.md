@@ -30,7 +30,9 @@ resource "alkira_policy_rule" "rule" {
 }
 ```
 
-To configure service chaining, multiple service types can be selected. Service chaining is currently supported only with PAN and Zscaler services.
+To configure service chaining, multiple service types can be
+selected. Service chaining is currently supported only with PAN and
+Zscaler services.
 
 ```terraform
 resource "alkira_policy_rule" "rule" {
@@ -47,7 +49,10 @@ resource "alkira_policy_rule" "rule" {
 }
 ```
 
-Another example of service chaining. The order of the services is important and PAN services must be followed by Zscaler services. In the below example, 1 & 2 are PAN serviceIds where as 3 is a Zscaler serviceId.
+Another example of service chaining. The order of the services is
+important and PAN services must be followed by Zscaler services. In
+the below example, 1 & 2 are PAN serviceIds where as 3 is a Zscaler
+serviceId.
 
 ```terraform
 resource "alkira_policy_rule" "rule" {
