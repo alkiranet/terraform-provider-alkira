@@ -1,8 +1,8 @@
 ---
 subcategory: "Release Notes"
-page_title: "v1.2"
+page_title: "v1.2.0"
 description: |-
-    Release notes for v1.2
+    Release notes for v1.2.0
 ---
 
 This release contains several new resources and enhancements across
