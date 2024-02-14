@@ -20,7 +20,7 @@ func dataSourceAlkiraConnectorAzureVnet() *schema.Resource {
 			},
 			"implicit_group_id": {
 				Description: "The implicit group associated with the connector.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 		},

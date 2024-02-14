@@ -22,6 +22,6 @@ Use this data source to get an existing IPSec Adv Connector.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `implicit_group_id` (String) The implicit group associated with the connector.
+- `implicit_group_id` (Number) The implicit group associated with the connector.
 
 
