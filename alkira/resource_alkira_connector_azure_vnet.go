@@ -225,6 +225,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -297,6 +302,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("size", connector.Size)
 	d.Set("service_tags", connector.ServiceTags)
 	d.Set("customer_asn", connector.CustomerASN)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -419,6 +425,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		VnetId:         d.Get("azure_vnet_id").(string),
 		VnetRouting:    routing,
 		CustomerASN:    d.Get("customer_asn").(int),
+		ScaleGroupId:   d.Get("scale_group_id").(string),
 	}
 
 	return request, nil

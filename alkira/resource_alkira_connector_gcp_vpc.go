@@ -182,6 +182,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Optional: true,
 				Default:  64522,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -253,6 +258,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("customer_asn", connector.CustomerASN)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	setGcpRoutingOptions(connector.GcpRouting, d)
 
 	// Get segment
