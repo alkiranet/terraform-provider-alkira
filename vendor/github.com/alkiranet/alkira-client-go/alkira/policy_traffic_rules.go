@@ -16,7 +16,6 @@ type TrafficPolicyRule struct {
 }
 
 type PolicyRuleMatchCondition struct {
-	ApplicationFamilyList []int    `json:"applicationFamilyList"`
 	ApplicationList       []int    `json:"applicationList"`
 	Dscp                  string   `json:"dscp"`
 	DstIp                 string   `json:"dstIp,omitempty"`

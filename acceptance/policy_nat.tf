@@ -15,6 +15,10 @@ resource "alkira_policy_nat_rule" "test1" {
   }
 }
 
+#
+# Group here matters and it may fail validation if the group is also
+# used by some SAAS connectors.
+#
 resource "alkira_policy_nat" "test1" {
   name               = "acceptance-basic"
   description        = "terraform test NAT policy"
