@@ -85,4 +85,8 @@ Optional:
 - `set_community` (String) Allows to add one or more community attributes to the existing communities on the route. Community attribute is specified in this format: `as-number:community-value`. as-number and community-value can be a value from `0` through `65535`. Example: `65512:20 65512:21`.
 - `set_extended_community` (String) Allows to add one or more extended community attributes to the existing extended communities on the route. Extended community attribute is specified in this format: `type:administrator:assigned-number`. Currently only type origin(soo) is supported.
 
+Read-Only:
+
+- `sequence_no` (Number) System assigned number for each rule starting with `1000`. It defines the order of the rules.
+
 

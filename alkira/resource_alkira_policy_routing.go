@@ -119,12 +119,21 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"sequence_no": {
+							Description: "System assigned number for each " +
+								"rule starting with `1000`. It defines the " +
+								"order of the rules.",
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"action": {
-							Description: "Action to be set on matched routes. Value could be " +
-								"`ALLOW`, `DENY` and `ALLOW_W_SET`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY", "ALLOW_W_SET"}, false),
+							Description: "Action to be set on matched " +
+								"routes. Value could be `ALLOW`, " +
+								"`DENY` and `ALLOW_W_SET`.",
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ALLOW", "DENY", "ALLOW_W_SET"}, false),
 						},
 						"match_all": {
 							Description: "This acts as match all if enabled" +
@@ -308,9 +317,10 @@ func resourcePolicyRoutingRead(ctx context.Context, d *schema.ResourceData, m in
 
 	for _, rule := range policy.Rules {
 		i := map[string]interface{}{
-			"name":      rule.Name,
-			"action":    rule.Action,
-			"match_all": rule.Match.All,
+			"name":        rule.Name,
+			"sequence_no": rule.SequenceNo,
+			"action":      rule.Action,
+			"match_all":   rule.Match.All,
 		}
 
 		if rule.Match.AsPathListIds != nil {

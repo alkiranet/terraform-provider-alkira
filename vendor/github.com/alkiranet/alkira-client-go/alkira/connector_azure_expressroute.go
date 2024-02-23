@@ -27,17 +27,18 @@ type ConnectorAzureExpressRouteInstance struct {
 }
 
 type ConnectorAzureExpressRoute struct {
-	Name           string                               `json:"name"`
-	Id             json.Number                          `json:"id,omitempty"`
-	Size           string                               `json:"size"`
-	Enabled        bool                                 `json:"enabled"`
-	VhubPrefix     string                               `json:"vhubPrefix"`
-	TunnelProtocol string                               `json:"tunnelProtocol"`
-	Cxp            string                               `json:"cxp"`
-	Group          string                               `json:"group,omitempty"`
-	Instances      []ConnectorAzureExpressRouteInstance `json:"instances,omitempty"`
-	SegmentOptions []ConnectorAzureExpressRouteSegment  `json:"segmentOptions,omitempty"`
-	BillingTags    []int                                `json:"billingTags"`
+	Name            string                               `json:"name"`
+	Id              json.Number                          `json:"id,omitempty"`
+	Size            string                               `json:"size"`
+	Enabled         bool                                 `json:"enabled"`
+	ImplicitGroupId int                                  `json:"implicitGroupId,omitempty"` // response only
+	VhubPrefix      string                               `json:"vhubPrefix"`
+	TunnelProtocol  string                               `json:"tunnelProtocol"`
+	Cxp             string                               `json:"cxp"`
+	Group           string                               `json:"group,omitempty"`
+	Instances       []ConnectorAzureExpressRouteInstance `json:"instances,omitempty"`
+	SegmentOptions  []ConnectorAzureExpressRouteSegment  `json:"segmentOptions,omitempty"`
+	BillingTags     []int                                `json:"billingTags"`
 }
 
 func NewConnectorAzureExpressRoute(ac *AlkiraClient) *AlkiraAPI[ConnectorAzureExpressRoute] {

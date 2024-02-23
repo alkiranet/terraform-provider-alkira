@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2021-2024 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -15,7 +15,7 @@ type RoutePolicy struct {
 	Segment                       string             `json:"segment"`
 	IncludedGroups                []int              `json:"includedGroups"`
 	ExcludedGroups                []int              `json:"excludedGroups,omitempty"`
-	Id                            json.Number        `json:"id,omitempty"`
+	Id                            json.Number        `json:"id,omitempty"` // response only
 	AdvertiseInternetExit         *bool              `json:"advertiseInternetExit"`
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
 	AdvertiseCustomRoutesPrefixId int                `json:"advertiseCustomRoutesPrefixId,omitempty"`
@@ -26,6 +26,7 @@ type RoutePolicyRules struct {
 	Action                       string                                        `json:"action"`
 	Name                         string                                        `json:"name"`
 	Match                        RoutePolicyRulesMatch                         `json:"match"`
+	SequenceNo                   int                                           `json:"sequenceNo,omitempty"` // response only
 	Set                          *RoutePolicyRulesSet                          `json:"set,omitempty"`
 	InterCxpRoutesRedistribution *RoutePolicyRulesInterCxpRoutesRedistribution `json:"interCxpRoutesRedistribution,omitempty"`
 }
