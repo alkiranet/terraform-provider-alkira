@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -144,4 +145,59 @@ func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) 
 	}
 
 	return rules, nil
+}
+
+// setPolicyRoutingRules set rules
+func setPolicyRoutingRules(in []alkira.RoutePolicyRules, d *schema.ResourceData) error {
+
+	if len(in) == 0 {
+		return errors.New("Invalid Checkpoint Firewall instance input.")
+	}
+
+	rules := make([]map[string]interface{}, len(in))
+
+	for i, rule := range in {
+		r := map[string]interface{}{
+			"name":        rule.Name,
+			"sequence_no": rule.SequenceNo,
+			"action":      rule.Action,
+			"match_all":   rule.Match.All,
+		}
+
+		if rule.Match.AsPathListIds != nil {
+			r["match_as_path_list_ids"] = rule.Match.AsPathListIds
+		}
+		if rule.Match.CommunityListIds != nil {
+			r["match_community_list_ids"] = rule.Match.CommunityListIds
+		}
+		if rule.Match.ExtendedCommunityListIds != nil {
+			r["match_extended_community_list_ids"] = rule.Match.ExtendedCommunityListIds
+		}
+		if rule.Match.PrefixListIds != nil {
+			r["match_prefix_list_ids"] = rule.Match.PrefixListIds
+		}
+		if rule.Match.ConnectorGroupIds != nil {
+			r["match_group_ids"] = rule.Match.ConnectorGroupIds
+		}
+		if rule.Match.Cxps != nil {
+			r["match_cxps"] = rule.Match.Cxps
+		}
+
+		if rule.Set != nil {
+			r["set_as_path_prepend"] = rule.Set.AsPathPrepend
+			r["set_community"] = rule.Set.Community
+			r["set_extended_community"] = rule.Set.ExtendedCommunity
+		}
+
+		if rule.InterCxpRoutesRedistribution != nil {
+			r["routes_distribution_restricted_cxps"] = rule.InterCxpRoutesRedistribution.RestrictedCxps
+			r["routes_distribution_type"] = rule.InterCxpRoutesRedistribution.DistributionType
+			r["routes_distribution_as_secondary"] = rule.InterCxpRoutesRedistribution.RedistributeAsSecondary
+		}
+
+		rules[i] = r
+	}
+
+	d.Set("rule", rules)
+	return nil
 }
