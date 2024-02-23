@@ -136,6 +136,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		Size:           d.Get("size").(string),
 		VpcName:        d.Get("gcp_vpc_name").(string),
 		CustomerASN:    d.Get("customer_asn").(int),
+		ScaleGroupId:   d.Get("scale_group_id").(string),
 	}
 
 	return connector, nil

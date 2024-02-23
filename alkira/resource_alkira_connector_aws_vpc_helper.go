@@ -201,6 +201,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		VpcId:                              d.Get("vpc_id").(string),
 		VpcOwnerId:                         d.Get("aws_account_id").(string),
 		VpcRouting:                         vpcRouting,
+		ScaleGroupId:                       d.Get("scale_group_id").(string),
 	}
 
 	return request, nil
