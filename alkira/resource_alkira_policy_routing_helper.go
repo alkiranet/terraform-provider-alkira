@@ -98,15 +98,15 @@ func expandPolicyRoutingRuleInterCxpRoutesRedistribution(in map[string]interface
 }
 
 // expandPolicyRoutingRule expanding the "rule" sections of the routing policy
-func expandPolicyRoutingRule(in *schema.Set) ([]alkira.RoutePolicyRules, error) {
+func expandPolicyRoutingRule(in []interface{}) ([]alkira.RoutePolicyRules, error) {
 
-	if in == nil || in.Len() == 0 {
+	if in == nil || len(in) == 0 {
 		return nil, nil
 	}
 
-	rules := make([]alkira.RoutePolicyRules, in.Len())
+	rules := make([]alkira.RoutePolicyRules, len(in))
 
-	for i, ruleInput := range in.List() {
+	for i, ruleInput := range in {
 
 		rule := alkira.RoutePolicyRules{}
 		input := ruleInput.(map[string]interface{})
