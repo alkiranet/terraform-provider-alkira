@@ -401,7 +401,7 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 	//
 	// Rule
 	//
-	rules, err := expandPolicyRoutingRule(d.Get("rule").(*schema.Set))
+	rules, err := expandPolicyRoutingRule(d.Get("rule").([]interface{}))
 
 	if err != nil {
 		return nil, err
