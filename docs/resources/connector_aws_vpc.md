@@ -113,6 +113,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector.
 - `tgw_attachment` (Block List) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
 - `tgw_connect_enabled` (Boolean) When it's set to `true`, Alkira will use TGW Connect attachments to build connection to AWS Transit Gateway. Connect Attachments suppport GRE tunnel protocol for high performance and BGP for dynamic routing. This applies to all TGW attachments. This field can be set to `true` only if the VPC is in the same AWS region as the Alkira CXP it is being deployed onto.
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.

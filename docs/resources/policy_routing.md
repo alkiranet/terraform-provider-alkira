@@ -54,7 +54,7 @@ resource "alkira_policy_routing" "test" {
 - `description` (String) The description of the routing policy.
 - `enabled` (Boolean) Whether the routing policy is enabled. By default, it is set to `false`.
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. Implicit group ID of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
-- `rule` (Block Set) (see [below for nested schema](#nestedblock--rule))
+- `rule` (Block List) (see [below for nested schema](#nestedblock--rule))
 
 ### Read-Only
 
