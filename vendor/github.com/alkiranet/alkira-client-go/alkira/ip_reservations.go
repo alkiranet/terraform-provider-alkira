@@ -22,6 +22,6 @@ type IPReservation struct {
 
 func NewIPReservation(ac *AlkiraClient) *AlkiraAPI[IPReservation] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/ip-reservations", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[IPReservation]{ac, uri, true}
+	api := &AlkiraAPI[IPReservation]{ac, uri, false}
 	return api
 }
