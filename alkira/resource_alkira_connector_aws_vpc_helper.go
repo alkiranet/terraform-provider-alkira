@@ -85,13 +85,24 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 }
 
 // expandUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
-func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.InputPrefixes, error) {
+func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySubnets []interface{}) ([]alkira.InputPrefixes, error) {
 
 	if len(cidr) == 0 && subnets == nil {
 		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified.")
 	}
 
-	// Processing "vpc_cidr"
+	// Processing overlay_subnets
+	log.Printf("[DEBUG] Processing overlay_subnets %v", overlaySubnets)
+	overlaySubnetList := make([]alkira.InputPrefixes, len(overlaySubnets))
+
+	if len(overlaySubnets) > 0 {
+		for i, value := range overlaySubnets {
+			overlaySubnetList[i].Value = value.(string)
+			overlaySubnetList[i].Type = "OVERLAY_SUBNETS"
+		}
+	}
+
+	// Processing vpc_cidr
 	if len(cidr) > 0 {
 		log.Printf("[DEBUG] Processing vpc_cidr %v", cidr)
 		cidrList := make([]alkira.InputPrefixes, len(cidr))
@@ -101,10 +112,11 @@ func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.
 			cidrList[i].Type = "CIDR"
 		}
 
+		cidrList = append(cidrList, overlaySubnetList...)
 		return cidrList, nil
 	}
 
-	// Processing VPC subnets
+	// Processing vpc_subnet
 	log.Printf("[DEBUG] Processing vpc_subnet")
 	if subnets == nil || subnets.Len() == 0 {
 		log.Printf("[DEBUG] Empty vpc_subnet")
@@ -126,6 +138,7 @@ func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.
 		prefixes[i] = r
 	}
 
+	prefixes = append(prefixes, overlaySubnetList...)
 	return prefixes, nil
 }
 
@@ -163,7 +176,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		return nil, err
 	}
 
-	inputPrefixes, err := expandUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set))
+	inputPrefixes, err := expandUserInputPrefixes(d.Get("vpc_cidr").([]interface{}), d.Get("vpc_subnet").(*schema.Set), d.Get("overlay_subnets").([]interface{}))
 
 	if err != nil {
 		return nil, err

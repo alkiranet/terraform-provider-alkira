@@ -227,6 +227,12 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"overlay_subnets": {
+				Description: "Overlay subnet.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
