@@ -122,6 +122,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_gcp_vpc":            dataSourceAlkiraConnectorGcpVpc(),
 			"alkira_group":                        dataSourceAlkiraGroup(),
 			"alkira_group_user":                   dataSourceAlkiraGroupUser(),
+			"alkira_internet_application":         dataSourceAlkiraInternetApplication(),
 			"alkira_ip_reservation":               dataSourceAlkiraIpReservation(),
 			"alkira_list_as_path":                 dataSourceAlkiraListAsPath(),
 			"alkira_list_community":               dataSourceAlkiraListCommunity(),
