@@ -77,7 +77,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"billing_tag_ids": {
 				Description: "A list of Billing Tag by ID associated with the " +
 					"connector.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
@@ -368,7 +368,7 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
-		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:          convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		ByoipOptions:         byoipOptions,
 		CXP:                  d.Get("cxp").(string),
 		CredentialId:         credentialId,

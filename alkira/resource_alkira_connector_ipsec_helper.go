@@ -79,8 +79,8 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 		r.HaMode = siteConfig["ha_mode"].(string)
 		r.Id = siteConfig["id"].(int)
 
-		if v, ok := siteConfig["billing_tag_ids"].([]interface{}); ok {
-			r.BillingTags = convertTypeListToIntList(v)
+		if v, ok := siteConfig["billing_tag_ids"].(*schema.Set); ok {
+			r.BillingTags = convertTypeSetToIntList(v)
 		}
 
 		if v, ok := siteConfig["preshared_keys"].([]interface{}); ok {

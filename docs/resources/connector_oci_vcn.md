@@ -59,7 +59,7 @@ resource "alkira_connector_oci_vcn" "test" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) IDs of billing tags.
+- `billing_tag_ids` (Set of Number) IDs of billing tags.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.

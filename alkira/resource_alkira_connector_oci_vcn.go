@@ -165,7 +165,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 			},
 			"billing_tag_ids": {
 				Description: "IDs of billing tags.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -354,7 +354,7 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 	// Assemble request
 	//
 	request := &alkira.ConnectorOciVcn{
-		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CXP:            d.Get("cxp").(string),
 		CredentialId:   d.Get("credential_id").(string),
 		CustomerRegion: d.Get("oci_region").(string),

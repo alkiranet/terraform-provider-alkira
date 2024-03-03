@@ -41,10 +41,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated with the connector.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing Tag IDs to be associated with the " +
+					"connector.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -348,7 +349,7 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 
 	// Construct the request payload
 	connector := &alkira.ConnectorCiscoSdwan{
-		BillingTags:          convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:          convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CiscoEdgeInfo:        vedges,
 		CiscoEdgeVrfMappings: expandCiscoSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set)),
 		Cxp:                  d.Get("cxp").(string),

@@ -81,7 +81,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 			},
 			"billing_tag_ids": {
 				Description: "IDs of Billing Tags.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -360,7 +360,7 @@ func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.Res
 // generateConnectorAzureExpressRouteRequest generate a request for Azure ExpressRoute connector
 func generateConnectorAzureExpressRouteRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureExpressRoute, error) {
 
-	billingTags := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	billingTags := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	instances, err := expandAzureExpressRouteInstances(d.Get("instances").([]interface{}), m)
 	if err != nil {

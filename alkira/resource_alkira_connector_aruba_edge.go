@@ -78,8 +78,8 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Optional: true,
 			},
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
-				Type:        schema.TypeList,
+				Description: "IDs of billing tags.",
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -382,7 +382,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 
 	return &alkira.ConnectorArubaEdge{
 		ArubaEdgeVrfMapping: vrfMappings,
-		BillingTags:         convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		BoostMode:           d.Get("boost_mode").(bool),
 		Cxp:                 d.Get("cxp").(string),
 		GatewayBgpAsn:       d.Get("gateway_gbp_asn").(int),

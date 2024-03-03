@@ -234,7 +234,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		d.Set("credential_id", credentialId)
 	}
 
-	billingTagIds := convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{}))
+	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
 

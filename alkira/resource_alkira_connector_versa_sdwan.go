@@ -35,9 +35,9 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated " +
+				Description: "IDs of Billing Tags to be associated " +
 					"with the connector.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},

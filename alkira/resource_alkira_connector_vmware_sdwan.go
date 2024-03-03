@@ -40,9 +40,9 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated " +
+				Description: "IDs of Billing Tags to be associated " +
 					"with the connector.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
@@ -348,7 +348,7 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 
 	// Construct the request payload
 	connector := &alkira.ConnectorVmwareSdwan{
-		BillingTags:             convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:             convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Instances:               virtualEdges,
 		VmWareSdWanVRFMappings:  expandVmwareSdwanVrfMappings(d.Get("target_segment").(*schema.Set)),
 		Cxp:                     d.Get("cxp").(string),

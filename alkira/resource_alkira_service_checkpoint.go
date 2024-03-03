@@ -45,10 +45,11 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
 			},
 			"billing_tag_ids": {
-				Description: "Billing tag IDs to associate with the service.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags to be associate with the " +
+					"service.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"cxp": {
 				Description: "CXP region.",
@@ -471,7 +472,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	// Assemble request
 	return &alkira.ServiceCheckpoint{
 		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CredentialId:     d.Get("credential_id").(string),
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),
