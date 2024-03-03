@@ -91,8 +91,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Default:     0,
 			},
 			"billing_tag_ids": {
-				Description: "IDs of Billing Tags.",
-				Type:        schema.TypeList,
+				Description: "IDs of billing tags.",
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -418,7 +418,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 		SegmentOptions:   segmentOptions,
 		AutoScale:        d.Get("auto_scale").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Instances:        instances,
 	}
 

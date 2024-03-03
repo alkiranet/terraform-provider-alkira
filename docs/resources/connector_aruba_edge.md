@@ -64,7 +64,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 ### Optional
 
 - `aruba_edge_vrf_mapping` (Block Set) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
-- `billing_tag_ids` (List of Number) Tags for billing.
+- `billing_tag_ids` (Set of Number) IDs of billing tags.
 - `boost_mode` (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.

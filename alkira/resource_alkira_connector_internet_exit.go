@@ -34,10 +34,11 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "The list of billing tag IDs.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags to be associated with " +
+					"the connector.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"byoip_id": {
 				Description: "ID of the BYOIP to be associated with the connector.",
@@ -295,7 +296,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	}
 
 	request := &alkira.ConnectorInternet{
-		BillingTags:         convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		ByoipId:             d.Get("byoip_id").(int),
 		CXP:                 d.Get("cxp").(string),
 		Description:         d.Get("description").(string),

@@ -37,10 +37,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "Billing tag IDs to associate with the service.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags to be associated with " +
+					"the service.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"bundle": {
 				Description: "The software image bundle that would be used for" +
@@ -634,7 +635,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	service := &alkira.ServicePan{
-		BillingTagIds:               convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTagIds:               convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Bundle:                      d.Get("bundle").(string),
 		CXP:                         d.Get("cxp").(string),
 		CredentialId:                d.Get("credential_id").(string),

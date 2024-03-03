@@ -44,10 +44,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					"ON", "OFF"}, false),
 			},
 			"billing_tag_ids": {
-				Description: "Billing tag IDs to associate with the service.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags to associate with " +
+					"the service.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed " +

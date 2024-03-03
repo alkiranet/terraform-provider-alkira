@@ -72,7 +72,7 @@ resource "alkira_service_cisco_ftdv" "test" {
 ### Optional
 
 - `auto_scale` (String) Indicate if `auto_scale` should be enabled for your Cisco FTDv service. `ON` and `OFF` are accepted values. Default is `OFF`.
-- `billing_tag_ids` (List of Number) IDs of Billing Tags.
+- `billing_tag_ids` (Set of Number) IDs of billing tags.
 - `min_instance_count` (Number) The minimum number of instances that should be deployed.
 - `segment_options` (Block Set) The segment options used by the Cisco FTDv. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) The tunnel protocol. Default is `IPSEC`.

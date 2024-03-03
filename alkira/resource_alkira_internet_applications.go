@@ -35,8 +35,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "IDs of billing tags.",
-				Type:        schema.TypeList,
+				Description: "IDs of billing tags to be associated.",
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -386,7 +386,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 
 	// Assemble request
 	request := &alkira.InternetApplication{
-		BillingTags:                   convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:                   convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		BiDirectionalAvailabilityZone: d.Get("bi_directional_az").(string),
 		ByoipId:                       d.Get("byoip_id").(int),
 		ConnectorId:                   d.Get("connector_id").(int),

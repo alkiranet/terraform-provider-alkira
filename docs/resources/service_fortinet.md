@@ -66,7 +66,7 @@ resource "alkira_service_fortinet" "test1" {
 ### Optional
 
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
-- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be deployed.
 - `password` (String) Fortinet password.

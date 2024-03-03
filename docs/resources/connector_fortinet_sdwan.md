@@ -48,7 +48,7 @@ resource "alkira_connector_fortinet_sdwan" "test" {
 ### Optional
 
 - `allow_list` (List of String) This list allows the IP addresses or subnets to be whitelisted so that they can communicate with the Fortinet SD-WAN instance. The value could be `/32` IPs or can also be a mask.
-- `billing_tag_ids` (List of Number) A list of Billing Tag IDs associated with the connector.
+- `billing_tag_ids` (Set of Number) IDs of Billing Tags to be associated with the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol. It could be either `IPSEC`or `GRE`. Default value is `IPSEC`.

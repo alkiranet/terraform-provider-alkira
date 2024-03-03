@@ -39,7 +39,7 @@ resource "alkira_connector_internet_exit" "test1" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) The list of billing tag IDs.
+- `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the connector.
 - `byoip_id` (Number) ID of the BYOIP to be associated with the connector.
 - `description` (String) The description of the connector.
 - `egress_ips` (List of String) The types of egress IPs to use with the connector. Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. If `BYOIP` is one of the options provided `byoip_id` must also be set.

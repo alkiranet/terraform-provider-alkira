@@ -56,7 +56,7 @@ resource "alkira_service_zscaler" "test1" {
 
 ### Optional
 
-- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the service.
 - `description` (String) The description of the Zscaler service.
 - `tunnel_protocol` (String) The type of tunnel protocol to be used to connect to Zscaler PoP.
 

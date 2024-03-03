@@ -41,7 +41,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			},
 			"billing_tag_ids": {
 				Description: "Tags for billing.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
@@ -411,7 +411,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:    convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CXP:            d.Get("cxp").(string),
 		ConnectionMode: d.Get("connection_mode").(string),
 		CredentialId:   d.Get("credential_id").(string),

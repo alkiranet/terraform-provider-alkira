@@ -94,9 +94,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Default:  true,
 						},
 						"billing_tag_ids": {
-							Description: "A list of IDs of billing tag associated " +
-								"with the endpoint.",
-							Type:     schema.TypeList,
+							Description: "A list of IDs of billing tag " +
+								"associated with the endpoint.",
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeInt,

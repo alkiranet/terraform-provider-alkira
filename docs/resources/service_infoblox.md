@@ -115,7 +115,7 @@ resource "alkira_service_infoblox" "test" {
 ### Optional
 
 - `allow_list_id` (Number) The ID of the `alkira_policy_prefix_list` to be used to whitelist prefixes for the service.
-- `billing_tag_ids` (List of Number) Billing tag IDs to associate with the service.
+- `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the service.
 - `description` (String) The description of the Infoblox service.
 
 ### Read-Only

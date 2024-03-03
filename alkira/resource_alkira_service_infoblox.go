@@ -69,10 +69,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				},
 			},
 			"billing_tag_ids": {
-				Description: "Billing tag IDs to associate with the service.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "IDs of billing tags to be associated with " +
+					"the service.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
@@ -415,7 +416,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	return &alkira.ServiceInfoblox{
 		AnyCast:          *anycast,
-		BillingTags:      convertTypeListToIntList(d.Get("billing_tag_ids").([]interface{})),
+		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Cxp:              d.Get("cxp").(string),
 		Description:      d.Get("description").(string),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
