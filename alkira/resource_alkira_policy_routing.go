@@ -109,6 +109,13 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"enable_as_override": {
+				Description: "Whether enable AS-override on associated " +
+					"connectors",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -168,6 +175,12 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 						"match_group_ids": {
 							Description: "IDs of groups.",
 							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"match_segment_resource_ids": {
+							Description: "IDs of segment resources.",
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
@@ -289,6 +302,10 @@ func resourcePolicyRoutingRead(ctx context.Context, d *schema.ResourceData, m in
 
 	if policy.AdvertiseInternetExit != nil {
 		d.Set("advertise_internet_exit", *policy.AdvertiseInternetExit)
+	}
+
+	if policy.EnableASOverride != nil {
+		d.Set("enable_as_override", *policy.EnableASOverride)
 	}
 
 	d.Set("advertise_custom_routes_prefix_id", policy.AdvertiseCustomRoutesPrefixId)
@@ -416,6 +433,14 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		*advertiseInternetExit = d.Get("advertise_internet_exit").(bool)
 	}
 
+	enableASOverride := new(bool)
+
+	if d.Get("direction").(string) == "INBOUND" {
+		enableASOverride = nil
+	} else {
+		*enableASOverride = d.Get("enable_as_override").(bool)
+	}
+
 	// Assemble request
 	policy := &alkira.RoutePolicy{
 		Name:                          d.Get("name").(string),
@@ -427,6 +452,7 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		ExcludedGroups:                convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
 		AdvertiseInternetExit:         advertiseInternetExit,
 		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
+		EnableASOverride:              enableASOverride,
 		AdvertiseCustomRoutesPrefixId: d.Get("advertise_custom_routes_prefix_id").(int),
 		Rules:                         rules,
 	}

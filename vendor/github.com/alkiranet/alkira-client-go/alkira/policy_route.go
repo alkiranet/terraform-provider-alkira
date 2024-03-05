@@ -19,6 +19,7 @@ type RoutePolicy struct {
 	AdvertiseInternetExit         *bool              `json:"advertiseInternetExit"`
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
 	AdvertiseCustomRoutesPrefixId int                `json:"advertiseCustomRoutesPrefixId,omitempty"`
+	EnableASOverride              *bool              `json:"enableASOverride,omitempty"`
 	Rules                         []RoutePolicyRules `json:"rules,omitempty"`
 }
 
@@ -38,6 +39,7 @@ type RoutePolicyRulesMatch struct {
 	ExtendedCommunityListIds []int    `json:"extendedCommunityListIds,omitempty"`
 	PrefixListIds            []int    `json:"prefixListIds,omitempty"`
 	Cxps                     []string `json:"cxps,omitempty"`
+	SegmentResourceIds       []int    `json:"segmentResourceIds,omitempty"`
 	ConnectorGroupIds        []int    `json:"connectorGroupIds,omitempty"`
 }
 

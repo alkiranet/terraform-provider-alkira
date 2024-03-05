@@ -41,6 +41,12 @@ func expandPolicyRoutingRuleMatch(in map[string]interface{}) (*alkira.RoutePolic
 			match.Cxps = nil
 		}
 	}
+	if v, ok := in["match_segment_resource_ids"].(*schema.Set); ok {
+		match.SegmentResourceIds = convertTypeSetToIntList(v)
+		if len(match.SegmentResourceIds) == 0 {
+			match.SegmentResourceIds = nil
+		}
+	}
 	if v, ok := in["match_group_ids"].([]interface{}); ok {
 		match.ConnectorGroupIds = convertTypeListToIntList(v)
 		if len(match.ConnectorGroupIds) == 0 {
@@ -181,6 +187,9 @@ func setPolicyRoutingRules(in []alkira.RoutePolicyRules, d *schema.ResourceData)
 		}
 		if rule.Match.Cxps != nil {
 			r["match_cxps"] = rule.Match.Cxps
+		}
+		if rule.Match.SegmentResourceIds != nil {
+			r["match_segment_resource_ids"] = rule.Match.SegmentResourceIds
 		}
 
 		if rule.Set != nil {
