@@ -52,6 +52,7 @@ resource "alkira_policy_routing" "test" {
 - `advertise_internet_exit` (Boolean) Advertise Alkira’s Internet Connector to selected scope. This only applies to `OUTBOUND` policy. Default value is `true`.
 - `advertise_on_prem_routes` (Boolean) Advertise routes from other on premise connectors to selected scope. Default value is `false`.
 - `description` (String) The description of the routing policy.
+- `enable_as_override` (Boolean) Whether enable AS-override on associated connectors
 - `enabled` (Boolean) Whether the routing policy is enabled. By default, it is set to `false`.
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. Implicit group ID of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
 - `rule` (Block List) (see [below for nested schema](#nestedblock--rule))
@@ -78,6 +79,7 @@ Optional:
 - `match_extended_community_list_ids` (List of Number) IDs of Extended Community Lists.
 - `match_group_ids` (List of Number) IDs of groups.
 - `match_prefix_list_ids` (List of Number) IDs of Prefix Lists.
+- `match_segment_resource_ids` (Set of Number) IDs of segment resources.
 - `routes_distribution_as_secondary` (Boolean) This allows to redistribute routes with lower preference to the restrictedCxps. Hence, this option can only be used with `RESTRICTED_CXPS` distribution_type. Also only 1 CXP is allowed in restricted_cxps, when this is set to `true`.
 - `routes_distribution_restricted_cxps` (List of String) List of cxps to which routes distribution is restricted. Should be used only with distributionType `RESTRICTED_CXPS`.
 - `routes_distribution_type` (String) Redistribute routes that match with this rule match codition to. The value could be `ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.
