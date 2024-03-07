@@ -7,7 +7,8 @@ import (
 
 func dataSourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Azure ExpressRoute connector.",
+		Description: "Use this data source to get an existing Azure " +
+			"ExpressRoute connector.",
 
 		Read: dataSourceAlkiraConnectorAzureExpressRouteRead,
 
@@ -16,6 +17,12 @@ func dataSourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Description: "The name of the Azure ExpressRoute connector.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"implicit_group_id": {
+				Description: "The implicit group associated with the " +
+					"connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -31,5 +38,7 @@ func dataSourceAlkiraConnectorAzureExpressRouteRead(d *schema.ResourceData, m in
 	}
 
 	d.SetId(string(resource.Id))
+	d.Set("implicit_group_id", resource.ImplicitGroupId)
+
 	return nil
 }
