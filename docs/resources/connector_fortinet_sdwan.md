@@ -82,7 +82,7 @@ Required:
 - `hostname` (String) The hostname of the WAN Edge.
 - `license_type` (String) The type of license. Either `PAY_AS_YOU_GO` or `BRING_YOUR_OWN`.
 - `password` (String) The password of the WAN Edge instance.
-- `version` (String) The version of WAN Edge.
+- `version` (String) The version of Fortinet WAN Edge. Please check Alkira Portal for all supported versions.
 
 Optional:
 

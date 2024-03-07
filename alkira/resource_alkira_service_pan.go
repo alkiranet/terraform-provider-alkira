@@ -85,16 +85,18 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Computed:    true,
 			},
 			"global_protect_enabled": {
-				Description: "Enable global protect option or not. Default is `false`",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Description: "Enable global protect option or not. " +
+					"Default is `false`",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"global_protect_segment_options": {
-				Description: "A mapping of segment_id -> segment_options. The only segment names " +
-					"allowed are the segments that are already associated with the service." +
-					"options should apply. If global_protect_enabled is set to false, " +
-					"global_protect_segment_options shound not be included in your request.",
+				Description: "Segment options for segments that are already " +
+					"associated with the service. Options should " +
+					"apply. If `global_protect_enabled` is set to false, " +
+					"`global_protect_segment_options` shound not be included " +
+					"in your request.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -178,26 +180,30 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"segment_id": {
-										Description: "The segment ID for Global Protect options.",
-										Type:        schema.TypeString,
-										Required:    true,
+										Description: "The segment ID for Global " +
+											"Protect options.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"portal_enabled": {
-										Description: "indicates if the Global Protect Portal is " +
-											"enabled on this PAN instance",
+										Description: "indicates if the " +
+											"GlobalProtect Portal is enabled " +
+											"on this PAN instance",
 										Type:     schema.TypeBool,
 										Required: true,
 									},
 									"gateway_enabled": {
-										Description: "indicates if the Global Protect Gateway " +
-											"is enabled on this PAN instance",
+										Description: "indicates if the Global " +
+											"Protect Gateway is enabled on " +
+											"this PAN instance",
 										Type:     schema.TypeBool,
 										Required: true,
 									},
 									"prefix_list_id": {
-										Description: "Prefix List with Client IP Pool.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "Prefix List with " +
+											"Client IP Pool.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 								},
 							},
@@ -208,16 +214,18 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"license_type": {
 				Description: "PAN license type, either `BRING_YOUR_OWN` " +
 					"or `PAY_AS_YOU_GO`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
 			"license_sub_type": {
 				Description: "PAN sub license type, either `CREDIT_BASED` " +
 					"or `MODEL_BASED`. (BETA)",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"CREDIT_BASED", "MODEL_BASED"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"CREDIT_BASED", "MODEL_BASED"}, false),
 			},
 			"panorama_enabled": {
 				Description: "Enable Panorama or not. Default value " +
@@ -322,22 +330,25 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, " +
 					"could be either `IPSEC` or `GRE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPSEC",
-				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPSEC",
+				ValidateFunc: validation.StringInSlice([]string{
+					"IPSEC", "GRE"}, false),
 			},
 			"type": {
 				Description: "The type of the PAN firewall. Either " +
 					"'VM-300', 'VM-500' or 'VM-700'",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"VM-300", "VM-500", "VM-700", "VM-SIM"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"VM-300", "VM-500", "VM-700", "VM-SIM"}, false),
 			},
 			"version": {
-				Description: "The version of the PAN firewall.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The version of the PAN firewall. Please check " +
+					"Alkira Portal for all supported versions.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
@@ -351,15 +362,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the associated firewall zone.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The name of the associated " +
+								"firewall zone.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"groups": {
-							Description: "The list of groups associated with the zone.",
-							Type:        schema.TypeList,
-							Required:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "The list of groups associated " +
+								"with the zone.",
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},

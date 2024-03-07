@@ -42,7 +42,7 @@ resource "alkira_connector_cisco_sdwan" "test" {
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
 - `vedge` (Block List, Min: 1) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
-- `version` (String) The version of Cisco SD-WAN.
+- `version` (String) The version of Cisco SD-WAN. Please check Alkira Portal for all supported versions.
 - `vrf_segment_mapping` (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
 
 ### Optional

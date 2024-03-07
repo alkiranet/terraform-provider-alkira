@@ -161,7 +161,7 @@ Required:
 - `model` (String) The model of the Infoblox instance.
 - `password` (String) The password associated with the infoblox instance.
 - `type` (String) The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.
-- `version` (String) The version of the Infoblox instance to be used.
+- `version` (String) The version of the Infoblox to be used. Please check Alkira Portal for all supported versions
 
 Optional:
 

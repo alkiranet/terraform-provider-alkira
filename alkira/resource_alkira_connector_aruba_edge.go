@@ -123,12 +123,14 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account_name": {
-							Description: "The account name given in Silver Peak orchestrator registration.",
+							Description: "The account name given in Silver " +
+								"Peak orchestrator registration.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"account_key": {
-							Description: "The account key generated in Silver Peak orchestrator account.",
+							Description: "The account key generated in " +
+								"Silver Peak orchestrator account.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -184,15 +186,18 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "IPSEC",
-				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"IPSEC", "GRE"}, false),
 			},
 			"version": {
-				Description: "The version of the Aruba Edge connector.",
+				Description: "The version of the Aruba Edge. Please check " +
+					"Alkira Portal for all supported versions.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"enabled": {
-				Description: "Is the connector enabled. Default is `true`.",
+				Description: "Whether the connector is enabled. Default " +
+					"is `true`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,

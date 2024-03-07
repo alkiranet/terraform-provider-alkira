@@ -69,7 +69,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Computed:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
@@ -80,10 +81,15 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Default:     "VEDGE",
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.",
+				Description:  "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
+					"`10LARGE` and `20LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE",
+					"2LARGE", "4LARGE", "5LARGE",
+					"10LARGE", "20LARGE"}, false),
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
@@ -138,7 +144,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Required: true,
 			},
 			"version": {
-				Description: "The version of Cisco SD-WAN.",
+				Description: "The version of Cisco SD-WAN. Please check Alkira " +
+					"Portal for all supported versions.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -148,8 +155,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advertise_on_prem_routes": {
-							Description: "Advertise On Prem Routes. Default value " +
-								"is `false`.",
+							Description: "Advertise On Prem Routes. Default " +
+								"value is `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -162,8 +169,10 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Default:  false,
 						},
 						"customer_asn": {
-							Description: "BGP ASN on the customer premise side. A typical value for 2 byte segment " +
-								"is `64523` and `4200064523` for 4 byte segment.",
+							Description: "BGP ASN on the customer premise " +
+								"side. A typical value for 2 byte segment " +
+								"is `64523` and `4200064523` for 4 byte " +
+								"segment.",
 							Type:     schema.TypeInt,
 							Required: true,
 						},

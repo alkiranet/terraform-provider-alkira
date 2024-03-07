@@ -74,7 +74,7 @@ resource "alkira_service_checkpoint" "test" {
 - `password` (String) The Checkpoint Firewall service password.
 - `segment_id` (String) The ID of the segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
-- `version` (String) The version of the Checkpoint Firewall.
+- `version` (String) The version of the Checkpoint Firewall. Please check all supported versions from Alkira Portal.
 
 ### Optional
 
