@@ -110,7 +110,7 @@ Required:
 - `fmc_registration_key` (String) FMC Registration Key.
 - `hostname` (String) Hostname of the Firepower Firewall.
 - `license_type` (String) Cisco Firepower Firewall license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
-- `version` (String) Cisco Firepower Firewall version.
+- `version` (String) Cisco Firepower Firewall version. Please check Alkira Portal for all supported versions.
 
 Optional:
 

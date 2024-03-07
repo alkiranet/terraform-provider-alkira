@@ -168,16 +168,19 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Required:    true,
 						},
 						"version": {
-							Description: "Cisco Firepower Firewall version.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "Cisco Firepower Firewall version. " +
+								"Please check Alkira Portal for all supported " +
+								"versions.",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"license_type": {
 							Description: "Cisco Firepower Firewall license " +
 								"type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 						},
 						"admin_password": {
 							Description: "Firepower Firewall Admin Password.",

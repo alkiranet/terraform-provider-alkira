@@ -212,22 +212,25 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
 					"it could be either `IPSEC` or `GRE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPSEC",
-				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPSEC",
+				ValidateFunc: validation.StringInSlice([]string{
+					"IPSEC", "GRE"}, false),
 			},
 			"version": {
-				Description: "The version of the Fortinet Firewall.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The version of the Fortinet Firewall. Please " +
+					"check Alkira Portal for all supported versions.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}

@@ -223,8 +223,9 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Required:    true,
 			},
 			"segment_options": {
-				Description: "The segment options as used by your Checkpoint firewall. No more than one " +
-					"segment option will be accepted.",
+				Description: "The segment options as used by your Checkpoint " +
+					"firewall. No more than one segment option will be " +
+					"accepted.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -235,10 +236,11 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "The name of the associated zone. Default value is `DEFAULT`.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "DEFAULT",
+							Description: "The name of the associated zone. " +
+								"Default value is `DEFAULT`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "DEFAULT",
 						},
 						"groups": {
 							Description: "The list of Groups associated with the zone.",
@@ -250,22 +252,27 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				},
 			},
 			"size": {
-				Description:  "The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),
+				Description: "The size of the service, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
-				Description:  "Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPSEC",
-				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
+				Description: "Tunnel Protocol, default to `IPSEC`, could be " +
+					"either `IPSEC` or `GRE`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPSEC",
+				ValidateFunc: validation.StringInSlice([]string{
+					"IPSEC", "GRE"}, false),
 			},
 			"version": {
-				Description: "The version of the Checkpoint Firewall.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The version of the Checkpoint Firewall. Please " +
+					"check all supported versions from Alkira Portal.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}

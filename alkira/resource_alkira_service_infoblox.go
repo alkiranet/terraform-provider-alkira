@@ -186,14 +186,17 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Description: "The type of the Infoblox instance that " +
 								"is to be provisioned. The value could be `MASTER`, " +
 								"`MASTER_CANDIDATE` and `MEMBER`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
 						},
 						"version": {
-							Description: "The version of the Infoblox instance to be used.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The version of the Infoblox to be " +
+								"used. Please check Alkira Portal for all " +
+								"supported versions",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -201,9 +204,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			"license_type": {
 				Description: "Infoblox license type, only " +
 					"`BRING_YOUR_OWN` is supported right now.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"BRING_YOUR_OWN"}, false),
 			},
 			"name": {
 				Description: "Name of the Infoblox service.",

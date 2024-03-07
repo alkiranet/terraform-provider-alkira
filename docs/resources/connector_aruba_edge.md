@@ -59,14 +59,14 @@ resource "alkira_connector_aruba_edge" "test1" {
 - `name` (String) The name of the connector.
 - `segment_ids` (Set of String) The IDs of the segments associated with theAruba Edge connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
-- `version` (String) The version of the Aruba Edge connector.
+- `version` (String) The version of the Aruba Edge. Please check Alkira Portal for all supported versions.
 
 ### Optional
 
 - `aruba_edge_vrf_mapping` (Block Set) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
 - `billing_tag_ids` (Set of Number) IDs of billing tags.
 - `boost_mode` (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
-- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
 
