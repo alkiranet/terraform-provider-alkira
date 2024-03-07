@@ -151,6 +151,12 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"prefix_list_id": {
+							Description: "The ID of the prefix list (" +
+								"`alkira_policy_prefix_list`).",
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"billing_tag_id": {
 							Description: "Billing tag (`alkira_billing_tag`).",
 							Type:        schema.TypeInt,
