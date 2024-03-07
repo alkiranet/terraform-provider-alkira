@@ -69,6 +69,9 @@ func expandConnectorRemoteAccessAuhtorization(in *schema.Set, cxp string, m inte
 		if v, ok := auth["split_tunneling"].(bool); ok {
 			mapping.SplitTunneling = v
 		}
+		if v, ok := auth["prefix_list_id"].(int); ok {
+			mapping.PrefixListId = v
+		}
 		if v, ok := auth["subnet"].(string); ok {
 			cxpMapping.Cxp = cxp
 			cxpMapping.Subnets = []string{v}
@@ -180,6 +183,7 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 			"segment_id":      option.SegmentId,
 			"user_group_name": option.UserGroupMappings[0].Name,
 			"split_tunneling": option.UserGroupMappings[0].SplitTunneling,
+			"prefix_list_id":  option.UserGroupMappings[0].PrefixListId,
 			"billing_tag_id":  option.UserGroupMappings[0].BillingTag,
 			"subnet":          option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets,
 		}

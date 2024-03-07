@@ -65,6 +65,7 @@ Required:
 Optional:
 
 - `billing_tag_id` (Number) Billing tag (`alkira_billing_tag`).
+- `prefix_list_id` (Number) The ID of the prefix list (`alkira_policy_prefix_list`).
 - `split_tunneling` (Boolean) Enable split tunneling to send traffic destined to only IP addresses in the prefix list over the VPN tunnel. Default is `false`
 
 
