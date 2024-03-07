@@ -50,6 +50,7 @@ type ConnectorRemoteAccessSegmentOptions struct {
 type ConnectorRemoteAccessUserGroupMappings struct {
 	BillingTag          int                                       `json:"billingTag,omitempty"`
 	Name                string                                    `json:"name"`
+	PrefixListId        int                                       `json:"prefixListId"`
 	SplitTunneling      bool                                      `json:"splitTunneling"`
 	CxpToSubnetsMapping []ConnectorRemoteAccessCxpToSubnetMapping `json:"cxpToSubnetsMapping"`
 }
