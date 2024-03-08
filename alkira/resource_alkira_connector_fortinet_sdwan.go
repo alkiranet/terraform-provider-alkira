@@ -149,8 +149,8 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							Description: "The version of Fortinet WAN Edge. " +
 								"Please check Alkira Portal for all supported " +
 								"versions.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
