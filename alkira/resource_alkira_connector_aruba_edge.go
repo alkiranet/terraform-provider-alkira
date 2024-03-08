@@ -125,14 +125,14 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 						"account_name": {
 							Description: "The account name given in Silver " +
 								"Peak orchestrator registration.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"account_key": {
 							Description: "The account key generated in " +
 								"Silver Peak orchestrator account.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"host_name": {
 							Description: "The host name given to the Aruba SD-WAN " +
@@ -183,24 +183,24 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 					"are the only valid options. IPSEC can only be used with " +
 					"azure. GRE can only be used with AWS. IPSEC is the " +
 					"default selection. ",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "IPSEC",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "IPSEC",
 				ValidateFunc: validation.StringInSlice([]string{
 					"IPSEC", "GRE"}, false),
 			},
 			"version": {
 				Description: "The version of the Aruba Edge. Please check " +
 					"Alkira Portal for all supported versions.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"enabled": {
 				Description: "Whether the connector is enabled. Default " +
 					"is `true`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 		},
 	}

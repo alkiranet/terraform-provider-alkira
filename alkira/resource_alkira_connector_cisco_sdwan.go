@@ -71,8 +71,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created " +
 					"with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"type": {
 				Description: "The type of Cisco SD-WAN. Default value is `VEDGE`.",
@@ -81,11 +81,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Default:     "VEDGE",
 			},
 			"size": &schema.Schema{
-				Description:  "The size of the connector, one of `SMALL`, " +
+				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
 					"`10LARGE` and `20LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE",
 					"2LARGE", "4LARGE", "5LARGE",
@@ -146,8 +146,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			"version": {
 				Description: "The version of Cisco SD-WAN. Please check Alkira " +
 					"Portal for all supported versions.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"vrf_segment_mapping": {
 				Description: "Specify target segment for VRF.",
