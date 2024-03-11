@@ -52,7 +52,7 @@ resource "alkira_policy_routing" "test" {
 - `advertise_internet_exit` (Boolean) Advertise Alkira’s Internet Connector to selected scope. This only applies to `OUTBOUND` policy. Default value is `true`.
 - `advertise_on_prem_routes` (Boolean) Advertise routes from other on premise connectors to selected scope. Default value is `false`.
 - `description` (String) The description of the routing policy.
-- `enable_as_override` (Boolean) Whether enable AS-override on associated connectors
+- `enable_as_override` (Boolean) Whether enable AS-override on associated connectors. Default value is `true`.
 - `enabled` (Boolean) Whether the routing policy is enabled. By default, it is set to `false`.
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. Implicit group ID of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
 - `rule` (Block List) (see [below for nested schema](#nestedblock--rule))
