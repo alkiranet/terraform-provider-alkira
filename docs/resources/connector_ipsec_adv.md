@@ -125,11 +125,11 @@ Required:
 Optional:
 
 - `advanced_options` (Block List, Max: 1) Advanced options for the IPSec gateway. (see [below for nested schema](#nestedblock--gateway--tunnel--advanced_options))
-- `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel.
 - `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`). `advanced_options` block is required when this is used.
 
 Read-Only:
 
+- `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel.
 - `id` (String) The ID of the tunnel.
 - `number` (Number) The number of the tunnel.
 
