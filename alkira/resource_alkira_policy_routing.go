@@ -111,10 +111,10 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			},
 			"enable_as_override": {
 				Description: "Whether enable AS-override on associated " +
-					"connectors",
+					"connectors. Default value is `true`.",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"rule": {
 				Type:     schema.TypeList,
