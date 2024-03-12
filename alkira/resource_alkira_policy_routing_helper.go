@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -157,7 +156,7 @@ func expandPolicyRoutingRule(in []interface{}) ([]alkira.RoutePolicyRules, error
 func setPolicyRoutingRules(in []alkira.RoutePolicyRules, d *schema.ResourceData) error {
 
 	if len(in) == 0 {
-		return errors.New("Invalid Checkpoint Firewall instance input.")
+		return nil
 	}
 
 	rules := make([]map[string]interface{}, len(in))
