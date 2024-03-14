@@ -80,7 +80,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 			"ldap_settings": {
 				Description: "LDAP Settings when `authentication_mode` " +
 					"is `LDAP`.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
