@@ -104,6 +104,13 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"search_scope_domain": {
+							Description: "Base DN to query and validate " +
+								"remote users that will connect to the " +
+								"connector.",
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},

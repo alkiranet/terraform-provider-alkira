@@ -45,7 +45,7 @@ resource "alkira_connector_remote_access" "test1" {
 - `billing_tag_ids` (Set of Number) Billing tags associated with the connector.
 - `concurrent_sessions_alert_threshold` (Number) The threshhold for concurrent sessions alert.
 - `enable_dynamic_region_mapping` (Boolean) Enable dynamic region mapping. Default value is `true`.
-- `ldap_settings` (Block List) LDAP Settings when `authentication_mode` is `LDAP`. (see [below for nested schema](#nestedblock--ldap_settings))
+- `ldap_settings` (Block Set) LDAP Settings when `authentication_mode` is `LDAP`. (see [below for nested schema](#nestedblock--ldap_settings))
 - `name_server` (String) Name server.
 
 ### Read-Only
@@ -78,6 +78,7 @@ Required:
 - `destination_address` (String) Destination dddress.
 - `ldap_type` (String) The LDAP type.
 - `management_segment_id` (String) The management segment.
+- `search_scope_domain` (String) Base DN to query and validate remote users that will connect to the connector.
 
 ## Import
 

@@ -206,6 +206,7 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 			"ldap_type":             connector.AuthenticationOptions.LdapSettings.LdapType,
 			"destination_address":   connector.AuthenticationOptions.LdapSettings.DestinationAddress,
 			"management_segment_id": connector.AuthenticationOptions.LdapSettings.ManagementSegmentId,
+			"search_scope_domain":   connector.AuthenticationOptions.LdapSettings.SearchScopeDomain,
 		}
 		d.Set("ldap_settings", settings)
 	}
