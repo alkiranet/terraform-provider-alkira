@@ -23,7 +23,7 @@ cloud.google.com/go/storage/internal/apiv2/stubs
 # github.com/agext/levenshtein v1.2.2
 ## explicit
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v1.47.2
+# github.com/alkiranet/alkira-client-go v1.47.4
 ## explicit; go 1.20
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-cidr v1.0.1
@@ -161,6 +161,9 @@ github.com/hashicorp/go-multierror
 ## explicit; go 1.13
 github.com/hashicorp/go-plugin
 github.com/hashicorp/go-plugin/internal/plugin
+# github.com/hashicorp/go-retryablehttp v0.7.5
+## explicit; go 1.13
+github.com/hashicorp/go-retryablehttp
 # github.com/hashicorp/go-safetemp v1.0.0
 ## explicit
 github.com/hashicorp/go-safetemp
