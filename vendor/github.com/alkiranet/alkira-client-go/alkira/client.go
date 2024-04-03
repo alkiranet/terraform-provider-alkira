@@ -4,6 +4,7 @@ package alkira
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-retryablehttp"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -28,7 +30,7 @@ const defaultRetryInterval time.Duration = 5 * time.Second
 const defaultRetryTimeout time.Duration = 60 * time.Second
 
 type AlkiraClient struct {
-	Client          *http.Client
+	Client          *retryablehttp.Client
 	URI             string
 	Username        string
 	Password        string
@@ -103,24 +105,37 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 		return nil, fmt.Errorf("invalid credentials to authenticate")
 	}
 
-	// Get the tenant network ID
+	// Create retry-able HTTP client
 	tr := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	var httpClient = &http.Client{
-		Timeout:   timeout,
-		Transport: tr,
+	// Config retry client
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Transport = tr
+	retryClient.RetryMax = 5
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+
+		shouldRetry, e := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+
+		// In addition, retry on 409 as well due to DELETE API.
+		if !shouldRetry {
+			if resp.StatusCode == 409 || resp.StatusCode == 500 {
+				return true, fmt.Errorf("%s", resp.Status)
+			}
+		}
+		return shouldRetry, e
 	}
 
+	// Get the tenant network ID
 	var result []TenantNetworkId
 	tenantNetworkUrl := apiUrl + "/tenantnetworksummaries"
 
-	tenantNetworkRequest, _ := http.NewRequest("GET", tenantNetworkUrl, nil)
+	tenantNetworkRequest, _ := retryablehttp.NewRequest("GET", tenantNetworkUrl, nil)
 	tenantNetworkRequest.Header.Set("Content-Type", "application/json")
 	tenantNetworkRequest.Header.Set("Authorization", auth)
-	tenantNetworkResponse, err := httpClient.Do(tenantNetworkRequest)
+	tenantNetworkResponse, err := retryClient.Do(tenantNetworkRequest)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to make tenant network request, %v", err)
@@ -147,7 +162,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 
 	// Construct our client with all information
 	client := &AlkiraClient{
-		Client:          httpClient,
+		Client:          retryClient,
 		URI:             apiUrl,
 		Username:        username,
 		Password:        password,
@@ -172,32 +187,44 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		"secret":   secret,
 	})
 
-	// Login to the portal
+	// Create retry-able HTTP client
 	tr := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	var httpClient = &http.Client{
-		Timeout:   timeout,
-		Transport: tr,
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 5
+	retryClient.HTTPClient.Transport = tr
+
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		shouldRetry, e := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+
+		// In addition, retry on 409 as well due to DELETE
+		if !shouldRetry && resp != nil {
+			if resp.StatusCode == 409 {
+				return true, fmt.Errorf("%s", resp.Status)
+			}
+		}
+		return shouldRetry, e
 	}
 
+	// Login to the portal
 	jar := &Session{}
 	jar.jar = make(map[string][]*http.Cookie)
-	httpClient.Jar = jar
+	retryClient.HTTPClient.Jar = jar
 
 	// User login
 	loginUrl := fmt.Sprintf("%s/user/login", apiUrl)
 
-	request, requestErr := http.NewRequest("POST", loginUrl, bytes.NewBuffer(loginRequestBody))
+	request, requestErr := retryablehttp.NewRequest("POST", loginUrl, bytes.NewBuffer(loginRequestBody))
 
 	if requestErr != nil {
 		return nil, fmt.Errorf("failed to create login request, %v", requestErr)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	response, err := httpClient.Do(request)
+	response, err := retryClient.Do(request)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to make login request, %v", err)
@@ -214,9 +241,9 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	// Obtain the session
 	sessionUrl := apiUrl + "/sessions"
 
-	sessionRequest, _ := http.NewRequest("POST", sessionUrl, bytes.NewBuffer(userAuthData))
+	sessionRequest, _ := retryablehttp.NewRequest("POST", sessionUrl, bytes.NewBuffer(userAuthData))
 	sessionRequest.Header.Set("Content-Type", "application/json")
-	sessionResponse, err := httpClient.Do(sessionRequest)
+	sessionResponse, err := retryClient.Do(sessionRequest)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to make session request, %v", err)
@@ -235,9 +262,9 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	var result []TenantNetworkId
 	tenantNetworkUrl := apiUrl + "/tenantnetworksummaries"
 
-	tenantNetworkRequest, _ := http.NewRequest("GET", tenantNetworkUrl, nil)
+	tenantNetworkRequest, _ := retryablehttp.NewRequest("GET", tenantNetworkUrl, nil)
 	tenantNetworkRequest.Header.Set("Content-Type", "application/json")
-	tenantNetworkResponse, err := httpClient.Do(tenantNetworkRequest)
+	tenantNetworkResponse, err := retryClient.Do(tenantNetworkRequest)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to make tenant network request, %v", err)
@@ -268,7 +295,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		Username:        username,
 		Password:        password,
 		TenantNetworkId: strconv.Itoa(tenantNetworkId),
-		Client:          httpClient,
+		Client:          retryClient,
 		Provision:       provision,
 	}
 
@@ -280,7 +307,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	logf("DEBUG", "client-get URI: %s\n", uri)
 
 	requestId := "client-" + uuid.New().String()
-	request, _ := http.NewRequest("GET", uri, nil)
+	request, _ := retryablehttp.NewRequest("GET", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", ac.Authorization)
@@ -297,67 +324,7 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 {
-		if response.StatusCode == 429 {
-			retryAfter := response.Header.Get("Retry-After") + "s"
-
-			logf("ERROR", "client-get(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
-			retryAfterSec, _ := time.ParseDuration(retryAfter)
-			retryInterval := retryAfterSec * time.Second
-			retryTimeout := 60 * time.Second
-
-			err := wait.Poll(retryInterval, retryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 {
-					return true, nil
-				}
-
-				logf("ERROR", "client-get(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): %d retry timeout", requestId, response.StatusCode)
-				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
-				}
-			}
-		} else {
-			if response.StatusCode < 500 {
-				return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
-			}
-
-			err := wait.Poll(defaultRetryInterval, defaultRetryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 {
-					return true, nil
-				}
-
-				logf("WARN", "client-get(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-get(%s): %d retry timeout", requestId, response.StatusCode)
-				} else {
-					return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
-				}
-			}
-		}
+		return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
 	}
 
 	//
@@ -373,7 +340,7 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	logf("DEBUG", "client-get URI: %s\n", uri)
 
 	requestId := "client-" + uuid.New().String()
-	request, _ := http.NewRequest("GET", uri, nil)
+	request, _ := retryablehttp.NewRequest("GET", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", ac.Authorization)
@@ -390,7 +357,7 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("%s(%d): %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("client-get-by-name(%s): %d %s", requestId, response.StatusCode, string(data))
 	}
 
 	//
@@ -419,7 +386,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	}
 
 	requestId := "client-" + uuid.New().String()
-	request, _ := http.NewRequest("POST", uri, bytes.NewBuffer(body))
+	request, _ := retryablehttp.NewRequest("POST", uri, bytes.NewBuffer(body))
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", ac.Authorization)
@@ -437,68 +404,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 {
-
-		if response.StatusCode == 429 {
-			retryAfter := response.Header.Get("Retry-After") + "s"
-
-			logf("ERROR", "client-create(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
-			retryAfterSec, _ := time.ParseDuration(retryAfter)
-			retryInterval := retryAfterSec * time.Second
-			retryTimeout := 60 * time.Second
-
-			err := wait.Poll(retryInterval, retryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 || response.StatusCode == 201 {
-					return true, nil
-				}
-
-				logf("ERROR", "client-create(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): %d retry timeout", requestId, response.StatusCode), nil
-				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d failed to create.", requestId, response.StatusCode), nil
-				}
-			}
-		} else {
-			if response.StatusCode < 500 {
-				return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil
-			}
-
-			err := wait.Poll(defaultRetryInterval, defaultRetryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 || response.StatusCode == 201 {
-					return true, nil
-				}
-
-				logf("ERROR", "client-create(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return nil, "", fmt.Errorf("client-create(%s): retry timeout", requestId), nil
-				} else {
-					return nil, "", fmt.Errorf("client-create(%s): %d failed to create.", requestId, response.StatusCode), nil
-				}
-			}
-		}
+		return nil, "", fmt.Errorf("client-create(%s): %d %s.", requestId, response.StatusCode, string(data)), nil
 	}
 
 	//
@@ -558,7 +464,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	}
 
 	requestId := "client-" + uuid.New().String()
-	request, _ := http.NewRequest("DELETE", uri, nil)
+	request, _ := retryablehttp.NewRequest("DELETE", uri, nil)
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", ac.Authorization)
@@ -575,39 +481,13 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 
 	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 
-	if response.StatusCode != 200 && response.StatusCode != 202 {
+	if response.StatusCode < 200 || response.StatusCode > 299 {
 		if response.StatusCode == 404 {
 			logf("INFO", "client-delete(%s): %d resource was already deleted.\n", requestId, response.StatusCode)
 			return "", nil, nil
 		}
 
-		// Retry several more times and see if the delete goes through
-		retryInterval := 2 * time.Second
-		retryTimeout := 10 * time.Second
-
-		err := wait.Poll(retryInterval, retryTimeout, func() (bool, error) {
-			response, err = ac.Client.Do(request)
-			if err != nil {
-				return false, err
-			}
-
-			data, _ = ioutil.ReadAll(response.Body)
-
-			if response.StatusCode == 200 || response.StatusCode == 202 || response.StatusCode == 404 {
-				return true, nil
-			}
-
-			logf("WARN", "client-delete(%s): %d retrying.", requestId, response.StatusCode)
-			return false, nil
-		})
-
-		if err == wait.ErrWaitTimeout {
-			return "", fmt.Errorf("client-delete(%s): retry timeout", requestId), nil
-		}
-
-		if err != nil {
-			return "", fmt.Errorf("client-delete(%s): %d", requestId, response.StatusCode), nil
-		}
+		return "", fmt.Errorf("client-delete(%s): %d %s", requestId, response.StatusCode, string(data)), nil
 	}
 
 	// If provision is enabled, wait for provision to finish and
@@ -665,7 +545,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	}
 
 	requestId := "client-" + uuid.New().String()
-	request, _ := http.NewRequest("PUT", uri, bytes.NewBuffer(body))
+	request, _ := retryablehttp.NewRequest("PUT", uri, bytes.NewBuffer(body))
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", ac.Authorization)
@@ -683,67 +563,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	logf("DEBUG", "client-update(%s): %d RSP: %v\n", requestId, response.StatusCode, data)
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
-		if response.StatusCode < 500 {
-			return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
-		}
-
-		if response.StatusCode == 429 {
-			retryAfter := response.Header.Get("Retry-After") + "s"
-
-			logf("WARN", "client-update(%s): %d too many requests, retry after %d.", requestId, response.StatusCode, retryAfter)
-			retryAfterSec, _ := time.ParseDuration(retryAfter)
-			retryInterval := retryAfterSec * time.Second
-			retryTimeout := 60 * time.Second
-
-			err := wait.Poll(retryInterval, retryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 || response.StatusCode == 202 {
-					return true, nil
-				}
-
-				logf("WARN", "client-update(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return "", fmt.Errorf("client-update(%s): retry timeout, %v", requestId, data), nil
-				} else {
-					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
-				}
-			}
-		} else {
-			err := wait.Poll(defaultRetryInterval, defaultRetryTimeout, func() (bool, error) {
-				response, err = ac.Client.Do(request)
-
-				if err != nil {
-					return false, err
-				}
-
-				data, _ = ioutil.ReadAll(response.Body)
-
-				if response.StatusCode == 200 || response.StatusCode == 202 {
-					return true, nil
-				}
-
-				logf("WARN", "client-update(%s): %d retrying...", requestId, response.StatusCode)
-				return false, nil
-			})
-
-			if err != nil {
-				if err == wait.ErrWaitTimeout {
-					return "", fmt.Errorf("client-update(%s): retry timeout", requestId), nil
-				} else {
-					return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
-				}
-			}
-		}
+		return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil
 	}
 
 	//
