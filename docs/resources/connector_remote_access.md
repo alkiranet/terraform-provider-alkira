@@ -77,7 +77,7 @@ Required:
 - `bind_user_domain` (String) The domain.
 - `destination_address` (String) Destination dddress.
 - `ldap_type` (String) The LDAP type.
-- `management_segment_id` (String) The management segment.
+- `management_segment_id` (Number) The management segment.
 - `search_scope_domain` (String) Base DN to query and validate remote users that will connect to the connector.
 
 ## Import

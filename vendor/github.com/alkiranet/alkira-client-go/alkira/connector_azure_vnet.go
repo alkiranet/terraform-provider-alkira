@@ -7,6 +7,17 @@ import (
 	"fmt"
 )
 
+type ConnectorVnetUdrList struct {
+	Id         string `json:"id"`
+	UdrListIds []int  `json:"udrListIds"`
+	Value      string `json:"value"`
+}
+
+type ConnectorVnetUdrLists struct {
+	Cidrs   []ConnectorVnetUdrList `json:"cidrs"`
+	Subnets []ConnectorVnetUdrList `json:"subnets"`
+}
+
 type ConnectorVnetServiceRoute struct {
 	Id             string   `json:"id"`
 	ServiceTags    []string `json:"serviceTags"`
