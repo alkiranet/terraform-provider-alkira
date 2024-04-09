@@ -29,7 +29,7 @@ func expandConnectorRemoteAccessLdapSettings(in *schema.Set, m interface{}) *alk
 		if v, ok := setting["ldap_type"].(string); ok {
 			ldapSettings.LdapType = v
 		}
-		if v, ok := setting["management_segment_id"].(string); ok {
+		if v, ok := setting["management_segment_id"].(int); ok {
 			ldapSettings.ManagementSegmentId = v
 		}
 		if v, ok := setting["search_scope_domain"].(string); ok {

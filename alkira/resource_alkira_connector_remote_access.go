@@ -101,7 +101,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 						},
 						"management_segment_id": {
 							Description: "The management segment.",
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"search_scope_domain": {

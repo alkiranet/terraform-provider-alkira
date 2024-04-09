@@ -38,7 +38,7 @@ type ConnectorRemoteAccessLdapSettings struct {
 	BindUserDomain      string `json:"bindUserDomain,omitempty"`
 	DestinationAddress  string `json:"destinationAddress,omitempty"`
 	LdapType            string `json:"ldapType,omitempty"`
-	ManagementSegmentId string `json:"managementSegmentId,omitempty"`
+	ManagementSegmentId int    `json:"managementSegmentId,omitempty"`
 	SearchScopeDomain   string `json:"searchScopeDomain,omitempty"`
 }
 

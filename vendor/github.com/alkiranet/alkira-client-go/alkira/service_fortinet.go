@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2024 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -20,6 +20,7 @@ type ServiceFortinet struct {
 	MaxInstanceCount int                      `json:"maxInstanceCount"`
 	MinInstanceCount int                      `json:"minInstanceCount"`
 	Name             string                   `json:"name"`
+	Scheme           string                   `json:"scheme,omitempty"`
 	Segments         []string                 `json:"segments"`
 	SegmentOptions   SegmentNameToZone        `json:"segmentOptions"`
 	Size             string                   `json:"size"`
