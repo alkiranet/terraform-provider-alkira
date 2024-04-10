@@ -19,19 +19,22 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_PORTAL"),
 			},
 			"username": {
-				Description: "Your Tenant Username. If this is not provided then `api_key` must have a value.",
+				Description: "Your username. If this is not provided then " +
+					"`api_key` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_USERNAME"),
 			},
 			"password": {
-				Description: "Your Tenant Password. If this is not provided then `api_key` must have a value.",
+				Description: "Your Tenant Password. If this is not provided " +
+					"then `api_key` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
 			},
 			"api_key": {
-				Description: "Your Alkira API key. If thie is not provided then `username` and `password` must have a value.",
+				Description: "Your Alkira API key. If thie is not provided " +
+					"then `username` and `password` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_API_KEY"),
@@ -44,9 +47,11 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
 			},
 			"auth": {
-				Description: "Authentication Method.",
+				Description: "Authentication with HTTP header. Default " +
+					"is `true`.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     true,
 				DefaultFunc: envDefaultFunc("ALKIRA_AUTH"),
 			},
 		},
