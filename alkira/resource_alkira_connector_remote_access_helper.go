@@ -201,13 +201,16 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 
 	// Set ldap_settings block
 	if connector.AuthenticationOptions.LdapSettings != nil {
-		settings := map[string]interface{}{
+		var settings []map[string]interface{}
+		setting := map[string]interface{}{
 			"bind_user_domain":      connector.AuthenticationOptions.LdapSettings.BindUserDomain,
 			"ldap_type":             connector.AuthenticationOptions.LdapSettings.LdapType,
 			"destination_address":   connector.AuthenticationOptions.LdapSettings.DestinationAddress,
 			"management_segment_id": connector.AuthenticationOptions.LdapSettings.ManagementSegmentId,
 			"search_scope_domain":   connector.AuthenticationOptions.LdapSettings.SearchScopeDomain,
 		}
+
+		settings = append(settings, setting)
 		d.Set("ldap_settings", settings)
 	}
 
