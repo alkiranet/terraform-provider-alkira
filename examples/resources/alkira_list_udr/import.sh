@@ -1,0 +1,1 @@
+terraform import alkira_list_udr.example LIST_ID
