@@ -67,6 +67,7 @@ resource "alkira_service_fortinet" "test1" {
 
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
+- `license_scheme` (String) The license scheme tells more about BYOL license method. `POINT_BASED` scheme refers to FortiFlex license whereas `TERM_BASED` refers to regular BYOL.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be deployed.
 - `password` (String) Fortinet password.

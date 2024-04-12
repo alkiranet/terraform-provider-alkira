@@ -145,6 +145,18 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					false,
 				),
 			},
+			"license_scheme": {
+				Description: "The license scheme tells more about BYOL license " +
+					"method. `POINT_BASED` scheme refers to FortiFlex license " +
+					"whereas `TERM_BASED` refers to regular BYOL.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "TERM_BASED",
+				ValidateFunc: validation.StringInSlice([]string{
+					"POINT_BASED", "TERM_BASED"},
+					false,
+				),
+			},
 			"management_server_ip": {
 				Description: "The IP addresses used to access the management " +
 					"server.",
@@ -293,6 +305,7 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("credential_id", f.CredentialId)
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
+	d.Set("license_scheme", f.Scheme)
 	d.Set("management_server_ip", f.ManagementServer.IpAddress)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
