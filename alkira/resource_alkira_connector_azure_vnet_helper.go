@@ -31,6 +31,13 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 					vnetSubnet["service_tags"] = serviceRoutes.ServiceTags
 				}
 			}
+
+			for _, udrLists := range routingOptions.UdrLists.Subnets {
+				if vnetSubnet["subnet_id"] == udrLists.Id {
+					vnetSubnet["udr_list_ids"] = udrLists.UdrListIds
+				}
+			}
+
 			vnetSubnets = append(vnetSubnets, vnetSubnet)
 		}
 	}
@@ -53,6 +60,12 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 				}
 			}
 
+			for _, udrLists := range routingOptions.UdrLists.Cidrs {
+				if vnetCidr["cidr"] == udrLists.Value {
+					vnetCidr["udr_list_ids"] = udrLists.UdrListIds
+				}
+			}
+
 			vnetCidrs = append(vnetCidrs, vnetCidr)
 		}
 	}
@@ -71,6 +84,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 	importOptions.PrefixListIds = convertTypeListToIntList(d.Get("routing_prefix_list_ids").([]interface{}))
 
 	serviceRoutes := alkira.ConnectorVnetServiceRoutes{}
+	udrLists := alkira.ConnectorVnetUdrLists{}
 
 	// Processing vnet_subnet blocks
 	for _, block := range d.Get("vnet_subnet").(*schema.Set).List() {
@@ -127,6 +141,23 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 
 			serviceRoutes.Subnets = append(serviceRoutes.Subnets, subnetServiceRoute)
 		}
+
+		// Processing UDR list for subnet
+		if content["udr_list_ids"].(*schema.Set).Len() > 0 {
+			subnetUdrList := alkira.ConnectorVnetUdrList{}
+
+			if v, ok := content["subnet_id"].(string); ok {
+				subnetUdrList.Id = v
+			}
+
+			if v, ok := content["subnet_cidr"].(string); ok {
+				subnetUdrList.Value = v
+			}
+
+			subnetUdrList.UdrListIds = convertTypeSetToIntList(content["udr_list_ids"].(*schema.Set))
+
+			udrLists.Subnets = append(udrLists.Subnets, subnetUdrList)
+		}
 	}
 
 	// Processing vnet_cidr blocks
@@ -172,12 +203,25 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 
 			serviceRoutes.Cidrs = append(serviceRoutes.Cidrs, cidrServiceRoute)
 		}
+
+		// Processing UDR lists for CIDR
+		if content["udr_list_ids"].(*schema.Set).Len() > 0 {
+			cidrUdrList := alkira.ConnectorVnetUdrList{}
+
+			if v, ok := content["cidr"].(string); ok {
+				cidrUdrList.Value = v
+			}
+
+			cidrUdrList.UdrListIds = convertTypeSetToIntList(content["udr_list_ids"].(*schema.Set))
+			udrLists.Cidrs = append(udrLists.Cidrs, cidrUdrList)
+		}
 	}
 
 	vnetRouting := alkira.ConnectorVnetRouting{
 		ExportOptions: exportOptions,
 		ImportOptions: importOptions,
 		ServiceRoutes: serviceRoutes,
+		UdrLists:      udrLists,
 	}
 
 	return &vnetRouting, nil
