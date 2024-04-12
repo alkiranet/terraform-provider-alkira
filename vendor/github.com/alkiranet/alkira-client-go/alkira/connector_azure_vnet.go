@@ -64,6 +64,7 @@ type ConnectorVnetRouting struct {
 	ExportOptions ConnectorVnetExportOptions `json:"exportToCXPOptions,omitempty"`
 	ImportOptions ConnectorVnetImportOptions `json:"importFromCXPOptions"`
 	ServiceRoutes ConnectorVnetServiceRoutes `json:"serviceRoutes,omitempty"`
+	UdrLists      ConnectorVnetUdrLists      `json:"udrLists,omitempty"`
 }
 
 type ConnectorAzureVnet struct {
