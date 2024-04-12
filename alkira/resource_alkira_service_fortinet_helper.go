@@ -276,6 +276,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Cxp:              d.Get("cxp").(string),
 		Instances:        instances,
 		LicenseType:      d.Get("license_type").(string),
+		Scheme:           d.Get("license_scheme").(string),
 		ManagementServer: managementServer,
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
