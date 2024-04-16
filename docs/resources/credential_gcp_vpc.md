@@ -54,5 +54,3 @@ resource "alkira_credential_gcp_vpc" "gcp" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

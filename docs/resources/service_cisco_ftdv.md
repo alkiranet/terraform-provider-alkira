@@ -133,5 +133,3 @@ Required:
 Optional:
 
 - `groups` (List of String) The list of Groups associated with the zone.
-
-

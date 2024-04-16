@@ -105,5 +105,3 @@ Optional:
 
 - `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
 - `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
-
-

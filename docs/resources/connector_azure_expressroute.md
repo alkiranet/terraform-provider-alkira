@@ -101,5 +101,3 @@ Optional:
 Read-Only:
 
 - `segment_id` (Number) The ID of the segment.
-
-

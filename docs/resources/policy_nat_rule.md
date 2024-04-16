@@ -71,5 +71,3 @@ Optional:
 - `src_ports` (List of String) The list of ports for source.
 - `src_prefix_list_ids` (List of Number) The list of prefix IDs as source.
 - `src_prefixes` (List of String) The list of prefixes for source.
-
-

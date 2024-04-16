@@ -71,5 +71,3 @@ resource "alkira_policy_nat" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-
