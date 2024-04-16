@@ -233,7 +233,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "A specific BGP ASN for the connector. This cannot be specified " +
 					"when `connection_mode` is `VNET_PEERING`. This field cannot be updated " +
 					"once the connector has been provisioned. The ASN cannot be value that " +
-					"is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
+					"is [restricted by Azure]" +
+					"(https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
 				Type:     schema.TypeInt,
 				Optional: true,
 			},

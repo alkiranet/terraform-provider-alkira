@@ -46,14 +46,6 @@ func Provider() *schema.Provider {
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
 			},
-			"auth": {
-				Description: "Authentication with HTTP header. Default " +
-					"is `true`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     true,
-				DefaultFunc: envDefaultFunc("ALKIRA_AUTH"),
-			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -165,7 +157,8 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 		d.Get("password").(string),
 		d.Get("api_key").(string),
 		d.Get("provision").(bool),
-		d.Get("auth").(string))
+		"header",
+	)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")

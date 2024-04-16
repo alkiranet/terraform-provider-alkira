@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Credential for interacting with Azure.
   You could also provide your credentials via the following environmental variables:
-  AKAZUREAPPLICATION_IDAKAZURESUBSCRIPTION_IDAKAZURESECRET_KEYAKAZURETENANT_IDAKAZUREENVIRONMENT
+  AK_AZURE_APPLICATION_IDAK_AZURE_SUBSCRIPTION_IDAK_AZURE_SECRET_KEYAK_AZURE_TENANT_IDAK_AZURE_ENVIRONMENT
 ---
 
 # alkira_credential_azure_vnet (Resource)
@@ -49,5 +49,3 @@ resource "alkira_credential_azure_vnet" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

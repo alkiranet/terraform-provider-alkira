@@ -22,5 +22,3 @@ Use this data source to get an existing remote access connector.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

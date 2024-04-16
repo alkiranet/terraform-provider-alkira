@@ -90,5 +90,3 @@ Optional:
 Read-Only:
 
 - `sequence_no` (Number) System assigned number for each rule starting with `1000`. It defines the order of the rules.
-
-

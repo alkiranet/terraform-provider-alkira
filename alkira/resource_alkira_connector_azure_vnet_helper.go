@@ -126,7 +126,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 		}
 
 		// Processing service routes for subnet
-		if content["service_tags"].(*schema.Set).Len() > 0 {
+		if content["service_tags"] != nil && content["service_tags"].(*schema.Set).Len() > 0 {
 			subnetServiceRoute := alkira.ConnectorVnetServiceRoute{}
 
 			if v, ok := content["subnet_id"].(string); ok {
@@ -143,7 +143,7 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 		}
 
 		// Processing UDR list for subnet
-		if content["udr_list_ids"].(*schema.Set).Len() > 0 {
+		if content["udr_list_ids"] != nil && content["udr_list_ids"].(*schema.Set).Len() > 0 {
 			subnetUdrList := alkira.ConnectorVnetUdrList{}
 
 			if v, ok := content["subnet_id"].(string); ok {

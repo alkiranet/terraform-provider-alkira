@@ -29,5 +29,3 @@ data "alkira_connector_aws_vpc" "test" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The implicit group associated with the connector.
-
-

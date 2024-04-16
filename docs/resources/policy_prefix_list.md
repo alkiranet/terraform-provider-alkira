@@ -49,5 +49,3 @@ Optional:
 
 - `ge` (Number) Integer less than `32` but greater than mask `m` in prefix and less than `le`.
 - `le` (Number) Integer less than `32` but greater than mask `m` in prefix
-
-

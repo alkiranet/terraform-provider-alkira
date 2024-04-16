@@ -140,5 +140,3 @@ Required:
 Optional:
 
 - `zone_name` (String) The name of the associated zone. Default value is `DEFAULT`.
-
-

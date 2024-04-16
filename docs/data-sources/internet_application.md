@@ -22,5 +22,3 @@ This data source allows to retrieve an internet application.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-
