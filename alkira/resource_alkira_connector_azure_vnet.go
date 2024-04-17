@@ -159,7 +159,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Description: "User defined routes list (`list_udr`).",
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 					},
 				},
@@ -202,11 +202,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
-						"user_defined_routes": {
-							Description: "List of user defined routesb (UDR).",
+						"udr_list_ids": {
+							Description: "User defined routes list (`list_udr`).",
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
 					},
 				},
