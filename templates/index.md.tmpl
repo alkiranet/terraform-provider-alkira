@@ -9,7 +9,7 @@ description: |-
 # Alkira Provider
 
 Lifecycle management of Alkira Cloud Services Exchange. For the
-proivder, the following ENV variables are supported:
+provider, the following ENV variables are supported:
 
 * `ALKIRA_PORTAL`
 * `ALKIRA_USERNAME`
