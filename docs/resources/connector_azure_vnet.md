@@ -142,7 +142,7 @@ Optional:
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
-- `udr_list_ids` (Set of String) User defined routes list (`list_udr`).
+- `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 
 
 <a id="nestedblock--vnet_subnet"></a>
@@ -158,7 +158,7 @@ Optional:
 - `routing_options` (String) Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
 - `subnet_cidr` (String) VNET subnet CIDR.
-- `user_defined_routes` (Set of String) List of user defined routesb (UDR).
+- `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 
 ## Import
 
