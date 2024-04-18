@@ -16,7 +16,6 @@ resource "alkira_connector_ipsec_adv" "test" {
     ha_mode             = "ACTIVE"
 
     tunnel {
-      number        = 1
       preshared_key = "1234"
 
       customer_end_overlay_ip_reservation_id = "151e8723-xxxx-4d6d-be90-xxxxxxxxxxxx"
