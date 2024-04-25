@@ -101,7 +101,7 @@ func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 	}
 
 	// Construct single resource URI
-	uri := fmt.Sprintf("%s?name=%s", a.Uri, name)
+	uri := fmt.Sprintf("%s?name=%s&paginated=false", a.Uri, name)
 
 	data, state, err := a.Client.getByName(uri)
 
