@@ -329,7 +329,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 		}
 		d.Set("segment_id", segmentId)
 	} else {
-		return diag.FromErr(fmt.Errorf("the number of segments are invalid %n", numOfSegments))
+		return diag.FromErr(fmt.Errorf("failed to find segment"))
 	}
 
 	// Set provision state
