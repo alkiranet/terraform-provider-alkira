@@ -58,11 +58,9 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Required: true,
 			},
 			"included_group_ids": {
-				Description: "Defines the scope for the policy. Connector " +
+				Description: "Defines the scope for the policy. Connectors " +
 					"associated with groups defined here is where this policy " +
-					"would be applied. Groups that associated with branch or " +
-					"on-premise connectors can be used here. These group should " +
-					"not contain any cloud connector.",
+					"would be applied.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
