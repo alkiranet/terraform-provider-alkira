@@ -221,7 +221,10 @@ func constructVnetRouting(d *schema.ResourceData) (*alkira.ConnectorVnetRouting,
 		ExportOptions: exportOptions,
 		ImportOptions: importOptions,
 		ServiceRoutes: serviceRoutes,
-		UdrLists:      udrLists,
+	}
+
+	if len(udrLists.Subnets) > 0 || len(udrLists.Cidrs) > 0 {
+		vnetRouting.UdrLists = udrLists
 	}
 
 	return &vnetRouting, nil
