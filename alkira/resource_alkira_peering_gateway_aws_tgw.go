@@ -1,0 +1,167 @@
+package alkira
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/alkiranet/alkira-client-go/alkira"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func resourceAlkiraPeeringGatewayAwsTgw() *schema.Resource {
+	return &schema.Resource{
+		Description:   "Manage Peering Gateway AWS-TGW.",
+		CreateContext: resourcePeeringGatewayAwsTgwCreate,
+		ReadContext:   resourcePeeringGatewayAwsTgwRead,
+		UpdateContext: resourcePeeringGatewayAwsTgwUpdate,
+		DeleteContext: resourcePeeringGatewayAwsTgwDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision == true && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Description: "The name of the attachment.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"description": {
+				Description: "Description of the attachment.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"asn": {
+				Description: "Initiator of transit gateway attachment.",
+				Type:        schema.TypeInt,
+				Required:    true,
+			},
+			"cxp": {
+				Description: "The AWS region of the peer TGW.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"aws_region": {
+				Description: "AWS region of TGW.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"state": {
+				Description: "The state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+		},
+	}
+}
+
+func resourcePeeringGatewayAwsTgwCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	//client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPeeringGatewayAwsTgw(m.(*alkira.AlkiraClient))
+
+	request, err := generatePeeringGatewayAwsTgwRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// CREATE
+	response, _, err, _ := api.Create(request)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(string(response.Id))
+
+	return resourcePeeringGatewayAwsTgwRead(ctx, d, m)
+}
+
+func resourcePeeringGatewayAwsTgwRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	//client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPeeringGatewayAwsTgw(m.(*alkira.AlkiraClient))
+
+	resource, _, err := api.GetById(d.Id())
+
+	if err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
+	}
+
+	d.Set("name", resource.Name)
+	d.Set("description", resource.Description)
+	d.Set("asn", resource.Asn)
+	d.Set("cxp", resource.Cxp)
+	d.Set("aws_region", resource.AwsRegion)
+	d.Set("state", resource.State)
+
+	return nil
+}
+
+func resourcePeeringGatewayAwsTgwUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	//client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPeeringGatewayAwsTgw(m.(*alkira.AlkiraClient))
+
+	request, err := generatePeeringGatewayAwsTgwRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// UPDATE
+	_, err, _ = api.Update(d.Id(), request)
+
+	return nil
+}
+
+func resourcePeeringGatewayAwsTgwDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	// INIT
+	//client := m.(*alkira.AlkiraClient)
+	api := alkira.NewPeeringGatewayAwsTgw(m.(*alkira.AlkiraClient))
+
+	// DELETE
+	_, err, _ := api.Delete(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+
+	return nil
+}
+
+// generatePeeringGatewayAwsTgwRequest generate request
+func generatePeeringGatewayAwsTgwRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgw, error) {
+
+	request := &alkira.PeeringGatewayAwsTgw{
+		Name:        d.Get("name").(string),
+		Description: d.Get("description").(string),
+		Asn:         d.Get("asn").(int),
+		Cxp:         d.Get("cxp").(string),
+		AwsRegion:   d.Get("aws_region").(string),
+	}
+
+	return request, nil
+}
