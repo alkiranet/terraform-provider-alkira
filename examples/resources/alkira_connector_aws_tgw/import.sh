@@ -1,0 +1,1 @@
+terraform import alkira_connector_aws_tgw.example CONNECTOR_ID
