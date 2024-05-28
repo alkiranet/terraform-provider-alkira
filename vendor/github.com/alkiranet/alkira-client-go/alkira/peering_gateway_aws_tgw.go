@@ -12,8 +12,10 @@ type PeeringGatewayAwsTgw struct {
 	Description      string      `json:"description,omitempty"`
 	Asn              int         `json:"asn"`
 	AwsRegion        string      `json:"awsRegion"`
+	Cxp              string      `json:"cxp"`
 	Id               json.Number `json:"id,omitempty"` // response only
 	State            string      `json:"state,omitempty"` // response only
+	AwsTgwId         string      `json:"awsTgwId,omitempty"` // response only
 }
 
 // NewPeeringGatewayAwsTgw new peering gateway AWS-TGW

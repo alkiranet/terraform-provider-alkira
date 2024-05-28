@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -17,17 +18,6 @@ func resourceAlkiraPeeringGatewayAwsTgw() *schema.Resource {
 		ReadContext:   resourcePeeringGatewayAwsTgwRead,
 		UpdateContext: resourcePeeringGatewayAwsTgwUpdate,
 		DeleteContext: resourcePeeringGatewayAwsTgwDelete,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
-			client := m.(*alkira.AlkiraClient)
-
-			old, _ := d.GetChange("provision_state")
-
-			if client.Provision == true && old == "FAILED" {
-				d.SetNew("provision_state", "SUCCESS")
-			}
-
-			return nil
-		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -62,6 +52,11 @@ func resourceAlkiraPeeringGatewayAwsTgw() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"aws_tgw_id": {
+				Description: "The ID of AWS TGW.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -86,6 +81,24 @@ func resourcePeeringGatewayAwsTgwCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(string(response.Id))
+
+	// WAIT FOR STATE
+	state := response.State
+
+	for state != "ACTIVE" {
+		resource, _, err := api.GetById(d.Id())
+
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "FAILED TO GET RESOURCE",
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+		}
+
+		state = resource.State
+		time.Sleep(5 * time.Second)
+	}
 
 	return resourcePeeringGatewayAwsTgwRead(ctx, d, m)
 }
@@ -112,6 +125,7 @@ func resourcePeeringGatewayAwsTgwRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("cxp", resource.Cxp)
 	d.Set("aws_region", resource.AwsRegion)
 	d.Set("state", resource.State)
+	d.Set("aws_tgw_id", resource.AwsTgwId)
 
 	return nil
 }

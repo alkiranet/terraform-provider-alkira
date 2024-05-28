@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -17,17 +18,6 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 		ReadContext:   resourcePeeringGatewayAwsTgwAttachmentRead,
 		UpdateContext: resourcePeeringGatewayAwsTgwAttachmentUpdate,
 		DeleteContext: resourcePeeringGatewayAwsTgwAttachmentDelete,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
-			client := m.(*alkira.AlkiraClient)
-
-			old, _ := d.GetChange("provision_state")
-
-			if client.Provision == true && old == "FAILED" {
-				d.SetNew("provision_state", "SUCCESS")
-			}
-
-			return nil
-		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -62,13 +52,13 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"alkira_aws_tgw_id": {
-				Description: "The ID of Alkira TGW.",
+			"peering_gateway_aws_tgw_id": {
+				Description: "The ID of Peering Gateway AWS-TGW.",
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
-			"provision_state": {
-				Description: "The provision state of the attachment.",
+			"state": {
+				Description: "The state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -79,7 +69,6 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
@@ -89,25 +78,30 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 	}
 
 	// CREATE
-	response, provState, err, provErr := api.Create(request)
+	response, _, err, _ := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Set the state
 	d.SetId(string(response.Id))
 
-	if client.Provision == true {
-		d.Set("provision_state", provState)
+	// WAIT FOR STATE
+	state := response.State
 
-		if provErr != nil {
+	for state != "PENDING_ACCEPTANCE" {
+		resource, _, err := api.GetById(d.Id())
+
+		if err != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION (CREATE) FAILED",
-				Detail:   fmt.Sprintf("%s", provErr),
+				Summary:  "FAILED TO GET RESOURCE",
+				Detail:   fmt.Sprintf("%s", err),
 			}}
 		}
+
+		state = resource.State
+		time.Sleep(5 * time.Second)
 	}
 
 	return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
@@ -116,10 +110,9 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
-	attachment, provState, err := api.GetById(d.Id())
+	attachment, _, err := api.GetById(d.Id())
 
 	if err != nil {
 		return diag.Diagnostics{{
@@ -135,12 +128,8 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peer_aws_region", attachment.PeerAwsRegion)
 	d.Set("peer_aws_tgw_id", attachment.PeerAwsTgwId)
 	d.Set("peer_aws_account_id", attachment.PeerAwsAccountId)
-	d.Set("alkira_aws_tgw_id", attachment.AwsTgwId)
-
-	// Set provision state
-	if client.Provision == true && provState != "" {
-		d.Set("provision_state", provState)
-	}
+	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
+	d.Set("state", attachment.State)
 
 	return nil
 }
@@ -148,7 +137,6 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
 	request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
@@ -158,20 +146,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
-
-	// Set provision state
-	if client.Provision == true {
-		d.Set("provision_state", provState)
-
-		if provErr != nil {
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "PROVISION (UPDATE) FAILED",
-				Detail:   fmt.Sprintf("%s", provErr),
-			}}
-		}
-	}
+	_, err, _ = api.Update(d.Id(), request)
 
 	return nil
 }
@@ -179,25 +154,16 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 func resourcePeeringGatewayAwsTgwAttachmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	_, err, _ := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId("")
-
-	if client.Provision == true && provState != "SUCCESS" {
-		return diag.Diagnostics{{
-			Severity: diag.Warning,
-			Summary:  "PROVISION (DELETE) FAILED",
-			Detail:   fmt.Sprintf("%s", provErr),
-		}}
-	}
 
 	return nil
 }
@@ -212,7 +178,7 @@ func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData, m int
 		PeerAwsRegion:    d.Get("peer_aws_region").(string),
 		PeerAwsTgwId:     d.Get("peer_aws_tgw_id").(string),
 		PeerAwsAccountId: d.Get("peer_aws_account_id").(string),
-		AwsTgwId:         d.Get("alkira_aws_tgw_id").(int),
+		AwsTgwId:         d.Get("peering_gateway_aws_tgw_id").(int),
 	}
 
 	return request, nil
