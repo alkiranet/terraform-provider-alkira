@@ -28,5 +28,6 @@ Manage Peering Gateway AWS-TGW.
 
 ### Read-Only
 
+- `aws_tgw_id` (String) The ID of AWS TGW.
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the resource.

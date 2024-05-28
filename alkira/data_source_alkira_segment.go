@@ -15,12 +15,6 @@ func dataSourceAlkiraSegment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment_id": {
-				Description: "The ID of the segment.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Optional:    true,
-			},
 		},
 	}
 }
@@ -35,7 +29,5 @@ func dataSourceAlkiraSegmentRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(string(segment.Id))
-	d.Set("segment_id", segment.Id)
-
 	return nil
 }
