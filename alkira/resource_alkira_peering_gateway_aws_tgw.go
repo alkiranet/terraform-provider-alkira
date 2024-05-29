@@ -123,7 +123,7 @@ func resourcePeeringGatewayAwsTgwRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("cxp", resource.Cxp)
 	d.Set("aws_region", resource.AwsRegion)
 	d.Set("state", resource.State)
-	d.Set("aws_tgw_id", resource.AwsTgwId)
+	d.Set("aws_tgw_id", resource.ProviderTransitGatewayId)
 
 	return nil
 }
