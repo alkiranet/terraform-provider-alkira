@@ -25,10 +25,6 @@ data "alkira_segment" "segment" {
 
 - `name` (String) The name of the segment.
 
-### Optional
-
-- `segment_id` (Number) The ID of the segment.
-
 ### Read-Only
 
 - `id` (String) The ID of this resource.
