@@ -21,7 +21,7 @@ This resource is still under active development. It may have further changes in 
 # and "alkira_byoip_prefix" are created separately.
 #
 resource "alkira_connector_akamai_prolexic" "test" {
-  name           = "tftest"
+  name           = "test"
   cxp            = "US-WEST"
   group          = alkira_group.test.name
   segment_id     = alkira_segment.test.id

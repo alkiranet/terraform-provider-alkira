@@ -13,19 +13,15 @@ Manage NAT policy.
 ## Example Usage
 
 ```terraform
-#
-# A simple NAT policy was constructed with segment, policy_nat_rule
-# and policy_nat.
-#
-resource "alkira_segment" "test" {
-  name  = "test-segment"
+resource "alkira_segment" "example" {
+  name  = "example"
   asn   = "65513"
   cidrs = ["10.16.1.0/24"]
 }
 
-resource "alkira_policy_nat_rule" "test" {
-  name          = "test"
-  description   = "test nat rule"
+resource "alkira_policy_nat_rule" "example" {
+  name          = "example"
+  description   = "example nat rule"
   enabled       = false
 
   match {
@@ -40,13 +36,13 @@ resource "alkira_policy_nat_rule" "test" {
   }
 }
 
-resource "alkira_policy_nat" "test" {
-  name               = "tftest"
-  description        = "terraform test NAT policy"
+resource "alkira_policy_nat" "example" {
+  name               = "example"
+  description        = "terraform example NAT policy"
   type               = "INTRA_SEGMENT"
-  segment_id         = alkira_segment.test.id
-  included_group_ids = [alkira_group.test.id]
-  nat_rule_ids       = [alkira_policy_nat_rule.test.id]
+  segment_id         = alkira_segment.example.id
+  included_group_ids = [alkira_group.example.id]
+  nat_rule_ids       = [alkira_policy_nat_rule.example.id]
 }
 ```
 

@@ -1,5 +1,5 @@
-resource "alkira_connector_aws_tgw" "test1" {
-  name                                  = "tftest-test1"
+resource "alkira_connector_aws_tgw" "example" {
+  name                                  = "example"
   cxp                                   = "US-EAST"
   segment_id                            = alkira_segment.test.id
   size                                  = "SMALL"

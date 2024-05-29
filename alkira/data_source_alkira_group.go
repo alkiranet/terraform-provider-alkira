@@ -17,12 +17,6 @@ func dataSourceAlkiraGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"group_id": {
-				Description: "The ID of the group.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Optional:    true,
-			},
 		},
 	}
 }
@@ -37,7 +31,5 @@ func dataSourceAlkiraGroupRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(string(group.Id))
-	d.Set("group_id", group.Id)
-
 	return nil
 }
