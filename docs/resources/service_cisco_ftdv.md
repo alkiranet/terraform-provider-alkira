@@ -13,8 +13,8 @@ Manage Cisco FTDv Service. (**BETA**)
 ## Example Usage
 
 ```terraform
-resource "alkira_service_cisco_ftdv" "test" {
-  name               = "test"
+resource "alkira_service_cisco_ftdv" "example" {
+  name               = "example"
   auto_scale         = "OFF"
   size               = "SMALL"
   tunnel_protocol    = "IPSEC"
@@ -22,14 +22,14 @@ resource "alkira_service_cisco_ftdv" "test" {
   max_instance_count = 1
   min_instance_count = 1
 
-  global_cidr_list_id = alkira_list_global_cidr.test.id
-  segment_ids         = [alkira_segment.test1.id, alkira_segment.test2.id]
+  global_cidr_list_id = alkira_list_global_cidr.example.id
+  segment_ids         = [alkira_segment.test1.id, alkira_segment.example.id]
 
   firepower_management_center {
     username      = "user1"
     password      = "Abcd1234567"
     server_ip     = "1.1.1.1"
-    segment_id    = alkira_segment.test1.id
+    segment_id    = alkira_segment.example.id
     ip_allow_list = ["192.168.3.3"]
   }
 
@@ -43,13 +43,13 @@ resource "alkira_service_cisco_ftdv" "test" {
   }
 
   segment_options {
-    segment_id = alkira_segment.test1.id
+    segment_id = alkira_segment.example.id
     zone_name  = "zone1"
-    groups     = [alkira_group.tftest.name]
+    groups     = [alkira_group.example.name]
   }
 
   segment_options {
-    segment_id = alkira_segment.test2.id
+    segment_id = alkira_segment.example.id
     zone_name  = "zone2"
   }
 }

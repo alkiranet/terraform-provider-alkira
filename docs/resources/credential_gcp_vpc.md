@@ -14,7 +14,7 @@ Manage Credential for GCP.
 
 ```terraform
 resource "alkira_credential_gcp_vpc" "gcp" {
-  name                 = "tftest"
+  name                 = "example"
   auth_provider        = "https://www.googleapis.com/oauth2/v1/certs"
   auth_uri             = "https://accounts.google.com/o/oauth2/auth"
 

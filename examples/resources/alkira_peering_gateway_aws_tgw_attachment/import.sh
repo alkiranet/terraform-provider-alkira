@@ -1,0 +1,1 @@
+terraform import alkira_peering_gateway_aws_tgw_attachment.example RESOURCE_ID
