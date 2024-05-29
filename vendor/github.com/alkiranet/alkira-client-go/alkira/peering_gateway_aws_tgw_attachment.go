@@ -15,7 +15,7 @@ type PeeringGatewayAwsTgwAttachment struct {
 	PeerAwsTgwId     string      `json:"peerAwsTgwId"`
 	PeerAwsAccountId string      `json:"peerAwsAccountId"`
 	AwsTgwId         int         `json:"awsTgwId"`
-	Id               json.Number `json:"id,omitempty"` // response only
+	Id               json.Number `json:"id,omitempty"`    // response only
 	State            string      `json:"state,omitempty"` // response only
 }
 

@@ -38,7 +38,7 @@ func dataSourceAlkiraPeeringGatewayAwsTgwRead(d *schema.ResourceData, m interfac
 	}
 
 	d.SetId(string(resource.Id))
-	d.Set("aws_tgw_id", resource.AwsTgwId)
+	d.Set("aws_tgw_id", resource.ProviderTransitGatewayId)
 
 	return nil
 }
