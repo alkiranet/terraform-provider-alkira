@@ -59,9 +59,17 @@ func resourceAlkiraSegment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"enable_overlapping_route_validation": {
+				Description: "Enable overlapping route validation. Default " +
+					"is `false`. (**BETA**)",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"enable_ipv6_to_ipv4_translation": {
 				Description: "Enable IPv6 to IPv4 translation in the " +
-					"segment for internet application traffic. (**BETA**)",
+					"segment for internet application traffic. Default " +
+					"is `false`. (**BETA**)",
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -174,6 +182,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, m interfac
 	d.Set("asn", segment.Asn)
 	d.Set("description", segment.Description)
 	d.Set("enable_ipv6_to_ipv4_translation", segment.EnableIpv6ToIpv4Translation)
+	d.Set("enable_overlapping_route_validation", segment.OverlappingRouteValidationEnabled)
 	d.Set("enterprise_dns_server_ip", segment.EnterpriseDNSServerIP)
 	d.Set("name", segment.Name)
 	d.Set("reserve_public_ips", segment.ReservePublicIPsForUserAndSiteConnectivity)
@@ -287,11 +296,12 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	}
 
 	seg := &alkira.Segment{
-		Asn:                         d.Get("asn").(int),
-		Description:                 d.Get("description").(string),
-		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
-		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
-		Name:                        d.Get("name").(string),
+		Asn:                               d.Get("asn").(int),
+		Description:                       d.Get("description").(string),
+		OverlappingRouteValidationEnabled: d.Get("enable_overlapping_route_validation").(bool),
+		EnableIpv6ToIpv4Translation:       d.Get("enable_ipv6_to_ipv4_translation").(bool),
+		EnterpriseDNSServerIP:             d.Get("enterprise_dns_server_ip").(string),
+		Name:                              d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity:        d.Get("reserve_public_ips").(bool),
 		ReservePublicIPsForUserAndSiteConnectivityForCXPs: cxps,
 		ServiceTrafficDistribution:                        serviceTrafficDistribution,

@@ -35,7 +35,8 @@ resource "alkira_segment" "test" {
 
 - `asn` (Number) The BGP ASN for the segment. Default value is `65514`.
 - `description` (String) The description of the segment.
-- `enable_ipv6_to_ipv4_translation` (Boolean) Enable IPv6 to IPv4 translation in the segment for internet application traffic. (**BETA**)
+- `enable_ipv6_to_ipv4_translation` (Boolean) Enable IPv6 to IPv4 translation in the segment for internet application traffic. Default is `false`. (**BETA**)
+- `enable_overlapping_route_validation` (Boolean) Enable overlapping route validation. Default is `false`. (**BETA**)
 - `enterprise_dns_server_ip` (String) The IP of the DNS server used within the segment. This DNS server may be used by the Alkira CXP to resolve the names of LDAP servers for example which are configured on the Remote Access Connector. (**BETA**)
 - `reserve_public_ips` (Boolean) Default value is `false`. When this is set to `true`. Alkira reserves public IPs which can be used to create underlay tunnels between an external service and Alkira. For example the reserved public IPs may be used to create tunnels to the Akamai Prolexic. (**BETA**)
 - `reserve_public_ips_for_cxps` (Set of String) Alkira reserves public IPs which can be used to create underlay tunnels between an external service to the specified Alkira CXPs. (**BETA**)
