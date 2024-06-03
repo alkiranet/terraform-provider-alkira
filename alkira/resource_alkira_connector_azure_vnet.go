@@ -64,7 +64,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 				Default:  "VNET_GATEWAY",
 				ValidateFunc: validation.StringInSlice([]string{
-					"VNET_GATEWAY", "VNET_PEERING"}, false),
+					"VNET_GATEWAY", "VNET_PEERING",
+				}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -109,7 +110,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Default:  "ADVERTISE_DEFAULT_ROUTE",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ADVERTISE_DEFAULT_ROUTE",
-					"ADVERTISE_CUSTOM_PREFIX"}, false),
+					"ADVERTISE_CUSTOM_PREFIX",
+				}, false),
 			},
 			"routing_prefix_list_ids": {
 				Description: "Prefix List IDs.",
@@ -122,7 +124,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"vnet_cidr": &schema.Schema{
+			"vnet_cidr": {
 				Description: "Configure routing options on specified VNET CIDR.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -141,7 +143,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ADVERTISE_DEFAULT_ROUTE",
-								"ADVERTISE_CUSTOM_PREFIX"}, false),
+								"ADVERTISE_CUSTOM_PREFIX",
+							}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -164,7 +167,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 					},
 				},
 			},
-			"vnet_subnet": &schema.Schema{
+			"vnet_subnet": {
 				Description: "Configure routing options on the specified VNET subnet.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -188,7 +191,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ADVERTISE_DEFAULT_ROUTE",
-								"ADVERTISE_CUSTOM_PREFIX"}, false),
+								"ADVERTISE_CUSTOM_PREFIX",
+							}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -227,7 +231,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE", `2LARGE`,
-					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
+					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`,
+				}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This cannot be specified " +
@@ -243,18 +248,21 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"cxp_peering_gateway_id": {
+				Description: "The ID of the peering gateway associated with the connector.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
 		},
 	}
 }
 
 func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	request, err := generateConnectorAzureVnetRequest(d, m)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -285,13 +293,11 @@ func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	// Get the resource
 	connector, provState, err := api.GetById(d.Id())
-
 	if err != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -316,6 +322,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("service_tags", connector.ServiceTags)
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
+	d.Set("cxp_peering_gateway_id", connector.CxpPeeringGatewayId)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -323,7 +330,6 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	numOfSegments := len(connector.Segments)
 	if numOfSegments == 1 {
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -341,13 +347,11 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	request, err := generateConnectorAzureVnetRequest(d, m)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -376,7 +380,6 @@ func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
@@ -403,12 +406,10 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
-
 	//
 	// Segment
 	//
 	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
 	if err != nil {
 		return nil, err
 	}
@@ -417,28 +418,28 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	// Routing
 	//
 	routing, err := constructVnetRouting(d)
-
 	if err != nil {
 		return nil, err
 	}
 
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		CXP:            d.Get("cxp").(string),
-		ConnectionMode: d.Get("connection_mode").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		Enabled:        d.Get("enabled").(bool),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Segments:       []string{segmentName},
-		Size:           d.Get("size").(string),
-		ServiceTags:    convertTypeListToStringList(d.Get("service_tags").([]interface{})),
-		VnetId:         d.Get("azure_vnet_id").(string),
-		VnetRouting:    routing,
-		CustomerASN:    d.Get("customer_asn").(int),
-		ScaleGroupId:   d.Get("scale_group_id").(string),
+		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		CXP:                 d.Get("cxp").(string),
+		ConnectionMode:      d.Get("connection_mode").(string),
+		CredentialId:        d.Get("credential_id").(string),
+		Enabled:             d.Get("enabled").(bool),
+		Group:               d.Get("group").(string),
+		Name:                d.Get("name").(string),
+		SecondaryCXPs:       convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:            []string{segmentName},
+		Size:                d.Get("size").(string),
+		ServiceTags:         convertTypeListToStringList(d.Get("service_tags").([]interface{})),
+		VnetId:              d.Get("azure_vnet_id").(string),
+		VnetRouting:         routing,
+		CustomerASN:         d.Get("customer_asn").(int),
+		ScaleGroupId:        d.Get("scale_group_id").(string),
+		CxpPeeringGatewayId: d.Get("cxp_peering_gateway_id").(int),
 	}
 
 	return request, nil
