@@ -89,6 +89,7 @@ func Provider() *schema.Provider {
 			"alkira_list_udr":                           resourceAlkiraListUdr(),
 			"alkira_peering_gateway_aws_tgw":            resourceAlkiraPeeringGatewayAwsTgw(),
 			"alkira_peering_gateway_aws_tgw_attachment": resourceAlkiraPeeringGatewayAwsTgwAttachment(),
+			"alkira_cxp_peering_gateways":               resourceAlkiraCxpPeeringGateways(),
 			"alkira_policy":                             resourceAlkiraPolicy(),
 			"alkira_policy_nat":                         resourceAlkiraPolicyNat(),
 			"alkira_policy_nat_rule":                    resourceAlkiraPolicyNatRule(),
@@ -165,7 +166,6 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 		d.Get("provision").(bool),
 		"header",
 	)
-
 	if err != nil {
 		log.Printf("[ERROR] failed to initialize alkira provider, please check your credential and portal URI.")
 		return nil, err
