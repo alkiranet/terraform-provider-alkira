@@ -89,7 +89,7 @@ func Provider() *schema.Provider {
 			"alkira_list_udr":                           resourceAlkiraListUdr(),
 			"alkira_peering_gateway_aws_tgw":            resourceAlkiraPeeringGatewayAwsTgw(),
 			"alkira_peering_gateway_aws_tgw_attachment": resourceAlkiraPeeringGatewayAwsTgwAttachment(),
-			"alkira_cxp_peering_gateways":               resourceAlkiraCxpPeeringGateways(),
+			"alkira_cxp_peering_gateway":                resourceAlkiraCxpPeeringGateway(),
 			"alkira_policy":                             resourceAlkiraPolicy(),
 			"alkira_policy_nat":                         resourceAlkiraPolicyNat(),
 			"alkira_policy_nat_rule":                    resourceAlkiraPolicyNatRule(),

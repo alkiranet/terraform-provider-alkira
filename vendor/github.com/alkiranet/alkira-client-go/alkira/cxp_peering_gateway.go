@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-type CxpPeeringGateways struct {
+type CxpPeeringGateway struct {
 	Name          string      `json:"name"`
 	Description   string      `json:"description,omitempty"`
 	Cxp           string      `json:"cxp"`
@@ -19,8 +19,8 @@ type CxpPeeringGateways struct {
 }
 
 // NewConnectorPeeringGatewayAwsTgwAttachment new peering gateway aws tgw attachment
-func NewCxpPeeringGateways(ac *AlkiraClient) *AlkiraAPI[CxpPeeringGateways] {
+func NewCxpPeeringGateway(ac *AlkiraClient) *AlkiraAPI[CxpPeeringGateway] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/cxp-peering-gateways", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[CxpPeeringGateways]{ac, uri, false}
+	api := &AlkiraAPI[CxpPeeringGateway]{ac, uri, false}
 	return api
 }
