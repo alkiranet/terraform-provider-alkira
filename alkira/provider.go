@@ -136,6 +136,7 @@ func Provider() *schema.Provider {
 			"alkira_list_udr":                           dataSourceAlkiraListUdr(),
 			"alkira_peering_gateway_aws_tgw":            dataSourceAlkiraPeeringGatewayAwsTgw(),
 			"alkira_peering_gateway_aws_tgw_attachment": dataSourceAlkiraPeeringGatewayAwsTgwAttachment(),
+			"alkira_cxp_peering_gateway":                dataSourceAlkiraCxpPeeringGateway(),
 			"alkira_policy":                             dataSourceAlkiraPolicy(),
 			"alkira_policy_nat_rule":                    dataSourceAlkiraPolicyNatRule(),
 			"alkira_policy_prefix_list":                 dataSourceAlkiraPolicyPrefixList(),
