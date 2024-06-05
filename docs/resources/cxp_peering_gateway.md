@@ -14,11 +14,11 @@ Manage CXP Peering Gateways.
 
 ```terraform
 resource "alkira_cxp_peering_gateway" "test1" {
-  name               = "tf-test-1"
-  description        = "Test CXP Peering Gatewat"
-  cloudRegion        = "us-east-1"
-  cxp                = "US_EAST_1"
-  segment            = "prod-seg"
+  name         = "tf-test-1"
+  description  = "Test CXP Peering Gatewat"
+  cloud_region = "us-east-1"
+  cxp          = "US_EAST_1"
+  segment      = "prod-seg"
 }
 ```
 
@@ -27,13 +27,14 @@ resource "alkira_cxp_peering_gateway" "test1" {
 
 ### Required
 
-- `cloudRegion` (String) The cloud region on which the ATH will be created
+- `cloud_region` (String) The cloud region on which the ATH will be created
 - `cxp` (String) The CXP to which the Gateway is attached.
 - `name` (String) The name of the Cxp Peering Gateway.
 - `segment` (String) Name of the segment in which the gateway is created.
 
 ### Optional
 
+- `cloud_provider` (String) The cloud provider on which the gateway is created
 - `description` (String) Description of the Cxp Peering Gateway.
 
 ### Read-Only
