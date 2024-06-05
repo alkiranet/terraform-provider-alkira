@@ -118,7 +118,7 @@ func resourceAlkiraCxpPeeringGatewayRead(ctx context.Context, d *schema.Resource
 
 	d.Set("name", resource.Name)
 	d.Set("description", resource.Description)
-	d.Set("cxp", resource.CloudProvider)
+	d.Set("cxp", resource.Cxp)
 	d.Set("cloud_provider", resource.CloudProvider)
 	d.Set("cloud_region", resource.CloudRegion)
 	d.Set("segment", resource.Segment)
@@ -165,7 +165,7 @@ func generateAlkiraCxpPeeringGatewayRequest(d *schema.ResourceData, m interface{
 		Description:   d.Get("description").(string),
 		Cxp:           d.Get("cxp").(string),
 		CloudRegion:   d.Get("cloud_region").(string),
-		CloudProvider: d.Get("cloud_proivder").(string),
+		CloudProvider: d.Get("cloud_provider").(string),
 		Segment:       d.Get("segment").(string),
 	}
 
