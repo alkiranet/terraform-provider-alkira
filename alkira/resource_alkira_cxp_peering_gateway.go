@@ -37,12 +37,16 @@ func resourceAlkiraCxpPeeringGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			// "cloudProvider": {
-			// 	Description: "The cloud provider on which the gateway is created",
-			// 	Type:        schema.TypeString,
-			// 	Required:    true,
-			// },
-			"cloudRegion": {
+
+			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
+			"cloud_provider": {
+				Description: "The cloud provider on which the gateway is created",
+				Type:        schema.TypeString,
+				// Required:    true,
+				Optional: true,
+				Default:  "AZURE",
+			},
+			"cloud_region": {
 				Description: "The cloud region on which the ATH will be created",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -115,8 +119,8 @@ func resourceAlkiraCxpPeeringGatewayRead(ctx context.Context, d *schema.Resource
 	d.Set("name", resource.Name)
 	d.Set("description", resource.Description)
 	d.Set("cxp", resource.CloudProvider)
-	// d.Set("cloudProvider", resource.CloudProvider)
-	d.Set("cloudRegion", resource.CloudRegion)
+	d.Set("cloud_provider", resource.CloudProvider)
+	d.Set("cloud_region", resource.CloudRegion)
 	d.Set("segment", resource.Segment)
 	d.Set("state", resource.State)
 
@@ -160,8 +164,8 @@ func generateAlkiraCxpPeeringGatewayRequest(d *schema.ResourceData, m interface{
 		Name:          d.Get("name").(string),
 		Description:   d.Get("description").(string),
 		Cxp:           d.Get("cxp").(string),
-		CloudRegion:   "AZURE",
-		CloudProvider: d.Get("cloudProivder").(string),
+		CloudRegion:   d.Get("cloud_region").(string),
+		CloudProvider: d.Get("cloud_proivder").(string),
 		Segment:       d.Get("segment").(string),
 	}
 
