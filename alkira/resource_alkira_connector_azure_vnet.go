@@ -258,7 +258,6 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 }
 
 func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
@@ -422,8 +421,6 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	if err != nil {
 		return nil, err
 	}
-	routing.Clean()
-
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
 		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
