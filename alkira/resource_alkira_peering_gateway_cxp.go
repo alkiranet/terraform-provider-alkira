@@ -23,12 +23,12 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Cxp Peering Gateway.",
+				Description: "The name of the Peering Gateway.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"description": {
-				Description: "Description of the Cxp Peering Gateway.",
+				Description: "Description of the Peering Gateway.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -40,14 +40,14 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 
 			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
 			"cloud_provider": {
-				Description: "The cloud provider on which the gateway is created",
+				Description: "The cloud provider on which the gateway will be created",
 				Type:        schema.TypeString,
 				// Required:    true,
 				Optional: true,
 				Default:  "AZURE",
 			},
 			"cloud_region": {
-				Description: "The cloud region on which the ATH will be created",
+				Description: "The cloud region on which the ATH will be created. Eg : eastus , westus",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
