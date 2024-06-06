@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAlkiraCxpPeeringGateway() *schema.Resource {
+func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manage CXP Peering Gateways.",
-		CreateContext: resourceAlkiraCxpPeeringGatewayCreate,
-		ReadContext:   resourceAlkiraCxpPeeringGatewayRead,
-		UpdateContext: resourceAlkiraCxpPeeringGatewayUpdate,
-		DeleteContext: resourceAlkiraCxpPeeringGatewayDelete,
+		CreateContext: resourceAlkiraPeeringGatewayCxpCreate,
+		ReadContext:   resourceAlkiraPeeringGatewayCxpRead,
+		UpdateContext: resourceAlkiraPeeringGatewayCxpUpdate,
+		DeleteContext: resourceAlkiraPeeringGatewayCxpDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,9 +65,9 @@ func resourceAlkiraCxpPeeringGateway() *schema.Resource {
 	}
 }
 
-func resourceAlkiraCxpPeeringGatewayCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlkiraPeeringGatewayCxpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// INIT
-	api := alkira.NewCxpPeeringGateway(m.(*alkira.AlkiraClient))
+	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
 	if err != nil {
@@ -100,12 +100,12 @@ func resourceAlkiraCxpPeeringGatewayCreate(ctx context.Context, d *schema.Resour
 		time.Sleep(5 * time.Second)
 	}
 
-	return resourceAlkiraCxpPeeringGatewayRead(ctx, d, m)
+	return resourceAlkiraPeeringGatewayCxpRead(ctx, d, m)
 }
 
-func resourceAlkiraCxpPeeringGatewayRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlkiraPeeringGatewayCxpRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// INIT
-	api := alkira.NewCxpPeeringGateway(m.(*alkira.AlkiraClient))
+	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	resource, _, err := api.GetById(d.Id())
 	if err != nil {
@@ -127,9 +127,9 @@ func resourceAlkiraCxpPeeringGatewayRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAlkiraCxpPeeringGatewayUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// INIT
-	api := alkira.NewCxpPeeringGateway(m.(*alkira.AlkiraClient))
+	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
 	if err != nil {
@@ -142,9 +142,9 @@ func resourceAlkiraCxpPeeringGatewayUpdate(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAlkiraCxpPeeringGatewayDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlkiraPeeringGatewayCxpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// INIT
-	api := alkira.NewCxpPeeringGateway(m.(*alkira.AlkiraClient))
+	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	// DELETE
 	_, err, _ := api.Delete(d.Id())
@@ -159,8 +159,8 @@ func resourceAlkiraCxpPeeringGatewayDelete(ctx context.Context, d *schema.Resour
 }
 
 // generateAlkiraCxpPeeringGatewayRequest generate request
-func generateAlkiraCxpPeeringGatewayRequest(d *schema.ResourceData, m interface{}) (*alkira.CxpPeeringGateway, error) {
-	request := &alkira.CxpPeeringGateway{
+func generateAlkiraCxpPeeringGatewayRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayCxp, error) {
+	request := &alkira.PeeringGatewayCxp{
 		Name:          d.Get("name").(string),
 		Description:   d.Get("description").(string),
 		Cxp:           d.Get("cxp").(string),

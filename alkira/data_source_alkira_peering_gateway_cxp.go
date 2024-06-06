@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAlkiraCxpPeeringGateway() *schema.Resource {
+func dataSourceAlkiraPeeringGatewayCxp() *schema.Resource {
 	return &schema.Resource{
 		Description: "This data source allows to retrieve an existing " +
 			"Cxp Peering Gateway by its name.",
 
-		Read: dataSourceAlkiraCxpPeeringGatewayRead,
+		Read: dataSourceAlkiraPeeringGatewayCxpRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,8 +22,8 @@ func dataSourceAlkiraCxpPeeringGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraCxpPeeringGatewayRead(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewCxpPeeringGateway(m.(*alkira.AlkiraClient))
+func dataSourceAlkiraPeeringGatewayCxpRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	resource, _, err := api.GetByName(d.Get("name").(string))
 	if err != nil {
