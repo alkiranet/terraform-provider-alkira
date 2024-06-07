@@ -1,3 +1,3 @@
-data "alkira_peering_gateway_cxp" "test-gateway" {
-  name = "test-gateway"
+data "alkira_peering_gateway_cxp" "example-gateway" {
+  name = "example-gateway"
 }

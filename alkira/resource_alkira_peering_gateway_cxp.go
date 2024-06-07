@@ -28,7 +28,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 				Required:    true,
 			},
 			"description": {
-				Description: "Description of the Peering Gateway.",
+				Description: "Description of the CXP Peering Gateway.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -40,19 +40,19 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 
 			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
 			"cloud_provider": {
-				Description: "The cloud provider on which the gateway will be created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
+				Description: "The cloud provider on which the resource will be created. Default value is AZURE and only AZURE is supported for now.",
 				Type:        schema.TypeString,
 				// Required:    true,
 				Optional: true,
 				Default:  "AZURE",
 			},
 			"cloud_region": {
-				Description: "The cloud region on which the ATH will be created. Eg : eastus , westus.\nOnce deployed this property can not be changed. All the changes will be ignored.",
+				Description: "The region of the specified cloud provider on which the resource should be created. E.g. if cloud_provider is AZURE, the region could be eastus.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"segment": {
-				Description: "The name of the segment in which the gateway is created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
+			"segment_id": {
+				Description: "The ID of the segment in which the gateway is created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -115,13 +115,17 @@ func resourceAlkiraPeeringGatewayCxpRead(ctx context.Context, d *schema.Resource
 			Detail:   fmt.Sprintf("%s", err),
 		}}
 	}
+	segmentId, err := getSegmentIdByName(resource.Segment, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.Set("name", resource.Name)
 	d.Set("description", resource.Description)
 	d.Set("cxp", resource.Cxp)
 	d.Set("cloud_provider", resource.CloudProvider)
 	d.Set("cloud_region", resource.CloudRegion)
-	d.Set("segment", resource.Segment)
+	d.Set("segment_id", segmentId)
 	d.Set("state", resource.State)
 
 	return nil
@@ -160,13 +164,17 @@ func resourceAlkiraPeeringGatewayCxpDelete(ctx context.Context, d *schema.Resour
 
 // generateAlkiraCxpPeeringGatewayRequest generate request
 func generateAlkiraCxpPeeringGatewayRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayCxp, error) {
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+	if err != nil {
+		return nil, err
+	}
 	request := &alkira.PeeringGatewayCxp{
 		Name:          d.Get("name").(string),
 		Description:   d.Get("description").(string),
 		Cxp:           d.Get("cxp").(string),
 		CloudRegion:   d.Get("cloud_region").(string),
 		CloudProvider: d.Get("cloud_provider").(string),
-		Segment:       d.Get("segment").(string),
+		Segment:       segmentName,
 	}
 
 	return request, nil

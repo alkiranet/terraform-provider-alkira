@@ -1,7 +1,7 @@
-resource "alkira_peering_gateway_cxp" "test1" {
-  name         = "tf-test-1"
-  description  = "Test CXP Peering Gatewat"
+resource "alkira_peering_gateway_cxp" "example-cxp-gateway" {
+  name         = "example-cxp-gateway"
+  description  = "Example CXP Peering Gateway"
   cloud_region = "useast"
-  cxp          = "US_EAST_1"
-  segment      = "prod-seg"
+  cxp          = "US-EAST-1"
+  segment_id   = alkira_segment.example-segment.id
 }

@@ -87,7 +87,7 @@ type ConnectorAzureVnet struct {
 	VnetRouting         *ConnectorVnetRouting `json:"vnetRouting"`
 	CustomerASN         int                   `json:"customerAsn,omitempty"`
 	ScaleGroupId        string                `json:"scaleGroupId,omitempty"`
-	CxpPeeringGatewayId int                   `json:"cxpPeeringGatewayId,omitempty"`
+	PeeringGatewayCxpId int                   `json:"cxpPeeringGatewayId,omitempty"`
 }
 
 // NewConnectorAzureVnet initalize a new connector

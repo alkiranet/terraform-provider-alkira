@@ -248,8 +248,8 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"cxp_peering_gateway_id": {
-				Description: "The ID of the peering gateway associated with the connector.",
+			"peering_gateway_cxp_id": {
+				Description: "The ID of the CXP peering gateway associated with the connector.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
@@ -322,7 +322,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("service_tags", connector.ServiceTags)
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
-	d.Set("cxp_peering_gateway_id", connector.CxpPeeringGatewayId)
+	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -438,7 +438,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		VnetRouting:         routing,
 		CustomerASN:         d.Get("customer_asn").(int),
 		ScaleGroupId:        d.Get("scale_group_id").(string),
-		CxpPeeringGatewayId: d.Get("cxp_peering_gateway_id").(int),
+		PeeringGatewayCxpId: d.Get("peering_gateway_cxp_id").(int),
 	}
 
 	return request, nil

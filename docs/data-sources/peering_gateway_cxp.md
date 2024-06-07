@@ -13,8 +13,8 @@ This data source allows to retrieve an existing Cxp Peering Gateway by its name.
 ## Example Usage
 
 ```terraform
-data "alkira_peering_gateway_cxp" "test-gateway" {
-  name = "test-gateway"
+data "alkira_peering_gateway_cxp" "example-gateway" {
+  name = "example-gateway"
 }
 ```
 

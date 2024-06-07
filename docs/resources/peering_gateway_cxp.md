@@ -13,12 +13,12 @@ Manage CXP Peering Gateways.
 ## Example Usage
 
 ```terraform
-resource "alkira_peering_gateway_cxp" "test1" {
-  name         = "tf-test-1"
-  description  = "Test CXP Peering Gatewat"
+resource "alkira_peering_gateway_cxp" "example-cxp-gateway" {
+  name         = "example-cxp-gateway"
+  description  = "Example CXP Peering Gateway"
   cloud_region = "useast"
-  cxp          = "US_EAST_1"
-  segment      = "prod-seg"
+  cxp          = "US-EAST-1"
+  segment_id   = alkira_segment.example-segment.id
 }
 ```
 
@@ -27,20 +27,18 @@ resource "alkira_peering_gateway_cxp" "test1" {
 
 ### Required
 
-- `cloud_region` (String) The cloud region on which the ATH will be created. Eg : eastus , westus.
-Once deployed this property can not be changed. All the changes will be ignored.
+- `cloud_region` (String) The region of the specified cloud provider on which the resource should be created. E.g. if cloud_provider is AZURE, the region could be eastus.
 - `cxp` (String) The CXP to which the Gateway is attached.
 Once deployed this property can not be changed. All the changes will be ignored.
 - `name` (String) The name of the Peering Gateway.
 Once deployed this property can not be changed. All the changes will be ignored.
-- `segment` (String) The name of the segment in which the gateway is created.
+- `segment_id` (String) The ID of the segment in which the gateway is created.
 Once deployed this property can not be changed. All the changes will be ignored.
 
 ### Optional
 
-- `cloud_provider` (String) The cloud provider on which the gateway will be created.
-Once deployed this property can not be changed. All the changes will be ignored.
-- `description` (String) Description of the Peering Gateway.
+- `cloud_provider` (String) The cloud provider on which the resource will be created. Default value is AZURE and only AZURE is supported for now.
+- `description` (String) Description of the CXP Peering Gateway.
 
 ### Read-Only
 
