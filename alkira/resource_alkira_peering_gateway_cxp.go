@@ -23,7 +23,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Peering Gateway.",
+				Description: "The name of the Peering Gateway.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -33,26 +33,26 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP to which the Gateway is attached.",
+				Description: "The CXP to which the Gateway is attached.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 
 			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
 			"cloud_provider": {
-				Description: "The cloud provider on which the gateway will be created",
+				Description: "The cloud provider on which the gateway will be created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				// Required:    true,
 				Optional: true,
 				Default:  "AZURE",
 			},
 			"cloud_region": {
-				Description: "The cloud region on which the ATH will be created. Eg : eastus , westus",
+				Description: "The cloud region on which the ATH will be created. Eg : eastus , westus.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"segment": {
-				Description: "Name of the segment in which the gateway is created.",
+				Description: "The name of the segment in which the gateway is created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
