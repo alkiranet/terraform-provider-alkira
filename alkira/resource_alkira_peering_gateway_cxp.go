@@ -42,9 +42,8 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 			"cloud_provider": {
 				Description: "The cloud provider on which the resource will be created. Default value is AZURE and only AZURE is supported for now.",
 				Type:        schema.TypeString,
-				// Required:    true,
-				Optional: true,
-				Default:  "AZURE",
+				Optional:    true,
+				Default:     "AZURE",
 			},
 			"cloud_region": {
 				Description: "The region of the specified cloud provider on which the resource should be created. E.g. if cloud_provider is AZURE, the region could be eastus.",
