@@ -23,7 +23,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Description: "The name of the Peering Gateway." +
-					"Once deployed this property can not be changed.",
+					"Once deployed, this property can not be changed.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -34,7 +34,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 			},
 			"cxp": {
 				Description: "The CXP to which the Gateway is attached." +
-					"Once deployed this property can not be changed.",
+					"Once deployed, this property can not be changed.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -55,7 +55,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "The ID of the segment in which the gateway is created." +
-					"Once deployed this property can not be changed.",
+					"Once deployed, this property can not be changed.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -150,6 +150,7 @@ func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.Resour
 
 		return nil
 	}
+	// return error if any field except description is changed.
 	return diag.Diagnostics{{
 		Severity: diag.Error,
 		Summary:  "Invalid Update!",
