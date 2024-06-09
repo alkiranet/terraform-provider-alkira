@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,9 +22,10 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Peering Gateway.\nOnce deployed this property can not be changed. All the changes will be ignored.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The name of the Peering Gateway." +
+					"Once deployed this property can not be changed.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"description": {
 				Description: "Description of the CXP Peering Gateway.",
@@ -33,27 +33,31 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP to which the Gateway is attached.\nOnce deployed this property can not be changed. All the changes will be ignored.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The CXP to which the Gateway is attached." +
+					"Once deployed this property can not be changed.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 
 			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
 			"cloud_provider": {
-				Description: "The cloud provider on which the resource will be created. Default value is AZURE and only AZURE is supported for now.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "AZURE",
+				Description: "The cloud provider on which the resource will be created." +
+					"Default value is AZURE and only AZURE is supported for now.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "AZURE",
 			},
 			"cloud_region": {
-				Description: "The region of the specified cloud provider on which the resource should be created. E.g. if cloud_provider is AZURE, the region could be eastus.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The region of the specified cloud provider on which the resource should be created." +
+					"E.g. if cloud_provider is AZURE, the region could be eastus.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"segment_id": {
-				Description: "The ID of the segment in which the gateway is created.\nOnce deployed this property can not be changed. All the changes will be ignored.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The ID of the segment in which the gateway is created." +
+					"Once deployed this property can not be changed.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"state": {
 				Description: "The state of the resource.",
@@ -131,18 +135,26 @@ func resourceAlkiraPeeringGatewayCxpRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// INIT
-	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
+	// checking if only description field is changed
+	if d.HasChange("description") && !d.HasChanges("name", "cloud_provider", "cloud_region", "segment_id") {
+		// INIT
+		api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
-	request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
-	if err != nil {
-		return diag.FromErr(err)
+		request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		// UPDATE
+		_, err, _ = api.Update(d.Id(), request)
+
+		return nil
 	}
-
-	// UPDATE
-	_, err, _ = api.Update(d.Id(), request)
-
-	return nil
+	return diag.Diagnostics{{
+		Severity: diag.Error,
+		Summary:  "Invalid Update!",
+		Detail:   "Only the description field can be updated.",
+	}}
 }
 
 func resourceAlkiraPeeringGatewayCxpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
