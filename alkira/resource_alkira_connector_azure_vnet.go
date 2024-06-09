@@ -252,11 +252,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 }
 
 func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	request, err := generateConnectorAzureVnetRequest(d, m)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -287,11 +289,13 @@ func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	// Get the resource
 	connector, provState, err := api.GetById(d.Id())
+
 	if err != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -324,6 +328,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	numOfSegments := len(connector.Segments)
 	if numOfSegments == 1 {
 		segmentId, err := getSegmentIdByName(connector.Segments[0], m)
+
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -341,11 +346,13 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	request, err := generateConnectorAzureVnetRequest(d, m)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -374,6 +381,7 @@ func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
@@ -400,10 +408,12 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 
 // generateConnectorAzureVnetRequest generate request for connector-azure-vnet
 func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureVnet, error) {
+
 	//
 	// Segment
 	//
 	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
 	if err != nil {
 		return nil, err
 	}
@@ -412,9 +422,11 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 	// Routing
 	//
 	routing, err := constructVnetRouting(d)
+
 	if err != nil {
 		return nil, err
 	}
+
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
 		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
