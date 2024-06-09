@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -64,8 +63,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 				Default:  "VNET_GATEWAY",
 				ValidateFunc: validation.StringInSlice([]string{
-					"VNET_GATEWAY", "VNET_PEERING",
-				}, false),
+					"VNET_GATEWAY", "VNET_PEERING"}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -110,8 +108,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Default:  "ADVERTISE_DEFAULT_ROUTE",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ADVERTISE_DEFAULT_ROUTE",
-					"ADVERTISE_CUSTOM_PREFIX",
-				}, false),
+					"ADVERTISE_CUSTOM_PREFIX"}, false),
 			},
 			"routing_prefix_list_ids": {
 				Description: "Prefix List IDs.",
@@ -143,8 +140,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ADVERTISE_DEFAULT_ROUTE",
-								"ADVERTISE_CUSTOM_PREFIX",
-							}, false),
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -191,8 +187,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ADVERTISE_DEFAULT_ROUTE",
-								"ADVERTISE_CUSTOM_PREFIX",
-							}, false),
+								"ADVERTISE_CUSTOM_PREFIX"}, false),
 						},
 						"prefix_list_ids": {
 							Description: "Prefix List IDs.",
@@ -231,8 +226,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE", `2LARGE`,
-					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`,
-				}, false),
+					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This cannot be specified " +
