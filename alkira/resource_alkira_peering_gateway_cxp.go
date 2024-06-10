@@ -22,40 +22,40 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Peering Gateway." +
-					"Once deployed, this property can not be changed.",
+				Description: "The name of the Peering Gateway.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"description": {
-				Description: "Description of the CXP Peering Gateway.",
+				Description: "Description of the resource.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP to which the Gateway is attached." +
-					"Once deployed, this property can not be changed.",
+				Description: "The CXP to which the Gateway is attached.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			// TODO: change cloud_provider to be a Required value when more cloud providers are added and remove the default value.
 			"cloud_provider": {
-				Description: "The cloud provider on which the resource will be created." +
-					"Default value is AZURE and only AZURE is supported for now.",
+				Description: "The cloud provider where this resource will be " +
+					"created. The default value is `AZURE` and only `AZURE` " +
+					"is supported for now.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "AZURE",
 			},
 			"cloud_region": {
-				Description: "The region of the specified cloud provider on which the resource should be created." +
-					"E.g. if cloud_provider is AZURE, the region could be eastus.",
+				Description: "The region of the specified cloud provider on " +
+					"which the resource should be created. E.g. if " +
+					"`cloud_provider` is `AZURE`, the region could be like " +
+					"`eastus`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"segment_id": {
-				Description: "The ID of the segment in which the gateway is created." +
-					"Once deployed, this property can not be changed.",
+				Description: "The ID of the segment that is associated with " +
+					"the resource.",
 				Type:     schema.TypeString,
 				Required: true,
 			},

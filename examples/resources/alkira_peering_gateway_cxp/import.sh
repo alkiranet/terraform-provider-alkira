@@ -1,0 +1,1 @@
+terraform import alkira_peering_gateway_cxp.example RESOURCE_ID
