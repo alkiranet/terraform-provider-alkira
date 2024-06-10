@@ -155,6 +155,9 @@ func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.Resour
 
 	// UPDATE
 	_, err, _ = api.Update(d.Id(), request)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
