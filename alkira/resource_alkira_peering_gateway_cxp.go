@@ -22,7 +22,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Peering Gateway.",
+				Description: "The name of the Peering Gateway." 
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -32,7 +32,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP to which the Gateway is attached.",
+				Description: "The CXP to which the Gateway is attached." 
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -135,27 +135,28 @@ func resourceAlkiraPeeringGatewayCxpRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// checking if only description field is changed
-	if d.HasChange("description") && !d.HasChanges("name", "cloud_provider", "cloud_region", "segment_id") {
-		// INIT
-		api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
+  // checking if only description field is changed
+  if d.HasChanges("name", "cloud_provider", "cloud_region", "segment_id") {
+    // return error if any field except description is changed.
+    return diag.Diagnostics{{
+      Severity: diag.Error,
+      Summary:  "Invalid Update!",
+      Detail:   "Only the description field can be updated.",
+    }}
+  }
 
-		request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+  // INIT
+  api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
-		// UPDATE
-		_, err, _ = api.Update(d.Id(), request)
+  request, err := generateAlkiraCxpPeeringGatewayRequest(d, m)
+  if err != nil {
+    return diag.FromErr(err)
+  }
 
-		return nil
-	}
-	// return error if any field except description is changed.
-	return diag.Diagnostics{{
-		Severity: diag.Error,
-		Summary:  "Invalid Update!",
-		Detail:   "Only the description field can be updated.",
-	}}
+  // UPDATE
+  _, err, _ = api.Update(d.Id(), request)
+
+  return nil
 }
 
 func resourceAlkiraPeeringGatewayCxpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
