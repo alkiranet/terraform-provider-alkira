@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -122,7 +121,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"vnet_cidr": &schema.Schema{
+			"vnet_cidr": {
 				Description: "Configure routing options on specified VNET CIDR.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -164,7 +163,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 					},
 				},
 			},
-			"vnet_subnet": &schema.Schema{
+			"vnet_subnet": {
 				Description: "Configure routing options on the specified VNET subnet.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -243,6 +242,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"peering_gateway_cxp_id": {
+				Description: "The ID of the CXP peering gateway associated with the connector.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -316,6 +320,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("service_tags", connector.ServiceTags)
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
+	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -424,21 +429,22 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		CXP:            d.Get("cxp").(string),
-		ConnectionMode: d.Get("connection_mode").(string),
-		CredentialId:   d.Get("credential_id").(string),
-		Enabled:        d.Get("enabled").(bool),
-		Group:          d.Get("group").(string),
-		Name:           d.Get("name").(string),
-		SecondaryCXPs:  convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Segments:       []string{segmentName},
-		Size:           d.Get("size").(string),
-		ServiceTags:    convertTypeListToStringList(d.Get("service_tags").([]interface{})),
-		VnetId:         d.Get("azure_vnet_id").(string),
-		VnetRouting:    routing,
-		CustomerASN:    d.Get("customer_asn").(int),
-		ScaleGroupId:   d.Get("scale_group_id").(string),
+		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		CXP:                 d.Get("cxp").(string),
+		ConnectionMode:      d.Get("connection_mode").(string),
+		CredentialId:        d.Get("credential_id").(string),
+		Enabled:             d.Get("enabled").(bool),
+		Group:               d.Get("group").(string),
+		Name:                d.Get("name").(string),
+		SecondaryCXPs:       convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:            []string{segmentName},
+		Size:                d.Get("size").(string),
+		ServiceTags:         convertTypeListToStringList(d.Get("service_tags").([]interface{})),
+		VnetId:              d.Get("azure_vnet_id").(string),
+		VnetRouting:         routing,
+		CustomerASN:         d.Get("customer_asn").(int),
+		ScaleGroupId:        d.Get("scale_group_id").(string),
+		PeeringGatewayCxpId: d.Get("peering_gateway_cxp_id").(int),
 	}
 
 	return request, nil

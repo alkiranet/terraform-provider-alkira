@@ -117,6 +117,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
+- `peering_gateway_cxp_id` (Number) The ID of the CXP peering gateway associated with the connector.
 - `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default value is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.
 - `scale_group_id` (String) The ID of the scale group associated with the connector.
