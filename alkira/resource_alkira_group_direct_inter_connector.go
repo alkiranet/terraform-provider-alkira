@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -17,17 +16,8 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 		ReadContext:   resourceDirectInterConnectorGroupRead,
 		UpdateContext: resourceDirectInterConnectorGroupUpdate,
 		DeleteContext: resourceDirectInterConnectorGroupDelete,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
-			client := m.(*alkira.AlkiraClient)
+		CustomizeDiff: resourceDirectInterConnectorGroupCustomizeDiff,
 
-			old, _ := d.GetChange("provision_state")
-
-			if client.Provision == true && old == "FAILED" {
-				d.SetNew("provision_state", "SUCCESS")
-			}
-
-			return nil
-		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -51,12 +41,12 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 			"cxp": {
 				Description: "The CXP of the group.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"connector_provider_region": {
 				Description: "The region of the connector.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"connector_type": {
 				Description: "The type of the connector.",
@@ -68,8 +58,39 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"azure_virtual_network_manager_id": {
+				Description: "The azure virtual network manager ID",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
 		},
 	}
+}
+
+func resourceDirectInterConnectorGroupCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+	client := m.(*alkira.AlkiraClient)
+
+	old, _ := d.GetChange("provision_state")
+
+	if client.Provision == true && old == "FAILED" {
+		d.SetNew("provision_state", "SUCCESS")
+	}
+	connectorType := d.Get("connector_type").(string)
+
+	switch connectorType {
+	case "AWS":
+		if err := d.SetNew("cxp", d.Get("cxp").(string)); err != nil {
+			return err
+		}
+		if err := d.SetNew("connector_provider_region", d.Get("connector_provider_region").(string)); err != nil {
+			return err
+		}
+	case "AZURE":
+		if err := d.SetNew("azure_virtual_network_manager_id", d.Get("azure_virtual_network_manager_id").(int)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func resourceDirectInterConnectorGroup(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
