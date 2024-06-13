@@ -1,3 +1,4 @@
+// Copyright (C) 2024 Alkira Inc. All Rights Reserved.
 package alkira
 
 import (
@@ -19,6 +20,6 @@ type AzureVirtualNetworkManager struct {
 
 func NewAzureVirtualNetworkManager(ac *AlkiraClient) *AlkiraAPI[AzureVirtualNetworkManager] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azure-virtual-network-managers", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[VirtualNetworkManagerAzure]{ac, uri, true}
+	api := &AlkiraAPI[AzureVirtualNetworkManager]{ac, uri, true}
 	return api
 }
