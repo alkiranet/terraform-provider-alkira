@@ -11,9 +11,9 @@ type AzureVirtualNetworkManager struct {
 	SubscriptionId       string      `json:"subscriptionId"`
 	ResourceGroup        string      `json:"resourceGroup"`
 	Description          string      `json:"description,omitempty"`
-	CredentialsId        string      `json:"credentialsId"`
-	Id                   json.Number `json:"id,omitempty"`
-	State                string      `json:"state,omitempty"`
+	CredentialId         string      `json:"credentialId"`
+	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY.
+	State                string      `json:"state,omitempty"` // RESPONSE ONLY.
 	SubscriptionsInScope []string    `json:"subscriptionsInScope"`
 }
 
