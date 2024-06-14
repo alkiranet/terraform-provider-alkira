@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAzureVirtualNetworkManager() *schema.Resource {
+func resourceAlkiraAzureVirtualNetworkManager() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manager Virtual Network Manager for Azure.",
 		CreateContext: resourceAzureVirtualNetworkManagerCreate,
@@ -34,13 +34,13 @@ func resourceAzureVirtualNetworkManager() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Azure Virtual Network Manager.",
+				Description: "The name of the Alkira Azure Virtual Network Manager.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"region": {
 				Description: "The Azure Region where the Azure Virtual Network" +
-					" Manager is created. eg: `eastus`.",
+					" Manager will be created. eg: `eastus`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -57,7 +57,7 @@ func resourceAzureVirtualNetworkManager() *schema.Resource {
 				Required: true,
 			},
 			"Description": {
-				Description: "The description of the Azure Virtual Network Manager.",
+				Description: "The description of the Alkira Azure Virtual Network Manager.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -67,8 +67,8 @@ func resourceAzureVirtualNetworkManager() *schema.Resource {
 				Required:    true,
 			},
 			"subscriptions_in_scope": {
-				Description: "List IDs of Azure Subscription Accounts that will be" +
-					" managed by this Azure Virtual Network Manager.",
+				Description: "List of IDs of Azure Subscription Accounts that" +
+					" will be managed by this Azure Virtual Network Manager.",
 				Type:     schema.TypeList,
 				Required: true,
 			},
