@@ -71,7 +71,7 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 				Computed:    true,
 			},
 			"azure_virtual_network_manager_id": {
-				Description: "The azure virtual network manager ID",
+				Description: "The Azure Virtual Network Manager's Alkira ID.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
@@ -85,18 +85,7 @@ func resourceDirectInterConnectorGroup(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
-	// Segment
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	// Construct request
-	request := &alkira.InterConnectorCommunicationGroup{
-		Name:                    d.Get("name").(string),
-		Description:             d.Get("description").(string),
-		Segment:                 segmentName,
-		Cxp:                     d.Get("cxp").(string),
-		ConnectorProviderRegion: d.Get("connector_provider_region").(string),
-		ConnectorType:           d.Get("connector_type").(string),
-	}
+	request, _ := generateDirectInterConnectorGroupRequest(d, m)
 
 	// Send create request
 	response, provState, err, provErr := api.Create(request)
@@ -145,6 +134,7 @@ func resourceDirectInterConnectorGroupRead(ctx context.Context, d *schema.Resour
 	d.Set("cxp", group.Cxp)
 	d.Set("connector_provider_region", group.ConnectorProviderRegion)
 	d.Set("connector_type", group.ConnectorType)
+	d.Set("azure_virtual_network_manager_id", group.AzureVirtualNetworkManagerId)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(group.Segment, m)
@@ -169,13 +159,7 @@ func resourceDirectInterConnectorGroupUpdate(ctx context.Context, d *schema.Reso
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := &alkira.InterConnectorCommunicationGroup{
-		Name:                    d.Get("name").(string),
-		Description:             d.Get("description").(string),
-		Cxp:                     d.Get("cxp").(string),
-		ConnectorProviderRegion: d.Get("connector_provider_region").(string),
-		ConnectorType:           d.Get("connector_type").(string),
-	}
+	request, _ := generateDirectInterConnectorGroupRequest(d, m)
 
 	// Send update request
 	provState, err, provErr := api.Update(d.Id(), request)
@@ -222,4 +206,22 @@ func resourceDirectInterConnectorGroupDelete(ctx context.Context, d *schema.Reso
 	}
 
 	return nil
+}
+
+func generateDirectInterConnectorGroupRequest(d *schema.ResourceData, m interface{}) (*alkira.InterConnectorCommunicationGroup, error) {
+
+	// Segment
+	segmentName, _ := getSegmentNameById(d.Get("segment_id").(string), m)
+
+	// Construct request
+	request := &alkira.InterConnectorCommunicationGroup{
+		Name:                         d.Get("name").(string),
+		Description:                  d.Get("description").(string),
+		Segment:                      segmentName,
+		Cxp:                          d.Get("cxp").(string),
+		ConnectorProviderRegion:      d.Get("connector_provider_region").(string),
+		ConnectorType:                d.Get("connector_type").(string),
+		AzureVirtualNetworkManagerId: d.Get("azure_virtual_network_manager_id").(int),
+	}
+	return request, nil
 }
