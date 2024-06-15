@@ -10,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAlkiraAzureVirtualNetworkManager() *schema.Resource {
+func resourceAlkiraVirtualNetworkManagerAzure() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manager Virtual Network Manager for Azure.",
-		CreateContext: resourceAzureVirtualNetworkManagerCreate,
-		UpdateContext: resourceAzureVirtualNetworkManagerUpdate,
-		DeleteContext: resourceAzureVirtualNetworkManagerDelete,
-		ReadContext:   resourceAzureVirtualNetworkManagerRead,
+		CreateContext: resourceVirtualNetworkManagerAzureCreate,
+		UpdateContext: resourceVirtualNetworkManagerAzureUpdate,
+		DeleteContext: resourceVirtualNetworkManagerAzureDelete,
+		ReadContext:   resourceVirtualNetworkManagerAzureRead,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -77,10 +77,10 @@ func resourceAlkiraAzureVirtualNetworkManager() *schema.Resource {
 
 }
 
-func resourceAzureVirtualNetworkManagerCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceVirtualNetworkManagerAzureCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	api := alkira.NewAzureVirtualNetworkManager(m.(*alkira.AlkiraClient))
+	api := alkira.NewVirtualNetworkManagerAzure(m.(*alkira.AlkiraClient))
 
 	request, err := generateAzureVirtualNetworkManagerRequest(d, m)
 
@@ -112,15 +112,15 @@ func resourceAzureVirtualNetworkManagerCreate(ctx context.Context, d *schema.Res
 		time.Sleep(5 * time.Second)
 
 	}
-	return resourceAzureVirtualNetworkManagerRead(ctx, d, m)
+	return resourceVirtualNetworkManagerAzureRead(ctx, d, m)
 }
 
-func resourceAzureVirtualNetworkManagerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceVirtualNetworkManagerAzureUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// CHECK FOR CHANGES IN ANY FIELD EXCEPT DESCRIPTION AND RETURN ERR.
 	if d.HasChange("description") {
 
 		// INIT
-		api := alkira.NewAzureVirtualNetworkManager(m.(*alkira.AlkiraClient))
+		api := alkira.NewVirtualNetworkManagerAzure(m.(*alkira.AlkiraClient))
 
 		request, err := generateAzureVirtualNetworkManagerRequest(d, m)
 
@@ -142,10 +142,10 @@ func resourceAzureVirtualNetworkManagerUpdate(ctx context.Context, d *schema.Res
 	}}
 }
 
-func resourceAzureVirtualNetworkManagerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceVirtualNetworkManagerAzureDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	api := alkira.NewAzureVirtualNetworkManager(m.(*alkira.AlkiraClient))
+	api := alkira.NewVirtualNetworkManagerAzure(m.(*alkira.AlkiraClient))
 
 	// DELETE
 	_, err, _ := api.Delete(d.Id())
@@ -159,10 +159,10 @@ func resourceAzureVirtualNetworkManagerDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAzureVirtualNetworkManagerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceVirtualNetworkManagerAzureRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
-	api := alkira.NewAzureVirtualNetworkManager(m.(*alkira.AlkiraClient))
+	api := alkira.NewVirtualNetworkManagerAzure(m.(*alkira.AlkiraClient))
 	resource, _, err := api.GetById(d.Id())
 
 	if err != nil {
@@ -184,9 +184,9 @@ func resourceAzureVirtualNetworkManagerRead(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func generateAzureVirtualNetworkManagerRequest(d *schema.ResourceData, m interface{}) (*alkira.AzureVirtualNetworkManager, error) {
+func generateAzureVirtualNetworkManagerRequest(d *schema.ResourceData, m interface{}) (*alkira.VirtualNetworkManagerAzure, error) {
 
-	request := &alkira.AzureVirtualNetworkManager{
+	request := &alkira.VirtualNetworkManagerAzure{
 		Name:                 d.Get("name").(string),
 		Region:               d.Get("region").(string),
 		SubscriptionId:       d.Get("subscription_id").(string),

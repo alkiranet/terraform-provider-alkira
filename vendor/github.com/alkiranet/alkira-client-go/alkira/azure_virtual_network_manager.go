@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type AzureVirtualNetworkManager struct {
+type VirtualNetworkManagerAzure struct {
 	Name                 string      `json:"name"`
 	Region               string      `json:"region"`
 	SubscriptionId       string      `json:"subscriptionId"`
@@ -18,8 +18,8 @@ type AzureVirtualNetworkManager struct {
 	SubscriptionsInScope []string    `json:"subscriptionsInScope"`
 }
 
-func NewAzureVirtualNetworkManager(ac *AlkiraClient) *AlkiraAPI[AzureVirtualNetworkManager] {
+func NewVirtualNetworkManagerAzure(ac *AlkiraClient) *AlkiraAPI[VirtualNetworkManagerAzure] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azure-virtual-network-managers", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[AzureVirtualNetworkManager]{ac, uri, true}
+	api := &AlkiraAPI[VirtualNetworkManagerAzure]{ac, uri, true}
 	return api
 }

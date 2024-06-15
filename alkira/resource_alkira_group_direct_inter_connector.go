@@ -70,7 +70,7 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"azure_virtual_network_manager_id": {
+			"virtual_network_manager_azure_id": {
 				Description: "The Azure Virtual Network Manager's Alkira ID.",
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -134,7 +134,7 @@ func resourceDirectInterConnectorGroupRead(ctx context.Context, d *schema.Resour
 	d.Set("cxp", group.Cxp)
 	d.Set("connector_provider_region", group.ConnectorProviderRegion)
 	d.Set("connector_type", group.ConnectorType)
-	d.Set("azure_virtual_network_manager_id", group.AzureVirtualNetworkManagerId)
+	d.Set("virtual_network_manager_azure_id", group.VirtualNetworkManagerAzureId)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(group.Segment, m)
@@ -221,7 +221,7 @@ func generateDirectInterConnectorGroupRequest(d *schema.ResourceData, m interfac
 		Cxp:                          d.Get("cxp").(string),
 		ConnectorProviderRegion:      d.Get("connector_provider_region").(string),
 		ConnectorType:                d.Get("connector_type").(string),
-		AzureVirtualNetworkManagerId: d.Get("azure_virtual_network_manager_id").(int),
+		VirtualNetworkManagerAzureId: d.Get("virtual_network_manager_azure_id").(int),
 	}
 	return request, nil
 }

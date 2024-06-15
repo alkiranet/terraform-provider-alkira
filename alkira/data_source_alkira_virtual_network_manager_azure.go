@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAlkiraAzureVirtualNetworkManager() *schema.Resource {
+func dataSourceAlkiraVirtualNetworkManagerAzure() *schema.Resource {
 	return &schema.Resource{
 		Description: "This data source allows to retrieve an existing" +
 			"Alkira Azure Virtual Network Manager by its name.",
 
-		Read: dataSourceAzureVirtualNetworkManagerRead,
+		Read: dataSourceVirtualNetworkManagerAzureRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,8 +22,8 @@ func dataSourceAlkiraAzureVirtualNetworkManager() *schema.Resource {
 	}
 }
 
-func dataSourceAzureVirtualNetworkManagerRead(d *schema.ResourceData, m interface{}) error {
-	api := alkira.NewAzureVirtualNetworkManager(m.(*alkira.AlkiraClient))
+func dataSourceVirtualNetworkManagerAzureRead(d *schema.ResourceData, m interface{}) error {
+	api := alkira.NewVirtualNetworkManagerAzure(m.(*alkira.AlkiraClient))
 
 	resource, _, err := api.GetByName(d.Get("name").(string))
 

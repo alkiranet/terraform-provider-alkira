@@ -15,7 +15,7 @@ type InterConnectorCommunicationGroup struct {
 	Cxp                          string      `json:"cxp"`
 	ConnectorProviderRegion      string      `json:"connectorProviderRegion"`
 	ConnectorType                string      `json:"connectorType"`
-	AzureVirtualNetworkManagerId int         `json:"azureVirtualNetworkManagerId"`
+	VirtualNetworkManagerAzureId int         `json:"azureVirtualNetworkManagerId"`
 }
 
 func NewInterConnectorCommunicationGroup(ac *AlkiraClient) *AlkiraAPI[InterConnectorCommunicationGroup] {
