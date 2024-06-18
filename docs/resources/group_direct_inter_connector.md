@@ -28,15 +28,16 @@ resource "alkira_group_direct_inter_connector" "test" {
 
 ### Required
 
-- `connector_provider_region` (String) The region of the connector.
 - `connector_type` (String) The type of the connector.
-- `cxp` (String) The CXP of the group.
 - `name` (String) The name of the group.
 - `segment_id` (String) The segment ID of the group.
 
 ### Optional
 
+- `connector_provider_region` (String) The region of the connector.
+- `cxp` (String) The CXP of the group.
 - `description` (String) The description of the group.
+- `virtual_network_manager_azure_id` (Number) The Azure Virtual Network Manager's Alkira ID.
 
 ### Read-Only
 

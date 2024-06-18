@@ -11,6 +11,7 @@ type VirtualNetworkManagerAzure struct {
 	Region               string      `json:"region"`
 	SubscriptionId       string      `json:"subscriptionId"`
 	ResourceGroup        string      `json:"resourceGroup"`
+	Cxp                  string      `json:"cxp"`
 	Description          string      `json:"description,omitempty"`
 	CredentialId         string      `json:"credentialId"`
 	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY.

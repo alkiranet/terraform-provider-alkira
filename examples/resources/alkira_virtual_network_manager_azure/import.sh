@@ -1,0 +1,1 @@
+terraform import alkira_virtual_network_manager_azure.example RESOURCE_ID

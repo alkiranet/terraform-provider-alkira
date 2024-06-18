@@ -82,7 +82,7 @@ Optional:
 
 Read-Only:
 
-- `id` (Number) The ID of this resource.
+- `id` (Number)
 
 
 <a id="nestedblock--segment_options"></a>

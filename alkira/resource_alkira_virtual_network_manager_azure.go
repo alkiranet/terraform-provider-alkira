@@ -50,13 +50,18 @@ func resourceAlkiraVirtualNetworkManagerAzure() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"cxp": {
+				Description: "The CXP on which the virtual network manager is created.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
 			"resource_group": {
 				Description: "The name of the Azure Resource Group in which the" +
 					" Azure Virtual Network Manager is created.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"Description": {
+			"description": {
 				Description: "The description of the Alkira Azure Virtual Network Manager.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -69,7 +74,8 @@ func resourceAlkiraVirtualNetworkManagerAzure() *schema.Resource {
 			"subscriptions_in_scope": {
 				Description: "List of IDs of Azure Subscription Accounts that" +
 					" will be managed by this Azure Virtual Network Manager.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
 			},
 		},
@@ -176,6 +182,7 @@ func resourceVirtualNetworkManagerAzureRead(ctx context.Context, d *schema.Resou
 	d.Set("name", resource.Name)
 	d.Set("region", resource.Region)
 	d.Set("subscription_id", resource.SubscriptionId)
+	d.Set("cxp", resource.Cxp)
 	d.Set("resource_group", resource.ResourceGroup)
 	d.Set("description", resource.Description)
 	d.Set("credential_id", resource.CredentialId)
@@ -193,7 +200,8 @@ func generateAzureVirtualNetworkManagerRequest(d *schema.ResourceData, m interfa
 		ResourceGroup:        d.Get("resource_group").(string),
 		Description:          d.Get("description").(string),
 		CredentialId:         d.Get("credential_id").(string),
-		SubscriptionsInScope: d.Get("subscriptions_in_scope").([]string),
+		Cxp:                  d.Get("cxp").(string),
+		SubscriptionsInScope: convertTypeSetToStringList(d.Get("subscriptions_in_scope").(*schema.Set)),
 	}
 	return request, nil
 }
