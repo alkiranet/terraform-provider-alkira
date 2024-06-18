@@ -49,7 +49,6 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"alkira_virtual_network_manager_azure":      resourceAlkiraVirtualNetworkManagerAzure(),
 			"alkira_billing_tag":                        resourceAlkiraBillingTag(),
 			"alkira_byoip_prefix":                       resourceAlkiraByoipPrefix(),
 			"alkira_cloudvisor_account":                 resourceAlkiraCloudVisorAccount(),
@@ -107,9 +106,9 @@ func Provider() *schema.Provider {
 			"alkira_service_infoblox":                   resourceAlkiraInfoblox(),
 			"alkira_service_zscaler":                    resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                        resourceAlkiraServicePan(),
+			"alkira_virtual_network_manager_azure":      resourceAlkiraVirtualNetworkManagerAzure(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"alkira_virtual_network_manager_azure":      dataSourceAlkiraVirtualNetworkManagerAzure(),
 			"alkira_billing_tag":                        dataSourceAlkiraBillingTag(),
 			"alkira_byoip":                              dataSourceAlkiraByoip(),
 			"alkira_credential":                         dataSourceAlkiraCredential(),
@@ -145,6 +144,7 @@ func Provider() *schema.Provider {
 			"alkira_policy_rule":                        dataSourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":                   dataSourceAlkiraPolicyRuleList(),
 			"alkira_segment":                            dataSourceAlkiraSegment(),
+			"alkira_virtual_network_manager_azure":      dataSourceAlkiraVirtualNetworkManagerAzure(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}
