@@ -326,7 +326,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
-	d.Set("direct_inter_vnet_communication_group", connector.DirectInterVPCCommunicationGroup)
+	d.Set("direct_inter_vnet_communication_group", connector.DirectInterVNETCommunicationGroup)
 
 	setVnetRouting(d, connector.VnetRouting)
 
