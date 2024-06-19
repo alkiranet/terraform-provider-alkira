@@ -14,8 +14,8 @@ type VirtualNetworkManagerAzure struct {
 	Cxp                  string      `json:"cxp"`
 	Description          string      `json:"description,omitempty"`
 	CredentialId         string      `json:"credentialId"`
-	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY.
-	State                string      `json:"state,omitempty"` // RESPONSE ONLY.
+	Id                   json.Number `json:"id,omitempty"`        // RESPONSE ONLY.
+	State                string      `json:"avnmState,omitempty"` // RESPONSE ONLY.
 	SubscriptionsInScope []string    `json:"subscriptionsInScope"`
 }
 
