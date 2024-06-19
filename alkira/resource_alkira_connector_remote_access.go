@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -176,6 +175,11 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 						},
 					},
 				},
+			},
+			"banner_text": {
+				Description: "The user provided connectors banner text.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}

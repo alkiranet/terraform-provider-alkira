@@ -42,6 +42,7 @@ resource "alkira_connector_remote_access" "example" {
 
 ### Optional
 
+- `banner_text` (String) The user provided connectors banner text.
 - `billing_tag_ids` (Set of Number) Billing tags associated with the connector.
 - `concurrent_sessions_alert_threshold` (Number) The threshhold for concurrent sessions alert.
 - `enable_dynamic_region_mapping` (Boolean) Enable dynamic region mapping. Default value is `true`.

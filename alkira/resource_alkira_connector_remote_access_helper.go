@@ -161,6 +161,7 @@ func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{})
 		Name:                  d.Get("name").(string),
 		Segments:              segmentNames,
 		SegmentOptions:        segOptions,
+		BannerText:            d.Get("banner_text").(string),
 	}
 
 	return request, nil
@@ -221,6 +222,7 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 	d.Set("billing_tag_ids", connector.Arguments[0].BillingTags)
 	d.Set("size", connector.Arguments[0].Size)
 	d.Set("name", connector.Name)
+	d.Set("banner_text", connector.BannerText)
 
 	// Set segment_ids
 	var segmentIds []string
