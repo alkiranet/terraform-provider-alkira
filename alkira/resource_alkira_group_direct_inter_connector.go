@@ -85,7 +85,11 @@ func resourceDirectInterConnectorGroup(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
-	request, _ := generateDirectInterConnectorGroupRequest(d, m)
+	request, err := generateDirectInterConnectorGroupRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Send create request
 	response, provState, err, provErr := api.Create(request)
@@ -159,7 +163,11 @@ func resourceDirectInterConnectorGroupUpdate(ctx context.Context, d *schema.Reso
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, _ := generateDirectInterConnectorGroupRequest(d, m)
+	request, err := generateDirectInterConnectorGroupRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Send update request
 	provState, err, provErr := api.Update(d.Id(), request)
@@ -211,7 +219,10 @@ func resourceDirectInterConnectorGroupDelete(ctx context.Context, d *schema.Reso
 func generateDirectInterConnectorGroupRequest(d *schema.ResourceData, m interface{}) (*alkira.InterConnectorCommunicationGroup, error) {
 
 	// Segment
-	segmentName, _ := getSegmentNameById(d.Get("segment_id").(string), m)
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+	if err != nil {
+		return nil, err
+	}
 
 	// Construct request
 	request := &alkira.InterConnectorCommunicationGroup{
