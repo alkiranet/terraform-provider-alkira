@@ -42,7 +42,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
-				Description: "ID of credential managed by Credential Manager.",
+				Description: "ID of resource `credential_gcp_vpc`.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
