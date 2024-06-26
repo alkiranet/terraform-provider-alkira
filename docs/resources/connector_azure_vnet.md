@@ -103,7 +103,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 ### Required
 
 - `azure_vnet_id` (String) Azure Virtual Network Id.
-- `credential_id` (String) ID of credential managed by Credential Manager.
+- `credential_id` (String) ID of resource `credential_azure_vnet`.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment assoicated with the connector.
