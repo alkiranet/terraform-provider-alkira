@@ -98,7 +98,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 - `aws_account_id` (String) AWS Account ID.
 - `aws_region` (String) AWS Region where VPC resides.
-- `credential_id` (String) ID of credential managed by Credential Manager.
+- `credential_id` (String) ID of resource `credential_aws_vpc`.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of segments associated with the connector. Currently, only `1` segment is allowed.

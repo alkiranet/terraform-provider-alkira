@@ -51,7 +51,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
-				Description: "ID of credential managed by Credential Manager.",
+				Description: "ID of resource `credential_aws_vpc`.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

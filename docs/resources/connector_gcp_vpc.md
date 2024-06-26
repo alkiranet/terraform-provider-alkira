@@ -93,7 +93,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 ### Required
 
-- `credential_id` (String) ID of credential managed by Credential Manager.
+- `credential_id` (String) ID of resource `credential_gcp_vpc`.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `gcp_region` (String) GCP region where VPC resides.
 - `gcp_vpc_name` (String) GCP VPC name.
