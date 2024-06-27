@@ -247,11 +247,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
-			"group_direct_inter_connector_id": {
-				Description: "The ID of the direct inter connector group associated with " +
-					"the connector.",
-				Type:     schema.TypeString,
-				Optional: true,
+			"group_direct_inter_connector": {
+				Description: "The direct inter connector group associated with the connector ",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}
@@ -327,7 +326,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
-	d.Set("group_direct_inter_connector_id", connector.DirectInterVNETCommunicationGroup)
+	d.Set("group_direct_inter_connector", connector.DirectInterVNETCommunicationGroup)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -452,7 +451,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		CustomerASN:                       d.Get("customer_asn").(int),
 		ScaleGroupId:                      d.Get("scale_group_id").(string),
 		PeeringGatewayCxpId:               d.Get("peering_gateway_cxp_id").(int),
-		DirectInterVNETCommunicationGroup: d.Get("group_direct_inter_connector_id").(string),
+		DirectInterVNETCommunicationGroup: d.Get("group_direct_inter_connector").(string),
 	}
 
 	return request, nil

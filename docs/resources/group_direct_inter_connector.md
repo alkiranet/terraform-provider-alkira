@@ -34,7 +34,7 @@ resource "alkira_group_direct_inter_connector" "test" {
 
 ### Optional
 
-- `azure_network_manager_id` (Number) The Azure Virtual Network Manager ID.
+- `azure_network_manager_id` (Number) The Azure Virtual Network Manager's Alkira ID.
 - `connector_provider_region` (String) The region of the connector.
 - `cxp` (String) The CXP of the group.
 - `description` (String) The description of the group.

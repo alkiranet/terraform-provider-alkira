@@ -71,7 +71,7 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 				Computed:    true,
 			},
 			"azure_network_manager_id": {
-				Description: "The Azure Virtual Network Manager ID.",
+				Description: "The Azure Virtual Network Manager's Alkira ID.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
