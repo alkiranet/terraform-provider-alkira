@@ -247,6 +247,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
+			"group_direct_inter_connector": {
+				Description: "The direct inter connector group associated with the connector ",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -321,6 +326,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
+	d.Set("group_direct_inter_connector", connector.DirectInterVNETCommunicationGroup)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -429,22 +435,23 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 
 	// Assemble request
 	request := &alkira.ConnectorAzureVnet{
-		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		CXP:                 d.Get("cxp").(string),
-		ConnectionMode:      d.Get("connection_mode").(string),
-		CredentialId:        d.Get("credential_id").(string),
-		Enabled:             d.Get("enabled").(bool),
-		Group:               d.Get("group").(string),
-		Name:                d.Get("name").(string),
-		SecondaryCXPs:       convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
-		Segments:            []string{segmentName},
-		Size:                d.Get("size").(string),
-		ServiceTags:         convertTypeListToStringList(d.Get("service_tags").([]interface{})),
-		VnetId:              d.Get("azure_vnet_id").(string),
-		VnetRouting:         routing,
-		CustomerASN:         d.Get("customer_asn").(int),
-		ScaleGroupId:        d.Get("scale_group_id").(string),
-		PeeringGatewayCxpId: d.Get("peering_gateway_cxp_id").(int),
+		BillingTags:                       convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		CXP:                               d.Get("cxp").(string),
+		ConnectionMode:                    d.Get("connection_mode").(string),
+		CredentialId:                      d.Get("credential_id").(string),
+		Enabled:                           d.Get("enabled").(bool),
+		Group:                             d.Get("group").(string),
+		Name:                              d.Get("name").(string),
+		SecondaryCXPs:                     convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		Segments:                          []string{segmentName},
+		Size:                              d.Get("size").(string),
+		ServiceTags:                       convertTypeListToStringList(d.Get("service_tags").([]interface{})),
+		VnetId:                            d.Get("azure_vnet_id").(string),
+		VnetRouting:                       routing,
+		CustomerASN:                       d.Get("customer_asn").(int),
+		ScaleGroupId:                      d.Get("scale_group_id").(string),
+		PeeringGatewayCxpId:               d.Get("peering_gateway_cxp_id").(int),
+		DirectInterVNETCommunicationGroup: d.Get("group_direct_inter_connector").(string),
 	}
 
 	return request, nil
