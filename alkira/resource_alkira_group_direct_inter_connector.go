@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
@@ -51,22 +52,28 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 			"cxp": {
 				Description: "The CXP of the group.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"connector_provider_region": {
 				Description: "The region of the connector.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"connector_type": {
-				Description: "The type of the connector.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The type of the connector.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"AWS_VPC", "AZURE_VNET"}, false),
 			},
 			"provision_state": {
 				Description: "The provisioning state of the resource.",
 				Type:        schema.TypeString,
 				Computed:    true,
+			},
+			"azure_network_manager_id": {
+				Description: "The Azure Virtual Network Manager ID.",
+				Type:        schema.TypeInt,
+				Optional:    true,
 			},
 		},
 	}
@@ -78,17 +85,10 @@ func resourceDirectInterConnectorGroup(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
-	// Segment
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+	request, err := generateDirectInterConnectorGroupRequest(d, m)
 
-	// Construct request
-	request := &alkira.InterConnectorCommunicationGroup{
-		Name:                    d.Get("name").(string),
-		Description:             d.Get("description").(string),
-		Segment:                 segmentName,
-		Cxp:                     d.Get("cxp").(string),
-		ConnectorProviderRegion: d.Get("connector_provider_region").(string),
-		ConnectorType:           d.Get("connector_type").(string),
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Send create request
@@ -138,6 +138,7 @@ func resourceDirectInterConnectorGroupRead(ctx context.Context, d *schema.Resour
 	d.Set("cxp", group.Cxp)
 	d.Set("connector_provider_region", group.ConnectorProviderRegion)
 	d.Set("connector_type", group.ConnectorType)
+	d.Set("azure_network_manager_id", group.VirtualNetworkManagerAzureId)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(group.Segment, m)
@@ -162,12 +163,11 @@ func resourceDirectInterConnectorGroupUpdate(ctx context.Context, d *schema.Reso
 	api := alkira.NewInterConnectorCommunicationGroup(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := &alkira.InterConnectorCommunicationGroup{
-		Name:                    d.Get("name").(string),
-		Description:             d.Get("description").(string),
-		Cxp:                     d.Get("cxp").(string),
-		ConnectorProviderRegion: d.Get("connector_provider_region").(string),
-		ConnectorType:           d.Get("connector_type").(string),
+	// Construct request
+	request, err := generateDirectInterConnectorGroupRequest(d, m)
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Send update request
@@ -215,4 +215,23 @@ func resourceDirectInterConnectorGroupDelete(ctx context.Context, d *schema.Reso
 	}
 
 	return nil
+}
+func generateDirectInterConnectorGroupRequest(d *schema.ResourceData, m interface{}) (*alkira.InterConnectorCommunicationGroup, error) {
+
+	// Segment
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+	if err != nil {
+		return nil, err
+	}
+	// Construct request
+	request := &alkira.InterConnectorCommunicationGroup{
+		Name:                         d.Get("name").(string),
+		Description:                  d.Get("description").(string),
+		Segment:                      segmentName,
+		Cxp:                          d.Get("cxp").(string),
+		ConnectorProviderRegion:      d.Get("connector_provider_region").(string),
+		ConnectorType:                d.Get("connector_type").(string),
+		VirtualNetworkManagerAzureId: d.Get("azure_network_manager_id").(int),
+	}
+	return request, nil
 }
