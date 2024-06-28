@@ -121,6 +121,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"udr_list_ids": {
+				Description: "User defined routes list (`list_udr`).",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
 			"vnet_cidr": {
 				Description: "Configure routing options on specified VNET CIDR.",
 				Type:        schema.TypeSet,
@@ -327,6 +333,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
 	d.Set("group_direct_inter_connector", connector.DirectInterVNETCommunicationGroup)
+	d.Set("udr_list_ids", connector.UdrListIds)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -452,6 +459,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		ScaleGroupId:                      d.Get("scale_group_id").(string),
 		PeeringGatewayCxpId:               d.Get("peering_gateway_cxp_id").(int),
 		DirectInterVNETCommunicationGroup: d.Get("group_direct_inter_connector").(string),
+		UdrListIds:                        convertTypeSetToIntList(d.Get("udr_list_ids").(*schema.Set)),
 	}
 
 	return request, nil
