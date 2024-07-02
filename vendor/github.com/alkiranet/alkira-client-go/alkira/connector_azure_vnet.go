@@ -68,27 +68,25 @@ type ConnectorVnetRouting struct {
 }
 
 type ConnectorAzureVnet struct {
-	BillingTags                       []int                 `json:"billingTags"`
-	CXP                               string                `json:"cxp"`
-	CredentialId                      string                `json:"credentialId"`
-	Group                             string                `json:"group,omitempty"`
-	Enabled                           bool                  `json:"enabled"`
-	Id                                json.Number           `json:"id,omitempty"`              // response only
-	ImplicitGroupId                   int                   `json:"implicitGroupId,omitempty"` // response only
-	Name                              string                `json:"name"`
-	NativeServices                    []string              `json:"nativeServices,omitempty"`
-	ResourceGroupName                 string                `json:"resourceGroupName,omitempty"`
-	SecondaryCXPs                     []string              `json:"secondaryCXPs,omitempty"`
-	Segments                          []string              `json:"segments"`
-	ServiceTags                       []string              `json:"serviceTags,omitempty"`
-	Size                              string                `json:"size"`
-	VnetId                            string                `json:"vnetId"`
-	ConnectionMode                    string                `json:"connectionMode,omitempty"`
-	VnetRouting                       *ConnectorVnetRouting `json:"vnetRouting"`
-	CustomerASN                       int                   `json:"customerAsn,omitempty"`
-	ScaleGroupId                      string                `json:"scaleGroupId,omitempty"`
-	PeeringGatewayCxpId               int                   `json:"cxpPeeringGatewayId,omitempty"`
-	DirectInterVNETCommunicationGroup string                `json:"directInterVnetCommunicationGroup,omitempty"`
+	BillingTags       []int                 `json:"billingTags"`
+	CXP               string                `json:"cxp"`
+	CredentialId      string                `json:"credentialId"`
+	Group             string                `json:"group,omitempty"`
+	Enabled           bool                  `json:"enabled"`
+	Id                json.Number           `json:"id,omitempty"`              // response only
+	ImplicitGroupId   int                   `json:"implicitGroupId,omitempty"` // response only
+	Name              string                `json:"name"`
+	NativeServices    []string              `json:"nativeServices,omitempty"`
+	ResourceGroupName string                `json:"resourceGroupName,omitempty"`
+	SecondaryCXPs     []string              `json:"secondaryCXPs,omitempty"`
+	Segments          []string              `json:"segments"`
+	ServiceTags       []string              `json:"serviceTags,omitempty"`
+	Size              string                `json:"size"`
+	VnetId            string                `json:"vnetId"`
+	ConnectionMode    string                `json:"connectionMode,omitempty"`
+	VnetRouting       *ConnectorVnetRouting `json:"vnetRouting"`
+	CustomerASN       int                   `json:"customerAsn,omitempty"`
+	ScaleGroupId      string                `json:"scaleGroupId,omitempty"`
 }
 
 // NewConnectorAzureVnet initalize a new connector

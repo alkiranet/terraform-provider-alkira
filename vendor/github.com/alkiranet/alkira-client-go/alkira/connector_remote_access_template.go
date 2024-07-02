@@ -15,7 +15,6 @@ type ConnectorRemoteAccessTemplate struct {
 	Name                  string                                `json:"name"`
 	SegmentOptions        []ConnectorRemoteAccessSegmentOptions `json:"segmentOptions"`
 	Segments              []string                              `json:"segments,omitempty"`
-	BannerText            string                                `json:"bannerText,omitempty"`
 }
 
 type ConnectorRemoteAccessAdvancedOptions struct {

@@ -8,14 +8,13 @@ import (
 )
 
 type InterConnectorCommunicationGroup struct {
-	Id                           json.Number `json:"id"`
-	Name                         string      `json:"name"`
-	Description                  string      `json:"description"`
-	Segment                      string      `json:"segment"`
-	Cxp                          string      `json:"cxp"`
-	ConnectorProviderRegion      string      `json:"connectorProviderRegion"`
-	ConnectorType                string      `json:"connectorType"`
-	VirtualNetworkManagerAzureId int         `json:"azureVirtualNetworkManagerId"`
+	Id                      json.Number `json:"id"`
+	Name                    string      `json:"name"`
+	Description             string      `json:"description"`
+	Segment                 string      `json:"segment"`
+	Cxp                     string      `json:"cxp"`
+	ConnectorProviderRegion string      `json:"connectorProviderRegion"`
+	ConnectorType           string      `json:"connectorType"`
 }
 
 func NewInterConnectorCommunicationGroup(ac *AlkiraClient) *AlkiraAPI[InterConnectorCommunicationGroup] {
