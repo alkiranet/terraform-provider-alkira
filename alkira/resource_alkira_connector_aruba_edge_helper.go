@@ -79,21 +79,16 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 }
 
 func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{}) ([]map[string]interface{}, error) {
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
 
 	var mappings []map[string]interface{}
 	for _, vrfmapping := range vrf {
-		arcSeg, _, err := api.GetByName(vrfmapping.ArubaEdgeConnectSegmentName)
-		if err != nil {
-			return nil, err
-		}
 
 		i := map[string]interface{}{
-			"advertise_on_prem_routes":      vrfmapping.AdvertiseOnPremRoutes,
-			"segment_id":                    strconv.Itoa(vrfmapping.AlkiraSegmentId),
-			"aruba_edge_connect_segment_id": arcSeg.Id,
-			"advertise_default_route":       !vrfmapping.DisableInternetExit,
-			"gateway_gbp_asn":               vrfmapping.GatewayBgpAsn,
+			"advertise_on_prem_routes":   vrfmapping.AdvertiseOnPremRoutes,
+			"segment_id":                 strconv.Itoa(vrfmapping.AlkiraSegmentId),
+			"aruba_edge_connect_segment": vrfmapping.ArubaEdgeConnectSegmentName,
+			"advertise_default_route":    !vrfmapping.DisableInternetExit,
+			"gateway_gbp_asn":            vrfmapping.GatewayBgpAsn,
 		}
 		mappings = append(mappings, i)
 	}
@@ -102,8 +97,6 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMapping, m interface{})
 }
 
 func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEdgeVRFMapping, error) {
-	api := alkira.NewSegment(m.(*alkira.AlkiraClient))
-
 	var mappings []alkira.ArubaEdgeVRFMapping
 	if in == nil || in.Len() == 0 {
 		return nil, errors.New("Invalid aruba edge mapping input: Cannot be nil or empty.")
@@ -123,13 +116,8 @@ func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEd
 			}
 			arubaEdgeVRFMapping.AlkiraSegmentId = i
 		}
-		if v, ok := m["aruba_edge_connect_segment_id"].(string); ok {
-			segment, _, err := api.GetById(v)
-			if err != nil {
-				return nil, err
-			}
-
-			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = segment.Name
+		if v, ok := m["aruba_edge_connect_segment"].(string); ok {
+			arubaEdgeVRFMapping.ArubaEdgeConnectSegmentName = v
 		}
 		if v, ok := m["advertise_default_route"].(bool); ok {
 			arubaEdgeVRFMapping.DisableInternetExit = !v
