@@ -57,4 +57,4 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 changelog:
-  skip: true
+  disable: true
