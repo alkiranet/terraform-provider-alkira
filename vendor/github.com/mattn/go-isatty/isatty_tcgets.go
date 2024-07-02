@@ -1,5 +1,7 @@
-// +build linux
+//go:build (linux || aix || zos) && !appengine && !tinygo
+// +build linux aix zos
 // +build !appengine
+// +build !tinygo
 
 package isatty
 
