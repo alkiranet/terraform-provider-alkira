@@ -260,7 +260,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 		}}
 	}
 
-	arubaEdgeMappings, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMapping, m)
+	arubaEdgeMappings, err := deflateArubaEdgeVrfMapping(connector.ArubaEdgeVrfMappings, m)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -386,18 +386,18 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	return &alkira.ConnectorArubaEdge{
-		ArubaEdgeVrfMapping: vrfMappings,
-		BillingTags:         convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		BoostMode:           d.Get("boost_mode").(bool),
-		Cxp:                 d.Get("cxp").(string),
-		GatewayBgpAsn:       d.Get("gateway_gbp_asn").(int),
-		Group:               d.Get("group").(string),
-		Instances:           instances,
-		Name:                d.Get("name").(string),
-		Segments:            segmentNames,
-		Size:                d.Get("size").(string),
-		TunnelProtocol:      d.Get("tunnel_protocol").(string),
-		Version:             d.Get("version").(string),
-		Enabled:             d.Get("enabled").(bool),
+		ArubaEdgeVrfMappings: vrfMappings,
+		BillingTags:          convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		BoostMode:            d.Get("boost_mode").(bool),
+		Cxp:                  d.Get("cxp").(string),
+		GatewayBgpAsn:        d.Get("gateway_gbp_asn").(int),
+		Group:                d.Get("group").(string),
+		Instances:            instances,
+		Name:                 d.Get("name").(string),
+		Segments:             segmentNames,
+		Size:                 d.Get("size").(string),
+		TunnelProtocol:       d.Get("tunnel_protocol").(string),
+		Version:              d.Get("version").(string),
+		Enabled:              d.Get("enabled").(bool),
 	}, nil
 }

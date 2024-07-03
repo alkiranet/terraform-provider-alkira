@@ -8,24 +8,24 @@ import (
 )
 
 type ConnectorArubaEdge struct {
-	ArubaEdgeVrfMapping []ArubaEdgeVRFMapping `json:"arubaEdgeVRFMapping,omitempty"`
-	BillingTags         []int                 `json:"billingTags"`
-	BoostMode           bool                  `json:"boostMode"`
-	Cxp                 string                `json:"cxp"`
-	GatewayBgpAsn       int                   `json:"gatewayBgpAsn"`
-	Group               string                `json:"group,omitempty"`
-	Id                  json.Number           `json:"id,omitempty"`              // response only
-	ImplicitGroupId     int                   `json:"implicitGroupId,omitempty"` // response only
-	Instances           []ArubaEdgeInstance   `json:"instances"`
-	Name                string                `json:"name"`
-	Segments            []string              `json:"segments"`
-	Size                string                `json:"size"`
-	TunnelProtocol      string                `json:"tunnelProtocol"`
-	Version             string                `json:"version"`
-	Enabled             bool                  `json:"enabled"`
+	ArubaEdgeVrfMappings []ArubaEdgeVRFMappings `json:"arubaEdgeVRFMappings,omitempty"`
+	BillingTags          []int                  `json:"billingTags"`
+	BoostMode            bool                   `json:"boostMode"`
+	Cxp                  string                 `json:"cxp"`
+	GatewayBgpAsn        int                    `json:"gatewayBgpAsn"`
+	Group                string                 `json:"group,omitempty"`
+	Id                   json.Number            `json:"id,omitempty"`              // response only
+	ImplicitGroupId      int                    `json:"implicitGroupId,omitempty"` // response only
+	Instances            []ArubaEdgeInstance    `json:"instances"`
+	Name                 string                 `json:"name"`
+	Segments             []string               `json:"segments"`
+	Size                 string                 `json:"size"`
+	TunnelProtocol       string                 `json:"tunnelProtocol"`
+	Version              string                 `json:"version"`
+	Enabled              bool                   `json:"enabled"`
 }
 
-type ArubaEdgeVRFMapping struct {
+type ArubaEdgeVRFMappings struct {
 	AdvertiseOnPremRoutes       bool   `json:"advertiseOnPremRoutes"`
 	AlkiraSegmentId             int    `json:"alkiraSegmentId"`
 	ArubaEdgeConnectSegmentName string `json:"arubaEdgeConnectSegmentName"`
