@@ -51,7 +51,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 			"segment_id": {
 				Description: "The segment ID.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"implicit_group_id": {
 				Description: "The ID of automatically created implicit group.",

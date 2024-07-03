@@ -57,11 +57,11 @@ resource "alkira_segment_resource" "example" {
 
 - `group_prefix` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--group_prefix))
 - `name` (String) The name of the segment resource.
+- `segment_id` (String) The segment ID.
 
 ### Optional
 
 - `description` (String) The description of the segment resource.
-- `segment_id` (String) The segment ID.
 
 ### Read-Only
 
