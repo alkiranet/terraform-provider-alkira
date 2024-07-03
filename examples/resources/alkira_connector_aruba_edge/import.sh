@@ -1,0 +1,1 @@
+terraform import alkira_connector_aruba_edge.example CONNECTOR_ID
