@@ -7,7 +7,7 @@ resource "alkira_connector_aruba_edge" "test1" {
   segment_ids     = [alkira_segment.test1.id]
   size            = "SMALL"
   tunnel_protocol = "IPSEC"
-  version         = "v668"
+  version         = "9.0.3.3"
 
   aruba_edge_vrf_mapping {
     segment_id                 = alkira_segment.test1.id
