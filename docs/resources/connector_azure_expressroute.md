@@ -49,7 +49,7 @@ resource "alkira_connector_azure_expressroute" "example" {
 - `instances` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instances))
 - `name` (String) The name of the connector.
 - `segment_options` (Block List, Min: 1) (see [below for nested schema](#nestedblock--segment_options))
-- `size` (String) The size of the connector, one of `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.
 - `vhub_prefix` (String) IP address prefix for VWAN Hub. This should be a `/23` prefix.
 
 ### Optional

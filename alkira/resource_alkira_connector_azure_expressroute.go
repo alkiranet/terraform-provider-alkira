@@ -41,10 +41,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Required:    true,
 			},
 			"size": {
-				Description:  "The size of the connector, one of `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.",
+				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`," +
+					" `2LARGE`, `5LARGE`, `10LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"LARGE", `2LARGE`, `5LARGE`, `10LARGE`}, false),
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE", `2LARGE`, `5LARGE`, `10LARGE`}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
