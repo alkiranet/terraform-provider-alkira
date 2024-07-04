@@ -61,10 +61,10 @@ func resourceAlkiraSegment() *schema.Resource {
 			},
 			"enable_overlapping_route_validation": {
 				Description: "Enable overlapping route validation. Default " +
-					"is `true`. (**BETA**)",
+					"value is `false`. (**BETA**)",
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			"enable_ipv6_to_ipv4_translation": {
 				Description: "Enable IPv6 to IPv4 translation in the " +
