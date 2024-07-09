@@ -125,6 +125,9 @@ func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.Checkp
 				r.CredentialId = v
 			}
 		}
+		if v, ok := instanceCfg["allow_traffic"].(bool); ok {
+			r.TrafficEnabled = v
+		}
 		instances[i] = r
 	}
 
@@ -186,6 +189,7 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 					"name":          ins.Name,
 					"id":            ins.Id,
 					"sic_key":       cfg["sic_key"].(string),
+					"allow_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
