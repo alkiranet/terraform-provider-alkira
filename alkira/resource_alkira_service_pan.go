@@ -208,6 +208,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 								},
 							},
 						},
+						"allow_traffic": {
+							Description: "Allow traffic on the PAN instance",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
 					},
 				},
 			},
