@@ -185,7 +185,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 
 			r.GlobalProtectSegmentOptions = options
 		}
-		if v, ok := instainstanceCfg["allow_traffic"].(bool); ok {
+		if v, ok := instanceCfg["allow_traffic"].(bool); ok {
 			r.TrafficEnabled = v
 		}
 		instances[i] = r
