@@ -17,21 +17,19 @@ type ConnectorAzureExpressRouteSegment struct {
 
 type ConnectorAzureExpressRouteInstance struct {
 	Name                  string   `json:"name"`
-	Id                    int      `json:"id,omitempty"`
 	ExpressRouteCircuitId string   `json:"expressRouteCircuitId"`
-	RedundantRouter       bool     `json:"redundantRouter,omitempty"`
 	LoopbackSubnet        string   `json:"loopbackSubnet,omitempty"`
 	CredentialId          string   `json:"credentialId"`
-	GatewayMacAddress     []string `json:"gatewayMacAddress,omitempty"`
+	GatewayMacAddress     []string `json:"gatewayMacAddresses,omitempty"`
 	Vnis                  []int    `json:"vnis,omitempty"`
+	Id                    int      `json:"id,omitempty"`
+	RedundantRouter       bool     `json:"redundantRouter,omitempty"`
 }
 
 type ConnectorAzureExpressRoute struct {
 	Name            string                               `json:"name"`
 	Id              json.Number                          `json:"id,omitempty"`
 	Size            string                               `json:"size"`
-	Enabled         bool                                 `json:"enabled"`
-	ImplicitGroupId int                                  `json:"implicitGroupId,omitempty"` // response only
 	VhubPrefix      string                               `json:"vhubPrefix"`
 	TunnelProtocol  string                               `json:"tunnelProtocol"`
 	Cxp             string                               `json:"cxp"`
@@ -39,6 +37,8 @@ type ConnectorAzureExpressRoute struct {
 	Instances       []ConnectorAzureExpressRouteInstance `json:"instances,omitempty"`
 	SegmentOptions  []ConnectorAzureExpressRouteSegment  `json:"segmentOptions,omitempty"`
 	BillingTags     []int                                `json:"billingTags"`
+	ImplicitGroupId int                                  `json:"implicitGroupId,omitempty"`
+	Enabled         bool                                 `json:"enabled"`
 }
 
 func NewConnectorAzureExpressRoute(ac *AlkiraClient) *AlkiraAPI[ConnectorAzureExpressRoute] {
