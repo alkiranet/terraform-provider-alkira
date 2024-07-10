@@ -114,6 +114,7 @@ Required:
 
 Optional:
 
+- `allow_traffic` (Boolean) Allow traffic on this instance of Cisco FTDv. Default is `true`
 - `ftdv_nat_id` (String) FTDv NAT ID.
 
 Read-Only:
