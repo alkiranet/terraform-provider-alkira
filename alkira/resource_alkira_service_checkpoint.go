@@ -106,7 +106,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Required:    true,
 						},
 						"allow_traffic": {
-							Description: "Allow traffic on the checkpoint instance",
+							Description: "Allow traffic on the checkpoint instance" + " Default is `true`",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
