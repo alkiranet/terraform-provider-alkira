@@ -102,7 +102,7 @@ Required:
 
 Optional:
 
-- `allow_traffic` (Boolean) Allow traffic on the checkpoint instance. Default is `true`
+- `enable_traffic` (Boolean) Enable traffic on the checkpoint instance. Default is `true`
 
 Read-Only:
 

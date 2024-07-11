@@ -185,7 +185,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 
 			r.GlobalProtectSegmentOptions = options
 		}
-		if v, ok := instanceCfg["allow_traffic"].(bool); ok {
+		if v, ok := instanceCfg["enable_traffic"].(bool); ok {
 			r.TrafficEnabled = v
 		}
 		instances[i] = r
@@ -208,7 +208,7 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 					"credential_id": ins.CredentialId,
 					"auth_key":      cfg["auth_key"].(string),
 					"auth_code":     cfg["auth_code"].(string),
-					"allow_traffic": ins.TrafficEnabled,
+					"enable_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
@@ -236,7 +236,7 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 				"credential_id": instance.CredentialId,
 				"name":          instance.Name,
 				"id":            instance.Id,
-				"allow_traffic": instance.TrafficEnabled,
+				"enable_traffic": instance.TrafficEnabled,
 			}
 
 			instances = append(instances, instance)
