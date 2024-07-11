@@ -15,7 +15,7 @@ type CiscoFTDvInstance struct {
 	Hostname       string `json:"hostName"`
 	LicenseType    string `json:"licenseType"`
 	Version        string `json:"version"`
-	TrafficEnabled bool   `json:"trafficEnabled,omitempty"`
+	TrafficEnabled bool   `json:"trafficEnabled"`
 }
 
 type CiscoFTDvManagementServer struct {

@@ -199,6 +199,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 						},
 						"allow_traffic": {
 							Description: "Allow traffic on this instance of Cisco FTDv." + " Default is `true`",
+							Default:     true,
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},

@@ -34,7 +34,7 @@ type CheckpointInstance struct {
 	Name           string `json:"name"`
 	CredentialId   string `json:"credentialId"`
 	InternalName   string `json:"internalName,omitempty"` //filled only on response
-	TrafficEnabled bool   `json:"trafficEnabled,omitempty"`
+	TrafficEnabled bool   `json:"trafficEnabled"`
 }
 
 type CheckpointInstanceConfig struct {
