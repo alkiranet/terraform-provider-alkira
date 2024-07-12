@@ -11,8 +11,8 @@ type ServiceF5Lb struct {
 	Description    string        `json:"description,omitempty"`
 	Cxp            string        `json:"cxp"`
 	Size           string        `json:"size"`
-	Id             json.Number   `json:"id"`
-	State          string        `json:"state,omitempty"`
+	Id             json.Number   `json:"id"`              //RESPONSE ONLY
+	State          string        `json:"state,omitempty"` //RESPONSE ONLY
 	Segments       []string      `json:"segments"`
 	BillingTags    []int         `json:"billingTags"`
 	ElbCidrs       []string      `json:"elbCidrs"`
