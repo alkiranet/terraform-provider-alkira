@@ -29,7 +29,7 @@ type F5Instances struct {
 }
 
 type InstanceDeployment struct {
-	Option string `json:"option,omitempty"`
+	Option string `json:"option"`
 	Type   string `json:"type"`
 }
 
