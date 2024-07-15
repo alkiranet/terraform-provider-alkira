@@ -72,6 +72,9 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 		if v, ok := instanceCfg["license_type"].(string); ok {
 			r.LicenseType = v
 		}
+		if v, ok := instanceCfg["enable_traffic"].(bool); ok {
+			r.TrafficEnabled = v
+		}
 
 		instances[i] = r
 	}
@@ -207,6 +210,7 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 					"id":                   ins.Id,
 					"license_type":         ins.LicenseType,
 					"version":              ins.Version,
+					"enable_traffic":        ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
@@ -236,6 +240,7 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 				"id":            instance.Id,
 				"license_type":  instance.LicenseType,
 				"version":       instance.Version,
+				"enable_traffic": instance.TrafficEnabled,
 			}
 
 			instances = append(instances, instance)
