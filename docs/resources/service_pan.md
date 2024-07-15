@@ -133,6 +133,7 @@ resource "alkira_service_pan" "test1" {
 
 Optional:
 
+- `enable_traffic` (Boolean) Enable traffic on the PAN instance. Default is `true`
 - `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
 - `auth_key` (String) PAN instance auth key. This is only required when `panorama_enabled` is set to `true`.
 - `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
