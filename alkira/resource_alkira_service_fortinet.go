@@ -306,7 +306,6 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
 	d.Set("license_scheme", f.Scheme)
-	d.Set("management_server_ip", f.ManagementServer.IpAddress)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
@@ -316,13 +315,15 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("version", f.Version)
 
 	// Set management server segment
-	managementServerSegmentId, err := getSegmentIdByName(f.ManagementServer.Segment, m)
 
-	if err != nil {
-		return diag.FromErr(err)
+	if f.ManagementServer != nil {
+		d.Set("management_server_ip", f.ManagementServer.IpAddress)
+		managementServerSegmentId, err := getSegmentIdByName(f.ManagementServer.Segment, m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("management_server_segment_id", managementServerSegmentId)
 	}
-	d.Set("management_server_segment_id", managementServerSegmentId)
-
 	// Set segments
 	segments := make([]int, len(f.Segments))
 
