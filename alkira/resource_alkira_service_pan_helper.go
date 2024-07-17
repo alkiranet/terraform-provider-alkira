@@ -203,11 +203,11 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		for _, ins := range c {
 			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
 				instance := map[string]interface{}{
-					"name":          ins.Name,
-					"id":            ins.Id,
-					"credential_id": ins.CredentialId,
-					"auth_key":      cfg["auth_key"].(string),
-					"auth_code":     cfg["auth_code"].(string),
+					"name":           ins.Name,
+					"id":             ins.Id,
+					"credential_id":  ins.CredentialId,
+					"auth_key":       cfg["auth_key"].(string),
+					"auth_code":      cfg["auth_code"].(string),
 					"enable_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
@@ -233,9 +233,9 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		// this will generate a diff
 		if new {
 			instance := map[string]interface{}{
-				"credential_id": instance.CredentialId,
-				"name":          instance.Name,
-				"id":            instance.Id,
+				"credential_id":  instance.CredentialId,
+				"name":           instance.Name,
+				"id":             instance.Id,
 				"enable_traffic": instance.TrafficEnabled,
 			}
 

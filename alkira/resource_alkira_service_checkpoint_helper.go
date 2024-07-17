@@ -185,10 +185,10 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 		for _, ins := range c {
 			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
 				instance := map[string]interface{}{
-					"credential_id": ins.CredentialId,
-					"name":          ins.Name,
-					"id":            ins.Id,
-					"sic_key":       cfg["sic_key"].(string),
+					"credential_id":  ins.CredentialId,
+					"name":           ins.Name,
+					"id":             ins.Id,
+					"sic_key":        cfg["sic_key"].(string),
 					"enable_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
