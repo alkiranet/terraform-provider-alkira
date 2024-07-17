@@ -210,7 +210,7 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 					"id":                   ins.Id,
 					"license_type":         ins.LicenseType,
 					"version":              ins.Version,
-					"enable_traffic":        ins.TrafficEnabled,
+					"enable_traffic":       ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
@@ -235,11 +235,11 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 		// this will generate a diff
 		if new {
 			instance := map[string]interface{}{
-				"credential_id": instance.CredentialId,
-				"hostname":      instance.Hostname,
-				"id":            instance.Id,
-				"license_type":  instance.LicenseType,
-				"version":       instance.Version,
+				"credential_id":  instance.CredentialId,
+				"hostname":       instance.Hostname,
+				"id":             instance.Id,
+				"license_type":   instance.LicenseType,
+				"version":        instance.Version,
 				"enable_traffic": instance.TrafficEnabled,
 			}
 
