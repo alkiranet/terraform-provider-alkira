@@ -63,6 +63,11 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"destination_type": {
 				Description: "The destination type of the connector. The value " +
 					"could be `IPSEC_ENDPOINT`, `AWS_VPN_CONNECTION`, " +
