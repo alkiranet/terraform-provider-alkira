@@ -100,10 +100,6 @@ Required:
 - `name` (String) The name of the checkpoint instance.
 - `sic_key` (String) The checkpoint instance sic keys.
 
-Optional:
-
-- `enable_traffic` (Boolean) Enable traffic on the checkpoint instance. Default is `true`
-
 Read-Only:
 
 - `credential_id` (String) ID of Checkpoint Firewall Instance credential.

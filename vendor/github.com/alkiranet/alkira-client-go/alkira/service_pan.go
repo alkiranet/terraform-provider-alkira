@@ -66,7 +66,6 @@ type ServicePanInstance struct {
 	Id                          int                                          `json:"id,omitempty"`
 	MasterKeyEnabled            bool                                         `json:"masterKeyEnabled,omitempty"`
 	Name                        string                                       `json:"name"`
-	TrafficEnabled              bool                                         `json:"trafficEnabled"`
 }
 
 // NewServicePan new service pan
