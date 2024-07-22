@@ -286,6 +286,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		Version:          d.Get("version").(string),
+		Description:      d.Get("description").(string),
 	}
 
 	return service, nil
