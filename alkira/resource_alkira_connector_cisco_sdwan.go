@@ -82,14 +82,14 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
-					"`10LARGE` and `20LARGE`.",
+					"`MEDIUM` and `LARGE`, `2LARGE`, `5LARGE` " +
+					"and `10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE",
-					"2LARGE", "4LARGE", "5LARGE",
-					"10LARGE", "20LARGE"}, false),
+					"2LARGE", "5LARGE",
+					"10LARGE"}, false),
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
