@@ -49,6 +49,7 @@ type ConnectorOciVcn struct {
 	Size            string      `json:"size"`
 	VcnId           string      `json:"vcnId"`
 	VcnRouting      interface{} `json:"vcnRouting,omitempty"`
+	Description     string      `json:"description,omitempty"`
 }
 
 // NewConnectorOciVcn new connector-oci-vcn

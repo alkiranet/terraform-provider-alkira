@@ -100,6 +100,7 @@ resource "alkira_connector_ipsec" "ipsec" {
 
 ### Optional
 
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED`. (see [below for nested schema](#nestedblock--policy_options))
