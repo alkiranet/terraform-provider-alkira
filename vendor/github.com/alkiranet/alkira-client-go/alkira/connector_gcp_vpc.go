@@ -48,6 +48,7 @@ type ConnectorGcpVpc struct {
 	VpcName         string                  `json:"vpcName"`
 	CustomerASN     int                     `json:"customerAsn,omitempty"`
 	ScaleGroupId    string                  `json:"scaleGroupId,omitempty"`
+	Description     string                  `json:"description,omitempty"`
 }
 
 // NewConnectorGcpVpc initialize a new connector

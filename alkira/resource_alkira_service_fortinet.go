@@ -189,6 +189,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
@@ -313,6 +318,7 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
+	d.Set("description", f.Description)
 
 	// Set management server segment
 

@@ -76,6 +76,7 @@ resource "alkira_connector_akamai_prolexic" "test" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) A list of Billing Tag by ID associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 

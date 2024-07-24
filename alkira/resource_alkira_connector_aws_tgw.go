@@ -72,6 +72,11 @@ func resourceAlkiraConnectorAwsTgw() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -160,6 +165,7 @@ func resourceConnectorAwsTgwRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("static_route_prefix_list_ids", connector.StaticRoutes)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -259,6 +265,7 @@ func generateConnectorAwsTgwRequest(d *schema.ResourceData, m interface{}) (*alk
 		StaticRoutes:              convertTypeSetToIntList(d.Get("static_route_prefix_list_ids").(*schema.Set)),
 		Segments:                  []string{segmentName},
 		Size:                      d.Get("size").(string),
+		Description:               d.Get("description").(string),
 	}
 
 	return request, nil

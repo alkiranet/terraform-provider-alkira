@@ -54,6 +54,7 @@ resource "alkira_connector_versa_sdwan" "test" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of Billing Tags to be associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default value is `true`.
 - `global_tenant_id` (Number) The global tenant ID of Versa SD-WAN. Default value is `1`.
 - `group` (String) The group of the connector.

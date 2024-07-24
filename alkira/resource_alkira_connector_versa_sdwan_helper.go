@@ -34,6 +34,7 @@ func generateConnectorVersaSdwanRequest(d *schema.ResourceData, m interface{}) (
 		Size:                  d.Get("size").(string),
 		TunnelProtocol:        d.Get("tunnel_protocol").(string),
 		VersaControllerHost:   d.Get("versa_controller_host").(string),
+		Description:           d.Get("description").(string),
 		VersaSdWanVRFMappings: expandVersaSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set)),
 	}
 

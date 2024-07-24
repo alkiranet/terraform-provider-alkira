@@ -39,6 +39,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
@@ -416,6 +421,7 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("size", connector.Size)
 	d.Set("vpn_mode", connector.VpnMode)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -616,6 +622,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 		ScaleGroupId:   d.Get("scale_group_id").(string),
 		Size:           d.Get("size").(string),
 		VpnMode:        vpnMode,
+		Description:    d.Get("description").(string),
 	}
 
 	return connector, nil

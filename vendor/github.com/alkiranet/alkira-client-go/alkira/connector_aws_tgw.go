@@ -19,6 +19,7 @@ type ConnectorAwsTgw struct {
 	StaticRoutes              []int       `json:"staticRoutes"`
 	Id                        json.Number `json:"id,omitempty"`              // response only
 	ImplicitGroupId           int         `json:"implicitGroupId,omitempty"` // response only
+	Description               string      `json:"description,omitempty"`
 }
 
 // NewConnectorAwsTgw new connector-aws-tgw

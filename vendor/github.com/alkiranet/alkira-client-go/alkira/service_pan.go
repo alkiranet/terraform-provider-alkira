@@ -38,6 +38,7 @@ type ServicePan struct {
 	TunnelProtocol              string                               `json:"tunnelProtocol,omitempty"`
 	Type                        string                               `json:"type"`
 	Version                     string                               `json:"version"`
+	Description                 string                               `json:"description,omitempty"`
 }
 
 type GlobalProtectSegmentOptions struct {

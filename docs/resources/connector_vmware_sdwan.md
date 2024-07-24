@@ -49,6 +49,7 @@ resource "alkira_connector_vmware_sdwan" "test" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of Billing Tags to be associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) Only supported tunnel protocol is `IPSEC` for now.

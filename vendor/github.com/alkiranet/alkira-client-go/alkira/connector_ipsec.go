@@ -96,6 +96,7 @@ type ConnectorIPSec struct {
 	Size            string                        `json:"size"`
 	VpnMode         string                        `json:"vpnMode"`
 	ScaleGroupId    string                        `json:"scaleGroupId,omitempty"`
+	Description     string                        `json:"description,omitempty"`
 }
 
 // NewConnectorIPSec initialize a new connector

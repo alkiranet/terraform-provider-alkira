@@ -23,6 +23,7 @@ type ConnectorArubaEdge struct {
 	TunnelProtocol       string                 `json:"tunnelProtocol"`
 	Version              string                 `json:"version"`
 	Enabled              bool                   `json:"enabled"`
+	Description          string                 `json:"description,omitempty"`
 }
 
 type ArubaEdgeVRFMappings struct {

@@ -106,6 +106,7 @@ resource "alkira_service_pan" "test1" {
 
 - `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the service.
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
+- `description` (String) The description of the service.
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`
 - `global_protect_segment_options` (Block Set) Segment options for segments that are already associated with the service. Options should apply. If `global_protect_enabled` is set to false, `global_protect_segment_options` shound not be included in your request. (see [below for nested schema](#nestedblock--global_protect_segment_options))
 - `license_sub_type` (String) PAN sub license type, either `CREDIT_BASED` or `MODEL_BASED`. (BETA)

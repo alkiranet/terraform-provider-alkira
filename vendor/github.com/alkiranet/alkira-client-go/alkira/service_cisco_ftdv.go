@@ -42,6 +42,7 @@ type ServiceCiscoFTDv struct {
 	AutoScale        string                    `json:"autoScale"`
 	InternalName     string                    `json:"internalName,omitempty"` // filled in response
 	State            string                    `json:"state,omitempty"`        // filled in response
+	Description      string                    `json:"description,omitempty"`
 }
 
 // NewServiceCiscoFTDv new service cisco FTDv

@@ -21,6 +21,7 @@ type ConnectorAkamaiProlexic struct {
 	OverlayConfiguration []ConnectorAkamaiProlexicOverlayConfiguration `json:"overlayConfiguration,omitempty"`
 	Segments             []string                                      `json:"segments"`
 	Size                 string                                        `json:"size"`
+	Description          string                                        `json:"description,omitempty"`
 }
 
 type ConnectorAkamaiProlexicByoipOption struct {
