@@ -41,7 +41,7 @@ resource "alkira_connector_fortinet_sdwan" "test" {
 
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `5LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `target_segment` (Block Set, Min: 1) Specify target segment. (see [below for nested schema](#nestedblock--target_segment))
 - `wan_edge` (Block List, Min: 1) WAN Edge (see [below for nested schema](#nestedblock--wan_edge))
 
