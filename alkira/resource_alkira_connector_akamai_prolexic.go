@@ -117,7 +117,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -125,10 +125,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 					"MEDIUM",
 					"LARGE",
 					"2LARGE",
-					"4LARGE",
-					"5LARGE",
-					"10LARGE",
-					"20LARGE"}, false),
+					"5LARGE"}, false),
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +
