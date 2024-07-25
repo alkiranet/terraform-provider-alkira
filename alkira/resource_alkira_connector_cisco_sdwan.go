@@ -89,7 +89,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE",
 					"2LARGE", "5LARGE",
-					"10LARGE", "20LARGE"}, false),
+					"10LARGE"}, false),
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
