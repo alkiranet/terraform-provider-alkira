@@ -208,12 +208,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 								},
 							},
 						},
-						"enable_traffic": {
-							Description: "Enable traffic on the PAN instance." + " Default is `true`",
-							Default:     true,
-							Type:        schema.TypeBool,
-							Optional:    true,
-						},
 					},
 				},
 			},
@@ -310,6 +304,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "Name of the PAN service.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"description": {
+				Description: "The description of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
@@ -455,6 +454,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("tunnel_protocol", pan.TunnelProtocol)
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
+	d.Set("description", pan.Description)
 
 	if pan.PanoramaDeviceGroup != nil {
 		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
@@ -675,6 +675,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		Size:                        d.Get("size").(string),
 		Type:                        d.Get("type").(string),
 		Version:                     d.Get("version").(string),
+		Description:                 d.Get("description").(string),
 	}
 
 	return service, nil

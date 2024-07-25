@@ -38,6 +38,7 @@ type ServicePan struct {
 	TunnelProtocol              string                               `json:"tunnelProtocol,omitempty"`
 	Type                        string                               `json:"type"`
 	Version                     string                               `json:"version"`
+	Description                 string                               `json:"description,omitempty"`
 }
 
 type GlobalProtectSegmentOptions struct {
@@ -66,7 +67,6 @@ type ServicePanInstance struct {
 	Id                          int                                          `json:"id,omitempty"`
 	MasterKeyEnabled            bool                                         `json:"masterKeyEnabled,omitempty"`
 	Name                        string                                       `json:"name"`
-	TrafficEnabled              bool                                         `json:"trafficEnabled"`
 }
 
 // NewServicePan new service pan

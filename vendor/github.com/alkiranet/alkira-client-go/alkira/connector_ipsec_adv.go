@@ -102,6 +102,7 @@ type ConnectorAdvIPSec struct {
 	TunnelsPerGateway     int                              `json:"tunnelsPerGateway"`
 	Size                  string                           `json:"size"`
 	VpnMode               string                           `json:"vpnMode"`
+	Description           string                           `json:"description,omitempty"`
 }
 
 // NewConnectorAdvIPSec initialize a new connector

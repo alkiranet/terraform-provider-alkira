@@ -299,6 +299,7 @@ func generateConnectorIPSecAdvRequest(d *schema.ResourceData, m interface{}) (*a
 		Size:                  d.Get("size").(string),
 		TunnelsPerGateway:     d.Get("tunnels_per_gateway").(int),
 		VpnMode:               vpnMode,
+		Description:           d.Get("description").(string),
 		Gateways:              gateways,
 		PolicyOptions:         policyOptions,
 		RoutingOptions:        routingOptions,
@@ -473,6 +474,7 @@ func setConnectorAdvIPSec(connector *alkira.ConnectorAdvIPSec, d *schema.Resourc
 	d.Set("size", connector.Size)
 	d.Set("tunnels_per_gateway", connector.TunnelsPerGateway)
 	d.Set("vpn_mode", connector.VpnMode)
+	d.Set("description", connector.Description)
 
 	// gateway block
 	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))

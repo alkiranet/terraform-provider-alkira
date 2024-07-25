@@ -68,6 +68,11 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -263,6 +268,7 @@ func resourceConnectorVersaSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("remote_public_shared_key", connector.RemotePublicSharedKey)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("description", connector.Description)
 
 	// Set Instances
 	setVersaSdwanInstance(d, connector)

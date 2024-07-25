@@ -39,6 +39,11 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"billing_tag_ids": {
 				Description: "IDs of Billing Tags to be associated " +
 					"with the connector.",
@@ -242,6 +247,7 @@ func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("enabled", connector.Enabled)
+	d.Set("description", connector.Description)
 
 	// Set virtual edge
 	setVirtualEdge(d, connector)
@@ -356,6 +362,7 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 		TunnelProtocol:          d.Get("tunnel_protocol").(string),
 		Version:                 d.Get("version").(string),
 		Enabled:                 d.Get("enabled").(bool),
+		Description:             d.Get("description").(string),
 	}
 
 	return connector, nil

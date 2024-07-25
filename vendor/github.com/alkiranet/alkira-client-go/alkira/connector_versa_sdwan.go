@@ -40,6 +40,7 @@ type ConnectorVersaSdwan struct {
 	VersaControllerHost   string                 `json:"versaControllerHost"`
 	VersaSdWanVRFMappings []VersaSdwanVrfMapping `json:"versaSDWANVRFMappings"`
 	Enabled               bool                   `json:"enabled"`
+	Description           string                 `json:"description,omitempty"`
 }
 
 // NewConnectorVersaSdwan new connector

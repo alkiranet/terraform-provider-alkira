@@ -39,6 +39,11 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"oci_region": {
 				Description: "OCI region of the VCN.",
 				Type:        schema.TypeString,
@@ -236,6 +241,7 @@ func resourceConnectorOciVcnRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("oci_region", connector.CustomerRegion)
 	d.Set("size", connector.Size)
 	d.Set("vcn_id", connector.VcnId)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -364,6 +370,7 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 		Segments:       []string{segmentName},
 		Size:           d.Get("size").(string),
 		VcnId:          d.Get("vcn_id").(string),
+		Description:    d.Get("description").(string),
 		VcnRouting:     vcnRouting,
 	}
 
