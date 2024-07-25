@@ -91,7 +91,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, ",
+					"`MEDIUM`, `LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SMALL", "MEDIUM", "LARGE"}, false),

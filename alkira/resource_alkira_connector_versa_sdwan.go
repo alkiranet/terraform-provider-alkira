@@ -106,7 +106,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` ",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`. ",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{

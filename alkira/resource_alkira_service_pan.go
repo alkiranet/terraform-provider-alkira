@@ -319,7 +319,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service, one of " +
-					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`",
+					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
