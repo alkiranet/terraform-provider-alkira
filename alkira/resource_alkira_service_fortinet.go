@@ -223,11 +223,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
+					"SMALL", "MEDIUM", "LARGE", "2LARGE", "5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
