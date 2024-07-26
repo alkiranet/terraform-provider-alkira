@@ -46,7 +46,7 @@ resource "alkira_connector_versa_sdwan" "test" {
 - `local_id` (String) The local ID.
 - `name` (String) The name of the connector.
 - `remote_id` (String) The remote ID.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 - `versa_controller_host` (String) The Versa controller IP/FQDN.
 - `versa_vos_device` (Block List, Min: 1) Versa VOS Device. (see [below for nested schema](#nestedblock--versa_vos_device))
 - `vrf_segment_mapping` (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))

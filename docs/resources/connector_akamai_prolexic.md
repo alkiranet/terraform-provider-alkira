@@ -70,7 +70,7 @@ resource "alkira_connector_akamai_prolexic" "test" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 - `tunnel_configuration` (Block Set, Min: 1) Tunnel Configurations. (see [below for nested schema](#nestedblock--tunnel_configuration))
 
 ### Optional

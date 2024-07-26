@@ -84,13 +84,12 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM` and `LARGE`, `2LARGE`, `5LARGE`.",
+					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM",
-					"LARGE", "2LARGE",
-					"5LARGE"}, false),
+					"LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol. It could be either `IPSEC`" +

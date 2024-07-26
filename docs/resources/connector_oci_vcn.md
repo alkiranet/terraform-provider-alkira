@@ -54,7 +54,7 @@ resource "alkira_connector_oci_vcn" "test" {
 - `name` (String) The name of the connector.
 - `oci_region` (String) OCI region of the VCN.
 - `segment_id` (String) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `vcn_id` (String) The OCID of the VCN.
 
 ### Optional
