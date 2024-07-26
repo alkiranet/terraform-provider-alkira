@@ -332,8 +332,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
-					"`10LARGE` and `20LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, " +
+					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice(
@@ -342,10 +342,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						"MEDIUM",
 						"LARGE",
 						"2LARGE",
-						"4LARGE",
 						"5LARGE",
 						"10LARGE",
-						"20LARGE"}, false),
+					}, false),
 			},
 			"vpn_mode": &schema.Schema{
 				Description: "The mode can be configured either as `ROUTE_BASED` " +

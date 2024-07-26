@@ -60,7 +60,7 @@ resource "alkira_service_fortinet" "test1" {
 - `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - `name` (String) Name of the Fortinet Firewall service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
-- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
+- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 - `version` (String) The version of the Fortinet Firewall. Please check Alkira Portal for all supported versions.
 
 ### Optional

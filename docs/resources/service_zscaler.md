@@ -52,7 +52,7 @@ resource "alkira_service_zscaler" "test1" {
 - `primary_public_edge_ip` (String) The IP for closest Zscaler PoP to CXP region.
 - `secondary_public_edge_ip` (String) The IP for standby Zscaler PoP to CXP region.
 - `segment_ids` (Set of String) IDs of segment associated with the service.
-- `size` (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`.
+- `size` (String) The size of the service one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.
 
 ### Optional
 
