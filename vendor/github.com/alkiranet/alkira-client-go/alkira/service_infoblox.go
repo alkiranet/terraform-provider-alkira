@@ -14,13 +14,13 @@ type ServiceInfoblox struct {
 	Description      string             `json:"description,omitempty"`
 	GlobalCidrListId int                `json:"globalCidrListId"`
 	GridMaster       InfobloxGridMaster `json:"gridMaster"`
-	Id               json.Number        `json:"id,omitempty"`
+	Id               json.Number        `json:"id,omitempty"` // RESPONSE ONLY
 	Instances        []InfobloxInstance `json:"instances"`
 	InternalName     string             `json:"internalName,omitempty"`
 	LicenseType      string             `json:"licenseType,omitempty"`
 	Name             string             `json:"name"`
 	Segments         []string           `json:"segments"`
-	ServiceGroupId   int                `json:"serviceGroupId,omitempty"`
+	ServiceGroupId   int                `json:"serviceGroupId,omitempty"` // RESPONSE ONLY
 	ServiceGroupName string             `json:"serviceGroupName"`
 	Size             string             `json:"size,omitempty"`
 	AllowListId      int                `json:"allowListId,omitempty"`

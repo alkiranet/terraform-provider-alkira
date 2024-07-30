@@ -215,4 +215,5 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
 	d.Set("allow_list_id", in.AllowListId)
+	d.Set("service_group_id", in.ServiceGroupId)
 }
