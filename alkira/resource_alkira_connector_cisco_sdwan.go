@@ -192,8 +192,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol for the " +
-					"connector one of `IPSEC` or `GRE`. " +
-					"Default value is `IPSEC`.",
+					"connector one of `IPSEC` or `GRE`. ",
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice(
