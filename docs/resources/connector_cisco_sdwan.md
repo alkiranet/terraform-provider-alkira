@@ -50,7 +50,7 @@ resource "alkira_connector_cisco_sdwan" "test" {
 - `billing_tag_ids` (Set of Number) Billing Tag IDs to be associated with the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `tunnel_protocol` (String) The tunnel protocol for the connector one of `IPSEC` or `GRE`. Default value is `IPSEC`.
+- `tunnel_protocol` (String) The tunnel protocol for the connector one of `IPSEC` or `GRE`.
 - `type` (String) The type of Cisco SD-WAN. Default value is `VEDGE`.
 
 ### Read-Only
