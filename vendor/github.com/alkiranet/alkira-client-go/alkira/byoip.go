@@ -14,12 +14,13 @@ type ByoipExtraAttributes struct {
 }
 
 type Byoip struct {
+	ExtraAttributes ByoipExtraAttributes `json:"extraAttributes"`
+	CloudProvider   string               `json:"cloudProvider"`
 	Prefix          string               `json:"prefix"`
 	Cxp             string               `json:"cxp"`
 	Description     string               `json:"description"`
-	ExtraAttributes ByoipExtraAttributes `json:"extraAttributes"`
+	Id              json.Number          `json:"id,omitempty"`
 	DoNotAdvertise  bool                 `json:"doNotAdvertise"`
-	Id              json.Number          `json:"id,omitempty"` // response only
 }
 
 // NewByoip new BYOIP

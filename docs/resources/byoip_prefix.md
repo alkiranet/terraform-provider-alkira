@@ -28,11 +28,12 @@ resource "alkira_byoip" "test" {
 
 ### Required
 
+- `cloud_provider` (String) Cloud provider for the BYOIP.This must match CXP's provider.
 - `cxp` (String) CXP region.
-- `message` (String) Message from AWS BYOIP.
+- `message` (String) Message from BYOIP.For AWS, the format of the message is `1|aws|account|cidr|YYYYMMDD|SHA256|RSAPSS`, where the date is the expiry date of the message.For AZURE, the format of the message is `subscriptionId|cidr|YYYYMMDD`, where the date is the validity date on the ROA.
 - `prefix` (String) Prefix for BYOIP.
-- `public_key` (String) Public Key from AWS BYOIP.
-- `signature` (String) Signautre from AWS BYOIP.
+- `public_key` (String) The RSA 2048-bit public key from the BYOIP.
+- `signature` (String) Signature from the BYOIP.For AZURE, the signature scheme is `SHA256RSA`.
 
 ### Optional
 
