@@ -1,4 +1,4 @@
-data "alkira_byoip" "byoip" {
+data "alkira_byoip_prefix" "byoip" {
   name = "byoip-pfx-01"
 }
 
@@ -9,3 +9,4 @@ resource "alkira_connector_internet_exit" "cn" {
   segment_id = alkira_segment.test.id
   byoip_id   = data.alkira_byoip.byoip.id
 }
+
