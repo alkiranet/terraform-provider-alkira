@@ -9,7 +9,7 @@ description: |-
 
 # alkira_byoip (Data Source)
 
-**NOTE: This data source is deprecated, use `alkira_byoip_prefix` instead.**
+~> **NOTE:** This data source is deprecated, use `alkira_byoip_prefix` instead.
 
 Use this data source to get an existing BYOIP Prefix.
 
