@@ -1,4 +1,4 @@
-data "alkira_byoip" "byoip" {
+data "alkira_byoip_prefix" "byoip" {
   name = "byoip-pfx-01"
 }
 
