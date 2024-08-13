@@ -21,7 +21,7 @@ func dataSourceAlkiraByoipPrefix() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraByoipRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceAlkiraByoipPrefixRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
 	resource, _, err := api.GetByName(d.Get("prefix").(string))
