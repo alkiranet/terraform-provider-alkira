@@ -5,10 +5,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAlkiraByoip() *schema.Resource {
+func dataSourceAlkiraByoipPrefix() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Use this data source to get an existing BYOIP Prefix.",
-		DeprecationMessage: "`alkira_byoip` data source is deprecated, use `alkira_byoip_prefix` instead.",
+		Description: "Use this data source to get an existing BYOIP Prefix.",
 
 		Read: dataSourceAlkiraByoipRead,
 
@@ -22,7 +21,7 @@ func dataSourceAlkiraByoip() *schema.Resource {
 	}
 }
 
-func dataSourceAlkiraByoipRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceAlkiraByoipPrefixRead(d *schema.ResourceData, m interface{}) error {
 	api := alkira.NewByoip(m.(*alkira.AlkiraClient))
 
 	resource, _, err := api.GetByName(d.Get("prefix").(string))
