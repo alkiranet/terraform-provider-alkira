@@ -150,6 +150,7 @@ func resourceByoipPrefixRead(ctx context.Context, d *schema.ResourceData, m inte
 	d.Set("signature", byoip.ExtraAttributes.Signature)
 	d.Set("public_key", byoip.ExtraAttributes.PublicKey)
 	d.Set("do_not_advertise", byoip.DoNotAdvertise)
+	d.Set("cloud_provider", byoip.CloudProvider)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -203,6 +204,7 @@ func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip,
 		Cxp:             d.Get("cxp").(string),
 		Description:     d.Get("description").(string),
 		ExtraAttributes: attributes,
+		CloudProvider:   d.Get("cloud_provider").(string),
 		DoNotAdvertise:  d.Get("do_not_advertise").(bool),
 	}
 
