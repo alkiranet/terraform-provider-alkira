@@ -20,7 +20,7 @@ type ServiceInfoblox struct {
 	LicenseType                 string             `json:"licenseType,omitempty"`
 	Name                        string             `json:"name"`
 	Segments                    []string           `json:"segments"`
-	ServiceGroupId              int                `json:"serviceGroupId,omitempty"`    // RESPONSE ONLY
+	ServiceGroupId              int                `json:"serviceGroupId"`              // RESPONSE ONLY
 	ServiceGroupImplicitGroupId int                `json:"serviceGroupImplicitGroupId"` // RESPONSE ONLY
 	ServiceGroupName            string             `json:"serviceGroupName"`
 	Size                        string             `json:"size,omitempty"`
