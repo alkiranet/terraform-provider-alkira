@@ -288,11 +288,11 @@ func generateSegmentRequest(d *schema.ResourceData) (*alkira.Segment, error) {
 	}
 
 	seg := &alkira.Segment{
-		Asn:                               d.Get("asn").(int),
-		Description:                       d.Get("description").(string),
-		EnableIpv6ToIpv4Translation:       d.Get("enable_ipv6_to_ipv4_translation").(bool),
-		EnterpriseDNSServerIP:             d.Get("enterprise_dns_server_ip").(string),
-		Name:                              d.Get("name").(string),
+		Asn:                         d.Get("asn").(int),
+		Description:                 d.Get("description").(string),
+		EnableIpv6ToIpv4Translation: d.Get("enable_ipv6_to_ipv4_translation").(bool),
+		EnterpriseDNSServerIP:       d.Get("enterprise_dns_server_ip").(string),
+		Name:                        d.Get("name").(string),
 		ReservePublicIPsForUserAndSiteConnectivity:        d.Get("reserve_public_ips").(bool),
 		ReservePublicIPsForUserAndSiteConnectivityForCXPs: cxps,
 		ServiceTrafficDistribution:                        serviceTrafficDistribution,
