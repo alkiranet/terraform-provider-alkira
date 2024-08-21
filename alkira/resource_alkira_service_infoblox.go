@@ -236,6 +236,12 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"service_group_implicit_group_id": {
+				Description: "The ID of the implicit group to be associated " +
+					"with the service.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"shared_secret": {
 				Description: "Shared Secret of the InfoBlox grid. " +
 					"This cannot be empty.",
