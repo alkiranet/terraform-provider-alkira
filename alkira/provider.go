@@ -110,7 +110,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":                        dataSourceAlkiraBillingTag(),
 			"alkira_byoip_prefix":                       dataSourceAlkiraByoipPrefix(),
-			"alkira_byoip":                              dataSourceAlkiraByoipPrefix(),
+			"alkira_byoip":                              dataSourceAlkiraByoip(),
 			"alkira_credential":                         dataSourceAlkiraCredential(),
 			"alkira_connector_akamai_prolexic":          dataSourceAlkiraConnectorAkamaiProlexic(),
 			"alkira_connector_aruba_edge":               dataSourceAlkiraConnectorArubaEdge(),
