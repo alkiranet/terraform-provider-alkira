@@ -90,6 +90,7 @@ type ConnectorAzureVnet struct {
 	PeeringGatewayCxpId               int                   `json:"cxpPeeringGatewayId,omitempty"`
 	DirectInterVNETCommunicationGroup string                `json:"directInterVnetCommunicationGroup,omitempty"`
 	UdrListIds                        []int                 `json:"udrListIds,omitempty"`
+	Description                       string                `json:"description,omitempty"`
 }
 
 // NewConnectorAzureVnet initalize a new connector
