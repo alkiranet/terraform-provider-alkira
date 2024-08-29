@@ -60,6 +60,7 @@ type ConnectorAwsVpc struct {
 	VpcRouting                         interface{}     `json:"vpcRouting"`
 	TgwConnectEnabled                  bool            `json:"tgwConnectEnabled"`
 	ScaleGroupId                       string          `json:"scaleGroupId,omitempty"`
+	Description                        string          `json:"description,omitempty"`
 }
 
 // NewConnectorAwsVpc new connector-aws-vpc
