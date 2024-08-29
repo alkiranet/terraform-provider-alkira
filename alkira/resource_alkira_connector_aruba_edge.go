@@ -75,7 +75,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 						},
 					},
 				},
-				Optional: true,
+				Required: true,
 			},
 			"billing_tag_ids": {
 				Description: "IDs of billing tags.",
