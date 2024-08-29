@@ -233,6 +233,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -307,6 +312,7 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("vpc_id", connector.VpcId)
 	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 	d.Set("scale_group_id", connector.ScaleGroupId)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)

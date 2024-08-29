@@ -38,6 +38,7 @@ type ConnectorCiscoSdwan struct {
 	BillingTags          []int                      `json:"billingTags"`
 	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"`
 	Enabled              bool                       `json:"enabled"`
+	Description          string                     `json:"description,omitempty"`
 }
 
 // NewConnectorCiscoSdwan initialize a new connector
