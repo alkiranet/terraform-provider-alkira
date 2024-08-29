@@ -56,6 +56,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 ### Required
 
+- `aruba_edge_vrf_mapping` (Block Set, Min: 1) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `gateway_gbp_asn` (Number) The gateway BGP ASN.
 - `instances` (Block List, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
@@ -66,7 +67,6 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 ### Optional
 
-- `aruba_edge_vrf_mapping` (Block Set) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
 - `billing_tag_ids` (Set of Number) IDs of billing tags.
 - `boost_mode` (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
 - `description` (String) The description of the connector.
@@ -79,6 +79,21 @@ resource "alkira_connector_aruba_edge" "test1" {
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 - `provision_state` (String) The provision state of the connector.
+
+<a id="nestedblock--aruba_edge_vrf_mapping"></a>
+### Nested Schema for `aruba_edge_vrf_mapping`
+
+Required:
+
+- `aruba_edge_connect_segment` (String) The segment of the Aruba Edge connector.
+- `gateway_gbp_asn` (Number) The gateway BGP ASN.
+- `segment_id` (String) The segment ID associated with the Aruba Edge connector.
+
+Optional:
+
+- `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
+- `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
+
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
@@ -94,21 +109,6 @@ Required:
 Read-Only:
 
 - `id` (Number) The ID of the endpoint.
-
-
-<a id="nestedblock--aruba_edge_vrf_mapping"></a>
-### Nested Schema for `aruba_edge_vrf_mapping`
-
-Required:
-
-- `aruba_edge_connect_segment` (String) The segment of the Aruba Edge connector.
-- `gateway_gbp_asn` (Number) The gateway BGP ASN.
-- `segment_id` (String) The segment ID associated with the Aruba Edge connector.
-
-Optional:
-
-- `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
-- `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
 
 ## Import
 
