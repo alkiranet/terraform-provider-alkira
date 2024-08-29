@@ -199,6 +199,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 					[]string{"IPSEC", "GRE"},
 					false),
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -266,6 +271,7 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("size", connector.Size)
 	d.Set("type", connector.Type)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("description", connector.Description)
 
 	// Set vedge
 	setVedge(d, connector)
@@ -379,6 +385,7 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 		Type:                 d.Get("type").(string),
 		Version:              d.Get("version").(string),
 		TunnelProtocol:       d.Get("tunnel_protocol").(string),
+		Description:          d.Get("description").(string),
 	}
 
 	return connector, nil
