@@ -172,8 +172,6 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This " +

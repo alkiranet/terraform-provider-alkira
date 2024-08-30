@@ -119,10 +119,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					"`LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"5LARGE", "10LARGE", "20LARGE"}, false),
-			},
 			"tgw_connect_enabled": {
 				Description: "When it's set to `true`, Alkira will use TGW Connect " +
 					"attachments to build connection to AWS Transit Gateway. " +
