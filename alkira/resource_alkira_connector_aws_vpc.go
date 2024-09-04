@@ -115,13 +115,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
+				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"tgw_connect_enabled": {
 				Description: "When it's set to `true`, Alkira will use TGW Connect " +
