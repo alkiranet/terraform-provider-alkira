@@ -226,13 +226,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
+				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", `2LARGE`,
-					`5LARGE`}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This cannot be specified " +
