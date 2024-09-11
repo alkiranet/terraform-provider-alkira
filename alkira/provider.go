@@ -103,6 +103,7 @@ func Provider() *schema.Provider {
 			"alkira_service_checkpoint":                 resourceAlkiraCheckpoint(),
 			"alkira_service_cisco_ftdv":                 resourceAlkiraServiceCiscoFTDv(),
 			"alkira_service_fortinet":                   resourceAlkiraServiceFortinet(),
+			"alkira_service_f5_lb":                      resourceAlkiraF5LoadBalancer(),
 			"alkira_service_infoblox":                   resourceAlkiraInfoblox(),
 			"alkira_service_zscaler":                    resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                        resourceAlkiraServicePan(),

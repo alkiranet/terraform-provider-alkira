@@ -8,67 +8,209 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// expandInstanceDeployment converts the input data to an InstanceDeployment struct.
-func expandInstanceDeployment(in []interface{}) (*alkira.InstanceDeployment, error) {
-	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] Invalid Instance Deployment")
-		return nil, errors.New("Invalid Instance Deployment.")
-	}
-
-	deployment := &alkira.InstanceDeployment{}
-	for _, v := range in {
-		deploymentConfig := v.(map[string]interface{})
-		if option, ok := deploymentConfig["deployment_option"]; ok {
-			deployment.Option = option.(string)
-		}
-		if dtype, ok := deploymentConfig["deployment_type"]; ok {
-			deployment.Type = dtype.(string)
-		}
-	}
-
-	return deployment, nil
-}
-
 // expandF5Instances converts the input data to a slice of F5Instances structs.
-func expandF5Instances(in []interface{}) ([]alkira.F5Instances, error) {
+func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, error) {
+
+	client := m.(*alkira.AlkiraClient)
+
 	if in == nil || len(in) == 0 {
-		log.Printf("[DEBUG] Invalid F5 Load Balancer instance input")
-		return nil, errors.New("Invalid F5 Load Balancer instance input")
+		log.Printf("[ERROR] Invalid F5 Load Balancer instance input.")
+		return nil, errors.New("Invalid F5 Load Balancer instance input.")
 	}
 
-	instances := make([]alkira.F5Instances, len(in))
+	instances := make([]alkira.F5Instance, len(in))
+	instanceDeployment := alkira.F5InstanceDeployment{}
 
 	for i, instance := range in {
 		instanceConfig := instance.(map[string]interface{})
-		f5lb := alkira.F5Instances{}
+		f5lb := alkira.F5Instance{}
 
 		if name, ok := instanceConfig["name"]; ok {
+
 			f5lb.Name = name.(string)
 		}
 		if licenseType, ok := instanceConfig["license_type"]; ok {
 			f5lb.LicenseType = licenseType.(string)
+			// if the license type is BRING_YOUR_OWN, we need a registration credential.
+			if licenseType == "BRING_YOUR_OWN" {
+				if regCredId, ok := instanceConfig["registration_credential_id"].(string); ok {
+					if regCredId == "" {
+						credentialName := f5lb.Name + "registration" + randomNameSuffix()
+						credentialF5Registration := alkira.CredentialF5InstanceRegistration{
+							RegistrationKey: instanceConfig["registration_key"].(string),
+						}
+
+						log.Printf("[INFO] Creating F5 Load Balancer Instance Registration Credential %s", credentialName)
+						credentialId, err := client.CreateCredential(
+							credentialName,
+							alkira.CredentialTypeF5InstanceRegistration,
+							credentialF5Registration,
+							0,
+						)
+						if err != nil {
+							return nil, err
+						}
+						f5lb.RegistrationCredentialId = credentialId
+					} else {
+						f5lb.RegistrationCredentialId = regCredId
+					}
+				}
+			}
 		}
 		if version, ok := instanceConfig["version"]; ok {
+
 			f5lb.Version = version.(string)
 		}
-		if regCredId, ok := instanceConfig["registration_credential_id"]; ok {
-			f5lb.RegistrationCredentialId = regCredId.(string)
-		}
-		if credId, ok := instanceConfig["credential_id"]; ok {
-			f5lb.CredentialId = credId.(string)
-		}
-		if deployment, ok := instanceConfig["deployment"]; ok {
-			deploymentStruct, err := expandInstanceDeployment(deployment.([]interface{}))
-			if err != nil {
-				return nil, err
-			}
-			f5lb.Deployment = deploymentStruct
+		if fqdn, ok := instanceConfig["hostname_fqdn"]; ok {
+			f5lb.HostNameFqdn = fqdn.(string)
 		}
 
+		if deploymentType, ok := instanceConfig["deployment_type"]; ok {
+			instanceDeployment.Type = deploymentType.(string)
+		}
+		if deploymentOption, ok := instanceConfig["deployment_option"]; ok {
+			instanceDeployment.Option = deploymentOption.(string)
+		}
+		f5lb.Deployment = instanceDeployment
+
+		if credId, ok := instanceConfig["credential_id"].(string); ok {
+
+			if credId == "" {
+				credentialName := f5lb.Name + randomNameSuffix()
+				credentialF5Instance := alkira.CredentialF5Instance{
+					UserName: instanceConfig["f5_username"].(string),
+					Password: instanceConfig["f5_password"].(string),
+				}
+
+				log.Printf("[INFO] Creating F5 Load Balancer Instance Credential %s", credentialName)
+				credentialId, err := client.CreateCredential(
+					credentialName,
+					alkira.CredentialTypeF5Instance,
+					credentialF5Instance,
+					0,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+
+				f5lb.CredentialId = credentialId
+			} else {
+				f5lb.CredentialId = credId
+			}
+		}
 		instances[i] = f5lb
 	}
 
 	return instances, nil
+}
+
+func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOption, error) {
+	segmentOptions := make(alkira.F5SegmentOption)
+
+	for _, option := range in.List() {
+		cfg := option.(map[string]interface{})
+		segmentId := cfg["segment_id"].(string)
+
+		segmentName, err := getSegmentNameById(segmentId, m)
+		if err != nil {
+			return nil, err
+		}
+
+		subOption := alkira.F5SegmentSubOption{
+			ElbNicCount: cfg["elb_nic_count"].(int),
+		}
+
+		if natPoolPrefixLength, ok := cfg["nat_pool_prefix_length"]; ok {
+			subOption.NatPoolPrefixLength = natPoolPrefixLength.(int)
+		}
+
+		segmentOptions[segmentName] = subOption
+	}
+
+	return segmentOptions, nil
+}
+
+func deflateF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string]interface{}, error) {
+	if in == nil {
+		return nil, errors.New("[ERROR] Segment options is nil.")
+	}
+
+	var segmentOptions []map[string]interface{}
+
+	for segmentName, subOption := range in {
+		segmentId, err := getSegmentIdByName(segmentName, m)
+		if err != nil {
+			return nil, err
+		}
+
+		option := map[string]interface{}{
+			"segment_id":    segmentId,
+			"elb_nic_count": subOption.ElbNicCount,
+		}
+
+		if subOption.NatPoolPrefixLength != 0 {
+			option["nat_pool_prefix_length"] = subOption.NatPoolPrefixLength
+		}
+
+		segmentOptions = append(segmentOptions, option)
+	}
+
+	return segmentOptions, nil
+}
+
+func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]interface{} {
+	var instances []map[string]interface{}
+
+	for _, instance := range d.Get("instance").([]interface{}) {
+		stateInstance := instance.(map[string]interface{})
+
+		for _, apiInstance := range c {
+			if stateInstance["id"].(int) == apiInstance.Id || stateInstance["name"].(string) == apiInstance.Name {
+				instanceStruct := map[string]interface{}{
+					"name":                       apiInstance.Name,
+					"id":                         apiInstance.Id,
+					"credential_id":              apiInstance.CredentialId,
+					"registration_credential_id": apiInstance.RegistrationCredentialId,
+					"license_type":               apiInstance.LicenseType,
+					"version":                    apiInstance.Version,
+					"hostname_fqdn":              apiInstance.HostNameFqdn,
+					"deployment_option":          apiInstance.Deployment.Option,
+					"deployment_type":            apiInstance.Deployment.Type,
+				}
+				instances = append(instances, instanceStruct)
+				break
+			}
+		}
+	}
+
+	for _, apiInstance := range c {
+		new := true
+
+		for _, instance := range d.Get("instance").([]interface{}) {
+			stateInstance := instance.(map[string]interface{})
+
+			if stateInstance["id"].(int) == apiInstance.Id || stateInstance["name"].(string) == apiInstance.Name {
+				new = false
+				break
+			}
+		}
+		if new {
+			instanceStruct := map[string]interface{}{
+				"credential_id":              apiInstance.CredentialId,
+				"registration_credential_id": apiInstance.RegistrationCredentialId,
+				"license_type":               apiInstance.LicenseType,
+				"version":                    apiInstance.Version,
+				"hostname_fqdn":              apiInstance.HostNameFqdn,
+				"deployment_option":          apiInstance.Deployment.Option,
+				"deployment_type":            apiInstance.Deployment.Type,
+			}
+			instances = append(instances, instanceStruct)
+			break
+		}
+
+	}
+	return instances
 }
 
 // generateRequestF5Lb generates the request payload for creating an F5 Load Balancer service.
@@ -77,8 +219,7 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	instances, err := expandF5Instances(
-		d.Get("instances").([]interface{}),
-	)
+		d.Get("instances").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
@@ -89,17 +230,25 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 		return nil, err
 	}
 
-	service := &alkira.ServiceF5Lb{
-		Name:           d.Get("name").(string),
-		Description:    d.Get("description").(string),
-		Cxp:            d.Get("cxp").(string),
-		Size:           d.Get("size").(string),
-		Segments:       segmentNames,
-		BillingTags:    billingTagIds,
-		ElbCidrs:       convertTypeSetToStringList(d.Get("elb_cidrs").(*schema.Set)),
-		BigIpAllowList: convertTypeSetToStringList(d.Get("big_ip_allow_list").(*schema.Set)),
-		Instances:      instances,
+	segmentOptions, err := expandF5SegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	if err != nil {
+		return nil, err
 	}
+	log.Printf("[DEBUG-TEST] %v", segmentOptions)
 
+	service := &alkira.ServiceF5Lb{
+		Name:             d.Get("name").(string),
+		Description:      d.Get("description").(string),
+		Cxp:              d.Get("cxp").(string),
+		Size:             d.Get("size").(string),
+		ServiceGroupName: d.Get("service_group_name").(string),
+		Segments:         segmentNames,
+		BillingTags:      billingTagIds,
+		Instances:        instances,
+		SegmentOptions:   segmentOptions,
+		PrefixListId:     d.Get("prefix_list_id").(int),
+		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
+	}
+	log.Printf("[DEBUG-TEST] %v", service)
 	return service, nil
 }

@@ -6,30 +6,40 @@ import (
 )
 
 type ServiceF5Lb struct {
-	Instances      []F5Instances `json:"instances"`
-	Name           string        `json:"name"`
-	Description    string        `json:"description,omitempty"`
-	Cxp            string        `json:"cxp"`
-	Size           string        `json:"size"`
-	Id             json.Number   `json:"id"`              //RESPONSE ONLY
-	State          string        `json:"state,omitempty"` //RESPONSE ONLY
-	Segments       []string      `json:"segments"`
-	BillingTags    []int         `json:"billingTags"`
-	ElbCidrs       []string      `json:"elbCidrs"`
-	BigIpAllowList []string      `json:"bigIpAllowList,omitempty"`
+	SegmentOptions   F5SegmentOption `json:"segmentOptions"`
+	State            string          `json:"state,omitempty"`
+	Description      string          `json:"description,omitempty"`
+	Cxp              string          `json:"cxp"`
+	Size             string          `json:"size"`
+	Id               json.Number     `json:"id,omitempty"`
+	Name             string          `json:"name"`
+	ServiceGroupName string          `json:"serviceGroupName"`
+	Instances        []F5Instance    `json:"instances"`
+	Segments         []string        `json:"segments"`
+	BillingTags      []int           `json:"billingTags,omitempty"`
+	PrefixListId     int             `json:"prefixListId,omitempty"`
+	GlobalCidrListId int             `json:"globalCidrListId"`
 }
 
-type F5Instances struct {
-	Deployment               *InstanceDeployment `json:"deployment"`
-	Name                     string              `json:"name"`
-	RegistrationCredentialId string              `json:"registrationCredentialId"`
-	CredentialId             string              `json:"credentialId"`
-	LicenseType              string              `json:"licenseType"`
-	Version                  string              `json:"version"`
+type F5Instance struct {
+	Deployment               F5InstanceDeployment `json:"deployment"`
+	Name                     string               `json:"name"`
+	RegistrationCredentialId string               `json:"registrationCredentialId,omitempty"`
+	CredentialId             string               `json:"credentialId"`
+	HostNameFqdn             string               `json:"hostNameFqdn"`
+	LicenseType              string               `json:"licenseType"`
+	Version                  string               `json:"version"`
+	Id                       int                  `json:"id,omitempty"` // RESPONSE ONLY
 }
 
-type InstanceDeployment struct {
-	Option string `json:"option"`
+type F5SegmentOption map[string]F5SegmentSubOption
+type F5SegmentSubOption struct {
+	NatPoolPrefixLength int `json:"natPoolPrefixLength,omitempty"`
+	ElbNicCount         int `json:"elbNicCount"`
+}
+
+type F5InstanceDeployment struct {
+	Option string `json:"option,omitempty"`
 	Type   string `json:"type"`
 }
 

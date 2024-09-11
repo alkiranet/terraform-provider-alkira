@@ -14,7 +14,7 @@ import (
 
 func resourceAlkiraF5LoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Description:   "",
+		Description:   "F5 Load Balancer Service.",
 		CreateContext: resourceF5LoadBalancerCreate,
 		ReadContext:   resourceF5LoadBalancerRead,
 		UpdateContext: resourceF5LoadBalancerUpdate,
@@ -45,12 +45,12 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP where the service should be provisioned.",
+				Description: "CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the service, one of" +
+				Description: "Size of the service, one of" +
 					" `SMALL`, `MEDIUM`, `LARGE`" +
 					" `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
@@ -68,60 +68,124 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Description: "IDs of billing tags to associate with " +
 					"the service.",
 				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt}},
-			"elb_cidrs": {
+			},
+			"global_cidr_list_id": {
 				Description: "",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeInt,
 				Required:    true,
 			},
-			"big_ip_allow_list": {
-				Description: "",
+			"prefix_list_id": {
+				Description: "ID of prefix list to use for IP allowlist",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
+			"segment_options": {
 				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "The segment options as used by your F5 Load Balancer.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"segment_id": {
+							Description: "ID of the segment.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"nat_pool_prefix_length": {
+							Description: "Prefix length of subnets for the segment.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+						},
+						"elb_nic_count": {
+							Description: "Number of nics to allocate for the segment.",
+							Type:        schema.TypeInt,
+							Required:    true,
+						},
+					},
+				},
+			},
+			"service_group_name": {
+				Description: "Name of the service group to be associated with the service.",
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"instances": {
 				Description: "An array containing the properties for each F5 load" +
-					" balancer instance that needs to be deployed.",
+					" balancer instance.",
 				Type:     schema.TypeList,
 				Required: true,
-				Elem: &schema.Resource{Schema: map[string]*schema.Schema{
-					"name": {
-						Description: "Name of the F5 load balancer instance.",
-						Type:        schema.TypeString,
-						Required:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Description: "Name of the F5 load balancer instance.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"registration_credential_id": {
+							Description: "ID of the F5 load balancer registration credential.",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"registration_key": {
+							Description: "Registration key for the F5 load balancer." +
+								"Only required if license_type is `BRING_YOUR_OWN`.",
+							Type:     schema.TypeString,
+							Optional: true},
+						"f5_username": {
+							Description: "Username for the F5 load balancer.",
+							Type:        schema.TypeString,
+							Optional:    true},
+						"f5_password": {
+							Description: "Password for the F5 load balancer.",
+							Type:        schema.TypeString,
+							Optional:    true},
+						"credential_id": {
+							Description: "ID of the F5 load balancer credential.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"license_type": {
+							Description: "The type of license used for the F5 load balancer instance." +
+								"Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`",
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
+								false),
+							Required: true,
+						},
+						"version": {
+							Description: "The version of the F5 load balancer instance.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"deployment_option": {
+							Description: "Only required when license_type is `BRING_YOUR_OWN`" +
+								"Can be one of `ONE_BOOT_LOCATION` or `TWO_BOOT_LOCATION`",
+							ValidateFunc: validation.StringInSlice(
+								[]string{"ONE_BOOT_LOCATION", "TWO_BOOT_LOCATION"},
+								false),
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"deployment_type": {
+							Description: "The deployment type used for the F5 load balancer instance." +
+								"Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`." +
+								"deployment types `GOOD`, `BETTER` and `BEST`" +
+								" are only applicable to license_type `PAY_AS_YOU_GO`" +
+								" `LTM_DNS` and `ALL` are only applicable to license_type `BRING_YOUR_OWN`",
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"GOOD", "BETTER", "BEST", "LTM_DNS", "ALL"},
+								false),
+							Required: true,
+						},
+						"hostname_fqdn": {
+							Description: "An FQDN defined in route 53.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
 					},
-					"registration_credential_id": {
-						Description: "The ID of the F5 load balancer registration",
-						Type:        schema.TypeString,
-						Required:    true,
-					},
-					"credential_id": {
-						Description: "The ID of the F5 load balancer credential.",
-						Type:        schema.TypeString,
-						Required:    true,
-					},
-					"license_type": {
-						Description: "The type of license used for the F5 load balancer instance.",
-						Type:        schema.TypeString,
-						Required:    true,
-					},
-					"version": {
-						Description: "The version of the F5 load balancer instance.",
-						Type:        schema.TypeString,
-						Required:    true,
-					},
-					"deployment_option": {
-						Description: "The deployment option used for the F5 load balancer instance.",
-						Type:        schema.TypeString,
-						Optional:    true,
-					},
-					"deployment_type": {
-						Description: "The deployment type used for the F5 load balancer instance.",
-						Type:        schema.TypeString,
-						Required:    true,
-					},
-				},
 				},
 			},
 		},
@@ -160,6 +224,7 @@ func resourceF5LoadBalancerCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	return resourceF5LoadBalancerRead(ctx, d, m)
 }
+
 func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -178,10 +243,20 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("description", lb.Description)
 	d.Set("cxp", lb.Cxp)
 	d.Set("size", lb.Size)
-	d.Set("elb_cidrs", lb.ElbCidrs)
-	d.Set("big_ip_allow_list", lb.BigIpAllowList)
 	d.Set("instances", lb.Instances)
 	d.Set("billing_tag_ids", lb.BillingTags)
+	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
+	d.Set("prefix_list_id", lb.PrefixListId)
+
+	segmentOptions, err := deflateF5SegmentOptions(lb.SegmentOptions, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("segment_options", segmentOptions)
+
+	instance := setF5Instances(d, lb.Instances)
+	d.Set("instances", instance)
 
 	// Set segments
 	segments := make([]int, len(lb.Segments))
@@ -205,6 +280,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	return nil
 
 }
+
 func resourceF5LoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -232,6 +308,7 @@ func resourceF5LoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 	return nil
 }
+
 func resourceF5LoadBalancerDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceF5Lb(m.(*alkira.AlkiraClient))

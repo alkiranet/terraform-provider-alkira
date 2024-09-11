@@ -122,8 +122,9 @@ func resourceF5vServerEndpointCreate(ctx context.Context, d *schema.ResourceData
 			}
 		}
 	}
-	return resourceF5LoadBalancerRead(ctx, d, m)
+	return resourceF5vServerEndpointRead(ctx, d, m)
 }
+
 func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -161,6 +162,7 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 
 }
+
 func resourceF5vServerEndpointUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -188,6 +190,7 @@ func resourceF5vServerEndpointUpdate(ctx context.Context, d *schema.ResourceData
 	}
 	return nil
 }
+
 func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewF5vServerEndpoint(m.(*alkira.AlkiraClient))
@@ -211,6 +214,7 @@ func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 
 }
+
 func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*alkira.F5vServerEndpoint, error) {
 
 	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
