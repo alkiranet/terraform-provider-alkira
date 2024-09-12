@@ -74,7 +74,6 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 		instanceStruct.Deployment = instanceDeployment
 
 		if credId, ok := tfInstance["credential_id"].(string); ok {
-			log.Printf("[DEBUG-TEST] credId: %v", credId)
 
 			if credId == "" {
 				credentialName := instanceStruct.Name + randomNameSuffix()
@@ -237,7 +236,6 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG-TEST] %v", segmentOptions)
 
 	service := &alkira.ServiceF5Lb{
 		Name:             d.Get("name").(string),
@@ -252,6 +250,5 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 		PrefixListId:     d.Get("prefix_list_id").(int),
 		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
 	}
-	log.Printf("[DEBUG-TEST] %v", service)
 	return service, nil
 }
