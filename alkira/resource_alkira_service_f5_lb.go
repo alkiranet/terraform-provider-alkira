@@ -125,28 +125,43 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"id": {
+							Description: "ID of the F5 load balancer instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"registration_credential_id": {
 							Description: "ID of the F5 load balancer registration credential.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
-						"registration_key": {
+						"f5_registration_key": {
 							Description: "Registration key for the F5 load balancer." +
 								"Only required if license_type is `BRING_YOUR_OWN`.",
-							Type:     schema.TypeString,
-							Optional: true},
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+							DefaultFunc: envDefaultFunc("F5_REGISTRATION_KEY"),
+						},
 						"f5_username": {
 							Description: "Username for the F5 load balancer.",
 							Type:        schema.TypeString,
-							Optional:    true},
+							Optional:    true,
+							Sensitive:   true,
+							DefaultFunc: envDefaultFunc("F5_USERNAME"),
+						},
 						"f5_password": {
 							Description: "Password for the F5 load balancer.",
 							Type:        schema.TypeString,
-							Optional:    true},
+							Optional:    true,
+							Sensitive:   true,
+							DefaultFunc: envDefaultFunc("F5_PASSWORD"),
+						},
 						"credential_id": {
 							Description: "ID of the F5 load balancer credential.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 						},
 						"license_type": {
 							Description: "The type of license used for the F5 load balancer instance." +
@@ -255,7 +270,6 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.Set("segment_options", segmentOptions)
 
 	instance := setF5Instances(d, lb.Instances)

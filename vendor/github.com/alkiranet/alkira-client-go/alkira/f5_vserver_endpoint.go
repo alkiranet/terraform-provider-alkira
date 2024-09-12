@@ -6,9 +6,9 @@ import (
 )
 
 type F5vServerEndpoint struct {
-	F5ServiceId          string      `json:"f5ServiceId"`
+	F5ServiceId          json.Number `json:"f5ServiceId"`
 	Name                 string      `json:"name"`
-	Id                   json.Number `json:"id"`              // RESPONSE ONLY
+	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY
 	State                string      `json:"state,omitempty"` //RESPONSE ONLY
 	Type                 string      `json:"type"`
 	Segment              string      `json:"segment"`

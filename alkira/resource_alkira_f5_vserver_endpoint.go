@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -33,14 +34,15 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of F5 vServer Endpoint.",
+				Description: "Name of F5 vServer Endpoint.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"f5_service_id": {
-				Description: "The F5 service ID",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "ID of the F5 service associated with the" +
+					"F5 vServer Endpoint.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"f5_service_instance_ids": {
 				Description: "An array of F5 service instance IDs" +
@@ -51,16 +53,16 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"type": {
-				Description: "The type of endpoint" +
-					"ELB",
+				Description: "The type of endpoint." +
+					"Can be one of `ELB`, `BOTH`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ELB"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ELB", "BOTH"}, false),
 			},
 			"segment_id": {
-				Description: "The Id of the segment associated with" +
+				Description: "ID of the segment associated with" +
 					" the endpoint",
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"fqdn": {
@@ -70,7 +72,7 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 			},
 			"protocol": {
 				Description: "The portocol used for the endpoint" +
-					"Values can be TCP, UDP or ICMP",
+					"Can be one of `TCP`, `UDP` or `ICMP`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP"}, false),
@@ -81,9 +83,10 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 					" An array with only the value '-1' means any port.",
 				Type:     schema.TypeSet,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snat": {
-				Description:  "SNAT for the endpoint",
+				Description:  "SNAT for the endpoint.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP"}, false),
@@ -225,12 +228,13 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Name:                 d.Get("name").(string),
 		Segment:              segmentName,
 		Type:                 d.Get("type").(string),
-		F5ServiceId:          d.Get("f5_service_id").(string),
+		F5ServiceId:          json.Number(d.Get("f5_service_id").(string)),
 		F5ServiceInstanceIds: convertTypeSetToIntList(d.Get("f5_service_instance_ids").(*schema.Set)),
 		Fqdn:                 d.Get("fqdn").(string),
 		Protocol:             d.Get("protocol").(string),
 		PortRanges:           convertTypeSetToStringList(d.Get("port_ranges").(*schema.Set)),
 		Snat:                 d.Get("snat").(string),
 	}
+
 	return request, nil
 }

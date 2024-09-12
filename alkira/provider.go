@@ -74,6 +74,7 @@ func Provider() *schema.Provider {
 			"alkira_credential_gcp_vpc":                 resourceAlkiraCredentialGcpVpc(),
 			"alkira_credential_oci_vcn":                 resourceAlkiraCredentialOciVcn(),
 			"alkira_credential_ssh_key_pair":            resourceAlkiraCredentialSshKeyPair(),
+			"alkira_f5_vserver_endpoint":                resourceAlkiraF5vServerEndpoint(),
 			"alkira_flow_collector":                     resourceAlkiraFlowCollector(),
 			"alkira_group":                              resourceAlkiraGroup(),
 			"alkira_group_user":                         resourceAlkiraGroupUser(),

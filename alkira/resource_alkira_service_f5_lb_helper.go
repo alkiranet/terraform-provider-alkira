@@ -22,22 +22,22 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 	instanceDeployment := alkira.F5InstanceDeployment{}
 
 	for i, instance := range in {
-		instanceConfig := instance.(map[string]interface{})
-		f5lb := alkira.F5Instance{}
+		tfInstance := instance.(map[string]interface{})
+		instanceStruct := alkira.F5Instance{}
 
-		if name, ok := instanceConfig["name"]; ok {
+		if name, ok := tfInstance["name"]; ok {
 
-			f5lb.Name = name.(string)
+			instanceStruct.Name = name.(string)
 		}
-		if licenseType, ok := instanceConfig["license_type"]; ok {
-			f5lb.LicenseType = licenseType.(string)
+		if licenseType, ok := tfInstance["license_type"]; ok {
+			instanceStruct.LicenseType = licenseType.(string)
 			// if the license type is BRING_YOUR_OWN, we need a registration credential.
 			if licenseType == "BRING_YOUR_OWN" {
-				if regCredId, ok := instanceConfig["registration_credential_id"].(string); ok {
+				if regCredId, ok := tfInstance["registration_credential_id"].(string); ok {
 					if regCredId == "" {
-						credentialName := f5lb.Name + "registration" + randomNameSuffix()
+						credentialName := instanceStruct.Name + "registration" + randomNameSuffix()
 						credentialF5Registration := alkira.CredentialF5InstanceRegistration{
-							RegistrationKey: instanceConfig["registration_key"].(string),
+							RegistrationKey: tfInstance["f5_registration_key"].(string),
 						}
 
 						log.Printf("[INFO] Creating F5 Load Balancer Instance Registration Credential %s", credentialName)
@@ -50,36 +50,37 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 						if err != nil {
 							return nil, err
 						}
-						f5lb.RegistrationCredentialId = credentialId
+						instanceStruct.RegistrationCredentialId = credentialId
 					} else {
-						f5lb.RegistrationCredentialId = regCredId
+						instanceStruct.RegistrationCredentialId = regCredId
 					}
 				}
 			}
 		}
-		if version, ok := instanceConfig["version"]; ok {
+		if version, ok := tfInstance["version"]; ok {
 
-			f5lb.Version = version.(string)
+			instanceStruct.Version = version.(string)
 		}
-		if fqdn, ok := instanceConfig["hostname_fqdn"]; ok {
-			f5lb.HostNameFqdn = fqdn.(string)
+		if fqdn, ok := tfInstance["hostname_fqdn"]; ok {
+			instanceStruct.HostNameFqdn = fqdn.(string)
 		}
 
-		if deploymentType, ok := instanceConfig["deployment_type"]; ok {
+		if deploymentType, ok := tfInstance["deployment_type"]; ok {
 			instanceDeployment.Type = deploymentType.(string)
 		}
-		if deploymentOption, ok := instanceConfig["deployment_option"]; ok {
+		if deploymentOption, ok := tfInstance["deployment_option"]; ok {
 			instanceDeployment.Option = deploymentOption.(string)
 		}
-		f5lb.Deployment = instanceDeployment
+		instanceStruct.Deployment = instanceDeployment
 
-		if credId, ok := instanceConfig["credential_id"].(string); ok {
+		if credId, ok := tfInstance["credential_id"].(string); ok {
+			log.Printf("[DEBUG-TEST] credId: %v", credId)
 
 			if credId == "" {
-				credentialName := f5lb.Name + randomNameSuffix()
+				credentialName := instanceStruct.Name + randomNameSuffix()
 				credentialF5Instance := alkira.CredentialF5Instance{
-					UserName: instanceConfig["f5_username"].(string),
-					Password: instanceConfig["f5_password"].(string),
+					UserName: tfInstance["f5_username"].(string),
+					Password: tfInstance["f5_password"].(string),
 				}
 
 				log.Printf("[INFO] Creating F5 Load Balancer Instance Credential %s", credentialName)
@@ -94,12 +95,12 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 					return nil, err
 				}
 
-				f5lb.CredentialId = credentialId
+				instanceStruct.CredentialId = credentialId
 			} else {
-				f5lb.CredentialId = credId
+				instanceStruct.CredentialId = credId
 			}
 		}
-		instances[i] = f5lb
+		instances[i] = instanceStruct
 	}
 
 	return instances, nil
@@ -162,11 +163,11 @@ func deflateF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[st
 func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]interface{} {
 	var instances []map[string]interface{}
 
-	for _, instance := range d.Get("instance").([]interface{}) {
-		stateInstance := instance.(map[string]interface{})
+	for _, instance := range d.Get("instances").([]interface{}) {
+		tfInstance := instance.(map[string]interface{})
 
 		for _, apiInstance := range c {
-			if stateInstance["id"].(int) == apiInstance.Id || stateInstance["name"].(string) == apiInstance.Name {
+			if tfInstance["id"].(int) == apiInstance.Id || tfInstance["name"].(string) == apiInstance.Name {
 				instanceStruct := map[string]interface{}{
 					"name":                       apiInstance.Name,
 					"id":                         apiInstance.Id,
@@ -177,6 +178,8 @@ func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]
 					"hostname_fqdn":              apiInstance.HostNameFqdn,
 					"deployment_option":          apiInstance.Deployment.Option,
 					"deployment_type":            apiInstance.Deployment.Type,
+					"f5_username":                tfInstance["f5_username"],
+					"f5_password":                tfInstance["f5_password"],
 				}
 				instances = append(instances, instanceStruct)
 				break
@@ -187,10 +190,10 @@ func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]
 	for _, apiInstance := range c {
 		new := true
 
-		for _, instance := range d.Get("instance").([]interface{}) {
-			stateInstance := instance.(map[string]interface{})
+		for _, instance := range d.Get("instances").([]interface{}) {
+			configInstance := instance.(map[string]interface{})
 
-			if stateInstance["id"].(int) == apiInstance.Id || stateInstance["name"].(string) == apiInstance.Name {
+			if configInstance["id"].(int) == apiInstance.Id || configInstance["name"].(string) == apiInstance.Name {
 				new = false
 				break
 			}
