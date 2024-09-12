@@ -45,7 +45,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "CXP where the service should be provisioned.",
+				Description: "CXP on which the service should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -72,9 +72,12 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Optional: true,
 			},
 			"global_cidr_list_id": {
-				Description: "",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "ID of global CIDR list from which subnets" +
+					" will be allocated for the external network interfaces of" +
+					" instances. These interfaces host the public IP" +
+					" addresses needed for virtual IPs.",
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"prefix_list_id": {
 				Description: "ID of prefix list to use for IP allowlist",
@@ -170,7 +173,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 						},
 						"deployment_type": {
 							Description: "The deployment type used for the F5 load balancer instance." +
-								"Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`." +
+								"Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`," +
 								"deployment types `GOOD`, `BETTER` and `BEST`" +
 								" are only applicable to license_type `PAY_AS_YOU_GO`" +
 								" `LTM_DNS` and `ALL` are only applicable to license_type `BRING_YOUR_OWN`",
@@ -278,7 +281,6 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	return nil
-
 }
 
 func resourceF5LoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -330,5 +332,4 @@ func resourceF5LoadBalancerDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
-
 }
