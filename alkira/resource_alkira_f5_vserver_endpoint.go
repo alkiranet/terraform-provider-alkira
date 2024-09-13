@@ -65,8 +65,8 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"fqdn": {
-				Description: "The FQDN of the endpoint",
+			"fqdn_prefix": {
+				Description: "The FQDN prefix of the endpoint",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -143,7 +143,7 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("name", f5.Name)
 	d.Set("type", f5.Type)
-	d.Set("fqdn", f5.Fqdn)
+	d.Set("fqdn_prefix", f5.FqdnPrefix)
 	d.Set("protocol", f5.Protocol)
 	d.Set("port_ranges", f5.PortRanges)
 	d.Set("snat", f5.Snat)
@@ -230,7 +230,7 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Type:                 d.Get("type").(string),
 		F5ServiceId:          json.Number(d.Get("f5_service_id").(string)),
 		F5ServiceInstanceIds: convertTypeSetToIntList(d.Get("f5_service_instance_ids").(*schema.Set)),
-		Fqdn:                 d.Get("fqdn").(string),
+		FqdnPrefix:           d.Get("fqdn_prefix").(string),
 		Protocol:             d.Get("protocol").(string),
 		PortRanges:           convertTypeSetToStringList(d.Get("port_ranges").(*schema.Set)),
 		Snat:                 d.Get("snat").(string),
