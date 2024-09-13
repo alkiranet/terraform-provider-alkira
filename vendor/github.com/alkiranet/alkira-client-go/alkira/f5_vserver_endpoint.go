@@ -12,7 +12,7 @@ type F5vServerEndpoint struct {
 	State                string      `json:"state,omitempty"` //RESPONSE ONLY
 	Type                 string      `json:"type"`
 	Segment              string      `json:"segment"`
-	Fqdn                 string      `json:"fqdn"`
+	FqdnPrefix           string      `json:"fqdnPrefix"`
 	Protocol             string      `json:"protocol"`
 	Snat                 string      `json:"snat"`
 	F5ServiceInstanceIds []int       `json:"f5ServiceInstanceIds,omitempty"`
