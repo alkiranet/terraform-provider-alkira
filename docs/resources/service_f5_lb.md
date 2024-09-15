@@ -9,7 +9,6 @@ description: |-
 
 F5 Load Balancer Service.
 
-
 `license_type` = `BRING_YOUR_OWN`
 ```terraform
 resource "alkira_service_f5_lb" "example_lb" {
@@ -107,8 +106,8 @@ Optional:
 
 - `credential_id` (String) ID of the F5 load balancer credential. If the `credential_id` is not passed, `f5_username` and `f5_password` is required to create new credentials.
 - `deployment_option` (String) The deployment option of the F5 LB instance, can be one of `ONE_BOOT_LOCATION` or `TWO_BOOT_LOCATION`. Only required when license_type is `BRING_YOUR_OWN`.
-- `f5_password` (String, Sensitive) Password for the F5 load balancer.
-- `f5_registration_key` (String, Sensitive) Registration key for the F5 load balancer. Only required if `license_type` is `BRING_YOUR_OWN`.
+- `f5_password` (String, Sensitive) Password for the F5 load balancer. This can also be set by `ALKIRA_F5_PASSWORD` environment variable.
+- `f5_registration_key` (String, Sensitive) Registration key for the F5 load balancer. Only required if `license_type` is `BRING_YOUR_OWN`. This can also be set by `ALKIRA_F5_REGISTRATION_KEY` environment variable.
 - `registration_credential_id` (String) ID of the F5 load balancer registration credential. If the `registration_credential_id` is not passed, `f5_registration_key` is required to create new credentials. Only required if `license_type` is `BRING_YOUR_OWN`.
 
 Read-Only:

@@ -148,7 +148,9 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 						},
 						"f5_registration_key": {
 							Description: "Registration key for the F5 load balancer." +
-								" Only required if `license_type` is `BRING_YOUR_OWN`.",
+								" Only required if `license_type` is `BRING_YOUR_OWN`." +
+								" This can also be set by `ALKIRA_F5_REGISTRATION_KEY`" +
+								" environment variable.",
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
@@ -159,13 +161,16 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 								" Username is `admin` and cannot be changed.",
 							Type:     schema.TypeString,
 							Computed: true,
+							Default:  "admin",
+							// read only for now, so the environment variable is not set
 							// Optional:    true,
 							// Sensitive:   true,
-							Default:     "admin",
-							DefaultFunc: envDefaultFunc("ALKIRA_F5_USERNAME"),
+							// DefaultFunc: envDefaultFunc("ALKIRA_F5_USERNAME"),
 						},
 						"f5_password": {
-							Description: "Password for the F5 load balancer.",
+							Description: "Password for the F5 load balancer." +
+								" This can also be set by `ALKIRA_F5_PASSWORD`" +
+								" environment variable.",
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
