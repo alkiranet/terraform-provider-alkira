@@ -1,0 +1,25 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+`license_type` = `BRING_YOUR_OWN`
+{{ tffile "examples/resources/alkira_service_f5_lb/resource.tf" }}
+
+`license_type` = `PAY_AS_YOU_GO`
+{{ tffile "examples/resources/alkira_service_f5_lb/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

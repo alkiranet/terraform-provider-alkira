@@ -45,12 +45,10 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"f5_service_instance_ids": {
-				Description: "An array of F5 service instance IDs" +
-					"when not provided an F5 vServer endpoint is " +
-					"associated with all instances of the F5 Service",
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Description: "An array of F5 service instance IDs",
+				Type:        schema.TypeSet,
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"type": {
 				Description: "The type of endpoint." +
@@ -61,17 +59,17 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 			},
 			"segment_id": {
 				Description: "ID of the segment associated with" +
-					" the endpoint",
+					" the endpoint.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"fqdn_prefix": {
-				Description: "The FQDN prefix of the endpoint",
+				Description: "The FQDN prefix of the endpoint.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"protocol": {
-				Description: "The portocol used for the endpoint" +
+				Description: "The portocol used for the endpoint." +
 					"Can be one of `TCP`, `UDP` or `ICMP`.",
 				Type:         schema.TypeString,
 				Required:     true,
@@ -86,7 +84,8 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snat": {
-				Description:  "SNAT for the endpoint.",
+				Description: "SNAT for the endpoint." +
+					"Can be one of `AUTOMAP`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP"}, false),

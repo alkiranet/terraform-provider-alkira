@@ -55,8 +55,6 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 					" `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE", "5LARGE"}, false),
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
@@ -65,8 +63,8 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"billing_tag_ids": {
-				Description: "IDs of billing tags to associate with " +
-					"the service.",
+				Description: "IDs of billing tags to associate with" +
+					" the service.",
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
@@ -86,7 +84,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 			},
 			"segment_options": {
 				Type:        schema.TypeSet,
-				Optional:    true,
+				Required:    true,
 				Description: "The segment options as used by your F5 Load Balancer.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -130,24 +128,40 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
+						"license_type": {
+							Description: "The type of license used for the F5 load balancer instance." +
+								" Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`",
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
+								false),
+							Required: true,
+						},
 						"registration_credential_id": {
-							Description: "ID of the F5 load balancer registration credential.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description: "ID of the F5 load balancer registration credential." +
+								" If the `registration_credential_id` is not passed, `f5_registration_key`" +
+								" is required to create new credentials." +
+								" Only required if `license_type` is `BRING_YOUR_OWN`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"f5_registration_key": {
 							Description: "Registration key for the F5 load balancer." +
-								"Only required if license_type is `BRING_YOUR_OWN`.",
+								" Only required if `license_type` is `BRING_YOUR_OWN`.",
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
 							DefaultFunc: envDefaultFunc("ALKIRA_F5_REGISTRATION_KEY"),
 						},
 						"f5_username": {
-							Description: "Username for the F5 load balancer.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Sensitive:   true,
+							Description: "Username for the F5 load balancer." +
+								" Username is `admin` and cannot be changed.",
+							Type:     schema.TypeString,
+							Computed: true,
+							// Optional:    true,
+							// Sensitive:   true,
+							Default:     "admin",
 							DefaultFunc: envDefaultFunc("ALKIRA_F5_USERNAME"),
 						},
 						"f5_password": {
@@ -158,19 +172,13 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							DefaultFunc: envDefaultFunc("ALKIRA_F5_PASSWORD"),
 						},
 						"credential_id": {
-							Description: "ID of the F5 load balancer credential.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						"license_type": {
-							Description: "The type of license used for the F5 load balancer instance." +
-								"Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`",
-							Type: schema.TypeString,
-							ValidateFunc: validation.StringInSlice(
-								[]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"},
-								false),
-							Required: true,
+							Description: "ID of the F5 load balancer credential." +
+								" If the `credential_id` is not passed," +
+								" `f5_username` and `f5_password` is required" +
+								" to create new credentials.",
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"version": {
 							Description: "The version of the F5 load balancer instance.",
@@ -178,8 +186,9 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required:    true,
 						},
 						"deployment_option": {
-							Description: "Only required when license_type is `BRING_YOUR_OWN`" +
-								"Can be one of `ONE_BOOT_LOCATION` or `TWO_BOOT_LOCATION`",
+							Description: "The deployment option of the F5 LB instance," +
+								" can be one of `ONE_BOOT_LOCATION` or `TWO_BOOT_LOCATION`." +
+								" Only required when license_type is `BRING_YOUR_OWN`.",
 							ValidateFunc: validation.StringInSlice(
 								[]string{"ONE_BOOT_LOCATION", "TWO_BOOT_LOCATION"},
 								false),
@@ -188,8 +197,8 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 						},
 						"deployment_type": {
 							Description: "The deployment type used for the F5 load balancer instance." +
-								"Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`," +
-								"deployment types `GOOD`, `BETTER` and `BEST`" +
+								" Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`," +
+								" deployment types `GOOD`, `BETTER` and `BEST`" +
 								" are only applicable to license_type `PAY_AS_YOU_GO`" +
 								" `LTM_DNS` and `ALL` are only applicable to license_type `BRING_YOUR_OWN`",
 							Type: schema.TypeString,
@@ -199,7 +208,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required: true,
 						},
 						"hostname_fqdn": {
-							Description: "An FQDN defined in route 53.",
+							Description: "The FQDN defined in route 53.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
