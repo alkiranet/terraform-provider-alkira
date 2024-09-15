@@ -41,7 +41,7 @@ resource "alkira_connector_fortinet_sdwan" "test" {
 
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `5LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `target_segment` (Block Set, Min: 1) Specify target segment. (see [below for nested schema](#nestedblock--target_segment))
 - `wan_edge` (Block List, Min: 1) WAN Edge (see [below for nested schema](#nestedblock--wan_edge))
 
@@ -49,6 +49,7 @@ resource "alkira_connector_fortinet_sdwan" "test" {
 
 - `allow_list` (List of String) This list allows the IP addresses or subnets to be whitelisted so that they can communicate with the Fortinet SD-WAN instance. The value could be `/32` IPs or can also be a mask.
 - `billing_tag_ids` (Set of Number) IDs of Billing Tags to be associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol. It could be either `IPSEC`or `GRE`. Default value is `IPSEC`.

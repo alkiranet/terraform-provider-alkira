@@ -189,6 +189,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
@@ -223,11 +228,11 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
+					"SMALL", "MEDIUM", "LARGE", "2LARGE", "5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
@@ -306,7 +311,6 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("cxp", f.Cxp)
 	d.Set("license_type", f.LicenseType)
 	d.Set("license_scheme", f.Scheme)
-	d.Set("management_server_ip", f.ManagementServer.IpAddress)
 	d.Set("max_instance_count", f.MaxInstanceCount)
 	d.Set("min_instance_count", f.MinInstanceCount)
 	d.Set("name", f.Name)
@@ -314,15 +318,18 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 	d.Set("size", f.Size)
 	d.Set("tunnel_protocol", f.TunnelProtocol)
 	d.Set("version", f.Version)
+	d.Set("description", f.Description)
 
 	// Set management server segment
-	managementServerSegmentId, err := getSegmentIdByName(f.ManagementServer.Segment, m)
 
-	if err != nil {
-		return diag.FromErr(err)
+	if f.ManagementServer != nil {
+		d.Set("management_server_ip", f.ManagementServer.IpAddress)
+		managementServerSegmentId, err := getSegmentIdByName(f.ManagementServer.Segment, m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("management_server_segment_id", managementServerSegmentId)
 	}
-	d.Set("management_server_segment_id", managementServerSegmentId)
-
 	// Set segments
 	segments := make([]int, len(f.Segments))
 

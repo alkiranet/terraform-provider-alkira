@@ -122,6 +122,8 @@ resource "alkira_service_infoblox" "test" {
 
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provision state of the resource.
+- `service_group_id` (Number) The ID of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
+- `service_group_implicit_group_id` (Number) The ID of the implicit group to be associated with the service.
 
 <a id="nestedblock--anycast"></a>
 ### Nested Schema for `anycast`

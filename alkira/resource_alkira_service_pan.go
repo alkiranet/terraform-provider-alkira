@@ -305,6 +305,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
@@ -313,19 +318,14 @@ func resourceAlkiraServicePan() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service, one of " +
-					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, " +
-					"`5LARGE`, `10LARGE`, `20LARGE`.",
+					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL",
 					"MEDIUM",
 					"LARGE",
-					"2LARGE",
-					"4LARGE",
-					"5LARGE",
-					"10LARGE",
-					"20LARGE"}, false),
+					"2LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, " +
@@ -454,6 +454,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("tunnel_protocol", pan.TunnelProtocol)
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
+	d.Set("description", pan.Description)
 
 	if pan.PanoramaDeviceGroup != nil {
 		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
@@ -674,6 +675,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		Size:                        d.Get("size").(string),
 		Type:                        d.Get("type").(string),
 		Version:                     d.Get("version").(string),
+		Description:                 d.Get("description").(string),
 	}
 
 	return service, nil

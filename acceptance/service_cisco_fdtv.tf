@@ -23,7 +23,7 @@ resource "alkira_service_cisco_ftdv" "cisco_ftdv_test" {
     admin_password       = "Test@2018"
     fmc_registration_key = "abcd12345"
     ftdv_nat_id          = "abcd1234"
-    version              = "7.2.1-40"
+    version              = "7.2.7-500"
     license_type         = "BRING_YOUR_OWN"
   }
 

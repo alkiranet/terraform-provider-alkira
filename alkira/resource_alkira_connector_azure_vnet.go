@@ -226,13 +226,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
+					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", `2LARGE`,
-					`4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This cannot be specified " +
@@ -251,6 +248,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			"peering_gateway_cxp_id": {
 				Description: "The ID of the CXP peering gateway associated with the connector.",
 				Type:        schema.TypeInt,
+				Optional:    true,
+			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"group_direct_inter_connector": {
@@ -334,6 +336,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
 	d.Set("group_direct_inter_connector", connector.DirectInterVNETCommunicationGroup)
 	d.Set("udr_list_ids", connector.UdrListIds)
+	d.Set("description", connector.Description)
 
 	setVnetRouting(d, connector.VnetRouting)
 
@@ -460,6 +463,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		PeeringGatewayCxpId:               d.Get("peering_gateway_cxp_id").(int),
 		DirectInterVNETCommunicationGroup: d.Get("group_direct_inter_connector").(string),
 		UdrListIds:                        convertTypeSetToIntList(d.Get("udr_list_ids").(*schema.Set)),
+		Description:                       d.Get("description").(string),
 	}
 
 	return request, nil

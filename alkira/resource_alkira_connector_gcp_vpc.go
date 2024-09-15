@@ -151,6 +151,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -163,14 +168,10 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Required: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
-					"`10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, " +
+					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"customer_asn": {
 				Description: "A specific BGP ASN for the connector. This " +
@@ -259,6 +260,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("size", connector.Size)
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
+	d.Set("description", connector.Description)
 	setGcpRoutingOptions(connector.GcpRouting, d)
 
 	// Get segment

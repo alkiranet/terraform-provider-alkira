@@ -36,6 +36,7 @@ resource "alkira_connector_aws_tgw" "example" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `static_route_prefix_list_ids` (Set of Number) Policy Prefixes to be associated with connector's VPN route.

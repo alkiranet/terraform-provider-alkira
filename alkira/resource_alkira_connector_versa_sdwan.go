@@ -68,6 +68,11 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -106,13 +111,12 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
-					"`10LARGE` and `20LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`. ",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
+					"5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol of Versa SD-WAN.",
@@ -264,6 +268,7 @@ func resourceConnectorVersaSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("remote_public_shared_key", connector.RemotePublicSharedKey)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("description", connector.Description)
 
 	// Set Instances
 	setVersaSdwanInstance(d, connector)

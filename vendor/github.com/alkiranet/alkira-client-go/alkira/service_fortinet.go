@@ -27,6 +27,7 @@ type ServiceFortinet struct {
 	State            string                   `json:"state,omitempty"`
 	TunnelProtocol   string                   `json:"tunnelProtocol"`
 	Version          string                   `json:"version"`
+	Description      string                   `json:"description,omitempty"`
 }
 
 type FortinetInstance struct {

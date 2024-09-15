@@ -99,12 +99,13 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 - `gcp_vpc_name` (String) GCP VPC name.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment associated with the connector.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `size` (String) The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, `LARGE`.
 
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of billing tags associated with the connector.
 - `customer_asn` (Number) A specific BGP ASN for the connector. This field cannot be updated once the connector has been provisioned. The ASN can be any private ASN (`64512 - 65534`, `4200000000 - 4294967294`) that is not used elsewhere in the network.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `gcp_project_id` (String) GCP Project ID.

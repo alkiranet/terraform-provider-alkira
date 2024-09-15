@@ -36,6 +36,7 @@ type ConnectorVmwareSdwan struct {
 	Version                 string                  `json:"version"`
 	VmWareSdWanVRFMappings  []VmwareSdwanVrfMapping `json:"vmWareSdWanVRFMappings"`
 	Enabled                 bool                    `json:"enabled"`
+	Description             string                  `json:"description,omitempty"`
 }
 
 // NewConnectorVmwareSdwan new connector

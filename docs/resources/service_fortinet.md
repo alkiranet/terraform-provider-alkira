@@ -60,13 +60,14 @@ resource "alkira_service_fortinet" "test1" {
 - `max_instance_count` (Number) The maximum number of Fortinet Firewall instances that should be deployed. `max_instance_count` must be greater than or equal to `min_instance_count`.
 - `name` (String) Name of the Fortinet Firewall service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
-- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
+- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 - `version` (String) The version of the Fortinet Firewall. Please check Alkira Portal for all supported versions.
 
 ### Optional
 
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
+- `description` (String) The description of the service.
 - `license_scheme` (String) The license scheme tells more about BYOL license method. `POINT_BASED` scheme refers to FortiFlex license whereas `TERM_BASED` refers to regular BYOL.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be deployed.

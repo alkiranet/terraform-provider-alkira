@@ -39,6 +39,11 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"billing_tag_ids": {
 				Description: "IDs of Billing Tags to be associated " +
 					"with the connector.",
@@ -79,13 +84,12 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM` and `LARGE`, `2LARGE`, `5LARGE`.",
+					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM",
-					"LARGE", "2LARGE",
-					"5LARGE"}, false),
+					"LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol. It could be either `IPSEC`" +
@@ -272,6 +276,7 @@ func resourceConnectorFortinetSdwanRead(ctx context.Context, d *schema.ResourceD
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("enabled", connector.Enabled)
+	d.Set("description", connector.Description)
 
 	// Set WAN Edge instances
 	setWanEdge(d, connector)
@@ -384,6 +389,7 @@ func generateConnectorFortinetSdwanRequest(d *schema.ResourceData, m interface{}
 		Size:                 d.Get("size").(string),
 		TunnelProtocol:       d.Get("tunnel_protocol").(string),
 		Enabled:              d.Get("enabled").(bool),
+		Description:          d.Get("description").(string),
 	}
 
 	return connector, nil

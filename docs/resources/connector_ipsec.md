@@ -95,11 +95,12 @@ resource "alkira_connector_ipsec" "ipsec" {
 - `endpoint` (Block List, Min: 1) The endpoint. (see [below for nested schema](#nestedblock--endpoint))
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment associated with the connector.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.
 - `vpn_mode` (String) The mode can be configured either as `ROUTE_BASED` or `POLICY_BASED`.
 
 ### Optional
 
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED`. (see [below for nested schema](#nestedblock--policy_options))

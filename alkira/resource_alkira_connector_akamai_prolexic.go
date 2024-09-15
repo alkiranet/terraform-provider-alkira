@@ -45,6 +45,11 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"akamai_bgp_asn": {
 				Description: "The Akamai BGP ASN.",
 				Type:        schema.TypeInt,
@@ -117,7 +122,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -125,10 +130,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 					"MEDIUM",
 					"LARGE",
 					"2LARGE",
-					"4LARGE",
-					"5LARGE",
-					"10LARGE",
-					"20LARGE"}, false),
+					"5LARGE"}, false),
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +
@@ -246,6 +248,7 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -378,6 +381,7 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		Segments:             []string{segmentName},
 		Size:                 d.Get("size").(string),
 		OverlayConfiguration: tunnelConfigurations,
+		Description:          d.Get("description").(string),
 	}
 
 	return connector, nil

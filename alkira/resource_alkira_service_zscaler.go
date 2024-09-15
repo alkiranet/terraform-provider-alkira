@@ -196,11 +196,11 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{"SMALL", "MEDIUM", "LARGE"}, false),
+					[]string{"SMALL", "MEDIUM", "LARGE", "2LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The type of tunnel protocol to be used to connect " +

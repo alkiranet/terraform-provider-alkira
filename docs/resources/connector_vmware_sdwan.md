@@ -41,7 +41,7 @@ resource "alkira_connector_vmware_sdwan" "test" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `orchestrator_host` (String) VMWare (Velo) Orchestrator portal host address.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE` and `20LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.
 - `target_segment` (Block Set, Min: 1) Specify target segment. (see [below for nested schema](#nestedblock--target_segment))
 - `version` (String) The version of VMWARE SD-WAN.
 - `virtual_edge` (Block List, Min: 1) Virtual Edge (see [below for nested schema](#nestedblock--virtual_edge))
@@ -49,6 +49,7 @@ resource "alkira_connector_vmware_sdwan" "test" {
 ### Optional
 
 - `billing_tag_ids` (Set of Number) IDs of Billing Tags to be associated with the connector.
+- `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) Only supported tunnel protocol is `IPSEC` for now.

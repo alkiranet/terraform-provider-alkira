@@ -102,12 +102,13 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of segments associated with the connector. Currently, only `1` segment is allowed.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
+- `size` (String) The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.
 - `vpc_id` (String) The ID of the target VPC.
 
 ### Optional
 
 - `billing_tag_ids` (Set of Number) Tags for billing.
+- `description` (String) The description of the connector.
 - `direct_inter_vpc_communication_enabled` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
 - `direct_inter_vpc_communication_group` (String) Direct inter-vpc communication group.
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.

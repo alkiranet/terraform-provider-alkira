@@ -115,13 +115,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
+					"`LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"4LARGE", "5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"tgw_connect_enabled": {
 				Description: "When it's set to `true`, Alkira will use TGW Connect " +
@@ -233,6 +230,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -307,6 +309,7 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("vpc_id", connector.VpcId)
 	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 	d.Set("scale_group_id", connector.ScaleGroupId)
+	d.Set("description", connector.Description)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)

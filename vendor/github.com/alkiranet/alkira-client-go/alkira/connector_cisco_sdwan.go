@@ -25,18 +25,20 @@ type CiscoSdwanEdgeInfo struct {
 }
 
 type ConnectorCiscoSdwan struct {
-	BillingTags          []int                      `json:"billingTags"`
-	CiscoEdgeInfo        []CiscoSdwanEdgeInfo       `json:"ciscoEdgeInfo"`
-	CiscoEdgeVrfMappings []CiscoSdwanEdgeVrfMapping `json:"ciscoEdgeVRFMappings"`
+	Name                 string                     `json:"name"`
 	Cxp                  string                     `json:"cxp"`
 	Group                string                     `json:"group,omitempty"`
-	Enabled              bool                       `json:"enabled"`
-	Name                 string                     `json:"name"`
-	Id                   json.Number                `json:"id,omitempty"`              // response only
-	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"` // response only
+	Id                   json.Number                `json:"id,omitempty"`
 	Size                 string                     `json:"size"`
 	Type                 string                     `json:"type,omitempty"`
 	Version              string                     `json:"version"`
+	TunnelProtocol       string                     `json:"tunnelProtocol,omitempty"`
+	CiscoEdgeInfo        []CiscoSdwanEdgeInfo       `json:"ciscoEdgeInfo"`
+	CiscoEdgeVrfMappings []CiscoSdwanEdgeVrfMapping `json:"ciscoEdgeVRFMappings"`
+	BillingTags          []int                      `json:"billingTags"`
+	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"`
+	Enabled              bool                       `json:"enabled"`
+	Description          string                     `json:"description,omitempty"`
 }
 
 // NewConnectorCiscoSdwan initialize a new connector

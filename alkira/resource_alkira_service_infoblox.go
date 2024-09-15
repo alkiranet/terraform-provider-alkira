@@ -228,6 +228,20 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"service_group_id": {
+				Description: "The ID of the service group to be associated " +
+					"with the service. A service group represents the " +
+					"service in traffic policies, route policies " +
+					"and when configuring segment resource shares.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"service_group_implicit_group_id": {
+				Description: "The ID of the implicit group to be associated " +
+					"with the service.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"shared_secret": {
 				Description: "Shared Secret of the InfoBlox grid. " +
 					"This cannot be empty.",

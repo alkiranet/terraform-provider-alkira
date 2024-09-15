@@ -40,6 +40,11 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the service.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"auto_scale": {
 				Description: "Indicate if `auto_scale` should be enabled for your Cisco FTDv service." +
 					" `ON` and `OFF` are accepted values. Default is `OFF`.",
@@ -58,7 +63,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SMALL", `MEDIUM`, `LARGE`, `2LARGE`}, false),
+				ValidateFunc: validation.StringInSlice([]string{`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`}, false),
 			},
 			"tunnel_protocol": {
 				Description:  "The tunnel protocol. Default is `IPSEC`.",
@@ -296,6 +301,7 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("segment_options", deflateSegmentOptions(service.SegmentOptions))
 	d.Set("size", service.Size)
 	d.Set("tunnel_protocol", service.TunnelProtocol)
+	d.Set("description", service.Description)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -423,6 +429,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Instances:        instances,
+		Description:      d.Get("description").(string),
 	}
 
 	return request, nil

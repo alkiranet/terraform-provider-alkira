@@ -2,9 +2,10 @@ package alkira
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorGcpVpcRouting, error) {
@@ -137,6 +138,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		VpcName:        d.Get("gcp_vpc_name").(string),
 		CustomerASN:    d.Get("customer_asn").(int),
 		ScaleGroupId:   d.Get("scale_group_id").(string),
+		Description:    d.Get("description").(string),
 	}
 
 	return connector, nil

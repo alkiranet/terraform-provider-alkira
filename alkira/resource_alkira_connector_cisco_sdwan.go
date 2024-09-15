@@ -82,14 +82,14 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM` and `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`, " +
-					"`10LARGE` and `20LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, " +
+					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"SMALL", "MEDIUM", "LARGE",
-					"2LARGE", "4LARGE", "5LARGE",
-					"10LARGE", "20LARGE"}, false),
+					"2LARGE", "5LARGE",
+					"10LARGE"}, false),
 			},
 			"vedge": &schema.Schema{
 				Description: "Cisco vEdge",
@@ -190,6 +190,20 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				},
 				Required: true,
 			},
+			"tunnel_protocol": {
+				Description: "The tunnel protocol for the " +
+					"connector one of `IPSEC` or `GRE`. ",
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"IPSEC", "GRE"},
+					false),
+			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -256,6 +270,8 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("type", connector.Type)
+	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("description", connector.Description)
 
 	// Set vedge
 	setVedge(d, connector)
@@ -368,6 +384,8 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 		Size:                 d.Get("size").(string),
 		Type:                 d.Get("type").(string),
 		Version:              d.Get("version").(string),
+		TunnelProtocol:       d.Get("tunnel_protocol").(string),
+		Description:          d.Get("description").(string),
 	}
 
 	return connector, nil

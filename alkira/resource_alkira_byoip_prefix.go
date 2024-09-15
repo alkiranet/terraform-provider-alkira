@@ -53,10 +53,21 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 			},
+			"cloud_provider": {
+				Description: "Cloud provider for the BYOIP." +
+					"This must match CXP's provider.",
+				Type:     schema.TypeString,
+				Required: true},
 			"message": {
-				Description: "Message from AWS BYOIP.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "Message from BYOIP." +
+					"For AWS, the format of the message is" +
+					" `1|aws|account|cidr|YYYYMMDD|SHA256|RSAPSS`," +
+					" where the date is the expiry date of the message." +
+					"For AZURE, the format of the message is" +
+					" `subscriptionId|cidr|YYYYMMDD`," +
+					" where the date is the validity date on the ROA.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"provision_state": {
 				Description: "The provision state of the resource.",
@@ -64,12 +75,13 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 				Computed:    true,
 			},
 			"signature": {
-				Description: "Signautre from AWS BYOIP.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "Signature from the BYOIP." +
+					"For AZURE, the signature scheme is `SHA256RSA`.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"public_key": {
-				Description: "Public Key from AWS BYOIP.",
+				Description: "The RSA 2048-bit public key from the BYOIP.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -138,6 +150,7 @@ func resourceByoipPrefixRead(ctx context.Context, d *schema.ResourceData, m inte
 	d.Set("signature", byoip.ExtraAttributes.Signature)
 	d.Set("public_key", byoip.ExtraAttributes.PublicKey)
 	d.Set("do_not_advertise", byoip.DoNotAdvertise)
+	d.Set("cloud_provider", byoip.CloudProvider)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -191,6 +204,7 @@ func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip,
 		Cxp:             d.Get("cxp").(string),
 		Description:     d.Get("description").(string),
 		ExtraAttributes: attributes,
+		CloudProvider:   d.Get("cloud_provider").(string),
 		DoNotAdvertise:  d.Get("do_not_advertise").(bool),
 	}
 

@@ -8,22 +8,23 @@ import (
 )
 
 type ServiceInfoblox struct {
-	AnyCast          InfobloxAnycast    `json:"anycast"`
-	BillingTags      []int              `json:"billingTags"`
-	Cxp              string             `json:"cxp"`
-	Description      string             `json:"description,omitempty"`
-	GlobalCidrListId int                `json:"globalCidrListId"`
-	GridMaster       InfobloxGridMaster `json:"gridMaster"`
-	Id               json.Number        `json:"id,omitempty"`
-	Instances        []InfobloxInstance `json:"instances"`
-	InternalName     string             `json:"internalName,omitempty"`
-	LicenseType      string             `json:"licenseType,omitempty"`
-	Name             string             `json:"name"`
-	Segments         []string           `json:"segments"`
-	ServiceGroupId   int                `json:"serviceGroupId,omitempty"`
-	ServiceGroupName string             `json:"serviceGroupName"`
-	Size             string             `json:"size,omitempty"`
-	AllowListId      int                `json:"allowListId,omitempty"`
+	AnyCast                     InfobloxAnycast    `json:"anycast"`
+	BillingTags                 []int              `json:"billingTags"`
+	Cxp                         string             `json:"cxp"`
+	Description                 string             `json:"description,omitempty"`
+	GlobalCidrListId            int                `json:"globalCidrListId"`
+	GridMaster                  InfobloxGridMaster `json:"gridMaster"`
+	Id                          json.Number        `json:"id,omitempty"` // RESPONSE ONLY
+	Instances                   []InfobloxInstance `json:"instances"`
+	InternalName                string             `json:"internalName,omitempty"`
+	LicenseType                 string             `json:"licenseType,omitempty"`
+	Name                        string             `json:"name"`
+	Segments                    []string           `json:"segments"`
+	ServiceGroupId              int                `json:"serviceGroupId,omitempty"`              // RESPONSE ONLY
+	ServiceGroupImplicitGroupId int                `json:"serviceGroupImplicitGroupId,omitempty"` // RESPONSE ONLY
+	ServiceGroupName            string             `json:"serviceGroupName"`
+	Size                        string             `json:"size,omitempty"`
+	AllowListId                 int                `json:"allowListId,omitempty"`
 }
 
 type InfobloxAnycast struct {
