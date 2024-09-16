@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraListGlobalCidr() *schema.Resource {
@@ -65,10 +64,9 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 			"tags": {
 				Description: "Tag of associated service types." +
 					"Can be one of `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.",
-				Type:         schema.TypeList,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"INFOBLOX", "CHKPFW", "CISCO_FTDV_FW", "F5LB"}, false),
-				Elem:         &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

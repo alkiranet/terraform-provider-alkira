@@ -161,7 +161,6 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 								" Username is `admin` and cannot be changed.",
 							Type:     schema.TypeString,
 							Computed: true,
-							Default:  "admin",
 							// read only for now, so the environment variable is not set
 							// Optional:    true,
 							// Sensitive:   true,
