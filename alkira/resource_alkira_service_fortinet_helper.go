@@ -213,7 +213,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	client := m.(*alkira.AlkiraClient)
 	fortinetCredId := d.Get("credential_id").(string)
 
-	if 0 == len(fortinetCredId) {
+	if 0 == len(fortinetCredId) || d.HasChanges("username", "password") {
 		log.Printf("[INFO] Creating Fortinet FW Credential")
 
 		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
