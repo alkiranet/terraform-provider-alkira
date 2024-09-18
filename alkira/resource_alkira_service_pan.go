@@ -548,7 +548,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	//
 	panCredentialId := d.Get("credential_id").(string)
 
-	if 0 == len(panCredentialId) {
+	if 0 == len(panCredentialId) || d.HasChanges("pan_username", "pan_password", "pan_license_key") {
 		log.Printf("[INFO] Creating PAN Credential")
 
 		panCredName := d.Get("name").(string) + randomNameSuffix()

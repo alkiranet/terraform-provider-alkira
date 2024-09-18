@@ -430,7 +430,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	chpfwCredId := d.Get("credential_id").(string)
 
-	if 0 == len(chpfwCredId) {
+	if 0 == len(chpfwCredId) || d.HasChange("password") {
 		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
 
 		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()

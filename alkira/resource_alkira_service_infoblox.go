@@ -390,7 +390,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	var infobloxCredentialId string
 
-	if shared_secret != "" {
+	if shared_secret != "" || d.HasChange("shared_secret") {
 		err := errors.New("")
 
 		infobloxCredentialId, err = client.CreateCredential(
