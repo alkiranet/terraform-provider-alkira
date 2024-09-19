@@ -374,11 +374,27 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
+	oldCredentialId := d.Get("credential_id").(string)
+
 	// Construct request
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	newCredentialId := d.Get("credential_id").(string)
+
+	if oldCredentialId != newCredentialId {
+		err = deleteCheckpointCredentials(oldCredentialId, client)
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "DELETE CHECKPOINT CREDENTIALS FAILED",
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+		}
+
 	}
 
 	// Send update request
@@ -424,6 +440,24 @@ func resourceCheckpointDelete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
+func createCheckpointCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
+
+	chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
+	chkpCred := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
+	return client.CreateCredential(
+		chkpfwName,
+		alkira.CredentialTypeChkpFw,
+		chkpCred,
+		0)
+
+}
+
+func deleteCheckpointCredentials(chkpCredId string, client *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Credential")
+	return client.DeleteCredential(chkpCredId, alkira.CredentialTypeChkpFw)
+}
+
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
 
 	client := m.(*alkira.AlkiraClient)
@@ -431,12 +465,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	chpfwCredId := d.Get("credential_id").(string)
 
 	if 0 == len(chpfwCredId) || d.HasChange("password") {
-		log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
-
-		chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
-		c := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
-		credentialId, err := client.CreateCredential(chkpfwName, alkira.CredentialTypeChkpFw, c, 0)
-
+		credentialId, err := createCheckpointCredentials(d, client)
 		if err != nil {
 			return nil, err
 		}

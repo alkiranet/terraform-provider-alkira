@@ -360,11 +360,27 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	oldCredentialId := d.Get("credential_id").(string)
+
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	newCredentialId := d.Get("credential_id").(string)
+
+	if oldCredentialId != newCredentialId {
+		err = deleteFortinetCredentials(oldCredentialId, client)
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "DELETE FORTINET CREDENTIALS FAILED",
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+		}
+
 	}
 
 	// Send update request
