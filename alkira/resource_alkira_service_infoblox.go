@@ -412,8 +412,9 @@ func deleteInfobloxCredential(infobloxCredentialId string, client *alkira.Alkira
 
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
 	client := m.(*alkira.AlkiraClient)
-	var infobloxCredentialId string
 
+	name := d.Get("name").(string)
+	var infobloxCredentialId string
 	if d.Get("shared_secret").(string) != "" || d.HasChange("shared_secret") {
 		credentialId, err := createInfobloxCredentials(d, client)
 		if err != nil {
