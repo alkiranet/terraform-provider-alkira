@@ -388,13 +388,8 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if oldCredentialId != newCredentialId {
 		err = deleteCheckpointCredentials(oldCredentialId, client)
 		if err != nil {
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "DELETE CHECKPOINT CREDENTIALS FAILED",
-				Detail:   fmt.Sprintf("%s", err),
-			}}
+			log.Printf("[WARN] failed to delete old credential %s", err)
 		}
-
 	}
 
 	// Send update request

@@ -498,13 +498,8 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if oldCredentialId != newCredentialId {
 		err = deletePanCredentials(oldCredentialId, client)
 		if err != nil {
-			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "DELETE PAN CREDENTIALS FAILED",
-				Detail:   fmt.Sprintf("%s", err),
-			}}
+			log.Printf("[WARN] failed to delete old credential %s", err)
 		}
-
 	}
 
 	// Set provision state
