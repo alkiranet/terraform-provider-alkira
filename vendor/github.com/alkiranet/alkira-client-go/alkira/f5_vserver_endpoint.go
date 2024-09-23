@@ -6,7 +6,7 @@ import (
 )
 
 type F5vServerEndpoint struct {
-	F5ServiceId          json.Number `json:"f5ServiceId"`
+	F5ServiceId          int         `json:"f5ServiceId"`
 	Name                 string      `json:"name"`
 	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY
 	State                string      `json:"state,omitempty"` //RESPONSE ONLY

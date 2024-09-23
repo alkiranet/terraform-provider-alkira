@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -41,7 +40,7 @@ func resourceAlkiraF5vServerEndpoint() *schema.Resource {
 			"f5_service_id": {
 				Description: "ID of the F5 service associated with the" +
 					"F5 vServer Endpoint.",
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"f5_service_instance_ids": {
@@ -227,7 +226,7 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Name:                 d.Get("name").(string),
 		Segment:              segmentName,
 		Type:                 d.Get("type").(string),
-		F5ServiceId:          json.Number(d.Get("f5_service_id").(string)),
+		F5ServiceId:          d.Get("f5_service_id").(int),
 		F5ServiceInstanceIds: convertTypeSetToIntList(d.Get("f5_service_instance_ids").(*schema.Set)),
 		FqdnPrefix:           d.Get("fqdn_prefix").(string),
 		Protocol:             d.Get("protocol").(string),
