@@ -30,11 +30,10 @@ type ServiceCheckpoint struct {
 }
 
 type CheckpointInstance struct {
-	Id             int    `json:"id,omitempty"` //filled only on response
-	Name           string `json:"name"`
-	CredentialId   string `json:"credentialId"`
-	InternalName   string `json:"internalName,omitempty"` //filled only on response
-	TrafficEnabled bool   `json:"trafficEnabled"`
+	Id           int    `json:"id,omitempty"` //filled only on response
+	Name         string `json:"name"`
+	CredentialId string `json:"credentialId"`
+	InternalName string `json:"internalName,omitempty"` //filled only on response
 }
 
 type CheckpointInstanceConfig struct {

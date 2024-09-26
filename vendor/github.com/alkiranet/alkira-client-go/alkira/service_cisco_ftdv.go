@@ -8,14 +8,13 @@ import (
 )
 
 type CiscoFTDvInstance struct {
-	Id             int    `json:"id,omitempty"`           // filled in response
-	CredentialId   string `json:"credentialId,omitempty"` // filled in response
-	InternalName   string `json:"internalName,omitempty"` // filled in response
-	State          string `json:"state,omitempty"`        // filled in response
-	Hostname       string `json:"hostName"`
-	LicenseType    string `json:"licenseType"`
-	Version        string `json:"version"`
-	TrafficEnabled bool   `json:"trafficEnabled"`
+	Id           int    `json:"id,omitempty"`           // filled in response
+	CredentialId string `json:"credentialId,omitempty"` // filled in response
+	InternalName string `json:"internalName,omitempty"` // filled in response
+	State        string `json:"state,omitempty"`        // filled in response
+	Hostname     string `json:"hostName"`
+	LicenseType  string `json:"licenseType"`
+	Version      string `json:"version"`
 }
 
 type CiscoFTDvManagementServer struct {
