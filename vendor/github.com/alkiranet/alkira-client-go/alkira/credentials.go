@@ -176,7 +176,7 @@ type CredentialF5Instance struct {
 }
 
 type CredentialF5InstanceRegistration struct {
-	RegistrationKey string `json:"egistrationKey"`
+	RegistrationKey string `json:"registrationKey"`
 }
 
 type CredentialPanMasterKey struct {
