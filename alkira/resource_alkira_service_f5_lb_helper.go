@@ -181,6 +181,7 @@ func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]
 					"deployment_type":            apiInstance.Deployment.Type,
 					"f5_username":                "admin",
 					"f5_password":                tfInstance["f5_password"].(string),
+					"f5_registration_key":        tfInstance["f5_registration_key"].(string),
 				}
 				instances = append(instances, instanceStruct)
 				break
