@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraF5vServerEndpoint() *schema.Resource {
+func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Description:   "",
 		CreateContext: resourceF5vServerEndpointCreate,
