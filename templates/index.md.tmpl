@@ -14,7 +14,7 @@ provider, the following ENV variables are supported:
 * `ALKIRA_PORTAL`
 * `ALKIRA_USERNAME`
 * `ALKIRA_PASSWORD`
-* `ALKIRA_KEY`
+* `ALKIRA_API_KEY`
 * `ALKIRA_PROVISION`
 
 More detailed usage of those ENV variables will be described below. A
@@ -68,7 +68,7 @@ Or use ENV var `ALKIRA_API_KEY` (preferrable in CI/CD system).
 
 Provisioning support is added on `v1.0` release. To enable
 provisioning, the provider should be initialized with
-`provisioning=true` or ENV variable `ALKIRA_PROVISION`:
+`provision = true` or ENV variable `ALKIRA_PROVISION`:
 
 ```hcl
 provider "alkira" {
