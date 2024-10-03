@@ -80,8 +80,8 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				},
 			},
 			"billing_tag_ids": {
-				Description: "A list of Billing Tag by ID associated with the " +
-					"connector.",
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},

@@ -107,7 +107,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) Tags for billing.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `direct_inter_vpc_communication_enabled` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
 - `direct_inter_vpc_communication_group` (String) Direct inter-vpc communication group.
