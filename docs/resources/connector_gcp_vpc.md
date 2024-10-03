@@ -103,7 +103,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) IDs of billing tags associated with the connector.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `customer_asn` (Number) A specific BGP ASN for the connector. This field cannot be updated once the connector has been provisioned. The ASN can be any private ASN (`64512 - 65534`, `4200000000 - 4294967294`) that is not used elsewhere in the network.
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.

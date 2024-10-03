@@ -44,10 +44,11 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 				Computed:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Billing tags associated with the connector.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be " +
