@@ -70,6 +70,16 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"customer_ip_type": {
+							Description: "The type of `customer_gateway_ip`. It " +
+								"could be either `STATIC` or DYNAMIC`. " +
+								"Default value is `STATIC`. When it's `DYNAMIC`, " +
+								"`customer_gateway_ip` should be set to `0.0.0.0`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "STATIC",
+							ValidateFunc: validation.StringInSlice([]string{"STATIC", "DYNAMIC"}, false),
+						},
 						"id": {
 							Description: "The ID of the endpoint.",
 							Type:        schema.TypeInt,
@@ -205,9 +215,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Required: true,
 			},
 			"group": {
-				Description: "The group of the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The group of the connector. (see resource " +
+					"`alkira_group`)",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created " +
