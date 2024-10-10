@@ -1,0 +1,1 @@
+terraform import alkira_service_f5_lb.example SERVICE_ID
