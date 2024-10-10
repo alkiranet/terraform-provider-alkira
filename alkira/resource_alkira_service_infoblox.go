@@ -2,8 +2,8 @@ package alkira
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -326,6 +326,7 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
+	oldCredentialId := d.Get("credential_id").(string)
 	// Construct request
 	request, err := generateInfobloxRequest(d, m)
 
@@ -340,6 +341,15 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
+	newCredentialId := d.Get("credential_id").(string)
+
+	if oldCredentialId != newCredentialId {
+		err := deleteInfobloxCredential(oldCredentialId, client)
+		if err != nil {
+			log.Printf("[WARN] failed to delete old credential %s", err)
+
+		}
+	}
 	// Set provision state
 	if client.Provision == true {
 		d.Set("provision_state", provState)
@@ -379,30 +389,38 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 
 	return nil
 }
+func createInfobloxCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating Infoblox Credential")
+
+	infobloxCredentialName := d.Get("name").(string) + "_" + randomNameSuffix()
+	infobloxCredential := alkira.CredentialInfoblox{SharedSecret: d.Get("shared_secret").(string)}
+	return client.CreateCredential(
+		infobloxCredentialName,
+		alkira.CredentialTypeInfoblox,
+		infobloxCredential,
+		0,
+	)
+
+}
+
+func deleteInfobloxCredential(infobloxCredentialId string, client *alkira.AlkiraClient) error {
+
+	log.Printf("[INFO] Deleting Infoblox Credential")
+
+	return client.DeleteCredential(infobloxCredentialId, alkira.CredentialTypeInfoblox)
+}
 
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
-	nameWithSuffix := name + randomNameSuffix()
-	shared_secret := d.Get("shared_secret").(string)
-
 	var infobloxCredentialId string
-
-	if shared_secret != "" {
-		err := errors.New("")
-
-		infobloxCredentialId, err = client.CreateCredential(
-			nameWithSuffix,
-			alkira.CredentialTypeInfoblox,
-			&alkira.CredentialInfoblox{SharedSecret: shared_secret},
-			0,
-		)
-
+	if d.Get("shared_secret").(string) != "" || d.HasChange("shared_secret") {
+		credentialId, err := createInfobloxCredentials(d, client)
 		if err != nil {
 			return nil, err
 		}
+		infobloxCredentialId = credentialId
 	}
 
 	//Parse Grid Master
