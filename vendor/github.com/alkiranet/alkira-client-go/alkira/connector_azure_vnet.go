@@ -77,6 +77,7 @@ type ConnectorAzureVnet struct {
 	ImplicitGroupId                   int                   `json:"implicitGroupId,omitempty"` // RESPONSE ONLY
 	Name                              string                `json:"name"`
 	NativeServices                    []string              `json:"nativeServices,omitempty"`
+	NativeServiceNames                []string              `json:"nativeServiceNames,omitempty"`
 	ResourceGroupName                 string                `json:"resourceGroupName,omitempty"`
 	SecondaryCXPs                     []string              `json:"secondaryCXPs,omitempty"`
 	Segments                          []string              `json:"segments"`
