@@ -8,8 +8,7 @@ import (
 type F5vServerEndpoint struct {
 	F5ServiceId          int         `json:"f5ServiceId"`
 	Name                 string      `json:"name"`
-	Id                   json.Number `json:"id,omitempty"`    // RESPONSE ONLY
-	State                string      `json:"state,omitempty"` //RESPONSE ONLY
+	Id                   json.Number `json:"id,omitempty"` // RESPONSE ONLY
 	Type                 string      `json:"type"`
 	Segment              string      `json:"segment"`
 	FqdnPrefix           string      `json:"fqdnPrefix"`

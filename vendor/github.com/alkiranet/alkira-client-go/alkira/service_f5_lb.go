@@ -7,7 +7,6 @@ import (
 
 type ServiceF5Lb struct {
 	SegmentOptions   F5SegmentOption `json:"segmentOptions"`
-	State            string          `json:"state,omitempty"`
 	Description      string          `json:"description,omitempty"`
 	Cxp              string          `json:"cxp"`
 	Size             string          `json:"size"`
