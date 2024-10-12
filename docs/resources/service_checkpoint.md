@@ -79,7 +79,7 @@ resource "alkira_service_checkpoint" "test" {
 ### Optional
 
 - `auto_scale` (String) Indicate if `auto_scale` should be enabled for your checkpoint firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
-- `billing_tag_ids` (Set of Number) IDs of billing tags to be associate with the service.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the checkpoint service.
 - `min_instance_count` (Number) The minimum number of Checkpoint Firewall instances that should be deployed at any point in time. If auto-scale is OFF, min_instance_count must equal max_instance_count.
 - `pdp_ips` (List of String) The IPs of the PDP Brokers.

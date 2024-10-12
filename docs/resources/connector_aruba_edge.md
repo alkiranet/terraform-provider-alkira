@@ -67,7 +67,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) IDs of billing tags.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `boost_mode` (Boolean) If enabled the Aruba Edge Connect image supporting the boost mode for given size(or bandwidth) would be deployed in Alkira CXP. The default value is false.
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.

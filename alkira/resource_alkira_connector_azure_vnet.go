@@ -39,10 +39,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
 				Description: "ID of resource `credential_azure_vnet`.",
@@ -98,6 +99,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
 				Computed:    true,
+			},
+			"native_services": {
+				Description: "A list of Azure native services. The value " +
+					"could be `Azure KMS` or `Azure RHUI`.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"routing_options": {
 				Description: " Routing options for the entire VNET, either " +
@@ -324,6 +332,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("connection_mode", connector.ConnectionMode)
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
+	d.Set("native_services", connector.NativeServiceNames)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -453,6 +462,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Group:                             d.Get("group").(string),
 		Name:                              d.Get("name").(string),
 		SecondaryCXPs:                     convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		NativeServiceNames:                convertTypeListToStringList(d.Get("native_services").([]interface{})),
 		Segments:                          []string{segmentName},
 		Size:                              d.Get("size").(string),
 		ServiceTags:                       convertTypeListToStringList(d.Get("service_tags").([]interface{})),

@@ -104,7 +104,7 @@ resource "alkira_service_pan" "test1" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) IDs of billing tags to be associated with the service.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `description` (String) The description of the service.
 - `global_protect_enabled` (Boolean) Enable global protect option or not. Default is `false`

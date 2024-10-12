@@ -76,6 +76,7 @@ func expandConnectorIPSecEndpoint(in []interface{}) []*alkira.ConnectorIPSecSite
 
 		r.Name = siteConfig["name"].(string)
 		r.CustomerGwIp = siteConfig["customer_gateway_ip"].(string)
+		r.GatewayIpType = siteConfig["customer_ip_type"].(string)
 		r.HaMode = siteConfig["ha_mode"].(string)
 		r.Id = siteConfig["id"].(int)
 
@@ -297,6 +298,7 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 		"name":                     site.Name,
 		"billing_tag_ids":          site.BillingTags,
 		"customer_gateway_ip":      site.CustomerGwIp,
+		"customer_ip_type":         site.GatewayIpType,
 		"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
 		"ha_mode":                  site.HaMode,
 		"preshared_keys":           site.PresharedKeys,

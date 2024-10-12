@@ -90,16 +90,18 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 				Required:    true,
 			},
 			"min_instance_count": {
-				Description: "The minimum number of instances that should be deployed.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
+				Description: "The minimum number of instances that should " +
+					"be deployed.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
 			},
 			"billing_tag_ids": {
-				Description: "IDs of billing tags.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"segment_ids": {
 				Description: "IDs of segments associated with the service.",

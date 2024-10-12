@@ -45,10 +45,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
 				Description: "ID of resource `credential_aws_vpc`.",

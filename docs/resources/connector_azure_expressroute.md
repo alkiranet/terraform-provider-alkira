@@ -54,7 +54,7 @@ resource "alkira_connector_azure_expressroute" "example" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) IDs of Billing Tags.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`

@@ -79,7 +79,7 @@ resource "alkira_connector_ipsec_adv" "test" {
 
 - `advertise_default_route` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default is `false`.
 - `advertise_on_prem_routes` (Boolean) Additional options for each segment associated with the connector. Default is `false`.
-- `billing_tag_ids` (Set of Number) A list of IDs of billing tag associated with the gateway.
+- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `destination_type` (String) The destination type of the connector. The value could be `IPSEC_ENDPOINT`, `AWS_VPN_CONNECTION`, `AZURE_VPN_CONNECTION`. The default value is `IPSEC_ENDPOINT`.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
