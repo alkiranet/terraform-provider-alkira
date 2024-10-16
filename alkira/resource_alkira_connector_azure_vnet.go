@@ -102,7 +102,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 			},
 			"native_services": {
 				Description: "A list of Azure native services. The value " +
-					"could be `Azure KMS` or `Azure RHUI`.",
+					"could be `Azure KMS` or `Azure RHUI`. This is only " +
+					"effective when `vnet_cidr` and `vnet_subnet` block is " +
+					"not specified.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -162,6 +164,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
+						"native_services": {
+							Description: "A list of Azure native services. The value " +
+								"could be `Azure KMS` or `Azure RHUI`.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeSet,
@@ -209,6 +218,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
+						"native_services": {
+							Description: "A list of Azure native services. The value " +
+								"could be `Azure KMS` or `Azure RHUI`.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeSet,
@@ -234,8 +250,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `5LARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`, " +
+					"`XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, " +
+					"`5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
