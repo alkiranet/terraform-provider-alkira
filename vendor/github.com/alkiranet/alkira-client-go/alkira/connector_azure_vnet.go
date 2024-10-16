@@ -19,10 +19,11 @@ type ConnectorVnetUdrLists struct {
 }
 
 type ConnectorVnetServiceRoute struct {
-	Id             string   `json:"id"`
-	ServiceTags    []string `json:"serviceTags"`
-	NativeServices []string `json:"nativeServices,omitempty"`
-	Value          string   `json:"value"`
+	Id                 string   `json:"id"`
+	ServiceTags        []string `json:"serviceTags"`
+	NativeServices     []string `json:"nativeServices,omitempty"`
+	NativeServiceNames []string `json:"nativeServiceNames,omitempty"`
+	Value              string   `json:"value"`
 }
 
 type ConnectorVnetServiceRoutes struct {

@@ -107,7 +107,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `segment_id` (String) The ID of the segment assoicated with the connector.
-- `size` (String) The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
+- `size` (String) The size of the connector, one of `5XSMALL`, `XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 
 ### Optional
 
@@ -119,7 +119,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `group_direct_inter_connector` (String) The direct inter connector group associated with the connector
-- `native_services` (List of String) A list of Azure native services. The value could be `Azure KMS` or `Azure RHUI`.
+- `native_services` (List of String) A list of Azure native services. The value could be `Azure KMS` or `Azure RHUI`. This is only effective when `vnet_cidr` and `vnet_subnet` block is not specified.
 - `peering_gateway_cxp_id` (Number) The ID of the CXP peering gateway associated with the connector.
 - `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default value is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.
@@ -144,6 +144,7 @@ Required:
 
 Optional:
 
+- `native_services` (Set of String) A list of Azure native services. The value could be `Azure KMS` or `Azure RHUI`.
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the CIDR, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
@@ -159,6 +160,7 @@ Required:
 
 Optional:
 
+- `native_services` (Set of String) A list of Azure native services. The value could be `Azure KMS` or `Azure RHUI`.
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
