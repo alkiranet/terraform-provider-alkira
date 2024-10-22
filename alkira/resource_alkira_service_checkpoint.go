@@ -449,7 +449,7 @@ func createCheckpointCredentials(d *schema.ResourceData, client *alkira.AlkiraCl
 }
 
 func deleteCheckpointCredentials(chkpCredId string, client *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Deleting PAN Credential")
+	log.Printf("[INFO] Deleting Checkpoint Credential")
 	return client.DeleteCredential(chkpCredId, alkira.CredentialTypeChkpFw)
 }
 
