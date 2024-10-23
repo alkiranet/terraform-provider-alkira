@@ -33,10 +33,10 @@ type ConnectorGcpInterconnectInstance struct {
 }
 
 type ConnectorGcpInterconnectSegmentOption struct {
-	SegmentName           string                                  `json:"segmentName"`
-	CustomerGateways      ConnectorGcpInterconnectCustomerGateway `json:"customerGateways"`
-	AdvertiseOnPremRoutes bool                                    `json:"advertiseOnPremRoutes,omitempty"`
-	DisableInternetExit   bool                                    `json:"disableInternetExit,omitempty"`
+	SegmentName           string                                    `json:"segmentName"`
+	CustomerGateways      []ConnectorGcpInterconnectCustomerGateway `json:"customerGateways"`
+	AdvertiseOnPremRoutes bool                                      `json:"advertiseOnPremRoutes,omitempty"`
+	DisableInternetExit   bool                                      `json:"disableInternetExit,omitempty"`
 }
 
 type ConnectorGcpInterconnectCustomerGateway struct {
