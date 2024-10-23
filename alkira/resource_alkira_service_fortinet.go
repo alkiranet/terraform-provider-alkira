@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -360,11 +361,22 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	oldCredentialId := d.Get("credential_id").(string)
+
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	newCredentialId := d.Get("credential_id").(string)
+
+	if oldCredentialId != newCredentialId {
+		err = deleteFortinetCredentials(oldCredentialId, client)
+		if err != nil {
+			log.Printf("[WARN] failed to delete old credential %s", err)
+		}
 	}
 
 	// Send update request
