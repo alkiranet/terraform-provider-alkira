@@ -28,6 +28,7 @@ type ConnectorGcpInterconnectInstance struct {
 	GatewayMacAddress         string                                  `json:"gatewayMacAddress,omitempty"`
 	CandidateSubnets          []string                                `json:"candidateSubnets"`
 	SegmentOptions            []ConnectorGcpInterconnectSegmentOption `json:"segmentOptions"`
+	Id                        int                                     `json:"id"`
 	CustomerAsn               int                                     `json:"customerAsn"`
 	Vni                       int                                     `json:"vni,omitempty"`
 }
