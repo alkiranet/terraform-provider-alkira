@@ -11,30 +11,32 @@ type CredentialType string
 
 const (
 	CredentialTypeAkamaiProlexic           CredentialType = "akamai-prolexic"
-	CredentialTypeArubaEdgeConnectInstance                = "aruba-edge-connector-instances"
-	CredentialTypeAwsVpc                                  = "awsvpc"
-	CredentialTypeAzureVnet                               = "azurevnet"
-	CredentialTypeChkpFw                                  = "chkp-fw"
-	CredentialTypeChkpFwInstance                          = "chkp-fw-instance"
-	CredentialTypeChkpFwManagement                        = "chkp-fw-management-server"
-	CredentialTypeCiscoFtdv                               = "cisco-ftdv-fw"
-	CredentialTypeCiscoFtdvInstance                       = "cisco-ftdv-fw-instance"
-	CredentialTypeCiscoSdwan                              = "ciscosdwan"
-	CredentialTypeFortinet                                = "ftntfw"
-	CredentialTypeFortinetInstance                        = "ftntfw-instance"
-	CredentialTypeFortinetSdwanInstance                   = "ftnt-sdwan-connector-instance"
-	CredentialTypeGcpVpc                                  = "gcpvpc"
-	CredentialTypeInfoblox                                = "infoblox"
-	CredentialTypeInfobloxGridMaster                      = "infoblox-grid-master"
-	CredentialTypeInfobloxInstance                        = "infoblox-instance"
-	CredentialTypeKeyPair                                 = "keypair"
-	CredentialTypeLdap                                    = "ldap"
-	CredentialTypeOciVcn                                  = "ocivcn"
-	CredentialTypePan                                     = "pan"
-	CredentialTypePanInstance                             = "paninstance"
-	CredentialTypePanMasterKey                            = "pan-masterkey"
-	CredentialTypePanRegistration                         = "pan-registration"
-	CredentialTypeVmwareSdwanInstance                     = "vmware-sdwan-connector-instance"
+	CredentialTypeArubaEdgeConnectInstance CredentialType = "aruba-edge-connector-instances"
+	CredentialTypeAwsVpc                   CredentialType = "awsvpc"
+	CredentialTypeAzureVnet                CredentialType = "azurevnet"
+	CredentialTypeChkpFw                   CredentialType = "chkp-fw"
+	CredentialTypeChkpFwInstance           CredentialType = "chkp-fw-instance"
+	CredentialTypeChkpFwManagement         CredentialType = "chkp-fw-management-server"
+	CredentialTypeCiscoFtdv                CredentialType = "cisco-ftdv-fw"
+	CredentialTypeCiscoFtdvInstance        CredentialType = "cisco-ftdv-fw-instance"
+	CredentialTypeCiscoSdwan               CredentialType = "ciscosdwan"
+	CredentialTypeFortinet                 CredentialType = "ftntfw"
+	CredentialTypeFortinetInstance         CredentialType = "ftntfw-instance"
+	CredentialTypeFortinetSdwanInstance    CredentialType = "ftnt-sdwan-connector-instance"
+	CredentialTypeGcpVpc                   CredentialType = "gcpvpc"
+	CredentialTypeInfoblox                 CredentialType = "infoblox"
+	CredentialTypeInfobloxGridMaster       CredentialType = "infoblox-grid-master"
+	CredentialTypeInfobloxInstance         CredentialType = "infoblox-instance"
+	CredentialTypeKeyPair                  CredentialType = "keypair"
+	CredentialTypeLdap                     CredentialType = "ldap"
+	CredentialTypeOciVcn                   CredentialType = "ocivcn"
+	CredentialTypePan                      CredentialType = "pan"
+	CredentialTypePanInstance              CredentialType = "paninstance"
+	CredentialTypePanMasterKey             CredentialType = "pan-masterkey"
+	CredentialTypePanRegistration          CredentialType = "pan-registration"
+	CredentialTypeVmwareSdwanInstance      CredentialType = "vmware-sdwan-connector-instance"
+	CredentialTypeF5Instance               CredentialType = "f5-lb-instance"
+	CredentialTypeF5InstanceRegistration   CredentialType = "f5-lb-registration"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -166,6 +168,15 @@ type CredentialPanInstance struct {
 	LicenseKey string `json:"licenseKey"`
 	Password   string `json:"password"`
 	Username   string `json:"userName"`
+}
+
+type CredentialF5Instance struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+}
+
+type CredentialF5InstanceRegistration struct {
+	RegistrationKey string `json:"registrationKey"`
 }
 
 type CredentialPanMasterKey struct {

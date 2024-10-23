@@ -39,10 +39,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Required:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Tags for billing.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"credential_id": {
 				Description: "ID of resource `credential_azure_vnet`.",
@@ -99,6 +100,15 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"native_services": {
+				Description: "A list of Azure native services. The value " +
+					"could be `Azure KMS` or `Azure RHUI`. This is only " +
+					"effective when `vnet_cidr` and `vnet_subnet` block is " +
+					"not specified.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"routing_options": {
 				Description: " Routing options for the entire VNET, either " +
 					"`ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. " +
@@ -154,6 +164,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
+						"native_services": {
+							Description: "A list of Azure native services. The value " +
+								"could be `Azure KMS` or `Azure RHUI`.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeSet,
@@ -201,6 +218,13 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 						},
+						"native_services": {
+							Description: "A list of Azure native services. The value " +
+								"could be `Azure KMS` or `Azure RHUI`.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"service_tags": {
 							Description: "List of service tags provided by Azure.",
 							Type:        schema.TypeSet,
@@ -226,8 +250,9 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, `MEDIUM`, " +
-					"`LARGE`, `2LARGE`, `5LARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`, " +
+					"`XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, " +
+					"`5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -324,6 +349,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("connection_mode", connector.ConnectionMode)
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
+	d.Set("native_services", connector.NativeServiceNames)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("name", connector.Name)
@@ -453,6 +479,7 @@ func generateConnectorAzureVnetRequest(d *schema.ResourceData, m interface{}) (*
 		Group:                             d.Get("group").(string),
 		Name:                              d.Get("name").(string),
 		SecondaryCXPs:                     convertTypeListToStringList(d.Get("failover_cxps").([]interface{})),
+		NativeServiceNames:                convertTypeListToStringList(d.Get("native_services").([]interface{})),
 		Segments:                          []string{segmentName},
 		Size:                              d.Get("size").(string),
 		ServiceTags:                       convertTypeListToStringList(d.Get("service_tags").([]interface{})),

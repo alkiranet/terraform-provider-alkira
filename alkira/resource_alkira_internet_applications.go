@@ -35,10 +35,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
-				Description: "IDs of billing tags to be associated.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"bi_directional_az": {
 				Description: "Bi-directional IFA AZ. The value could be either " +

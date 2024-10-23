@@ -19,10 +19,11 @@ type ConnectorVnetUdrLists struct {
 }
 
 type ConnectorVnetServiceRoute struct {
-	Id             string   `json:"id"`
-	ServiceTags    []string `json:"serviceTags"`
-	NativeServices []string `json:"nativeServices,omitempty"`
-	Value          string   `json:"value"`
+	Id                 string   `json:"id"`
+	ServiceTags        []string `json:"serviceTags"`
+	NativeServices     []string `json:"nativeServices,omitempty"`
+	NativeServiceNames []string `json:"nativeServiceNames,omitempty"`
+	Value              string   `json:"value"`
 }
 
 type ConnectorVnetServiceRoutes struct {
@@ -77,6 +78,7 @@ type ConnectorAzureVnet struct {
 	ImplicitGroupId                   int                   `json:"implicitGroupId,omitempty"` // RESPONSE ONLY
 	Name                              string                `json:"name"`
 	NativeServices                    []string              `json:"nativeServices,omitempty"`
+	NativeServiceNames                []string              `json:"nativeServiceNames,omitempty"`
 	ResourceGroupName                 string                `json:"resourceGroupName,omitempty"`
 	SecondaryCXPs                     []string              `json:"secondaryCXPs,omitempty"`
 	Segments                          []string              `json:"segments"`
