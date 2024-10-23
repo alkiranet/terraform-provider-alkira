@@ -208,26 +208,42 @@ func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath str
 	return string(b), nil
 }
 
+func createFortinetCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+
+	log.Printf("[INFO] Creating Fortinet FW Credential")
+
+	fortinetCredName := d.Get("name").(string) + "_" + randomNameSuffix()
+	fortinetCred := alkira.CredentialPan{
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
+	}
+
+	return client.CreateCredential(
+		fortinetCredName,
+		alkira.CredentialTypeFortinet,
+		fortinetCred,
+		0,
+	)
+}
+
+func deleteFortinetCredentials(fortinetCredId string, client *alkira.AlkiraClient) error {
+
+	log.Printf("[INFO] Deleting Fortinet FW Credential")
+
+	return client.DeleteCredential(fortinetCredId, alkira.CredentialTypeFortinet)
+}
+
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
 
 	client := m.(*alkira.AlkiraClient)
+
+	//
+	// Construct credentials
+	//
 	fortinetCredId := d.Get("credential_id").(string)
 
-	if 0 == len(fortinetCredId) {
-		log.Printf("[INFO] Creating Fortinet FW Credential")
-
-		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
-		fortinetCred := alkira.CredentialPan{
-			Username: d.Get("username").(string),
-			Password: d.Get("password").(string),
-		}
-
-		credentialId, err := client.CreateCredential(
-			fortinetCredName,
-			alkira.CredentialTypeFortinet,
-			fortinetCred,
-			0,
-		)
+	if 0 == len(fortinetCredId) || d.HasChanges("username", "password") {
+		credentialId, err := createFortinetCredentials(d, client)
 		if err != nil {
 			return nil, err
 		}

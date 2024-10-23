@@ -485,11 +485,21 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	oldCredentialId := d.Get("credential_id").(string)
+
 	// Send update request
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	newCredentialId := d.Get("credential_id").(string)
+
+	if oldCredentialId != newCredentialId {
+		err = deletePanCredentials(oldCredentialId, client)
+		if err != nil {
+			log.Printf("[WARN] failed to delete old credential %s", err)
+		}
 	}
 
 	// Set provision state
@@ -535,6 +545,31 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
+func createPanCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Credential")
+
+	panCredName := d.Get("name").(string) + randomNameSuffix()
+	panCredential := alkira.CredentialPan{
+		Username:   d.Get("pan_username").(string),
+		Password:   d.Get("pan_password").(string),
+		LicenseKey: d.Get("pan_license_key").(string),
+	}
+
+	return client.CreateCredential(
+		panCredName,
+		alkira.CredentialTypePan,
+		panCredential,
+		0,
+	)
+
+}
+
+func deletePanCredentials(panCredId string, client *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Credential")
+
+	return client.DeleteCredential(panCredId, alkira.CredentialTypePan)
+}
+
 func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
 
 	client := m.(*alkira.AlkiraClient)
@@ -546,29 +581,14 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	//
 	// Construct credentials
 	//
-	panCredentialId := d.Get("credential_id").(string)
+	panCredId := d.Get("credential_id").(string)
 
-	if 0 == len(panCredentialId) {
-		log.Printf("[INFO] Creating PAN Credential")
+	if 0 == len(panCredId) || d.HasChanges("pan_username", "pan_password", "pan_license_key") {
 
-		panCredName := d.Get("name").(string) + randomNameSuffix()
-		panCredential := alkira.CredentialPan{
-			Username:   d.Get("pan_username").(string),
-			Password:   d.Get("pan_password").(string),
-			LicenseKey: d.Get("pan_license_key").(string),
-		}
-
-		credentialId, err := client.CreateCredential(
-			panCredName,
-			alkira.CredentialTypePan,
-			panCredential,
-			0,
-		)
-
+		credentialId, err := createPanCredentials(d, client)
 		if err != nil {
 			return nil, err
 		}
-
 		d.Set("credential_id", credentialId)
 	}
 
