@@ -229,16 +229,16 @@ func generateGcpInterconnectRequest(d *schema.ResourceData, m interface{}) (*alk
 	// Assemble request
 	connector := &alkira.ConnectorGcpInterconnect{
 		Name:             d.Get("name").(string),
+		Size:             d.Get("size").(string),
 		Description:      d.Get("description").(string),
 		Cxp:              d.Get("cxp").(string),
+		Enabled:          d.Get("enabled").(bool),
 		Group:            d.Get("group").(string),
-		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		ScaleGroupId:     d.Get("scale_group_id").(string),
 		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		LoopbackPrefixes: convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set)),
-		Enabled:          d.Get("enabled").(bool),
 		Instances:        instances,
+		ScaleGroupId:     d.Get("scale_group_id").(string),
 	}
 
 	return connector, nil
