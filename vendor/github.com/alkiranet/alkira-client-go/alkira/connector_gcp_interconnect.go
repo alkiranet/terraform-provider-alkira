@@ -15,7 +15,7 @@ type ConnectorGcpInterconnect struct {
 	Name             string                             `json:"name"`
 	Id               json.Number                        `json:"id"` // RESPONSE ONLY
 	BillingTags      []int                              `json:"billingTags"`
-	LoopbackPrefixes []string                           `json:"loopbackPrefixes"`
+	LoopbackPrefixes []string                           `json:"loopbackPrefixes,omitempty"`
 	Instances        []ConnectorGcpInterconnectInstance `json:"instances"`
 	ImplicitGroupId  int                                `json:"implicitGroupId,omitempty"` // RESPONSE ONLY
 	Enabled          bool                               `json:"enabled"`

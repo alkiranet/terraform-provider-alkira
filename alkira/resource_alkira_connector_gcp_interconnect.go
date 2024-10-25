@@ -133,7 +133,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"vni": {
+						"vni_id": {
 							Description: "The VXLAN Network Identifier." +
 								"Required if tunnel protocol is VXLAN.",
 							Type:     schema.TypeInt,
@@ -155,7 +155,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"segment_id": {
-							Description: "The name of the segment.",
+							Description: "The ID of the segment.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -199,6 +199,12 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Description: "The ID of the scale group associated with the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"implicit_group_id": {
+				Description: "The ID of the implicit group associated with the connector.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

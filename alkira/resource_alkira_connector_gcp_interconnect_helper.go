@@ -99,7 +99,7 @@ func expandGcpInterconnectInstances(in []interface{}, m interface{}) ([]alkira.C
 		if v, ok := cfgInstance["customer_asn"].(int); ok {
 			newInstance.CustomerAsn = v
 		}
-		if v, ok := cfgInstance["vni"].(int); ok {
+		if v, ok := cfgInstance["vni_id"].(int); ok {
 			newInstance.Vni = v
 		}
 		if v, ok := cfgInstance["segment_options"].([]interface{}); ok {
@@ -177,7 +177,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 					"customer_asn":             aInstance.CustomerAsn,
 					"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
 					"gateway_mac_address":      aInstance.GatewayMacAddress,
-					"vni":                      aInstance.Vni,
+					"vni_id":                   aInstance.Vni,
 				}
 				instances = append(instances, instance)
 			}
@@ -210,7 +210,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 				"customer_asn":             aInstance.CustomerAsn,
 				"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
 				"gateway_mac_address":      aInstance.GatewayMacAddress,
-				"vni":                      aInstance.Vni,
+				"vni_id":                   aInstance.Vni,
 			}
 			instances = append(instances, i)
 		}
@@ -239,6 +239,7 @@ func generateGcpInterconnectRequest(d *schema.ResourceData, m interface{}) (*alk
 		LoopbackPrefixes: convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set)),
 		Instances:        instances,
 		ScaleGroupId:     d.Get("scale_group_id").(string),
+		ImplicitGroupId:  d.Get("implicit_group_id").(int),
 	}
 
 	return connector, nil
