@@ -41,8 +41,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, " +
-					"`MEDIUM`, `LARGE`.",
+				Description: "The size of the connector, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -107,10 +107,11 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"edge_availibility_domain": {
-							Description:  "The Availibility Domain of the instance.",
+							Description: "The Availibility Domain of the instance." +
+								"Can be one of `AVAILIBILITY_DOMAIN_1`, `AVAILBILITY_DOMAIN_2`.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_ANY", "AVAILIBILITY_DOMAIN_1", "AVAILBILITY_DOMAIN_2"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"AVAILIBILITY_DOMAIN_1", "AVAILBILITY_DOMAIN_2"}, false),
 						},
 						"candidate_subnets": {
 							Description: "A list of candidate subnets to be used by the instance.",
@@ -184,10 +185,9 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 										Required: true,
 									},
 									"tunnel_count": {
-										Description: "Number of tunnels per customer gateway. " +
-											"This must be a multiple of 2.",
-										Type:     schema.TypeInt,
-										Required: true,
+										Description: "Number of tunnels per customer gateway. ",
+										Type:        schema.TypeInt,
+										Required:    true,
 									},
 								},
 							},
