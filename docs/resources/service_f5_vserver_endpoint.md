@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "alkira_f5_vserver_endpoint" "example_vserver" {
+resource "alkira_service_f5_vserver_endpoint" "example_vserver" {
   name                    = "example"
   f5_service_id           = alkira_service_f5_lb.example_lb.id
   f5_service_instance_ids = [alkira_service_f5_lb.example_lb.instances[0].id]
