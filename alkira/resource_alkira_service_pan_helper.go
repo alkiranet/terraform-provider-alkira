@@ -14,6 +14,89 @@ type panZone struct {
 	Groups  interface{}
 }
 
+// Helper functions for credentials. There are 3 types of credentials used in PAN:
+//
+// - PAN credential
+// - PAN Registration
+// - PAN Master Key
+func createPanCredential(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Credential")
+
+	panCredName := d.Get("name").(string) + randomNameSuffix()
+	panCredential := alkira.CredentialPan{
+		Username:   d.Get("pan_username").(string),
+		Password:   d.Get("pan_password").(string),
+		LicenseKey: d.Get("pan_license_key").(string),
+	}
+
+	return client.CreateCredential(
+		panCredName,
+		alkira.CredentialTypePan,
+		panCredential,
+		0,
+	)
+
+}
+
+func deletePanCredential(credentialId string, client *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Credential")
+
+	return client.DeleteCredential(credentialId, alkira.CredentialTypePan)
+}
+
+func createPanRegistrationCredential(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Registration Credential")
+
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPanRegistration{
+		RegistrationPinId:    d.Get("registration_pin_id").(string),
+		RegistrationPinValue: d.Get("registration_pin_value").(string),
+	}
+	credentialExpiry, err := convertInputTimeToEpoch(d.Get("registration_pin_expiry").(string))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to parse 'registration_pin_exiry', %v", err)
+		return "", err
+	}
+
+	return client.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
+}
+
+func deletePanRegistrationCredential(credentialId string, client *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Registration Credential")
+
+	return client.DeleteCredential(credentialId, alkira.CredentialTypePanRegistration)
+}
+
+func createPanMasterKeyCredential(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Master Key Credential")
+
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPanMasterKey{
+		MasterKey: d.Get("master_key").(string),
+	}
+
+	credentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
+		return "", err
+	}
+
+	if credentialExpiry == 0 {
+		log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
+		return "", err
+	}
+
+	return client.CreateCredential(credentialName, alkira.CredentialTypePanMasterKey, credential, credentialExpiry)
+}
+
+func deletePanMasterKeyCredential(credentialId string, client *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Master Key Credential")
+
+	return client.DeleteCredential(credentialId, alkira.CredentialTypePanMasterKey)
+}
+
 func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentName, error) {
 
 	if in == nil || in.Len() == 0 {

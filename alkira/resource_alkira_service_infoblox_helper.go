@@ -3,11 +3,32 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func createInfobloxSharedSecretCredential(client *alkira.AlkiraClient, name string, secret string) (string, error) {
+	log.Printf("[INFO] Creating Infoblox Shared Secret Credential")
+
+	credential := alkira.CredentialInfoblox{SharedSecret: secret}
+
+	return client.CreateCredential(
+		name,
+		alkira.CredentialTypeInfoblox,
+		credential,
+		0,
+	)
+}
+
+func deleteInfobloxCredential(infobloxCredentialId string, client *alkira.AlkiraClient) error {
+
+	log.Printf("[INFO] Deleting Infoblox Credential")
+
+	return client.DeleteCredential(infobloxCredentialId, alkira.CredentialTypeInfoblox)
+}
 
 // func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
 func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
@@ -101,8 +122,9 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	return m
 }
 
-func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
-	client := m.(*alkira.AlkiraClient)
+func expandInfobloxGridMaster(d *schema.ResourceData, c *alkira.AlkiraClient) (*alkira.InfobloxGridMaster, error) {
+
+	in := d.Get("grid_master").([]interface{})
 
 	if in == nil || len(in) > 1 || len(in) < 1 {
 		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
@@ -113,6 +135,9 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 	var username string
 	var password string
 	for _, option := range in {
+
+		var nameWithSuffix string
+		var sharedSecret string
 
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["external"].(bool); ok {
@@ -129,11 +154,15 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 		}
 		if v, ok := cfg["name"].(string); ok {
 			im.Name = v
+			nameWithSuffix = v + randomNameSuffix()
+		}
+		if v, ok := cfg["shared_secret"].(string); ok {
+			sharedSecret = v
 		}
 		if v, ok := cfg["credential_id"].(string); ok {
 			if v == "" {
-				gridMasterCredentialId, err := client.CreateCredential(
-					im.Name+randomNameSuffix(),
+				gridMasterCredentialId, err := c.CreateCredential(
+					nameWithSuffix,
 					alkira.CredentialTypeInfobloxGridMaster,
 					&alkira.CredentialInfobloxGridMaster{
 						Username: username,
@@ -153,9 +182,21 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 				im.GridMasterCredentialId = v
 			}
 		}
-	}
+		if v, ok := cfg["shared_secret_credential_id"].(string); ok {
+			if v == "" {
+				sharedSecretCredentialId, err := createInfobloxSharedSecretCredential(c, nameWithSuffix, sharedSecret)
+				if err != nil {
+					return nil, err
+				}
 
-	im.SharedSecretCredentialId = sharedSecretCredentialId
+				im.SharedSecretCredentialId = sharedSecretCredentialId
+			}
+
+			if v != "" {
+				im.SharedSecretCredentialId = v
+			}
+		}
+	}
 
 	return im, nil
 }
