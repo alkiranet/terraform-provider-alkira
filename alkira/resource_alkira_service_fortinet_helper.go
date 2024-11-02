@@ -208,7 +208,7 @@ func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath str
 	return string(b), nil
 }
 
-func createFortinetCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
+func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 
 	log.Printf("[INFO] Creating Fortinet FW Credential")
 
@@ -218,7 +218,7 @@ func createFortinetCredentials(d *schema.ResourceData, client *alkira.AlkiraClie
 		Password: d.Get("password").(string),
 	}
 
-	return client.CreateCredential(
+	return c.CreateCredential(
 		fortinetCredName,
 		alkira.CredentialTypeFortinet,
 		fortinetCred,
@@ -226,29 +226,34 @@ func createFortinetCredentials(d *schema.ResourceData, client *alkira.AlkiraClie
 	)
 }
 
-func deleteFortinetCredentials(fortinetCredId string, client *alkira.AlkiraClient) error {
+func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	if d.HasChanges("username", "password") {
+		log.Printf("[INFO] FOrtinet credential has changed")
+		id, err := createFortinetCredential(d, c)
+		if err != nil {
+			return err
+		}
+		d.Set("credential_id", id)
+	}
+	return nil
+}
+
+func deleteFortinetCredential(id string, c *alkira.AlkiraClient) error {
 
 	log.Printf("[INFO] Deleting Fortinet FW Credential")
-
-	return client.DeleteCredential(fortinetCredId, alkira.CredentialTypeFortinet)
+	return c.DeleteCredential(id, alkira.CredentialTypeFortinet)
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
 
 	client := m.(*alkira.AlkiraClient)
 
-	//
 	// Construct credentials
-	//
-	fortinetCredId := d.Get("credential_id").(string)
-
-	if 0 == len(fortinetCredId) || d.HasChanges("username", "password") {
-		credentialId, err := createFortinetCredentials(d, client)
-		if err != nil {
-			return nil, err
-		}
-		d.Set("credential_id", credentialId)
+	credentialId, err := createFortinetCredential(d, client)
+	if err != nil {
+		return nil, err
 	}
+	d.Set("credential_id", credentialId)
 
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
