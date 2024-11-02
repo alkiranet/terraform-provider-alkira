@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -404,6 +403,12 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	// Create credentails
+	err := createCredentials(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
@@ -495,6 +500,12 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	// Update all credentails
+	err := updateCredentials(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
@@ -550,164 +561,4 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	return nil
-}
-
-func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
-
-	client := m.(*alkira.AlkiraClient)
-
-	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
-	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
-	panoramaTemplate := d.Get("panorama_template").(string)
-
-	//
-	// Construct instances
-	//
-	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct segment options
-	//
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct global protect
-	//
-	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// PAN credential
-	var panCredentialId string
-
-	if d.Get("pan_credential_id") != nil {
-		oldCredentialId := d.Get("pan_credential_id").(string)
-
-		if d.HasChanges("pan_username", "pan_password", "pan_license_key") {
-
-			// Create a new credential
-			credentialId, err := createPanCredential(d, client)
-			if err != nil {
-				return nil, err
-			}
-
-			// Delete the old credential
-			err = deletePanCredential(oldCredentialId, client)
-			if err != nil {
-				log.Printf("[WARN] failed to delete old credential %s", err)
-			}
-
-			panCredentialId = credentialId
-		}
-	} else {
-		credentialId, err := createPanCredential(d, client)
-		if err != nil {
-			return nil, err
-		}
-
-		panCredentialId = credentialId
-	}
-	d.Set("pan_credential_id", panCredentialId)
-
-	// PAN Registration PIN Credential
-	var panRegistrationCredentialId string
-
-	if d.Get("pan_registration_credential_id") != nil {
-		oldCredentialId := d.Get("pan_registration_credential_id").(string)
-
-		if d.HasChanges("registration_pin_id", "registration_pin_value", "registration_pin_expiry") {
-			credentialId, err := createPanRegistrationCredential(d, client)
-			if err != nil {
-				return nil, err
-			}
-
-			err = deletePanRegistrationCredential(oldCredentialId, client)
-			if err != nil {
-				log.Printf("[WARN] failed to delete old PAN registration credential %s", err)
-			}
-
-			panRegistrationCredentialId = credentialId
-		}
-	} else {
-		credentialId, err := createPanRegistrationCredential(d, client)
-		if err != nil {
-			return nil, err
-		}
-		panRegistrationCredentialId = credentialId
-	}
-	d.Set("pan_registration_credential_id", panRegistrationCredentialId)
-
-	// PAN Master Key Credential
-	var panMasterKeyCredentialId string
-
-	if d.Get("master_key_enabled").(bool) {
-
-		if d.Get("pan_registration_credential_id") != nil {
-			oldCredentialId := d.Get("pan_registration_credential_id").(string)
-
-			if d.HasChanges("master_key", "master_key_expiry") {
-
-				credentialId, err := createPanMasterKeyCredential(d, client)
-				if err != nil {
-					return nil, err
-				}
-
-				err = deletePanMasterKeyCredential(oldCredentialId, client)
-				if err != nil {
-					log.Printf("[WARN] failed to delete old PAN Master Key Credential %s", err)
-				}
-
-				panMasterKeyCredentialId = credentialId
-			}
-		}
-	} else {
-		credentialId, err := createPanMasterKeyCredential(d, client)
-		if err != nil {
-			return nil, err
-		}
-		panMasterKeyCredentialId = credentialId
-	}
-	d.Set("pan_master_key_credential_id", panMasterKeyCredentialId)
-
-	service := &alkira.ServicePan{
-		BillingTagIds:               convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		Bundle:                      d.Get("bundle").(string),
-		CXP:                         d.Get("cxp").(string),
-		CredentialId:                d.Get("pan_credential_id").(string),
-		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
-		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
-		Instances:                   instances,
-		LicenseType:                 d.Get("license_type").(string),
-		SubLicenseType:              d.Get("license_sub_type").(string),
-		MasterKeyCredentialId:       d.Get("pan_master_key_credential_id").(string),
-		MasterKeyEnabled:            d.Get("master_key_enabled").(bool),
-		MaxInstanceCount:            d.Get("max_instance_count").(int),
-		MinInstanceCount:            d.Get("min_instance_count").(int),
-		ManagementSegmentId:         d.Get("management_segment_id").(int),
-		Name:                        d.Get("name").(string),
-		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
-		PanoramaDeviceGroup:         &panoramaDeviceGroup,
-		PanoramaIpAddresses:         panoramaIpAddresses,
-		PanoramaTemplate:            &panoramaTemplate,
-		RegistrationCredentialId:    d.Get("pan_registration_credential_id").(string),
-		SegmentOptions:              segmentOptions,
-		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
-		TunnelProtocol:              d.Get("tunnel_protocol").(string),
-		Size:                        d.Get("size").(string),
-		Type:                        d.Get("type").(string),
-		Version:                     d.Get("version").(string),
-		Description:                 d.Get("description").(string),
-	}
-
-	return service, nil
 }
