@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -79,8 +78,18 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			"credential_id": {
+			"pan_credential_id": {
 				Description: "ID of PAN credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"pan_registration_credential_id": {
+				Description: "ID of PAN Registration credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"pan_master_key_credential_id": {
+				Description: "ID of PAN master key credential.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -394,6 +403,12 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	// Create credentails
+	err := createCredentials(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
@@ -485,6 +500,12 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	// Update all credentails
+	err := updateCredentials(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
@@ -492,7 +513,7 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
@@ -540,150 +561,4 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	return nil
-}
-
-func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
-
-	client := m.(*alkira.AlkiraClient)
-
-	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
-	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
-	panoramaTemplate := d.Get("panorama_template").(string)
-
-	//
-	// Construct credentials
-	//
-	panCredentialId := d.Get("credential_id").(string)
-
-	if 0 == len(panCredentialId) {
-		log.Printf("[INFO] Creating PAN Credential")
-
-		panCredName := d.Get("name").(string) + randomNameSuffix()
-		panCredential := alkira.CredentialPan{
-			Username:   d.Get("pan_username").(string),
-			Password:   d.Get("pan_password").(string),
-			LicenseKey: d.Get("pan_license_key").(string),
-		}
-
-		credentialId, err := client.CreateCredential(
-			panCredName,
-			alkira.CredentialTypePan,
-			panCredential,
-			0,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		d.Set("credential_id", credentialId)
-	}
-
-	//
-	// Construct instances
-	//
-	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct segment options
-	//
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct global protect
-	//
-	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// PAN Registration PIN saved as credential
-	regCredentialName := d.Get("name").(string) + randomNameSuffix()
-	regCredential := alkira.CredentialPanRegistration{
-		RegistrationPinId:    d.Get("registration_pin_id").(string),
-		RegistrationPinValue: d.Get("registration_pin_value").(string),
-	}
-
-	regCredentialExpiry, err := convertInputTimeToEpoch(d.Get("registration_pin_expiry").(string))
-
-	if err != nil {
-		log.Printf("[ERROR] failed to parse 'registration_pin_exiry', %v", err)
-		return nil, err
-	}
-
-	regCredentialId, err := client.CreateCredential(regCredentialName, alkira.CredentialTypePanRegistration, regCredential, regCredentialExpiry)
-
-	if err != nil {
-		log.Printf("[ERROR] failed to process PAN registration pin, %v", err)
-		return nil, err
-	}
-
-	// PAN Master Key saved as credential
-	var masterKeyCredentialId string
-	if d.Get("master_key_enabled").(bool) {
-		masterKeyCredentialName := d.Get("name").(string) + randomNameSuffix()
-		masterKeyCredential := alkira.CredentialPanMasterKey{
-			MasterKey: d.Get("master_key").(string),
-		}
-
-		masterKeyCredentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
-
-		if err != nil {
-			log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
-			return nil, err
-		}
-
-		if masterKeyCredentialExpiry == 0 {
-			log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
-			return nil, err
-		}
-
-		masterKeyCredentialId, err = client.CreateCredential(masterKeyCredentialName, alkira.CredentialTypePanMasterKey, masterKeyCredential, masterKeyCredentialExpiry)
-
-		if err != nil {
-			log.Printf("[ERROR] failed to process PAN master key, %v", err)
-			return nil, err
-		}
-	}
-
-	service := &alkira.ServicePan{
-		BillingTagIds:               convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		Bundle:                      d.Get("bundle").(string),
-		CXP:                         d.Get("cxp").(string),
-		CredentialId:                d.Get("credential_id").(string),
-		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
-		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
-		Instances:                   instances,
-		LicenseType:                 d.Get("license_type").(string),
-		SubLicenseType:              d.Get("license_sub_type").(string),
-		MasterKeyCredentialId:       masterKeyCredentialId,
-		MasterKeyEnabled:            d.Get("master_key_enabled").(bool),
-		MaxInstanceCount:            d.Get("max_instance_count").(int),
-		MinInstanceCount:            d.Get("min_instance_count").(int),
-		ManagementSegmentId:         d.Get("management_segment_id").(int),
-		Name:                        d.Get("name").(string),
-		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
-		PanoramaDeviceGroup:         &panoramaDeviceGroup,
-		PanoramaIpAddresses:         panoramaIpAddresses,
-		PanoramaTemplate:            &panoramaTemplate,
-		RegistrationCredentialId:    regCredentialId,
-		SegmentOptions:              segmentOptions,
-		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
-		TunnelProtocol:              d.Get("tunnel_protocol").(string),
-		Size:                        d.Get("size").(string),
-		Type:                        d.Get("type").(string),
-		Version:                     d.Get("version").(string),
-		Description:                 d.Get("description").(string),
-	}
-
-	return service, nil
 }
