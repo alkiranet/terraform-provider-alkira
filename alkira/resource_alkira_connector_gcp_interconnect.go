@@ -52,10 +52,10 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description:  "The CXP where the connector should be provisioned.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"US-EAST1", "US-WEST1", "US-CENTRAL1", "AP-NORTHEAST", "EU-WEST"}, false),
+				Description: "The CXP where the connector should be provisioned.",
+				Type:        schema.TypeString,
+				Required:    true,
+				// ValidateFunc: validation.StringInSlice([]string{"US-EAST1", "US-WEST1", "US-CENTRAL1", "AP-NORTHEAST", "EU-WEST"}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -89,9 +89,9 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"instance": {
+			"instances": {
 				Description: "A list of instances of the Interconnect",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -107,16 +107,11 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"edge_availibility_domain": {
-							Description: "The Availibility Domain of the instance." +
-								"Can be one of `AVAILIBILITY_DOMAIN_1`, `AVAILBILITY_DOMAIN_2`.",
+							Description: "The Availability Domain of the instance." +
+								"Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"AVAILIBILITY_DOMAIN_1", "AVAILBILITY_DOMAIN_2"}, false),
-						},
-						"candidate_subnets": {
-							Description: "A list of candidate subnets to be used by the instance.",
-							Type:        schema.TypeSet,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
 						},
 						"customer_asn": {
 							Description: "The customer ASN.",
@@ -146,7 +141,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 
 			"segment_options": {
 				Description: "Options for each segment associated with the instance.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -174,7 +169,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 						},
 						"customer_gateways": {
 							Description: "The customer gateway associated with the segment.",
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Required:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -182,7 +177,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 										Description: "The customer gateway IP address " +
 											"which is set as tunnel source",
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"tunnel_count": {
 										Description: "Number of tunnels per customer gateway. ",
