@@ -82,6 +82,7 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 	d.Set("instances", instances)
 }
 
+// expandFortinetInstances expand instance blocks to construct the request payload
 func expandFortinetInstances(licenseType string, in []interface{}, m interface{}) ([]alkira.FortinetInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
@@ -116,34 +117,13 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
-
-				lk, err := extractLicenseKey(licenseType, licenseKeyLiteral, licenseKeyPath)
-				if err != nil {
-					return nil, err
-				}
-				c := alkira.CredentialFortinetInstance{
-					LicenseKey:  lk,
-					LicenseType: licenseType,
-				}
-
-				credentialName := r.Name + randomNameSuffix()
-
-				log.Printf("[INFO] Creating Fortinet Instance Credential %s", credentialName)
-
-				credentialId, err := client.CreateCredential(
-					credentialName,
-					alkira.CredentialTypeFortinetInstance,
-					c,
-					0,
-				)
+				credentialId, err := createFortinetInstanceCredential(client, r.Name, licenseType, licenseKeyLiteral, licenseKeyPath)
 				if err != nil {
 					return nil, err
 				}
 
 				r.CredentialId = credentialId
-			}
-
-			if v != "" {
+			} else {
 				r.CredentialId = v
 			}
 		}
@@ -175,64 +155,107 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 	return zonesToGroups
 }
 
-// extractLicenseKey takes two string values. The order of the string
-// parameters matters. After validation, if both fields have are not
-// empty strings extractLicenseKey will default to using licenseKey as
-// the return value. Otherwise extractLicenseKey will read from the
-// licenseKeyPath and return the output as a string
-func extractLicenseKey(licenseType string, licenseKey string, licenseKeyPath string) (string, error) {
-	// if both params are empty
-	if licenseKey == "" && licenseKeyPath == "" {
+func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 
-		// license key is optional for PAY_AS_YOU_GO
+	log.Printf("[INFO] Creating Fortinet Credential")
+
+	fortinetCredName := d.Get("name").(string) + "_" + randomNameSuffix()
+	fortinetCred := alkira.CredentialPan{
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
+	}
+
+	return c.CreateCredential(fortinetCredName, alkira.CredentialTypeFortinet, fortinetCred, 0)
+}
+
+func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	if d.HasChanges("username", "password") {
+		log.Printf("[INFO] Fortinet credential has changed")
+		id, err := createFortinetCredential(d, c)
+		if err != nil {
+			return err
+		}
+		d.Set("credential_id", id)
+	}
+	return nil
+}
+
+func deleteFortinetCredential(id string, c *alkira.AlkiraClient) error {
+
+	log.Printf("[INFO] Deleting Fortinet Credential")
+	return c.DeleteCredential(id, alkira.CredentialTypeFortinet)
+}
+
+// createFortinetInstanceCredential
+func createFortinetInstanceCredential(c *alkira.AlkiraClient, name string, licenseType string, licenseKey string, licenseKeyPath string) (string, error) {
+
+	log.Printf("[INFO] Creating Fortinet Instance Credential")
+
+	// When license type is "PAY_AS_YOU_GO", license key is optional
+	if licenseKey == "" && licenseKeyPath == "" {
 		if licenseType == "PAY_AS_YOU_GO" {
 			return "", nil
 		}
 
-		return "", errors.New("either 'license_key' or 'icense_key_file_path' must be populated")
+		return "", errors.New("either 'license_key' or 'license_key_file_path' must be provided")
 	}
 
-	if licenseKey != "" {
-		return licenseKey, nil
+	// If the license_key is provided directly in the config, use it,
+	// otherwise, try to read it from the given license key file
+	if licenseKey == "" {
+		if _, err := os.Stat(licenseKeyPath); errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("file not found at %s: %w", licenseKeyPath, err)
+		}
+
+		b, err := os.ReadFile(licenseKeyPath)
+		if err != nil {
+			return "", err
+		}
+		licenseKey = string(b)
+
+		if licenseKey == "" {
+			return "", errors.New("'license_key' of 'service_fortinet_instance' is invalid")
+		}
 	}
 
-	if _, err := os.Stat(licenseKeyPath); errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("file not found at %s: %w", licenseKeyPath, err)
-	}
+	id, err := c.CreateCredential(
+		name+randomNameSuffix(),
+		alkira.CredentialTypeFortinetInstance,
+		alkira.CredentialFortinetInstance{
+			LicenseKey:  licenseKey,
+			LicenseType: licenseType,
+		},
+		0)
 
-	b, err := os.ReadFile(licenseKeyPath)
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	return id, nil
+}
+
+func updateFortinetInstanceCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	if d.HasChanges("username", "password") {
+		log.Printf("[INFO] FOrtinet credential has changed")
+		id, err := createFortinetCredential(d, c)
+		if err != nil {
+			return err
+		}
+		d.Set("credential_id", id)
+	}
+	return nil
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
 
 	client := m.(*alkira.AlkiraClient)
-	fortinetCredId := d.Get("credential_id").(string)
 
-	if 0 == len(fortinetCredId) {
-		log.Printf("[INFO] Creating Fortinet FW Credential")
-
-		fortinetCredName := d.Get("name").(string) + randomNameSuffix()
-		fortinetCred := alkira.CredentialPan{
-			Username: d.Get("username").(string),
-			Password: d.Get("password").(string),
-		}
-
-		credentialId, err := client.CreateCredential(
-			fortinetCredName,
-			alkira.CredentialTypeFortinet,
-			fortinetCred,
-			0,
-		)
-		if err != nil {
-			return nil, err
-		}
-		d.Set("credential_id", credentialId)
+	// Construct credentials
+	credentialId, err := createFortinetCredential(d, client)
+	if err != nil {
+		return nil, err
 	}
+	d.Set("credential_id", credentialId)
 
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
