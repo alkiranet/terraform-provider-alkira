@@ -231,8 +231,6 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE", "5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
@@ -360,6 +358,8 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	err := updateFortinetCredential(d, client)
+
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
@@ -367,7 +367,7 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
