@@ -248,19 +248,9 @@ func updateFortinetInstanceCredential(d *schema.ResourceData, c *alkira.AlkiraCl
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
 
-	client := m.(*alkira.AlkiraClient)
-
-	// Construct credentials
-	credentialId, err := createFortinetCredential(d, client)
-	if err != nil {
-		return nil, err
-	}
-	d.Set("credential_id", credentialId)
-
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
-
 	if err != nil {
 		return nil, err
 	}

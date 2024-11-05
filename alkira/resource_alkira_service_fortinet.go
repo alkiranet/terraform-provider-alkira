@@ -256,6 +256,13 @@ func resourceFortinetCreate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	// Construct credentials
+	credentialId, err := createFortinetCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("credential_id", credentialId)
+
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
