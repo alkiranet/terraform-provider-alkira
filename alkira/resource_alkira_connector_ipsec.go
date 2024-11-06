@@ -72,9 +72,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 						"customer_ip_type": {
 							Description: "The type of `customer_gateway_ip`. It " +
-								"could be either `STATIC` or DYNAMIC`. " +
+								"could be either `STATIC` or `DYNAMIC`. " +
 								"Default value is `STATIC`. When it's `DYNAMIC`, " +
-								"`customer_gateway_ip` should be set to `0.0.0.0`.",
+								"`customer_gateway_ip` should be set to `0.0.0.0`. " +
+								"`remote_auth_type` in `advanced_options` is " +
+								"required as well.",
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "STATIC",

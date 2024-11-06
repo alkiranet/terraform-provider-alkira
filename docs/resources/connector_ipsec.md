@@ -127,7 +127,7 @@ Optional:
 
 - `advanced_options` (Block List) Advanced options for IPSec endpoint. (see [below for nested schema](#nestedblock--endpoint--advanced_options))
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
-- `customer_ip_type` (String) The type of `customer_gateway_ip`. It could be either `STATIC` or DYNAMIC`. Default value is `STATIC`. When it's `DYNAMIC`, `customer_gateway_ip` should be set to `0.0.0.0`.
+- `customer_ip_type` (String) The type of `customer_gateway_ip`. It could be either `STATIC` or `DYNAMIC`. Default value is `STATIC`. When it's `DYNAMIC`, `customer_gateway_ip` should be set to `0.0.0.0`. `remote_auth_type` in `advanced_options` is required as well.
 - `enable_tunnel_redundancy` (Boolean) Disable this if all tunnels will not be configured or enabled on the on-premise device. If it's set to `false`, connector health will be shown as `UP` if at least one of the tunnels is `UP`. If enabled, all tunnels need to be `UP` for the connectorhealth to be shown as `UP`.
 - `ha_mode` (String) The value could be `ACTIVE` or `STANDBY`. A endpoint in `STANDBY` mode will not be used for traffic unless all other endpoints for the connector are down. There can only be one endpoint in `STANDBY` mode per connector and there must be at least one endpoint that isn't in `STANDBY` mode per connector.
 
