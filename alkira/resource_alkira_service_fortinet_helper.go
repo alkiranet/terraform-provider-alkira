@@ -155,6 +155,7 @@ func expandFortinetZone(in *schema.Set) map[string][]string {
 	return zonesToGroups
 }
 
+// createFortinetCredential
 func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 
 	log.Printf("[INFO] Creating Fortinet Credential")
@@ -168,6 +169,7 @@ func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (s
 	return c.CreateCredential(fortinetCredName, alkira.CredentialTypeFortinet, fortinetCred, 0)
 }
 
+// updateFortinetCredential
 func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	if d.HasChanges("username", "password") {
 		log.Printf("[INFO] Fortinet credential has changed")
@@ -180,6 +182,7 @@ func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) er
 	return nil
 }
 
+// deleteFortinetCredential
 func deleteFortinetCredential(id string, c *alkira.AlkiraClient) error {
 
 	log.Printf("[INFO] Deleting Fortinet Credential")

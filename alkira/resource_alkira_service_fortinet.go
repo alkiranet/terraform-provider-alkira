@@ -256,7 +256,7 @@ func resourceFortinetCreate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
-	// Construct credentials
+	// Create fortinet service credentials
 	credentialId, err := createFortinetCredential(d, client)
 	if err != nil {
 		return diag.FromErr(err)
@@ -365,7 +365,11 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	// Update fortinet service credential
 	err := updateFortinetCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
