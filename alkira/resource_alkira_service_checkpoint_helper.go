@@ -8,6 +8,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// createCheckpointCredential create checkpoint service credential
+func createCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating Checkpoint service credential")
+
+	credentialName := d.Get("name").(string) + "-" + randomNameSuffix()
+	credential := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
+
+	return c.CreateCredential(credentialName, alkira.CredentialTypeChkpFw, credential, 0)
+}
+
+// updateCheckpointCredential update checkpoint service credential
+func updateCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating Checkpoint service credential")
+
+	if d.HasChanges("password") {
+		log.Printf("[INFO] Checkpoint service credential has changed")
+
+		credentialId, err := createCheckpointCredential(d, c)
+		if err != nil {
+			return err
+		}
+		d.Set("credential_id", credentialId)
+	}
+
+	return nil
+}
+
 func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
 
 	client := m.(*alkira.AlkiraClient)
@@ -134,11 +161,9 @@ func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.Checkp
 	return instances, nil
 }
 
-/*
-Checkpoint expects segment_options to not be empty.
-If segment_options is not defined in the TF file, this function adds the default expected data.
-If segment_options is included, populates it normally.
-*/
+// Checkpoint expects segment_options to not be empty.
+// If segment_options is not defined in the TF file, this function adds the default expected data.
+// If segment_options is included, populates it normally.
 func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interface{}) (alkira.SegmentNameToZone, error) {
 
 	if in == nil || in.Len() == 0 {
@@ -225,4 +250,63 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 	}
 
 	return instances
+}
+
+// generateCheckpointRequest
+func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
+
+	// Management Server block
+	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Instances block
+	//
+	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Segment
+	//
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Segment Options
+	//
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble request
+	return &alkira.ServiceCheckpoint{
+		AutoScale:        d.Get("auto_scale").(string),
+		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		CredentialId:     d.Get("credential_id").(string),
+		Cxp:              d.Get("cxp").(string),
+		Description:      d.Get("description").(string),
+		Instances:        instances,
+		LicenseType:      d.Get("license_type").(string),
+		ManagementServer: managementServer,
+		MinInstanceCount: d.Get("min_instance_count").(int),
+		MaxInstanceCount: d.Get("max_instance_count").(int),
+		Name:             d.Get("name").(string),
+		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
+		Segments:         []string{segmentName},
+		SegmentOptions:   segmentOptions,
+		Size:             d.Get("size").(string),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		Version:          d.Get("version").(string),
+	}, nil
 }
