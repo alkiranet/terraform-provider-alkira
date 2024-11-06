@@ -139,8 +139,6 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					"`SMALL`, `MEDIUM` and `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"source_nat_ip_pool": {
 				Description: "A IP range to use for source NAT with this internet " +

@@ -61,9 +61,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`}, false),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"tunnel_protocol": {
 				Description:  "The tunnel protocol. Default is `IPSEC`.",

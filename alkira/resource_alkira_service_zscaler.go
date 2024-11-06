@@ -199,8 +199,6 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"SMALL", "MEDIUM", "LARGE", "2LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The type of tunnel protocol to be used to connect " +
