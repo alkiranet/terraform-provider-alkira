@@ -263,8 +263,6 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, could be " +

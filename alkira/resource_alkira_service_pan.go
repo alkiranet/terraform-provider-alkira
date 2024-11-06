@@ -337,11 +337,6 @@ func resourceAlkiraServicePan() *schema.Resource {
 					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL",
-					"MEDIUM",
-					"LARGE",
-					"2LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, " +
