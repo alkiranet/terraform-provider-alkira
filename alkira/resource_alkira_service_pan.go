@@ -83,6 +83,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"pan_credential_name": {
+				Description: "Name of PAN credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"pan_registration_credential_id": {
 				Description: "ID of PAN Registration credential.",
 				Type:        schema.TypeString,
