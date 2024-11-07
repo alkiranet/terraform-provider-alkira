@@ -74,11 +74,12 @@ resource "alkira_service_fortinet" "test1" {
 - `password` (String) Fortinet password.
 - `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol. The default value is `IPSEC`. it could be either `IPSEC` or `GRE`.
-- `username` (String) Fortinet username.
+- `username` (String) Fortinet username. The field could not be updated after creation.
 
 ### Read-Only
 
 - `credential_id` (String) ID of Fortinet Firewall credential managed by credential resource.
+- `credential_name` (String) Name of Fortinet Firewall credential managed by credential resource.
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provision state of the resource.
 

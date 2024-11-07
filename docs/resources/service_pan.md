@@ -127,6 +127,7 @@ resource "alkira_service_pan" "test1" {
 
 - `id` (String) The ID of this resource.
 - `pan_credential_id` (String) ID of PAN credential.
+- `pan_credential_name` (String) Name of PAN credential.
 - `pan_master_key_credential_id` (String) ID of PAN master key credential.
 - `pan_registration_credential_id` (String) ID of PAN Registration credential.
 - `provision_state` (String) The provision state of the service.

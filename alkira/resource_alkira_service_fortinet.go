@@ -50,6 +50,12 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
+			"credential_name": {
+				Description: "Name of Fortinet Firewall credential managed " +
+					"by credential resource.",
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed " +
 					"by credential resource.",
@@ -66,13 +72,14 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"username": {
+				Description: "Fortinet username. The field could not be updated " +
+					"after creation.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"password": {
 				Description: "Fortinet password.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
-			"username": {
-				Description: "Fortinet username.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},

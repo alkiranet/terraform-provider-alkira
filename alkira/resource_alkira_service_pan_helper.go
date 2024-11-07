@@ -18,27 +18,39 @@ type panZone struct {
 func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 	log.Printf("[INFO] Creating PAN Credential")
 
-	panCredName := d.Get("name").(string) + randomNameSuffix()
-	panCredential := alkira.CredentialPan{
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPan{
 		Username:   d.Get("pan_username").(string),
 		Password:   d.Get("pan_password").(string),
 		LicenseKey: d.Get("pan_license_key").(string),
 	}
+	d.Set("pan_credential_name", credentialName)
 
-	return c.CreateCredential(panCredName, alkira.CredentialTypePan, panCredential, 0)
+	return c.CreateCredential(credentialName, alkira.CredentialTypePan, credential, 0)
 }
 
 func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	log.Printf("[INFO] Updating PAN Credential")
 
 	if d.HasChanges("pan_username", "pan_password", "pan_license_key") {
-
 		log.Printf("[INFO] PAN credential has changed")
-		panCredentialId, err := createPanCredential(d, c)
-		if err != nil {
-			return err
+
+		if d.Get("pan_credential_id") == nil {
+			return errors.New("pan_credential_id is empty when updating PAN credential")
+		} else {
+			if d.Get("pan_credential_name") == nil || d.Get("pan_credential_name").(string) == "" {
+				return errors.New("pan_credential_name is empty when updating PAN credential")
+			}
+
+			credentialId := d.Get("pan_credential_id").(string)
+			credentialName := d.Get("pan_credential_name").(string)
+			credential := alkira.CredentialPan{
+				Username:   d.Get("pan_username").(string),
+				Password:   d.Get("pan_password").(string),
+				LicenseKey: d.Get("pan_license_key").(string),
+			}
+			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
 		}
-		d.Set("pan_credential_id", panCredentialId)
 	}
 
 	return nil
@@ -66,19 +78,6 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
-}
-
-func updatePanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Updating PAN Registration Credential")
-
-	if d.HasChanges("registration_pin_id", "registration_pin_value", "registration_pin_expiry") {
-		panRegistrationCredentialId, err := createPanRegistrationCredential(d, c)
-		if err != nil {
-			return err
-		}
-		d.Set("pan_registration_credential_id", panRegistrationCredentialId)
-	}
-	return nil
 }
 
 func deletePanRegistrationCredential(id string, c *alkira.AlkiraClient) error {
@@ -113,25 +112,6 @@ func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanMasterKey, credential, credentialExpiry)
-}
-
-func updatePanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Updating PAN Master Key Credential")
-
-	if !d.Get("master_key_enabled").(bool) {
-		log.Printf("[INFO] PAN master key is not enabled, skip updating credential")
-		return nil
-	}
-
-	if d.HasChanges("master_key", "master_key_expiry") {
-		log.Printf("[INFO] PAN master key credentials have changed")
-		panMasterKeyCredentialId, err := createPanMasterKeyCredential(d, c)
-		if err != nil {
-			return err
-		}
-		d.Set("pan_master_key_credential_id", panMasterKeyCredentialId)
-	}
-	return nil
 }
 
 func deletePanMasterKeyCredential(id string, c *alkira.AlkiraClient) error {
@@ -175,18 +155,6 @@ func updateCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
 	// Update PAN credentail
 	err := updatePanCredential(d, c)
-	if err != nil {
-		return err
-	}
-
-	// Update PAN Registration credential
-	err = updatePanRegistrationCredential(d, c)
-	if err != nil {
-		return err
-	}
-
-	// Update PAN Master Key credential
-	err = updatePanMasterKeyCredential(d, c)
 	if err != nil {
 		return err
 	}

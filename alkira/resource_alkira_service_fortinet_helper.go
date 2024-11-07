@@ -160,24 +160,39 @@ func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (s
 
 	log.Printf("[INFO] Creating Fortinet Credential")
 
-	fortinetCredName := d.Get("name").(string) + "_" + randomNameSuffix()
-	fortinetCred := alkira.CredentialPan{
-		Username: d.Get("username").(string),
+	credentialName := d.Get("name").(string) + "_" + randomNameSuffix()
+	d.Set("credential_name", credentialName)
+
+	credential := alkira.CredentialFortinet{
+		UserName: d.Get("username").(string),
 		Password: d.Get("password").(string),
 	}
 
-	return c.CreateCredential(fortinetCredName, alkira.CredentialTypeFortinet, fortinetCred, 0)
+	return c.CreateCredential(credentialName, alkira.CredentialTypeFortinet, credential, 0)
 }
 
-// updateFortinetCredential
+// updateFortinetCredential update credential when username or password has changes
 func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	if d.HasChanges("username", "password") {
 		log.Printf("[INFO] Fortinet credential has changed")
-		id, err := createFortinetCredential(d, c)
-		if err != nil {
-			return err
+
+		if d.Get("credential_id") == nil {
+			return errors.New("credential_id is empty when updating fortinet credential")
+		} else {
+			if d.Get("credential_name") == nil {
+				return errors.New("credential_name is empty when updating fortinet credential")
+			}
+
+			credentialName := d.Get("credential_name").(string)
+			credentialId := d.Get("credential_id").(string)
+
+			credential := alkira.CredentialFortinet{
+				UserName: d.Get("username").(string),
+				Password: d.Get("password").(string),
+			}
+
+			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypeFortinet, credential, 0)
 		}
-		d.Set("credential_id", id)
 	}
 	return nil
 }
@@ -235,18 +250,6 @@ func createFortinetInstanceCredential(c *alkira.AlkiraClient, name string, licen
 	}
 
 	return id, nil
-}
-
-func updateFortinetInstanceCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
-	if d.HasChanges("username", "password") {
-		log.Printf("[INFO] FOrtinet credential has changed")
-		id, err := createFortinetCredential(d, c)
-		if err != nil {
-			return err
-		}
-		d.Set("credential_id", id)
-	}
-	return nil
 }
 
 func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
