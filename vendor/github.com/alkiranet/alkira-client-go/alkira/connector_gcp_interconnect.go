@@ -36,7 +36,7 @@ type ConnectorGcpInterconnectSegmentOption struct {
 	SegmentName           string                                    `json:"segmentName"`
 	CustomerGateways      []ConnectorGcpInterconnectCustomerGateway `json:"customerGateways"`
 	AdvertiseOnPremRoutes bool                                      `json:"advertiseOnPremRoutes,omitempty"`
-	DisableInternetExit   bool                                      `json:"disableInternetExit,omitempty"`
+	DisableInternetExit   bool                                      `json:"disableInternetExit"`
 }
 
 type ConnectorGcpInterconnectCustomerGateway struct {

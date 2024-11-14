@@ -55,7 +55,6 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
-				// ValidateFunc: validation.StringInSlice([]string{"US-EAST1", "US-WEST1", "US-CENTRAL1", "AP-NORTHEAST", "EU-WEST"}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -107,11 +106,11 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"edge_availibility_domain": {
-							Description: "The Availability Domain of the instance." +
-								"Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.",
+							Description: "The Availibility Domain of the instance." +
+								"Can be one of `AVAILIBILITY_DOMAIN_1`, `AVAILIBILITY_DOMAIN_2`.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"AVAILIBILITY_DOMAIN_1", "AVAILIBILITY_DOMAIN_2"}, false),
 						},
 						"customer_asn": {
 							Description: "The customer ASN.",
