@@ -78,9 +78,7 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 			if credId == "" {
 				credentialName := instanceStruct.Name + randomNameSuffix()
 				credentialF5Instance := alkira.CredentialF5Instance{
-					// UserName: tfInstance["f5_username"].(string),
-					// hardcode the username to admin for now.
-					UserName: "admin",
+					UserName: tfInstance["f5_username"].(string),
 					Password: tfInstance["f5_password"].(string),
 				}
 
@@ -179,7 +177,7 @@ func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]
 					"hostname_fqdn":              apiInstance.HostNameFqdn,
 					"deployment_option":          apiInstance.Deployment.Option,
 					"deployment_type":            apiInstance.Deployment.Type,
-					"f5_username":                "admin",
+					"f5_username":                tfInstance["f5_username"].(string),
 					"f5_password":                tfInstance["f5_password"].(string),
 					"f5_registration_key":        tfInstance["f5_registration_key"].(string),
 				}

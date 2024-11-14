@@ -158,13 +158,14 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 						},
 						"f5_username": {
 							Description: "Username for the F5 load balancer." +
-								" Username is `admin` and cannot be changed.",
-							Type:     schema.TypeString,
-							Computed: true,
-							// read only for now, so the environment variable is not set
-							// Optional:    true,
-							// Sensitive:   true,
-							// DefaultFunc: envDefaultFunc("ALKIRA_F5_USERNAME"),
+								" Username is `admin` for AWS CXP and `akadmin` " +
+								" for Azure CXP any other value will be rejected." +
+								" This can also be set by `ALKIRA_F5_USERNAME`" +
+								" environment variable.",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+							DefaultFunc: envDefaultFunc("ALKIRA_F5_USERNAME"),
 						},
 						"f5_password": {
 							Description: "Password for the F5 load balancer." +
