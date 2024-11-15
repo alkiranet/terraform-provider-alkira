@@ -24,7 +24,10 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 	for i, instance := range in {
 		tfInstance := instance.(map[string]interface{})
 		instanceStruct := alkira.F5Instance{}
+		if instanceId, ok := tfInstance["id"]; ok {
 
+			instanceStruct.Id = instanceId.(int)
+		}
 		if name, ok := tfInstance["name"]; ok {
 
 			instanceStruct.Name = name.(string)
