@@ -122,7 +122,7 @@ func expandGcpInterconnectInstances(in []interface{}, so []interface{}, m interf
 		if v, ok := cfgInstance["name"].(string); ok {
 			newInstance.Name = v
 		}
-		if v, ok := cfgInstance["edge_availibility_domain"].(string); ok {
+		if v, ok := cfgInstance["edge_availability_domain"].(string); ok {
 			newInstance.GcpEdgeAvailabilityDomain = v
 		}
 		if v, ok := cfgInstance["bgp_auth_key_alkira"].(string); ok {
@@ -205,7 +205,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 				instance := map[string]interface{}{
 					"id":                       aInstance.Id,
 					"name":                     aInstance.Name,
-					"edge_availibility_domain": aInstance.GcpEdgeAvailabilityDomain,
+					"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
 					"customer_asn":             aInstance.CustomerAsn,
 					"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
 					"gateway_mac_address":      aInstance.GatewayMacAddress,
@@ -237,7 +237,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 			i := map[string]interface{}{
 				"id":                       aInstance.Id,
 				"name":                     aInstance.Name,
-				"edge_availibility_domain": aInstance.GcpEdgeAvailabilityDomain,
+				"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
 				"customer_asn":             aInstance.CustomerAsn,
 				"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
 				"gateway_mac_address":      aInstance.GatewayMacAddress,

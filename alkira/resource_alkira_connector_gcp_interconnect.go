@@ -105,12 +105,12 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"edge_availibility_domain": {
-							Description: "The Availibility Domain of the instance." +
-								"Can be one of `AVAILIBILITY_DOMAIN_1`, `AVAILIBILITY_DOMAIN_2`.",
+						"edge_availability_domain": {
+							Description: "The Availability Domain of the instance." +
+								"Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.",
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"AVAILIBILITY_DOMAIN_1", "AVAILIBILITY_DOMAIN_2"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
 						},
 						"customer_asn": {
 							Description: "The customer ASN.",
