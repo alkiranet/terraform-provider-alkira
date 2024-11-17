@@ -23,7 +23,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   loopback_prefixes = ["1.2.3.4"]
   instances = {
     name                     = "instance1"
-    edge_availibility_domain = "AVAILIBILITY_DOMAIN_1"
+    edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
     bgp_auth_key             = "key"
   }
@@ -72,7 +72,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
 Required:
 
 - `customer_asn` (Number) The customer ASN.
-- `edge_availibility_domain` (String) The Availibility Domain of the instance.Can be one of `AVAILIBILITY_DOMAIN_1`, `AVAILIBILITY_DOMAIN_2`.
+- `edge_availability_domain` (String) The Availability Domain of the instance.Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.
 - `name` (String) The name of the instance.
 
 Optional:

@@ -8,7 +8,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   loopback_prefixes = ["1.2.3.4"]
   instances = {
     name                     = "instance1"
-    edge_availibility_domain = "AVAILIBILITY_DOMAIN_1"
+    edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
     bgp_auth_key             = "key"
   }
