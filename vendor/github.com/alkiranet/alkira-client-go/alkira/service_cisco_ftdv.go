@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2024 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -8,13 +8,14 @@ import (
 )
 
 type CiscoFTDvInstance struct {
-	Id           int    `json:"id,omitempty"`           // filled in response
-	CredentialId string `json:"credentialId,omitempty"` // filled in response
-	InternalName string `json:"internalName,omitempty"` // filled in response
-	State        string `json:"state,omitempty"`        // filled in response
-	Hostname     string `json:"hostName"`
-	LicenseType  string `json:"licenseType"`
-	Version      string `json:"version"`
+	Id             int    `json:"id,omitempty"`           // response only
+	CredentialId   string `json:"credentialId,omitempty"` // response only
+	InternalName   string `json:"internalName,omitempty"` // response only
+	State          string `json:"state,omitempty"`        // response only
+	Hostname       string `json:"hostName"`
+	LicenseType    string `json:"licenseType"`
+	Version        string `json:"version"`
+	TrafficEnabled bool   `json:"trafficEnabled"`
 }
 
 type CiscoFTDvManagementServer struct {
@@ -24,11 +25,11 @@ type CiscoFTDvManagementServer struct {
 }
 
 type ServiceCiscoFTDv struct {
-	Id               json.Number               `json:"id,omitempty"` // filled in response
+	Id               json.Number               `json:"id,omitempty"` // response only
 	Name             string                    `json:"name"`
 	GlobalCidrListId int                       `json:"globalCidrListId"`
 	Size             string                    `json:"size"`
-	CredentialId     string                    `json:"credentialId,omitempty"` // filled in response
+	CredentialId     string                    `json:"credentialId,omitempty"` // response only
 	Cxp              string                    `json:"cxp"`
 	ManagementServer CiscoFTDvManagementServer `json:"managementServer"`
 	IpAllowList      []string                  `json:"servicesIpAllowList"`
@@ -40,8 +41,8 @@ type ServiceCiscoFTDv struct {
 	BillingTags      []int                     `json:"billingTags"`
 	TunnelProtocol   string                    `json:"tunnelProtocol"`
 	AutoScale        string                    `json:"autoScale"`
-	InternalName     string                    `json:"internalName,omitempty"` // filled in response
-	State            string                    `json:"state,omitempty"`        // filled in response
+	InternalName     string                    `json:"internalName,omitempty"` // response only
+	State            string                    `json:"state,omitempty"`        // response only
 	Description      string                    `json:"description,omitempty"`
 }
 

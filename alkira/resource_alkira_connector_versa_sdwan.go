@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
@@ -114,9 +113,6 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`. ",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE",
-					"5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol of Versa SD-WAN.",

@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -104,6 +103,13 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Description: "The checkpoint instance sic keys.",
 							Type:        schema.TypeString,
 							Required:    true,
+						},
+						"enable_traffic": {
+							Description: "Enable traffic on the checkpoint instance. " +
+								"Default value is `true`",
+							Default:  true,
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
@@ -256,8 +262,6 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol, default to `IPSEC`, could be " +
@@ -282,6 +286,13 @@ func resourceCheckpoint(ctx context.Context, d *schema.ResourceData, m interface
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
+
+	// Create checkpoint service credentail
+	credentialId, err := createCheckpointCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("credential_id", credentialId)
 
 	// Construct request
 	request, err := generateCheckpointRequest(d, m)
@@ -374,22 +385,17 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
-	oldCredentialId := d.Get("credential_id").(string)
+	// Update checkpoint service credential
+	err := updateCheckpointCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Construct request
 	request, err := generateCheckpointRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
-	}
-
-	newCredentialId := d.Get("credential_id").(string)
-
-	if oldCredentialId != newCredentialId {
-		err = deleteCheckpointCredentials(oldCredentialId, client)
-		if err != nil {
-			log.Printf("[WARN] failed to delete old credential %s", err)
-		}
 	}
 
 	// Send update request
@@ -433,91 +439,4 @@ func resourceCheckpointDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	return nil
-}
-
-func createCheckpointCredentials(d *schema.ResourceData, client *alkira.AlkiraClient) (string, error) {
-	log.Printf("[INFO] Creating Checkpoint Firewall Service Credentials")
-
-	chkpfwName := d.Get("name").(string) + "-" + randomNameSuffix()
-	chkpCred := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
-	return client.CreateCredential(
-		chkpfwName,
-		alkira.CredentialTypeChkpFw,
-		chkpCred,
-		0)
-
-}
-
-func deleteCheckpointCredentials(chkpCredId string, client *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Deleting Checkpoint Credential")
-	return client.DeleteCredential(chkpCredId, alkira.CredentialTypeChkpFw)
-}
-
-func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
-
-	client := m.(*alkira.AlkiraClient)
-
-	chpfwCredId := d.Get("credential_id").(string)
-
-	if 0 == len(chpfwCredId) || d.HasChange("password") {
-		credentialId, err := createCheckpointCredentials(d, client)
-		if err != nil {
-			return nil, err
-		}
-		d.Set("credential_id", credentialId)
-	}
-
-	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Instances
-	//
-	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Segment
-	//
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Segment Options
-	//
-	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Assemble request
-	return &alkira.ServiceCheckpoint{
-		AutoScale:        d.Get("auto_scale").(string),
-		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		CredentialId:     d.Get("credential_id").(string),
-		Cxp:              d.Get("cxp").(string),
-		Description:      d.Get("description").(string),
-		Instances:        instances,
-		LicenseType:      d.Get("license_type").(string),
-		ManagementServer: managementServer,
-		MinInstanceCount: d.Get("min_instance_count").(int),
-		MaxInstanceCount: d.Get("max_instance_count").(int),
-		Name:             d.Get("name").(string),
-		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         []string{segmentName},
-		SegmentOptions:   segmentOptions,
-		Size:             d.Get("size").(string),
-		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		Version:          d.Get("version").(string),
-	}, nil
 }
