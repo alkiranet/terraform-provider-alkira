@@ -59,12 +59,12 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `implicit_group_id` (Number) The ID of the implicit group associated with the connector.
 - `scale_group_id` (String) The ID of the scale group associated with the connector.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of the implicit group associated with the connector.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
@@ -78,9 +78,12 @@ Required:
 Optional:
 
 - `bgp_auth_key` (String) The BGP MD5 authentication key to authenticate Alkira CXP.
-- `gateway_mac_address` (String) The MAC address of the gateway.Required if tunnel protocol is VXLAN.
+- `gateway_mac_address` (String) The MAC address of the gateway.It's required if the `tunnel_protocol` is `VXLAN`.
+- `vni_id` (Number) The VXLAN Network Identifier.It's required if the `tunnel_protocol` is `VXLAN`.
+
+Read-Only:
+
 - `id` (Number) The ID of the instance.
-- `vni_id` (Number) The VXLAN Network Identifier.Required if tunnel protocol is VXLAN.
 
 
 <a id="nestedblock--segment_options"></a>
@@ -106,4 +109,4 @@ Required:
 
 Optional:
 
-- `loopback_ip` (String) The customer gateway IP address which is set as tunnel source
+- `loopback_ip` (String) The customer gateway IP address which is set as tunnel source.

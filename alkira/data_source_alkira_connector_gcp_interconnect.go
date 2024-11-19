@@ -7,7 +7,7 @@ import (
 
 func dataSourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Gcp Interconnect connector.",
+		Description: "Use this data source to get an existing GCP Interconnect connector.",
 
 		Read: dataSourceAlkiraConnectorGcpInterconnectRead,
 

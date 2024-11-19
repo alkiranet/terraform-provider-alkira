@@ -3,12 +3,12 @@
 page_title: "alkira_connector_gcp_interconnect Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get an existing Gcp Interconnect connector.
+  Use this data source to get an existing GCP Interconnect connector.
 ---
 
 # alkira_connector_gcp_interconnect (Data Source)
 
-Use this data source to get an existing Gcp Interconnect connector.
+Use this data source to get an existing GCP Interconnect connector.
 
 
 

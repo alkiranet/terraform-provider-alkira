@@ -97,7 +97,6 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 						"id": {
 							Description: "The ID of the instance.",
 							Type:        schema.TypeInt,
-							Optional:    true,
 							Computed:    true,
 						},
 						"name": {
@@ -124,13 +123,13 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 						},
 						"gateway_mac_address": {
 							Description: "The MAC address of the gateway." +
-								"Required if tunnel protocol is VXLAN.",
+								"It's required if the `tunnel_protocol` is `VXLAN`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"vni_id": {
 							Description: "The VXLAN Network Identifier." +
-								"Required if tunnel protocol is VXLAN.",
+								"It's required if the `tunnel_protocol` is `VXLAN`.",
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -174,12 +173,12 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"loopback_ip": {
 										Description: "The customer gateway IP address " +
-											"which is set as tunnel source",
+											"which is set as tunnel source.",
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 									"tunnel_count": {
-										Description: "Number of tunnels per customer gateway. ",
+										Description: "Number of tunnels per customer gateway.",
 										Type:        schema.TypeInt,
 										Required:    true,
 									},
@@ -197,7 +196,6 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			"implicit_group_id": {
 				Description: "The ID of the implicit group associated with the connector.",
 				Type:        schema.TypeInt,
-				Optional:    true,
 				Computed:    true,
 			},
 		},
