@@ -100,7 +100,7 @@ Required:
 - `hostname_fqdn` (String) The FQDN defined in route 53.
 - `license_type` (String) The type of license used for the F5 load balancer instance. Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`
 - `name` (String) Name of the F5 load balancer instance.
-- `version` (String) The version of the F5 load balancer instance.
+- `version` (String) The version of the F5 load balancer.
 
 Optional:
 
@@ -121,7 +121,7 @@ Read-Only:
 
 Required:
 
-- `elb_nic_count` (Number) Number of nics to allocate for the segment.
+- `elb_nic_count` (Number) Number of NICs to allocate for the segment.
 - `segment_id` (String) ID of the segment.
 
 Optional:

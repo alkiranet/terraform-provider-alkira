@@ -99,7 +99,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Optional:    true,
 						},
 						"elb_nic_count": {
-							Description: "Number of nics to allocate for the segment.",
+							Description: "Number of NICs to allocate for the segment.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
@@ -186,7 +186,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 						"version": {
-							Description: "The version of the F5 load balancer instance.",
+							Description: "The version of the F5 load balancer.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
