@@ -5,7 +5,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
   tunnel_protocol   = "IPSEC"
-  loopback_prefixes = ["1.2.3.4"]
+  loopback_prefixes = ["10.30.0.0/24"]
   instances = {
     name                     = "instance1"
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"

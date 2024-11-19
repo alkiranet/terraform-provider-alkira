@@ -83,7 +83,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			},
 			"loopback_prefixes": {
 				Description: "A list of prefixes that should be " +
-					"associated with the connector.",
+					"associated with the connector. Eg :" +
+					`["10.30.0.0/24"]`,
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

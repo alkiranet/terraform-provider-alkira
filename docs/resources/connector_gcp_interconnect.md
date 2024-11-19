@@ -20,7 +20,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
   tunnel_protocol   = "IPSEC"
-  loopback_prefixes = ["1.2.3.4"]
+  loopback_prefixes = ["10.30.0.0/24"]
   instances = {
     name                     = "instance1"
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
@@ -47,7 +47,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
 
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `instances` (Block List, Min: 1) A list of instances of the Interconnect (see [below for nested schema](#nestedblock--instances))
-- `loopback_prefixes` (Set of String) A list of prefixes that should be associated with the connector.
+- `loopback_prefixes` (Set of String) A list of prefixes that should be associated with the connector. Eg :["10.30.0.0/24"]
 - `name` (String) The name of the connector.
 - `segment_options` (Block List, Min: 1) Options for each segment associated with the instance. (see [below for nested schema](#nestedblock--segment_options))
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.
