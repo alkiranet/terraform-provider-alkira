@@ -93,11 +93,6 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"nat_pool_prefix_length": {
-							Description: "Prefix length of subnets for the segment.",
-							Type:        schema.TypeInt,
-							Optional:    true,
-						},
 						"elb_nic_count": {
 							Description: "Number of NICs to allocate for the segment.",
 							Type:        schema.TypeInt,
