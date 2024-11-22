@@ -22,7 +22,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   group             = alkira_group.group1.name
   tunnel_protocol   = "IPSEC"
   loopback_prefixes = ["10.30.0.0/24"]
-  instances = {
+  instances {
     name                     = "instance1"
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
