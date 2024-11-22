@@ -2,7 +2,7 @@ name: build-latest
 on:
   push:
     branches:
-      - main
+      - dev
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_DOWNLOADS_DEV_ACCESS_KEY }}
