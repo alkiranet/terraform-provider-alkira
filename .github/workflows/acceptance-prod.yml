@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
 
 env:
   ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
@@ -19,7 +20,7 @@ jobs:
     steps:
       -
         name: Pull Terraform CLI
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
       -
         name: Add .terraformrc
         run: echo 'provider_installation {
@@ -30,10 +31,10 @@ jobs:
                   }' > ~/.terraformrc
       -
         name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.22'
       -
