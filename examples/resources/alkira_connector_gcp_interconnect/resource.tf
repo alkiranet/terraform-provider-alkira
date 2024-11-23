@@ -18,7 +18,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     advertise_on_prem_routes = true
     disable_internet_exit    = false
     customer_gateways {
-      loopback_ip  = "192.192.192.192"
       tunnel_count = 2
     }
   }

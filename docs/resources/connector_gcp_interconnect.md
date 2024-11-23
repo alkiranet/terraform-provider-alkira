@@ -34,7 +34,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     advertise_on_prem_routes = true
     disable_internet_exit    = false
     customer_gateways {
-      loopback_ip  = "192.192.192.192"
       tunnel_count = 2
     }
   }
@@ -50,7 +49,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
   description       = "example connector with multiple instances"
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
-  tunnel_protocol   = "IPSEC"
+  tunnel_protocol   = "GRE"
   loopback_prefixes = ["10.40.0.0/24"]
   instances {
     name                     = "instance1"
@@ -71,11 +70,9 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     advertise_on_prem_routes = true
     disable_internet_exit    = false
     customer_gateways {
-      loopback_ip  = "192.192.192.192"
       tunnel_count = 2
     }
     customer_gateways {
-      loopback_ip  = "192.192.192.193"
       tunnel_count = 1
     }
   }
@@ -105,11 +102,9 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     advertise_on_prem_routes = true
     disable_internet_exit    = false
     customer_gateways {
-      loopback_ip  = "192.192.192.192"
       tunnel_count = 2
     }
     customer_gateways {
-      loopback_ip  = "192.192.192.193"
       tunnel_count = 1
     }
   }
@@ -119,7 +114,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     advertise_on_prem_routes = true
     disable_internet_exit    = false
     customer_gateways {
-      loopback_ip  = "192.192.192.192"
       tunnel_count = 2
     }
   }
