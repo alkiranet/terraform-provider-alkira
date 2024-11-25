@@ -36,7 +36,8 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 			instanceStruct.LicenseType = licenseType.(string)
 			// if the license type is BRING_YOUR_OWN, we need a registration credential.
 			if licenseType == "BRING_YOUR_OWN" {
-				if regCredId, ok := tfInstance["registration_credential_id"].(string); ok {
+				if rawRegCredId, ok := tfInstance["registration_credential_id"]; ok {
+					regCredId := rawRegCredId.(string)
 					if regCredId == "" {
 						credentialName := instanceStruct.Name + "registration" + randomNameSuffix()
 						credentialF5Registration := alkira.CredentialF5InstanceRegistration{
@@ -61,7 +62,6 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 			}
 		}
 		if version, ok := tfInstance["version"]; ok {
-
 			instanceStruct.Version = version.(string)
 		}
 		if fqdn, ok := tfInstance["hostname_fqdn"]; ok {
@@ -76,7 +76,8 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 		}
 		instanceStruct.Deployment = instanceDeployment
 
-		if credId, ok := tfInstance["credential_id"].(string); ok {
+		if rawCredId, ok := tfInstance["credential_id"]; ok {
+			credId := rawCredId.(string)
 
 			if credId == "" {
 				credentialName := instanceStruct.Name + randomNameSuffix()
