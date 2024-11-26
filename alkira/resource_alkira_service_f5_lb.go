@@ -236,6 +236,7 @@ func resourceF5LoadBalancerCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(string(response.Id))
+	d.Set("instances", setF5Instances(d, response.Instances))
 
 	if client.Provision {
 		d.Set("provision_state", provState)
