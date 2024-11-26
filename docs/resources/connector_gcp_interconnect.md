@@ -125,7 +125,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 ```
 
 All the `instances` must be attached to same `segments`.
-If the `instance1` is linked to `Seg1` and `Seg2` then the `instance2` must also be attached to both `Seg1` and `Seg2`.
+If the `instance1` is attached to `Seg1` and `Seg2` then the `instance2` must also be attached to both `Seg1` and `Seg2`.
 
 ```terraform
 resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_3" {
@@ -188,7 +188,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_3" {
 }
 ```
 
-Customers can configure mulitple `customer_gateways` per `segment_options`.
+Customers can configure multiple `customer_gateways` per `segment_options`.
 
 ```terraform
 resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_4" {
