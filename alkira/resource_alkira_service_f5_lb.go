@@ -49,6 +49,11 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"size": {
 				Description: "Size of the service, one of" +
 					" `SMALL`, `MEDIUM`, `LARGE`" +
