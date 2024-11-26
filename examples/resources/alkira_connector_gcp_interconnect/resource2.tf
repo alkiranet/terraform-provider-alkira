@@ -1,10 +1,10 @@
 resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
-  name              = "example_gcp_interconnect_1"
+  name              = "example_gcp_interconnect_2"
   size              = "LARGE"
   description       = "example connector with multiple segment options"
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
-  tunnel_protocol   = "IPSEC"
+  tunnel_protocol   = "GRE"
   loopback_prefixes = ["10.40.0.0/24"]
   instances {
     name                     = "instance1"
@@ -20,9 +20,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     disable_internet_exit    = false
     customer_gateways {
       tunnel_count = 2
-    }
-    customer_gateways {
-      tunnel_count = 1
     }
   }
   segment_options {

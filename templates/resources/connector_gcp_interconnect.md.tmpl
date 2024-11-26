@@ -15,12 +15,21 @@ This is one simple minimal example to create a GCP connector.
 
 {{ tffile "examples/resources/alkira_connector_gcp_interconnect/resource.tf" }}
 
-You can add multiple `instances` to the same connector.
+Customers can add multiple `instances` to the same connector. Each instance requires a corresponding `segment_options` per segment.
 
 {{ tffile "examples/resources/alkira_connector_gcp_interconnect/resource1.tf" }}
 
-You can also configure multiple `segments_options` for an instance.
+Customers can also configure multiple `segments_options` for an instance.
+
 {{ tffile "examples/resources/alkira_connector_gcp_interconnect/resource2.tf" }}
 
+All the `instances` must be attached to same `segments`.
+If the `instance1` is attached to `Seg1` and `Seg2` then the `instance2` must also be attached to both `Seg1` and `Seg2`.
+
+{{ tffile "examples/resources/alkira_connector_gcp_interconnect/resource3.tf" }}
+
+Customers can configure mulitple `customer_gateways` per `segment_options`.
+
+{{ tffile "examples/resources/alkira_connector_gcp_interconnect/resource4.tf" }}
 {{ .SchemaMarkdown | trimspace }}
 

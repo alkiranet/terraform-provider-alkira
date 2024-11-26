@@ -1,5 +1,5 @@
-resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
-  name              = "example_gcp_interconnect"
+resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_4" {
+  name              = "example_gcp_interconnect_4"
   size              = "SMALL"
   description       = "example connector"
   cxp               = "US-WEST"
@@ -17,6 +17,9 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     instance_name            = "instance1"
     advertise_on_prem_routes = true
     disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
     customer_gateways {
       tunnel_count = 2
     }

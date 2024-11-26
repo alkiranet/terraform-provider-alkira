@@ -20,7 +20,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
   description       = "example connector"
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
-  tunnel_protocol   = "IPSEC"
+  tunnel_protocol   = "GRE"
   loopback_prefixes = ["10.30.0.0/24"]
   instances {
     name                     = "instance1"
@@ -40,7 +40,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
 }
 ```
 
-You can add multiple `instances` to the same connector.
+Customers can add multiple `instances` to the same connector. Each instance requires a corresponding `segment_options` per segment.
 
 ```terraform
 resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
@@ -72,22 +72,29 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     customer_gateways {
       tunnel_count = 2
     }
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment1.id
+    instance_name            = "instance2"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
     customer_gateways {
-      tunnel_count = 1
+      tunnel_count = 2
     }
   }
 }
 ```
 
-You can also configure multiple `segments_options` for an instance.
+Customers can also configure multiple `segments_options` for an instance.
+
 ```terraform
 resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
-  name              = "example_gcp_interconnect_1"
+  name              = "example_gcp_interconnect_2"
   size              = "LARGE"
   description       = "example connector with multiple segment options"
   cxp               = "US-WEST"
   group             = alkira_group.group1.name
-  tunnel_protocol   = "IPSEC"
+  tunnel_protocol   = "GRE"
   loopback_prefixes = ["10.40.0.0/24"]
   instances {
     name                     = "instance1"
@@ -104,9 +111,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     customer_gateways {
       tunnel_count = 2
     }
-    customer_gateways {
-      tunnel_count = 1
-    }
   }
   segment_options {
     segment_id               = alkira_segment.segment2.id
@@ -120,6 +124,101 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 }
 ```
 
+All the `instances` must be attached to same `segments`.
+If the `instance1` is linked to `Seg1` and `Seg2` then the `instance2` must also be attached to both `Seg1` and `Seg2`.
+
+```terraform
+resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_3" {
+  name              = "example_gcp_interconnect_3"
+  size              = "LARGE"
+  description       = "example connector with multiple segment options"
+  cxp               = "US-WEST"
+  group             = alkira_group.group1.name
+  tunnel_protocol   = "GRE"
+  loopback_prefixes = ["10.40.0.0/24"]
+  instances {
+    name                     = "instance1"
+    edge_availability_domain = "AVAILABILITY_DOMAIN_1"
+    customer_asn             = 56009
+    bgp_auth_key             = "key"
+  }
+
+  instances {
+    name                     = "instance2"
+    edge_availability_domain = "AVAILABILITY_DOMAIN_1"
+    customer_asn             = 56011
+    bgp_auth_key             = "key"
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment1.id
+    instance_name            = "instance1"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment2.id
+    instance_name            = "instance1"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment1.id
+    instance_name            = "instance2"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment2.id
+    instance_name            = "instance2"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
+  }
+}
+```
+
+Customers can configure mulitple `customer_gateways` per `segment_options`.
+
+```terraform
+resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_4" {
+  name              = "example_gcp_interconnect_4"
+  size              = "SMALL"
+  description       = "example connector"
+  cxp               = "US-WEST"
+  group             = alkira_group.group1.name
+  tunnel_protocol   = "GRE"
+  loopback_prefixes = ["10.30.0.0/24"]
+  instances {
+    name                     = "instance1"
+    edge_availability_domain = "AVAILABILITY_DOMAIN_1"
+    customer_asn             = 56009
+    bgp_auth_key             = "key"
+  }
+  segment_options {
+    segment_id               = alkira_segment.segment1.id
+    instance_name            = "instance1"
+    advertise_on_prem_routes = true
+    disable_internet_exit    = false
+    customer_gateways {
+      tunnel_count = 2
+    }
+    customer_gateways {
+      tunnel_count = 2
+    }
+  }
+}
+```
 <!-- schema generated by tfplugindocs -->
 ## Schema
 
