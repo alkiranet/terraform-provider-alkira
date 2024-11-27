@@ -54,6 +54,7 @@ func Provider() *schema.Provider {
 			"alkira_cloudvisor_account":                 resourceAlkiraCloudVisorAccount(),
 			"alkira_connector_akamai_prolexic":          resourceAlkiraConnectorAkamaiProlexic(),
 			"alkira_connector_aruba_edge":               resourceAlkiraConnectorArubaEdge(),
+			"alkira_connector_aws_dx":                   resourceAlkiraConnectorAwsDx(),
 			"alkira_connector_aws_tgw":                  resourceAlkiraConnectorAwsTgw(),
 			"alkira_connector_aws_vpc":                  resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":               resourceAlkiraConnectorAzureVnet(),
