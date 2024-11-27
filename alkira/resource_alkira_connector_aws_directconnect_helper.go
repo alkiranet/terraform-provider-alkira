@@ -2,274 +2,224 @@ package alkira
 
 import (
 	"errors"
-	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandGcpInterconnectCustomerGateways(cg []interface{}) ([]alkira.ConnectorGcpInterconnectCustomerGateway, error) {
-	if cg == nil || len(cg) == 0 {
-		log.Printf("[ERROR] invalid GCP interconnect customer gateway input")
-		return nil, errors.New("[ERROR] invalid GCP interconnect customer gateway input")
-	}
-	customerGateways := make([]alkira.ConnectorGcpInterconnectCustomerGateway, len(cg))
-	for i, c := range cg {
-		cfgCustomerGateway := c.(map[string]interface{})
-		newCustomerGateway := alkira.ConnectorGcpInterconnectCustomerGateway{}
-		if v, ok := cfgCustomerGateway["loopback_ip"].(string); ok {
-			newCustomerGateway.LoopbackIp = v
-		}
-		if v, ok := cfgCustomerGateway["tunnel_count"].(int); ok {
-			newCustomerGateway.TunnelCount = v
-		}
-		customerGateways[i] = newCustomerGateway
-	}
-	return customerGateways, nil
-}
+// expandAwsDirectConnectSegmentOptions expand "segment_options" block
+// in "instance" block to generate request payload.
+func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alkira.ConnectorAwsDirectConnectSegmentOption, error) {
 
-func expandGcpInterconnectSegmentOptions(so []interface{}, instanceName string, m interface{}) ([]alkira.ConnectorGcpInterconnectSegmentOption, error) {
-	if so == nil || len(so) == 0 {
-		log.Printf("[ERROR] invalid GCP interconnect segment option input")
-		return nil, errors.New("[ERROR] invalid GCP interconnect segment option input")
+	if in == nil || in.Len() == 0 {
+		return nil, errors.New("[ERROR] invalid connector_aws_directconnect segment_options.")
 	}
 
-	segmentOptions := make([]alkira.ConnectorGcpInterconnectSegmentOption, 0)
-	for _, s := range so {
-		cfgSegmentOption := s.(map[string]interface{})
-		if cfgSegmentOption["instance_name"] == instanceName {
-			newSegmentOption := alkira.ConnectorGcpInterconnectSegmentOption{}
-			if v, ok := cfgSegmentOption["segment_id"].(string); ok {
-				segmentName, err := getSegmentNameById(v, m)
-				if err != nil {
-					return nil, err
-				}
-				newSegmentOption.SegmentName = segmentName
-			}
-			if v, ok := cfgSegmentOption["advertise_on_prem_routes"].(bool); ok {
-				newSegmentOption.AdvertiseOnPremRoutes = v
-			}
-			if v, ok := cfgSegmentOption["disable_internet_exit"].(bool); ok {
-				newSegmentOption.DisableInternetExit = v
-			}
+	segmentOptions := make([]alkira.ConnectorAwsDirectConnectSegmentOption, 0)
 
-			if v, ok := cfgSegmentOption["customer_gateways"].([]interface{}); ok {
-				customerGateways, err := expandGcpInterconnectCustomerGateways(v)
-				if err != nil {
-					return nil, err
-				}
-				newSegmentOption.CustomerGateways = customerGateways
+	for i, block := range in.List() {
+		cfg := block.(map[string]interface{})
+		option := alkira.ConnectorAwsDirectConnectSegmentOption{}
+
+		if v, ok := cfg["segment_id"].(string); ok {
+			segmentName, err := getSegmentNameById(v, m)
+			if err != nil {
+				return nil, err
 			}
-			if newSegmentOption.SegmentName != "" ||
-				newSegmentOption.AdvertiseOnPremRoutes ||
-				newSegmentOption.DisableInternetExit ||
-				len(newSegmentOption.CustomerGateways) > 0 {
-				segmentOptions = append(segmentOptions, newSegmentOption) // append only if we have newSegmentOption
-			}
+			option.SegmentName = segmentName
 		}
+		if v, ok := cfg["on_prem_segment_asn"].(int); ok {
+			option.CustomerAsn = v
+		}
+		if v, ok := cfg["customer_loopback_ip"].(string); ok {
+			option.CustomerLoopbackIp = v
+		}
+		if v, ok := cfg["alkira_loopback_ip1"].(string); ok {
+			option.AlkLoopbackIp1 = v
+		}
+		if v, ok := cfg["alkira_loopback_ip2"].(string); ok {
+			option.AlkLoopbackIp2 = v
+		}
+		if v, ok := cfg["loopback_subnet"].(string); ok {
+			option.LoopbackSubnet = v
+		}
+		if v, ok := cfg["advertise_on_prem_routes"].(bool); ok {
+			option.AdvertiseOnPremRoutes = v
+		}
+		if v, ok := cfg["disable_internet_exit"].(bool); ok {
+			option.DisableInternetExit = v
+		}
+		if v, ok := cfg["number_of_customer_loopback_ips"].(int); ok {
+			option.NumOfCustomerLoopbackIps = v
+		}
+		if v, ok := cfg["tunnel_count_per_customer_loopback_ip"].(int); ok {
+			option.TunnelCountPerCustomerLoopbackIp = v
+		}
+
+		segmentOptions[i] = option
 	}
+
 	return segmentOptions, nil
 }
 
-func validateGcpInterconnectInstances(in []interface{}, so []interface{}) error {
-	// Create a map to track instances with segment options
-	instanceSegmentMap := make(map[string]bool)
+// expandAwsDirectConnectInstances expand instance block to generate request payload
+func expandAwsDirectConnectInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAwsDirectConnectInstance, error) {
 
-	// Iterate over segment options to populate the map
-	for _, segmentOption := range so {
-		cfgSegmentOption := segmentOption.(map[string]interface{})
-		if instanceName, ok := cfgSegmentOption["instance_name"].(string); ok {
-			instanceSegmentMap[instanceName] = true
-		}
-	}
-
-	// Check each instance to ensure it has a corresponding segment option
-	for _, instance := range in {
-		cfgInstance := instance.(map[string]interface{})
-		instanceName, ok := cfgInstance["name"].(string)
-		if !ok || instanceName == "" {
-			return errors.New("[ERROR] GCP interconnect instance name is required")
-		}
-
-		if _, exists := instanceSegmentMap[instanceName]; !exists {
-			return fmt.Errorf("[ERROR] No segment option found for instance '%s'", instanceName)
-		}
-	}
-	return nil
-}
-func expandGcpInterconnectInstances(in []interface{}, so []interface{}, m interface{}) ([]alkira.ConnectorGcpInterconnectInstance, error) {
 	if in == nil || len(in) == 0 {
-		log.Printf("[ERROR] invalid GCP interconnect instance input")
-		return nil, errors.New("[ERROR] invalid GCP interconnect instance input")
-	}
-	err := validateGcpInterconnectInstances(in, so)
-	if err != nil {
-		return nil, err
+		return nil, errors.New("[ERROR] Invalid AWS DX instance input")
 	}
 
-	instances := make([]alkira.ConnectorGcpInterconnectInstance, len(in))
+	instances := make([]alkira.ConnectorAwsDirectConnectInstance, len(in))
 
-	// loop over the instances from the config and copy the values from the config to the struct
-	// to create the API payload
 	for i, instance := range in {
-		newInstance := alkira.ConnectorGcpInterconnectInstance{}
-		cfgInstance := instance.(map[string]interface{})
 
-		if v, ok := cfgInstance["id"].(int); ok {
-			newInstance.Id = v
+		cfg := instance.(map[string]interface{})
+		ins := alkira.ConnectorAwsDirectConnectInstance{}
+
+		if v, ok := cfg["name"].(string); ok {
+			ins.Name = v
 		}
-		if v, ok := cfgInstance["name"].(string); ok {
-			newInstance.Name = v
+		if v, ok := cfg["connection_id"].(string); ok {
+			ins.ConnectionId = v
 		}
-		if v, ok := cfgInstance["edge_availability_domain"].(string); ok {
-			newInstance.GcpEdgeAvailabilityDomain = v
+		if v, ok := cfg["dx_asn"].(int); ok {
+			ins.DcGatewayAsn = v
 		}
-		if v, ok := cfgInstance["bgp_auth_key_alkira"].(string); ok {
-			newInstance.BgpAuthKeyAlkira = v
+		if v, ok := cfg["dx_gateway_ip"].(string); ok {
+			ins.AwsUnderlayIp = v
 		}
-		if v, ok := cfgInstance["gateway_mac_address"].(string); ok {
-			newInstance.GatewayMacAddress = v
+		if v, ok := cfg["on_prem_asn"].(int); ok {
+			ins.UnderlayAsn = v
 		}
-		if v, ok := cfgInstance["customer_asn"].(int); ok {
-			newInstance.CustomerAsn = v
+		if v, ok := cfg["on_prem_gateway_ip"].(string); ok {
+			ins.OnPremUnderlayIp = v
 		}
-		if v, ok := cfgInstance["vni_id"].(int); ok {
-			newInstance.Vni = v
+		if v, ok := cfg["underlay_prefix"].(string); ok {
+			ins.UnderlayPrefix = v
 		}
-		segmentOptions, err := expandGcpInterconnectSegmentOptions(so, cfgInstance["name"].(string), m)
-		if err != nil {
-			return nil, err
+		if v, ok := cfg["bgp_auth_key"].(string); ok {
+			ins.BgpAuthKey = v
 		}
-		newInstance.SegmentOptions = segmentOptions
-		instances[i] = newInstance
+		if v, ok := cfg["bgp_auth_key_alkira"].(string); ok {
+			ins.BgpAuthKeyAlkira = v
+		}
+		if v, ok := cfg["vlan_id"].(int); ok {
+			ins.Vlan = v
+		}
+		if v, ok := cfg["aws_region"].(string); ok {
+			ins.CustomerRegion = v
+		}
+		if v, ok := cfg["credential_id"].(string); ok {
+			ins.CredentialId = v
+		}
+		if v, ok := cfg["gateway_mac_address"].(string); ok {
+			ins.GatewayMacAddress = v
+		}
+		if v, ok := cfg["segment_options"].(*schema.Set); ok {
+			segmentOptions, err := expandAwsDirectConnectSegmentOptions(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+			ins.SegmentOptions = segmentOptions
+		}
+
+		instances[i] = ins
 	}
 	return instances, nil
 }
 
-func setGcpInterconnectSegmentOptions(d *schema.ResourceData, instance *alkira.ConnectorGcpInterconnectInstance, m interface{}) ([]map[string]interface{}, error) {
-	var segmentOptions []map[string]interface{}
+// getAwsDirectConnectSegmentOptions set "segment_options" block from API response
+func getAwsDirectConnectSegmentOptions(instance alkira.ConnectorAwsDirectConnectInstance, m interface{}) ([]map[string]interface{}, error) {
 
-	// loop over the segment options
-	for _, cSegmentOption := range d.Get("segment_options").([]interface{}) {
-		cfgSegmentOption := cSegmentOption.(map[string]interface{})
-		for _, aSegmentOption := range instance.SegmentOptions {
-			// make segmentOptions map for each instance using the instance name
-			if cfgSegmentOption["instance_name"].(string) == instance.Name {
-				segmentId, err := getSegmentIdByName(aSegmentOption.SegmentName, m)
-				if err != nil {
-					log.Printf("[ERROR] error getting segment ID for Segment Name %v", aSegmentOption.SegmentName)
-					return nil, err
-				}
+	segmentOptions := instance.SegmentOptions
 
-				// create a list of map for customer gateways
-				var customerGateways []map[string]interface{}
-				for _, aCustomerGateway := range aSegmentOption.CustomerGateways {
-					// add all gateways to the list
-					customerGateway := map[string]interface{}{
-						"loopback_ip":  aCustomerGateway.LoopbackIp,
-						"tunnel_count": aCustomerGateway.TunnelCount,
-					}
-					customerGateways = append(customerGateways, customerGateway)
-				}
-				segmentOption := map[string]interface{}{
-					"instance_name":            instance.Name,
-					"segment_id":               segmentId,
-					"advertise_on_prem_routes": aSegmentOption.AdvertiseOnPremRoutes,
-					"disable_internet_exit":    aSegmentOption.DisableInternetExit,
-					"customer_gateways":        customerGateways,
-				}
-				segmentOptions = append(segmentOptions, segmentOption)
-			}
-		}
+	if segmentOptions == nil {
+		return nil, errors.New("invalid \"segment_options{}\"")
 	}
-	return segmentOptions, nil
+
+	var segmentOptionBlocks []map[string]interface{}
+
+	for _, option := range segmentOptions {
+
+		segmentId, err := getSegmentIdByName(option.SegmentName, m)
+		if err != nil {
+			return nil, err
+		}
+
+		segmentOption := map[string]interface{}{
+			"segment_id":                            segmentId,
+			"on_prem_segment_asn":                   option.CustomerAsn,
+			"customer_loopback_ip":                  option.CustomerLoopbackIp,
+			"alkira_loopback_ip1":                   option.AlkLoopbackIp1,
+			"alkira_loopback_ip2":                   option.AlkLoopbackIp2,
+			"loopback_subnet":                       option.LoopbackSubnet,
+			"advertise_on_prem_routes":              option.AdvertiseOnPremRoutes,
+			"disable_internet_exit":                 option.DisableInternetExit,
+			"number_of_customer_loopback_ips":       option.NumOfCustomerLoopbackIps,
+			"tunnel_count_per_customer_loopback_ip": option.TunnelCountPerCustomerLoopbackIp,
+		}
+		segmentOptionBlocks = append(segmentOptionBlocks, segmentOption)
+	}
+
+	return segmentOptionBlocks, nil
 }
 
-func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.ConnectorGcpInterconnect, m interface{}) {
+func setAwsDirectConnectInstance(d *schema.ResourceData, m interface{}, connector *alkira.ConnectorAwsDirectConnect) error {
 	var instances []map[string]interface{}
-	var segmentOptions []map[string]interface{}
-	for _, cInstance := range d.Get("instances").([]interface{}) {
-		configInstance := cInstance.(map[string]interface{})
-		for _, aInstance := range connector.Instances {
-			if configInstance["id"].(int) == aInstance.Id ||
-				configInstance["name"].(string) == aInstance.Name {
-				log.Printf("[DEBUG] instance found [%v]", aInstance.Name)
-				instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(d, &aInstance, m)
-				if err != nil {
-					log.Printf("[ERROR] error setting segment options")
-					return
-				}
-				segmentOptions = append(segmentOptions, instanceSegmentOptions...)
 
-				instance := map[string]interface{}{
-					"id":                       aInstance.Id,
-					"name":                     aInstance.Name,
-					"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
-					"customer_asn":             aInstance.CustomerAsn,
-					"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
-					"gateway_mac_address":      aInstance.GatewayMacAddress,
-					"vni_id":                   aInstance.Vni,
-				}
-				instances = append(instances, instance)
-			}
+	for _, ins := range connector.Instances {
+
+		// Firstly, get segment_options of the instance
+		segmentOptions, err := getAwsDirectConnectSegmentOptions(ins, m)
+
+		if err != nil {
+			return err
 		}
+
+		instance := map[string]interface{}{
+			"name":                ins.Name,
+			"connection_id":       ins.ConnectionId,
+			"dx_asn":              ins.DcGatewayAsn,
+			"dx_gateway_ip":       ins.AwsUnderlayIp,
+			"on_prem_asn":         ins.UnderlayAsn,
+			"on_prem_gateway_ip":  ins.OnPremUnderlayIp,
+			"underlay_prefix":     ins.UnderlayPrefix,
+			"bgp_auth_key":        ins.BgpAuthKey,
+			"bgp_auth_key_alkira": ins.BgpAuthKeyAlkira,
+			"vlan_id":             ins.Vlan,
+			"aws_region":          ins.CustomerRegion,
+			"credential_id":       ins.CredentialId,
+			"gateway_mac_address": ins.GatewayMacAddress,
+			"segment_options":     segmentOptions,
+		}
+		instances = append(instances, instance)
 	}
 
-	for _, aInstance := range connector.Instances {
-		new := true
-		for _, cInstance := range d.Get("instances").([]interface{}) {
-			instanceConfig := cInstance.(map[string]interface{})
-			if instanceConfig["id"].(int) == aInstance.Id ||
-				instanceConfig["name"].(string) == aInstance.Name {
-				new = false
-			}
-		}
-
-		if new {
-			instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(d, &aInstance, m)
-			if err != nil {
-				log.Printf("[DEBUG] error setting segment options")
-				return
-			}
-			segmentOptions = append(segmentOptions, instanceSegmentOptions...)
-
-			i := map[string]interface{}{
-				"id":                       aInstance.Id,
-				"name":                     aInstance.Name,
-				"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
-				"customer_asn":             aInstance.CustomerAsn,
-				"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
-				"gateway_mac_address":      aInstance.GatewayMacAddress,
-				"vni_id":                   aInstance.Vni,
-			}
-			instances = append(instances, i)
-		}
-	}
 	d.Set("instances", instances)
-	d.Set("segment_options", segmentOptions)
+	return nil
 }
 
-func generateGcpInterconnectRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpInterconnect, error) {
-	instances, err := expandGcpInterconnectInstances(d.Get("instances").([]interface{}), d.Get("segment_options").([]interface{}), m)
+func generateAwsDirectConnectRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsDirectConnect, error) {
+
+	// Expand instances
+	instances, err := expandAwsDirectConnectInstances(d.Get("instances").([]interface{}), m)
+
 	if err != nil {
 		return nil, err
 	}
 
 	// Assemble request
-	connector := &alkira.ConnectorGcpInterconnect{
-		Name:             d.Get("name").(string),
-		Size:             d.Get("size").(string),
-		Description:      d.Get("description").(string),
-		Cxp:              d.Get("cxp").(string),
-		Enabled:          d.Get("enabled").(bool),
-		Group:            d.Get("group").(string),
-		TunnelProtocol:   d.Get("tunnel_protocol").(string),
-		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		LoopbackPrefixes: convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set)),
-		Instances:        instances,
-		ScaleGroupId:     d.Get("scale_group_id").(string),
-		ImplicitGroupId:  d.Get("implicit_group_id").(int),
+	connector := &alkira.ConnectorAwsDirectConnect{
+		Name:           d.Get("name").(string),
+		Description:    d.Get("description").(string),
+		Cxp:            d.Get("cxp").(string),
+		Enabled:        d.Get("enabled").(bool),
+		Group:          d.Get("group").(string),
+		TunnelProtocol: d.Get("tunnel_protocol").(string),
+		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		Size:           d.Get("size").(string),
+		Instances:      instances,
 	}
 
 	return connector, nil

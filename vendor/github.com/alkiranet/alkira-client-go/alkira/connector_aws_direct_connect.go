@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-type ConnectorAwsDirectConnectSegmentOptions struct {
+type ConnectorAwsDirectConnectSegmentOption struct {
 	SegmentName                      string  `json:"segmentName"`
 	CustomerAsn                      int     `json:"customerAsn"`
 	CustomerLoopbackIp               string  `json:"customerLoopbackIp,omitempty"`
@@ -35,12 +35,12 @@ type ConnectorAwsDirectConnectInstance struct {
 	CredentialId      string           `json:"credentialId"`
 	GatewayMacAddress string           `json:"gatewayMacAddress,omitempty"`
 	Vni               int              `json:"vni"`
-	SegmentOptions    []ConnectorAwsDirectConnectSegmentOptions `json:"segmentOptions"`
+	SegmentOptions    []ConnectorAwsDirectConnectSegmentOption `json:"segmentOptions"`
 }
 
 type ConnectorAwsDirectConnect struct {
 	BillingTags    []int       `json:"billingTags"`
-	CXP            string      `json:"cxp"`
+	Cxp            string      `json:"cxp"`
 	Description    string      `json:"description,omitempty"`
 	Enabled        bool        `json:"enabled"`
 	Group          string      `json:"group,omitempty"`
@@ -48,6 +48,7 @@ type ConnectorAwsDirectConnect struct {
 	Name           string      `json:"name"`
 	Size           string      `json:"size"`
 	TunnelProtocol string      `json:"tunnelProtocol"`
+	Instances      []ConnectorAwsDirectConnectInstance `json:"instances"`
 }
 
 // NewConnectorAwsDirectConnect new connector-aws-direct-connect
