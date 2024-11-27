@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
+func resourceAlkiraConnectorAwsDx() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage AWS Direct Connect connector.",
+		Description: "Manage AWS Direct Connect (DX) connector.",
 
-		CreateContext: resourceConnectorAwsDirectConnectCreate,
-		ReadContext:   resourceConnectorAwsDirectConnectRead,
-		UpdateContext: resourceConnectorAwsDirectConnectUpdate,
-		DeleteContext: resourceConnectorAwsDirectConnectDelete,
+		CreateContext: resourceConnectorAwsDxCreate,
+		ReadContext:   resourceConnectorAwsDxRead,
+		UpdateContext: resourceConnectorAwsDxUpdate,
+		DeleteContext: resourceConnectorAwsDxDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -62,6 +62,12 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "ID of implicit group created for the " +
+					"connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol used by the connector." +
 					"The value should be one of `GRE`, `IPSEC`, `VXLAN`, " +
@@ -95,6 +101,11 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"id": {
+							Description: "ID of the instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 						"connection_id": {
 							Description: "AWS DirctConnect connection ID.",
 							Type:        schema.TypeString,
@@ -111,12 +122,12 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"onprem_asn": {
+						"on_prem_asn": {
 							Description: "The customer underlay ASN.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
-						"onprem_gateway_ip": {
+						"on_prem_gateway_ip": {
 							Description: "Valid IP from customer gateway.",
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -183,7 +194,7 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 										Type:        schema.TypeString,
 										Required:    true,
 									},
-									"onprem_segment_asn": {
+									"on_prem_segment_asn": {
 										Description: "The ASN of customer on-prem side.",
 										Type:        schema.TypeInt,
 										Required:    true,
@@ -229,9 +240,11 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"disable_internet_exit": {
-										Description: "Disable access to the " +
-											"internet. Default value is `false`.",
+									"advertise_default_route": {
+										Description: "Enable or disable access " +
+											"to the internet when traffic " +
+											"arrives via this connector. " +
+											"Default value is `false`.",
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
@@ -266,7 +279,7 @@ func resourceAlkiraConnectorAwsDirectConnect() *schema.Resource {
 	}
 }
 
-func resourceConnectorAwsDirectConnectCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorAwsDxCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)
@@ -300,10 +313,10 @@ func resourceConnectorAwsDirectConnectCreate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return resourceConnectorAwsDirectConnectRead(ctx, d, m)
+	return resourceConnectorAwsDxRead(ctx, d, m)
 }
 
-func resourceConnectorAwsDirectConnectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorAwsDxRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)
@@ -328,6 +341,7 @@ func resourceConnectorAwsDirectConnectRead(ctx context.Context, d *schema.Resour
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("enabled", connector.Enabled)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 
 	// Set instances
 	err = setAwsDirectConnectInstance(d, m, connector)
@@ -348,7 +362,7 @@ func resourceConnectorAwsDirectConnectRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceConnectorAwsDirectConnectUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorAwsDxUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)
@@ -380,10 +394,10 @@ func resourceConnectorAwsDirectConnectUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return resourceConnectorAwsDirectConnectRead(ctx, d, m)
+	return resourceConnectorAwsDxRead(ctx, d, m)
 }
 
-func resourceConnectorAwsDirectConnectDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorAwsDxDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)

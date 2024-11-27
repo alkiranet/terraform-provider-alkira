@@ -16,11 +16,12 @@ type ConnectorAwsDirectConnectSegmentOption struct {
 	LoopbackSubnet                   string  `json:"loopbackSubnet"`
 	AdvertiseOnPremRoutes            bool `json:"advertiseOnPremRoutes"`
 	DisableInternetExit              bool `json:"disableInternetExit"`
-	NumOfCustomerLoopbackIps         int     `json:"numOfCustomerLoopbackIps"`
+	NumOfCustomerLoopbackIps         int     `json:"numOfCustomerLoopbackIps,omitempty"`
 	TunnelCountPerCustomerLoopbackIp int     `json:"tunnelCountPerCustomerLoopbackIp,omitempty"`
 }
 
 type ConnectorAwsDirectConnectInstance struct {
+	Id                int              `json:"id,omitempty"` // response only
 	Name              string           `json:"name"`
 	ConnectionId      string           `json:"connectionId"`
 	DcGatewayAsn      int              `json:"dcGatewayAsn"`
@@ -34,18 +35,19 @@ type ConnectorAwsDirectConnectInstance struct {
 	CustomerRegion    string           `json:"customerRegion"`
 	CredentialId      string           `json:"credentialId"`
 	GatewayMacAddress string           `json:"gatewayMacAddress,omitempty"`
-	Vni               int              `json:"vni"`
+	Vni               int              `json:"vni,omitempty"`
 	SegmentOptions    []ConnectorAwsDirectConnectSegmentOption `json:"segmentOptions"`
 }
 
 type ConnectorAwsDirectConnect struct {
-	BillingTags    []int       `json:"billingTags"`
-	Cxp            string      `json:"cxp"`
-	Description    string      `json:"description,omitempty"`
-	Enabled        bool        `json:"enabled"`
-	Group          string      `json:"group,omitempty"`
 	Id             json.Number `json:"id,omitempty"` // response only
 	Name           string      `json:"name"`
+	Description    string      `json:"description,omitempty"`
+	BillingTags    []int       `json:"billingTags"`
+	Cxp            string      `json:"cxp"`
+	Enabled        bool        `json:"enabled"`
+	Group          string      `json:"group,omitempty"`
+	ImplicitGroupId   int              `json:"implicitGroupId,omitempty"` // response only
 	Size           string      `json:"size"`
 	TunnelProtocol string      `json:"tunnelProtocol"`
 	Instances      []ConnectorAwsDirectConnectInstance `json:"instances"`
