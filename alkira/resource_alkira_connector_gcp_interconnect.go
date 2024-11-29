@@ -112,6 +112,55 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
 						},
+						"segment_options": {
+							Description: "Options for each segment associated with the instance.",
+							Type:        schema.TypeList,
+							Required:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment_id": {
+										Description: "The ID of the segment.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"advertise_on_prem_routes": {
+										Description: "Advertise on-prem routes. Default is `false`.",
+										Default:     false,
+										Optional:    true,
+										Type:        schema.TypeBool,
+									},
+									"advertise_default_routes": {
+										Description: "Enable or disable access " +
+											"to the internet when traffic " +
+											"arrives via this connector. " +
+											"Default value is `true`.",
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"customer_gateways": {
+										Description: "The customer gateway associated with the segment.",
+										Type:        schema.TypeList,
+										Required:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"loopback_ip": {
+													Description: "The customer gateway IP address " +
+														"which is set as tunnel source.",
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"tunnel_count": {
+													Description: "Number of tunnels per customer gateway.",
+													Type:        schema.TypeInt,
+													Required:    true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"customer_asn": {
 							Description: "The customer ASN.",
 							Type:        schema.TypeInt,
@@ -138,57 +187,6 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				},
 			},
 
-			"segment_options": {
-				Description: "Options for each segment associated with the instance.",
-				Type:        schema.TypeList,
-				Required:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_name": {
-							Description: "The name of the instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"segment_id": {
-							Description: "The ID of the segment.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"advertise_on_prem_routes": {
-							Description: "Advertise on-prem routes. Default is `false`.",
-							Default:     false,
-							Optional:    true,
-							Type:        schema.TypeBool,
-						},
-						"disable_internet_exit": {
-							Description: "Disable access to the internet. Default is `false`.",
-							Default:     false,
-							Optional:    true,
-							Type:        schema.TypeBool,
-						},
-						"customer_gateways": {
-							Description: "The customer gateway associated with the segment.",
-							Type:        schema.TypeList,
-							Required:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"loopback_ip": {
-										Description: "The customer gateway IP address " +
-											"which is set as tunnel source.",
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"tunnel_count": {
-										Description: "Number of tunnels per customer gateway.",
-										Type:        schema.TypeInt,
-										Required:    true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with the connector.",
 				Type:        schema.TypeString,
