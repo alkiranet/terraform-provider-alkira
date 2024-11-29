@@ -30,7 +30,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     segment_options {
       segment_id               = alkira_segment.segment1.id
       advertise_on_prem_routes = true
-      disable_internet_exit    = false
+      advertise_default_routes = false
       customer_gateways {
         tunnel_count = 2
       }
@@ -58,7 +58,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     segment_options {
       segment_id               = alkira_segment.segment1.id
       advertise_on_prem_routes = true
-      disable_internet_exit    = false
+      advertise_default_routes = false
       customer_gateways {
         tunnel_count = 2
       }
@@ -73,7 +73,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     segment_options {
       segment_id               = alkira_segment.segment1.id
       advertise_on_prem_routes = true
-      disable_internet_exit    = false
+      advertise_default_routes = false
       customer_gateways {
         tunnel_count = 2
       }
@@ -100,7 +100,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     segment_options {
       segment_id               = alkira_segment.segment1.id
       advertise_on_prem_routes = true
-      disable_internet_exit    = false
+      advertise_default_routes = false
       customer_gateways {
         tunnel_count = 2
       }
@@ -108,7 +108,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     segment_options {
       segment_id               = alkira_segment.segment2.id
       advertise_on_prem_routes = true
-      disable_internet_exit    = false
+      advertise_default_routes = false
       customer_gateways {
         tunnel_count = 2
       }
