@@ -119,9 +119,8 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 
 		shouldRetry, e := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 
-		// In addition, retry on 409 as well due to DELETE API.
 		if !shouldRetry {
-			if resp.StatusCode == 409 || resp.StatusCode == 500 {
+			if resp.StatusCode == 500 {
 				return true, fmt.Errorf("%s", resp.Status)
 			}
 		}

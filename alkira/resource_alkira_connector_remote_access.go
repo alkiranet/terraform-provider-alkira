@@ -7,7 +7,6 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
@@ -61,8 +60,6 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"authentication_mode": {
 				Description: "Authentication mode, the value could be " +

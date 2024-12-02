@@ -14,6 +14,155 @@ type panZone struct {
 	Groups  interface{}
 }
 
+// Helper functions for PAN credentials
+func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Credential")
+
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPan{
+		Username:   d.Get("pan_username").(string),
+		Password:   d.Get("pan_password").(string),
+		LicenseKey: d.Get("pan_license_key").(string),
+	}
+	d.Set("pan_credential_name", credentialName)
+
+	return c.CreateCredential(credentialName, alkira.CredentialTypePan, credential, 0)
+}
+
+func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating PAN Credential")
+
+	if d.HasChanges("pan_username", "pan_password", "pan_license_key") {
+		log.Printf("[INFO] PAN credential has changed")
+
+		if d.Get("pan_credential_id") == nil {
+			return errors.New("pan_credential_id is empty when updating PAN credential")
+		} else {
+			if d.Get("pan_credential_name") == nil || d.Get("pan_credential_name").(string) == "" {
+				return errors.New("pan_credential_name is empty when updating PAN credential")
+			}
+
+			credentialId := d.Get("pan_credential_id").(string)
+			credentialName := d.Get("pan_credential_name").(string)
+			credential := alkira.CredentialPan{
+				Username:   d.Get("pan_username").(string),
+				Password:   d.Get("pan_password").(string),
+				LicenseKey: d.Get("pan_license_key").(string),
+			}
+			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
+		}
+	}
+
+	return nil
+}
+
+func deletePanCredential(id string, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Credential")
+	return c.DeleteCredential(id, alkira.CredentialTypePan)
+}
+
+// Helper functions for PAN Registration Credentials
+func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Registration Credential %v", d.Get("registration_pin_expiry").(string))
+
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPanRegistration{
+		RegistrationPinId:    d.Get("registration_pin_id").(string),
+		RegistrationPinValue: d.Get("registration_pin_value").(string),
+	}
+	credentialExpiry, err := convertInputTimeToEpoch(d.Get("registration_pin_expiry").(string))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to parse 'registration_pin_exiry', %v", err)
+		return "", err
+	}
+
+	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
+}
+
+func deletePanRegistrationCredential(id string, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Registration Credential")
+	return c.DeleteCredential(id, alkira.CredentialTypePanRegistration)
+}
+
+// Helper function for PAN Master Key Credential
+func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
+	log.Printf("[INFO] Creating PAN Master Key Credential %v", d.Get("master_key_expiry").(string))
+
+	if !d.Get("master_key_enabled").(bool) {
+		log.Printf("[INFO] PAN master key is not enabled, skip creating credential")
+		return "", nil
+	}
+
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPanMasterKey{
+		MasterKey: d.Get("master_key").(string),
+	}
+
+	credentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
+
+	if err != nil {
+		log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
+		return "", err
+	}
+
+	if credentialExpiry == 0 {
+		log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
+		return "", err
+	}
+
+	return c.CreateCredential(credentialName, alkira.CredentialTypePanMasterKey, credential, credentialExpiry)
+}
+
+func deletePanMasterKeyCredential(id string, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Deleting PAN Master Key Credential")
+	return c.DeleteCredential(id, alkira.CredentialTypePanMasterKey)
+}
+
+// Create all credentails of PAN service
+//
+// - PAN Credential
+// - PAN Registration Credential
+// - PAN Master Key Credential
+func createCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+
+	// Create PAN credentail
+	panCredentialId, err := createPanCredential(d, c)
+	if err != nil {
+		return err
+	}
+
+	d.Set("pan_credential_id", panCredentialId)
+
+	// Create PAN Registration Credential
+	panRegistrationCredentialId, err := createPanRegistrationCredential(d, c)
+	if err != nil {
+		return err
+	}
+	d.Set("pan_registration_credential_id", panRegistrationCredentialId)
+
+	// Create PAN Master Key Credential
+	panMasterKeyCredentialId, err := createPanMasterKeyCredential(d, c)
+	if err != nil {
+		return err
+	}
+	d.Set("pan_master_key_credential_id", panMasterKeyCredentialId)
+
+	return nil
+}
+
+func updateCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+
+	// Update PAN credentail
+	err := updatePanCredential(d, c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Global Protect Segment Options
 func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[string]*alkira.GlobalProtectSegmentName, error) {
 
 	if in == nil || in.Len() == 0 {
@@ -185,6 +334,9 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 
 			r.GlobalProtectSegmentOptions = options
 		}
+		if v, ok := instanceCfg["enable_traffic"].(bool); ok {
+			r.TrafficEnabled = v
+		}
 		instances[i] = r
 	}
 
@@ -200,11 +352,12 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		for _, ins := range c {
 			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
 				instance := map[string]interface{}{
-					"name":          ins.Name,
-					"id":            ins.Id,
-					"credential_id": ins.CredentialId,
-					"auth_key":      cfg["auth_key"].(string),
-					"auth_code":     cfg["auth_code"].(string),
+					"name":           ins.Name,
+					"id":             ins.Id,
+					"credential_id":  ins.CredentialId,
+					"auth_key":       cfg["auth_key"].(string),
+					"auth_code":      cfg["auth_code"].(string),
+					"enable_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
@@ -229,9 +382,10 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		// this will generate a diff
 		if new {
 			instance := map[string]interface{}{
-				"credential_id": instance.CredentialId,
-				"name":          instance.Name,
-				"id":            instance.Id,
+				"credential_id":  instance.CredentialId,
+				"name":           instance.Name,
+				"id":             instance.Id,
+				"enable_traffic": instance.TrafficEnabled,
 			}
 
 			instances = append(instances, instance)
@@ -240,4 +394,71 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 	}
 
 	return instances
+}
+
+// generateServicePanRequest generate request payload for creating and updating service.
+func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
+
+	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
+	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
+	panoramaTemplate := d.Get("panorama_template").(string)
+
+	//
+	// Construct instances
+	//
+	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Construct segment options
+	//
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//
+	// Construct global protect
+	//
+	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	service := &alkira.ServicePan{
+		BillingTagIds:               convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		Bundle:                      d.Get("bundle").(string),
+		CXP:                         d.Get("cxp").(string),
+		CredentialId:                d.Get("pan_credential_id").(string),
+		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
+		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
+		Instances:                   instances,
+		LicenseType:                 d.Get("license_type").(string),
+		SubLicenseType:              d.Get("license_sub_type").(string),
+		MasterKeyCredentialId:       d.Get("pan_master_key_credential_id").(string),
+		MasterKeyEnabled:            d.Get("master_key_enabled").(bool),
+		MaxInstanceCount:            d.Get("max_instance_count").(int),
+		MinInstanceCount:            d.Get("min_instance_count").(int),
+		ManagementSegmentId:         d.Get("management_segment_id").(int),
+		Name:                        d.Get("name").(string),
+		PanoramaEnabled:             d.Get("panorama_enabled").(bool),
+		PanoramaDeviceGroup:         &panoramaDeviceGroup,
+		PanoramaIpAddresses:         panoramaIpAddresses,
+		PanoramaTemplate:            &panoramaTemplate,
+		RegistrationCredentialId:    d.Get("pan_registration_credential_id").(string),
+		SegmentOptions:              segmentOptions,
+		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
+		TunnelProtocol:              d.Get("tunnel_protocol").(string),
+		Size:                        d.Get("size").(string),
+		Type:                        d.Get("type").(string),
+		Version:                     d.Get("version").(string),
+		Description:                 d.Get("description").(string),
+	}
+
+	return service, nil
 }

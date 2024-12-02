@@ -61,9 +61,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`}, false),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"tunnel_protocol": {
 				Description:  "The tunnel protocol. Default is `IPSEC`.",
@@ -203,6 +202,13 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Description: "FTDv NAT ID.",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"enable_traffic": {
+							Description: "Enable traffic on this instance of Cisco FTDv. " +
+								"Default value is `true`.",
+							Default:  true,
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},

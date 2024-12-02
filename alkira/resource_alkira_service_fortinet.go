@@ -50,6 +50,12 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
+			"credential_name": {
+				Description: "Name of Fortinet Firewall credential managed " +
+					"by credential resource.",
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"credential_id": {
 				Description: "ID of Fortinet Firewall credential managed " +
 					"by credential resource.",
@@ -66,13 +72,14 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"username": {
+				Description: "Fortinet username. The field could not be updated " +
+					"after creation.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"password": {
 				Description: "Fortinet password.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
-			"username": {
-				Description: "Fortinet username.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -231,8 +238,6 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE", "5LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Tunnel Protocol. The default value is `IPSEC`. " +
@@ -257,6 +262,13 @@ func resourceFortinetCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
+
+	// Create fortinet service credentials
+	credentialId, err := createFortinetCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("credential_id", credentialId)
 
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
@@ -360,6 +372,12 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
+	// Update fortinet service credential
+	err := updateFortinetCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateFortinetRequest(d, m)
 
@@ -367,7 +385,7 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	// Send update request
+	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), request)
 
 	if err != nil {

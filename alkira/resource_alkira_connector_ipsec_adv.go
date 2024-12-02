@@ -116,9 +116,6 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 					"`5LARGE`, `10LARGE` and `20LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE",
-					"5LARGE", "10LARGE", "20LARGE"}, false),
 			},
 			"tunnels_per_gateway": {
 				Description: "The number of tunnels per gateway instance. " +

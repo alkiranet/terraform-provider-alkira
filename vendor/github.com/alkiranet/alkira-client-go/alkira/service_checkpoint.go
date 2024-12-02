@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2024 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -13,7 +13,7 @@ type ServiceCheckpoint struct {
 	Cxp              string                      `json:"cxp"`
 	CredentialId     string                      `json:"credentialId"`
 	Description      string                      `json:"description"`
-	Id               json.Number                 `json:"id,omitempty"` //filled only on response
+	Id               json.Number                 `json:"id,omitempty"` // response only
 	Instances        []CheckpointInstance        `json:"instances"`
 	InternalName     string                      `json:"internalName"`
 	LicenseType      string                      `json:"licenseType"`
@@ -30,16 +30,17 @@ type ServiceCheckpoint struct {
 }
 
 type CheckpointInstance struct {
-	Id           int    `json:"id,omitempty"` //filled only on response
-	Name         string `json:"name"`
-	CredentialId string `json:"credentialId"`
-	InternalName string `json:"internalName,omitempty"` //filled only on response
+	Id             int    `json:"id,omitempty"` // response only
+	Name           string `json:"name"`
+	InternalName   string `json:"internalName,omitempty"` // response only
+	CredentialId   string `json:"credentialId"`
+	TrafficEnabled bool   `json:"trafficEnabled"`
 }
 
 type CheckpointInstanceConfig struct {
-	Data string //The response is string data the entire body of the
-	//response whould be interpreted together. There is no
-	//json structure.
+	// The response is string data the entire body of the response
+	// whould be interpreted together. There is no json structure.
+	Data string
 }
 
 type CheckpointManagementServer struct {
