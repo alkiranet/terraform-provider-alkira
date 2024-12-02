@@ -7,80 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// getAwsDirectConnectSegmentOptions set "segment_options" block from API response
-func getAwsDirectConnectSegmentOptions(instance alkira.ConnectorAwsDirectConnectInstance, m interface{}) ([]map[string]interface{}, error) {
-
-	segmentOptions := instance.SegmentOptions
-
-	if segmentOptions == nil {
-		return nil, errors.New("invalid \"segment_options{}\"")
-	}
-
-	var segmentOptionBlocks []map[string]interface{}
-
-	for _, option := range segmentOptions {
-
-		segmentId, err := getSegmentIdByName(option.SegmentName, m)
-		if err != nil {
-			return nil, err
-		}
-
-		segmentOption := map[string]interface{}{
-			"segment_id":                            segmentId,
-			"on_prem_segment_asn":                   option.CustomerAsn,
-			"customer_loopback_ip":                  option.CustomerLoopbackIp,
-			"alkira_loopback_ip1":                   option.AlkLoopbackIp1,
-			"alkira_loopback_ip2":                   option.AlkLoopbackIp2,
-			"loopback_subnet":                       option.LoopbackSubnet,
-			"advertise_on_prem_routes":              option.AdvertiseOnPremRoutes,
-			"advertise_default_routes":              !option.DisableInternetExit,
-			"number_of_customer_loopback_ips":       option.NumOfCustomerLoopbackIps,
-			"tunnel_count_per_customer_loopback_ip": option.TunnelCountPerCustomerLoopbackIp,
-		}
-		segmentOptionBlocks = append(segmentOptionBlocks, segmentOption)
-	}
-
-	return segmentOptionBlocks, nil
-}
-
-func setAwsDirectConnectInstance(d *schema.ResourceData, m interface{}, connector *alkira.ConnectorAwsDirectConnect) error {
-	var instances []map[string]interface{}
-
-	for _, ins := range connector.Instances {
-
-		// Firstly, get segment_options of the instance
-		segmentOptions, err := getAwsDirectConnectSegmentOptions(ins, m)
-
-		if err != nil {
-			return err
-		}
-
-		instance := map[string]interface{}{
-			"name":                ins.Name,
-			"id":                  ins.Id,
-			"connection_id":       ins.ConnectionId,
-			"dx_asn":              ins.DcGatewayAsn,
-			"dx_gateway_ip":       ins.AwsUnderlayIp,
-			"on_prem_asn":         ins.UnderlayAsn,
-			"on_prem_gateway_ip":  ins.OnPremUnderlayIp,
-			"underlay_prefix":     ins.UnderlayPrefix,
-			"bgp_auth_key":        ins.BgpAuthKey,
-			"bgp_auth_key_alkira": ins.BgpAuthKeyAlkira,
-			"vlan_id":             ins.Vlan,
-			"aws_region":          ins.CustomerRegion,
-			"credential_id":       ins.CredentialId,
-			"gateway_mac_address": ins.GatewayMacAddress,
-			"segment_options":     segmentOptions,
-		}
-		instances = append(instances, instance)
-	}
-
-	d.Set("instances", instances)
-	return nil
-}
-
-// expandAwsDirectConnectSegmentOptions expand "segment_options" block
-// in "instance" block to generate request payload.
+// Expand "segment_options" block in "instance" block for request
+// payload.
 func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alkira.ConnectorAwsDirectConnectSegmentOption, error) {
 
 	if in == nil || in.Len() == 0 {
@@ -118,7 +46,7 @@ func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alki
 		if v, ok := cfg["advertise_on_prem_routes"].(bool); ok {
 			option.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := cfg["advertise_default_routes"].(bool); ok {
+		if v, ok := cfg["advertise_default_route"].(bool); ok {
 			option.DisableInternetExit = !v
 		}
 		if v, ok := cfg["number_of_customer_loopback_ips"].(int); ok {
@@ -134,7 +62,7 @@ func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alki
 	return segmentOptions, nil
 }
 
-// expandAwsDirectConnectInstances expand instance block to generate request payload
+// Expand instance block to generate request payload
 func expandAwsDirectConnectInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAwsDirectConnectInstance, error) {
 
 	if in == nil || len(in) == 0 {
@@ -204,6 +132,7 @@ func expandAwsDirectConnectInstances(in []interface{}, m interface{}) ([]alkira.
 	return instances, nil
 }
 
+// Generate request payload
 func generateAwsDirectConnectRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsDirectConnect, error) {
 
 	// Expand instances
@@ -227,4 +156,79 @@ func generateAwsDirectConnectRequest(d *schema.ResourceData, m interface{}) (*al
 	}
 
 	return connector, nil
+}
+
+// Helper function to get "segment_options" block from API
+// response. This block is part of "instance" block.
+func getAwsDirectConnectSegmentOptions(instance alkira.ConnectorAwsDirectConnectInstance, m interface{}) ([]map[string]interface{}, error) {
+
+	segmentOptions := instance.SegmentOptions
+
+	if segmentOptions == nil {
+		return nil, errors.New("invalid \"segment_options{}\"")
+	}
+
+	var segmentOptionBlocks []map[string]interface{}
+
+	for _, option := range segmentOptions {
+
+		segmentId, err := getSegmentIdByName(option.SegmentName, m)
+		if err != nil {
+			return nil, err
+		}
+
+		segmentOption := map[string]interface{}{
+			"segment_id":                            segmentId,
+			"on_prem_segment_asn":                   option.CustomerAsn,
+			"customer_loopback_ip":                  option.CustomerLoopbackIp,
+			"alkira_loopback_ip1":                   option.AlkLoopbackIp1,
+			"alkira_loopback_ip2":                   option.AlkLoopbackIp2,
+			"loopback_subnet":                       option.LoopbackSubnet,
+			"advertise_on_prem_routes":              option.AdvertiseOnPremRoutes,
+			"advertise_default_route":               !option.DisableInternetExit,
+			"number_of_customer_loopback_ips":       option.NumOfCustomerLoopbackIps,
+			"tunnel_count_per_customer_loopback_ip": option.TunnelCountPerCustomerLoopbackIp,
+		}
+		segmentOptionBlocks = append(segmentOptionBlocks, segmentOption)
+	}
+
+	return segmentOptionBlocks, nil
+}
+
+// Set "instance" block from API response. The instance block contains
+// another block "segment_options".
+func setAwsDirectConnectInstance(d *schema.ResourceData, m interface{}, connector *alkira.ConnectorAwsDirectConnect) error {
+	var instances []map[string]interface{}
+
+	for _, ins := range connector.Instances {
+
+		// Firstly, get segment_options of the instance
+		segmentOptions, err := getAwsDirectConnectSegmentOptions(ins, m)
+
+		if err != nil {
+			return err
+		}
+
+		instance := map[string]interface{}{
+			"name":                ins.Name,
+			"id":                  ins.Id,
+			"connection_id":       ins.ConnectionId,
+			"dx_asn":              ins.DcGatewayAsn,
+			"dx_gateway_ip":       ins.AwsUnderlayIp,
+			"on_prem_asn":         ins.UnderlayAsn,
+			"on_prem_gateway_ip":  ins.OnPremUnderlayIp,
+			"underlay_prefix":     ins.UnderlayPrefix,
+			"bgp_auth_key":        ins.BgpAuthKey,
+			"bgp_auth_key_alkira": ins.BgpAuthKeyAlkira,
+			"vlan_id":             ins.Vlan,
+			"aws_region":          ins.CustomerRegion,
+			"credential_id":       ins.CredentialId,
+			"gateway_mac_address": ins.GatewayMacAddress,
+			"segment_options":     segmentOptions,
+		}
+		instances = append(instances, instance)
+	}
+
+	d.Set("instances", instances)
+	return nil
 }
