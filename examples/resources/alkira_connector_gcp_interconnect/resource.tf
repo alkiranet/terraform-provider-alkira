@@ -14,7 +14,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     segment_options {
       segment_id               = alkira_segment.segment1.id
       advertise_on_prem_routes = true
-      advertise_default_routes = false
+      advertise_default_route = false
       customer_gateways {
         tunnel_count = 2
       }

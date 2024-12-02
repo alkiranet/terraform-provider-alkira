@@ -8,13 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandGcpInterconnectCustomerGateways(cg []interface{}) ([]alkira.ConnectorGcpInterconnectCustomerGateway, error) {
-	if cg == nil || len(cg) == 0 {
+func expandGcpInterconnectCustomerGateways(d []interface{}) ([]alkira.ConnectorGcpInterconnectCustomerGateway, error) {
+	if d == nil || len(d) == 0 {
 		log.Printf("[ERROR] invalid GCP interconnect customer gateway input")
 		return nil, errors.New("[ERROR] invalid GCP interconnect customer gateway input")
 	}
-	customerGateways := make([]alkira.ConnectorGcpInterconnectCustomerGateway, len(cg))
-	for i, c := range cg {
+	customerGateways := make([]alkira.ConnectorGcpInterconnectCustomerGateway, len(d))
+	for i, c := range d {
 		cfgCustomerGateway := c.(map[string]interface{})
 		newCustomerGateway := alkira.ConnectorGcpInterconnectCustomerGateway{}
 		if v, ok := cfgCustomerGateway["loopback_ip"].(string); ok {
@@ -28,14 +28,14 @@ func expandGcpInterconnectCustomerGateways(cg []interface{}) ([]alkira.Connector
 	return customerGateways, nil
 }
 
-func expandGcpInterconnectSegmentOptions(sO []interface{}, m interface{}) ([]alkira.ConnectorGcpInterconnectSegmentOption, error) {
-	if sO == nil || len(sO) == 0 {
+func expandGcpInterconnectSegmentOptions(d []interface{}, m interface{}) ([]alkira.ConnectorGcpInterconnectSegmentOption, error) {
+	if d == nil || len(d) == 0 {
 		log.Printf("[ERROR] invalid GCP interconnect segment option input")
 		return nil, errors.New("[ERROR] invalid GCP interconnect segment option input")
 	}
 
-	segmentOptions := make([]alkira.ConnectorGcpInterconnectSegmentOption, len(sO))
-	for i, s := range sO {
+	segmentOptions := make([]alkira.ConnectorGcpInterconnectSegmentOption, len(d))
+	for i, s := range d {
 		cfgSegmentOption := s.(map[string]interface{})
 		newSegmentOption := alkira.ConnectorGcpInterconnectSegmentOption{}
 		if v, ok := cfgSegmentOption["segment_id"].(string); ok {
@@ -48,8 +48,8 @@ func expandGcpInterconnectSegmentOptions(sO []interface{}, m interface{}) ([]alk
 		if v, ok := cfgSegmentOption["advertise_on_prem_routes"].(bool); ok {
 			newSegmentOption.AdvertiseOnPremRoutes = v
 		}
-		if v, ok := cfgSegmentOption["advertise_default_routes"].(bool); ok {
-			// advertise_default_routes is negation of disable_internet_exit
+		if v, ok := cfgSegmentOption["advertise_default_route"].(bool); ok {
+			// advertise_default_route is negation of disable_internet_exit
 			newSegmentOption.DisableInternetExit = !v
 		}
 
@@ -101,8 +101,8 @@ func expandGcpInterconnectInstances(in []interface{}, m interface{}) ([]alkira.C
 		if v, ok := cfgInstance["vni_id"].(int); ok {
 			newInstance.Vni = v
 		}
-		if sO, ok := cfgInstance["segment_options"].([]interface{}); ok {
-			segmentOptions, err := expandGcpInterconnectSegmentOptions(sO, m)
+		if v, ok := cfgInstance["segment_options"].([]interface{}); ok {
+			segmentOptions, err := expandGcpInterconnectSegmentOptions(v, m)
 			if err != nil {
 				return nil, err
 			}
@@ -114,8 +114,9 @@ func expandGcpInterconnectInstances(in []interface{}, m interface{}) ([]alkira.C
 	return instances, nil
 }
 
-func setGcpInterconnectSegmentOptions(sO []alkira.ConnectorGcpInterconnectSegmentOption, m interface{}) ([]map[string]interface{}, error) {
+func setGcpInterconnectSegmentOptions(instance alkira.ConnectorGcpInterconnectInstance, m interface{}) ([]map[string]interface{}, error) {
 	var segmentOptions []map[string]interface{}
+	sO := instance.SegmentOptions
 
 	// loop over the segment options
 	for _, aSegmentOption := range sO {
@@ -138,7 +139,7 @@ func setGcpInterconnectSegmentOptions(sO []alkira.ConnectorGcpInterconnectSegmen
 		segmentOption := map[string]interface{}{
 			"segment_id":               segmentId,
 			"advertise_on_prem_routes": aSegmentOption.AdvertiseOnPremRoutes,
-			"advertise_default_routes": !aSegmentOption.DisableInternetExit,
+			"advertise_default_route":  !aSegmentOption.DisableInternetExit,
 			"customer_gateways":        customerGateways,
 		}
 		segmentOptions = append(segmentOptions, segmentOption)
@@ -154,7 +155,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 			if configInstance["id"].(int) == aInstance.Id ||
 				configInstance["name"].(string) == aInstance.Name {
 				log.Printf("[DEBUG] instance found [%v]", aInstance.Name)
-				instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance.SegmentOptions, m)
+				instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance, m)
 				if err != nil {
 					log.Printf("[ERROR] error setting segment options")
 					return
@@ -186,7 +187,7 @@ func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.Connec
 		}
 
 		if new {
-			instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance.SegmentOptions, m)
+			instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance, m)
 			if err != nil {
 				log.Printf("[DEBUG] error setting segment options")
 				return

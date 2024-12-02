@@ -129,7 +129,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 										Optional:    true,
 										Type:        schema.TypeBool,
 									},
-									"advertise_default_routes": {
+									"advertise_default_route": {
 										Description: "Enable or disable access " +
 											"to the internet when traffic " +
 											"arrives via this connector. " +
