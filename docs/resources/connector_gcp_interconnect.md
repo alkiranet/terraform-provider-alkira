@@ -27,14 +27,13 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect" {
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
     bgp_auth_key             = "key"
-  }
-  segment_options {
-    segment_id               = alkira_segment.segment1.id
-    instance_name            = "instance1"
-    advertise_on_prem_routes = true
-    disable_internet_exit    = false
-    customer_gateways {
-      tunnel_count = 2
+    segment_options {
+      segment_id               = alkira_segment.segment1.id
+      advertise_on_prem_routes = true
+      advertise_default_route = false
+      customer_gateways {
+        tunnel_count = 2
+      }
     }
   }
 }
@@ -56,6 +55,14 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
     bgp_auth_key             = "key"
+    segment_options {
+      segment_id               = alkira_segment.segment1.id
+      advertise_on_prem_routes = true
+      advertise_default_route = false
+      customer_gateways {
+        tunnel_count = 2
+      }
+    }
   }
 
   instances {
@@ -63,17 +70,13 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_1" {
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56010
     bgp_auth_key             = "key_2"
-  }
-  segment_options {
-    segment_id               = alkira_segment.segment1.id
-    instance_name            = "instance1"
-    advertise_on_prem_routes = true
-    disable_internet_exit    = false
-    customer_gateways {
-      tunnel_count = 2
-    }
-    customer_gateways {
-      tunnel_count = 1
+    segment_options {
+      segment_id               = alkira_segment.segment1.id
+      advertise_on_prem_routes = true
+      advertise_default_route = false
+      customer_gateways {
+        tunnel_count = 2
+      }
     }
   }
 }
@@ -94,27 +97,21 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
     edge_availability_domain = "AVAILABILITY_DOMAIN_1"
     customer_asn             = 56009
     bgp_auth_key             = "key"
-  }
-
-  segment_options {
-    segment_id               = alkira_segment.segment1.id
-    instance_name            = "instance1"
-    advertise_on_prem_routes = true
-    disable_internet_exit    = false
-    customer_gateways {
-      tunnel_count = 2
+    segment_options {
+      segment_id               = alkira_segment.segment1.id
+      advertise_on_prem_routes = true
+      advertise_default_route = false
+      customer_gateways {
+        tunnel_count = 2
+      }
     }
-    customer_gateways {
-      tunnel_count = 1
-    }
-  }
-  segment_options {
-    segment_id               = alkira_segment.segment2.id
-    instance_name            = "instance1"
-    advertise_on_prem_routes = true
-    disable_internet_exit    = false
-    customer_gateways {
-      tunnel_count = 2
+    segment_options {
+      segment_id               = alkira_segment.segment2.id
+      advertise_on_prem_routes = true
+      advertise_default_route = false
+      customer_gateways {
+        tunnel_count = 2
+      }
     }
   }
 }
@@ -129,7 +126,6 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 - `instances` (Block List, Min: 1) A list of instances of the Interconnect (see [below for nested schema](#nestedblock--instances))
 - `loopback_prefixes` (Set of String) A list of prefixes that should be associated with the connector. Eg :["10.30.0.0/24"]
 - `name` (String) The name of the connector.
-- `segment_options` (Block List, Min: 1) Options for each segment associated with the instance. (see [below for nested schema](#nestedblock--segment_options))
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.
 - `tunnel_protocol` (String) The tunnel protocol used by the connector.Can be one of `GRE`, `IPSEC`, `VXLAN`, `VXLAN_GPE`.
 
@@ -154,6 +150,7 @@ Required:
 - `customer_asn` (Number) The customer ASN.
 - `edge_availability_domain` (String) The Availability Domain of the instance.Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.
 - `name` (String) The name of the instance.
+- `segment_options` (Block List, Min: 1) Options for each segment associated with the instance. (see [below for nested schema](#nestedblock--instances--segment_options))
 
 Optional:
 
@@ -165,23 +162,21 @@ Read-Only:
 
 - `id` (Number) The ID of the instance.
 
-
-<a id="nestedblock--segment_options"></a>
-### Nested Schema for `segment_options`
+<a id="nestedblock--instances--segment_options"></a>
+### Nested Schema for `instances.segment_options`
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) The customer gateway associated with the segment. (see [below for nested schema](#nestedblock--segment_options--customer_gateways))
-- `instance_name` (String) The name of the instance.
+- `customer_gateways` (Block List, Min: 1) The customer gateway associated with the segment. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
 - `segment_id` (String) The ID of the segment.
 
 Optional:
 
+- `advertise_default_route` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default value is `true`.
 - `advertise_on_prem_routes` (Boolean) Advertise on-prem routes. Default is `false`.
-- `disable_internet_exit` (Boolean) Disable access to the internet. Default is `false`.
 
-<a id="nestedblock--segment_options--customer_gateways"></a>
-### Nested Schema for `segment_options.customer_gateways`
+<a id="nestedblock--instances--segment_options--customer_gateways"></a>
+### Nested Schema for `instances.segment_options.customer_gateways`
 
 Required:
 
