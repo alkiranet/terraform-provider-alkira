@@ -266,7 +266,8 @@ func resourceConnectorGcpInterconnectRead(ctx context.Context, d *schema.Resourc
 	d.Set("loopback_prefixes", connector.LoopbackPrefixes)
 	d.Set("enabled", connector.Enabled)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
-	setGcpInterconnectInstance(d, connector, m)
+	instances := setGcpInterconnectInstance(d, connector.Instances, m)
+	d.Set("instances", instances)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {

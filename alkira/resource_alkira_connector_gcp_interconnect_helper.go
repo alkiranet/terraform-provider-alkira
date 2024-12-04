@@ -147,67 +147,29 @@ func setGcpInterconnectSegmentOptions(instance alkira.ConnectorGcpInterconnectIn
 	return segmentOptions, nil
 }
 
-func setGcpInterconnectInstance(d *schema.ResourceData, connector *alkira.ConnectorGcpInterconnect, m interface{}) {
+func setGcpInterconnectInstance(d *schema.ResourceData, ins []alkira.ConnectorGcpInterconnectInstance, m interface{}) []map[string]interface{} {
 	var instances []map[string]interface{}
-	for _, cInstance := range d.Get("instances").([]interface{}) {
-		configInstance := cInstance.(map[string]interface{})
-		for _, aInstance := range connector.Instances {
-			if configInstance["id"].(int) == aInstance.Id ||
-				configInstance["name"].(string) == aInstance.Name {
-				log.Printf("[DEBUG] instance found [%v]", aInstance.Name)
-				instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance, m)
-				if err != nil {
-					log.Printf("[ERROR] error setting segment options")
-					return
-				}
-				instance := map[string]interface{}{
-					"id":                       aInstance.Id,
-					"name":                     aInstance.Name,
-					"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
-					"customer_asn":             aInstance.CustomerAsn,
-					"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
-					"gateway_mac_address":      aInstance.GatewayMacAddress,
-					"vni_id":                   aInstance.Vni,
-					"segment_options":          instanceSegmentOptions,
-				}
-				instances = append(instances, instance)
-
-			}
+	for _, in := range ins {
+		instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(in, m)
+		if err != nil {
+			log.Printf("[ERROR] error setting segment options")
+			return nil
 		}
+		instance := map[string]interface{}{
+			"id":                       in.Id,
+			"name":                     in.Name,
+			"edge_availability_domain": in.GcpEdgeAvailabilityDomain,
+			"customer_asn":             in.CustomerAsn,
+			"bgp_auth_key":             in.BgpAuthKeyAlkira,
+			"gateway_mac_address":      in.GatewayMacAddress,
+			"vni_id":                   in.Vni,
+			"segment_options":          instanceSegmentOptions,
+		}
+		instances = append(instances, instance)
+
 	}
+	return instances
 
-	for _, aInstance := range connector.Instances {
-		new := true
-		for _, cInstance := range d.Get("instances").([]interface{}) {
-			instanceConfig := cInstance.(map[string]interface{})
-			if instanceConfig["id"].(int) == aInstance.Id ||
-				instanceConfig["name"].(string) == aInstance.Name {
-				new = false
-			}
-		}
-
-		if new {
-			instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(aInstance, m)
-			if err != nil {
-				log.Printf("[DEBUG] error setting segment options")
-				return
-			}
-
-			i := map[string]interface{}{
-				"id":                       aInstance.Id,
-				"name":                     aInstance.Name,
-				"edge_availability_domain": aInstance.GcpEdgeAvailabilityDomain,
-				"customer_asn":             aInstance.CustomerAsn,
-				"bgp_auth_key":             aInstance.BgpAuthKeyAlkira,
-				"gateway_mac_address":      aInstance.GatewayMacAddress,
-				"vni_id":                   aInstance.Vni,
-				"segment_options":          instanceSegmentOptions,
-			}
-			instances = append(instances, i)
-
-		}
-	}
-	d.Set("instances", instances)
 }
 
 func generateGcpInterconnectRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpInterconnect, error) {
