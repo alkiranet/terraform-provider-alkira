@@ -62,10 +62,11 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
-				Description: "A list of associated service types.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Tag of associated service types." +
+					"Can be one of `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -195,7 +196,7 @@ func generateListGlobalCidrRequest(d *schema.ResourceData, m interface{}) *alkir
 		Description: d.Get("description").(string),
 		CXP:         d.Get("cxp").(string),
 		Values:      convertTypeListToStringList(d.Get("values").([]interface{})),
-		Tags:        convertTypeListToStringList(d.Get("tags").([]interface{})),
+		Tags:        convertTypeSetToStringList(d.Get("tags").(*schema.Set)),
 	}
 
 	return request
