@@ -241,7 +241,6 @@ func resourceF5LoadBalancerCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(string(response.Id))
-	d.Set("instances", setF5Instances(d, response.Instances))
 
 	if client.Provision {
 		d.Set("provision_state", provState)
@@ -281,7 +280,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
 
-	segmentOptions, err := deflateF5SegmentOptions(lb.SegmentOptions, m)
+	segmentOptions, err := setF5SegmentOptions(lb.SegmentOptions, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
