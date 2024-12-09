@@ -9,12 +9,14 @@ description: |-
 
 {{ .Description | trimspace }}
 
-`license_type` = `BRING_YOUR_OWN`
+User can use `license_type` = `BRING_YOUR_OWN`
 {{ tffile "examples/resources/alkira_service_f5_lb/resource.tf" }}
-
-`license_type` = `PAY_AS_YOU_GO`
-{{ tffile "examples/resources/alkira_service_f5_lb/resource.tf" }}
-
+or `license_type` = `PAY_AS_YOU_GO`
+{{ tffile "examples/resources/alkira_service_f5_lb/resource3.tf" }} 
+ User can add multiple `instances` 
+ {{tffile "examples/resources/alkira_service_f5_lb/resource1.tf"}}
+ User can also add configure multiple segments with `segment_options`
+ {{tffile "examples/resources/alkira_service_f5_lb/resource2.tf"}}
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import
