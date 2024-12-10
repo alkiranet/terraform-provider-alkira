@@ -33,20 +33,8 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"billing_tag_ids": {
-				Description: "Billing tags to be associated with " +
-					"the resource. (see resource `alkira_billing_tag`).",
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"byoip_id": {
-				Description: "ID of the BYOIP to be associated with the connector.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-			},
-			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
+			"name": {
+				Description: "The name of the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -61,36 +49,59 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"segment_id": {
+				Description: "ID of segment associated with the connector.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"cxp": {
+				Description: "The CXP where the connector should be " +
+					"provisioned.",
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"group": {
 				Description: "The group of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of implicit group automaticaly created with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
-			"name": {
-				Description: "The name of the connector.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"provision_state": {
-				Description: "The provision state of the connector.",
-				Type:        schema.TypeString,
-				Computed:    true,
+			"egress_ips": {
+				Description: "The types of egress IPs to use with the connector. " +
+					"Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. If `BYOIP` " +
+					"is one of the options provided `byoip_id` must also be set.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
+				},
 			},
 			"public_ip_number": {
-				Description: "The number of the public IPs to the connector. Default is `2`.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     2,
+				Description: "The number of the public IPs to the connector. " +
+					"Default is `2`.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  2,
 			},
-			"segment_id": {
-				Description: "ID of segment associated with the connector.",
-				Type:        schema.TypeString,
-				Required:    true,
+			"byoip_id": {
+				Description: "ID of the BYOIP to be associated with the " +
+					"connector.",
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"byoip_public_ips": {
+				Description: "Public IPs in BYOIP to be used to access the " +
+					"connector. The number of public IPs must be equal to " +
+					"`public_ip_number`.",
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 			"traffic_distribution_algorithm": {
 				Description: "The type of the algorithm to be used for traffic distribution." +
@@ -108,16 +119,17 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 				Default:      "DEFAULT",
 				ValidateFunc: validation.StringInSlice([]string{"DEFAULT", "SRC_IP"}, false),
 			},
-			"egress_ips": {
-				Description: "The types of egress IPs to use with the connector. " +
-					"Current options are `ALKIRA_PUBLIC_IP` or `BYOIP`. If `BYOIP` " +
-					"is one of the options provided `byoip_id` must also be set.",
-				Type:     schema.TypeList,
+			"billing_tag_ids": {
+				Description: "Billing tags to be associated with " +
+					"the resource. (see resource `alkira_billing_tag`).",
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"ALKIRA_PUBLIC_IP", "BYOIP"}, false),
-				},
+			},
+			"provision_state": {
+				Description: "The provision state of the connector.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -178,6 +190,7 @@ func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("byoip_id", connector.ByoipId)
+	d.Set("byoip_public_ips", connector.PublicIps)
 	d.Set("cxp", connector.CXP)
 	d.Set("description", connector.Description)
 	d.Set("enabled", connector.Enabled)
@@ -302,6 +315,7 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 		Description:         d.Get("description").(string),
 		Group:               d.Get("group").(string),
 		Enabled:             d.Get("enabled").(bool),
+		PublicIps:           convertTypeSetToStringList(d.Get("byoip_public_ips").(*schema.Set)),
 		Name:                d.Get("name").(string),
 		NumOfPublicIPs:      d.Get("public_ip_number").(int),
 		Segments:            []string{segmentName},
