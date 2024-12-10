@@ -122,6 +122,7 @@ resource "alkira_service_f5_lb" "example_lb" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `provision_state` (String) The provisioning state of the resource.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
