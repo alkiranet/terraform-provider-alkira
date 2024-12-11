@@ -40,6 +40,9 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 					regCredId := rawRegCredId.(string)
 					if regCredId == "" {
 						credentialName := instanceStruct.Name + "registration" + randomNameSuffix()
+						if len(instanceStruct.Name) > 255 {
+							credentialName = instanceStruct.Name[0:225] + "registration" + randomNameSuffix()
+						}
 						credentialF5Registration := alkira.CredentialF5InstanceRegistration{
 							RegistrationKey: tfInstance["f5_registration_key"].(string),
 						}
@@ -81,6 +84,9 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 
 			if credId == "" {
 				credentialName := instanceStruct.Name + "credential" + randomNameSuffix()
+				if len(instanceStruct.Name) > 255 {
+					credentialName = instanceStruct.Name[0:225] + "credential" + randomNameSuffix()
+				}
 				credentialF5Instance := alkira.CredentialF5Instance{
 					UserName: tfInstance["f5_username"].(string),
 					Password: tfInstance["f5_password"].(string),
