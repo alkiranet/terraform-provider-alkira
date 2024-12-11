@@ -169,9 +169,9 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 
 	for _, in := range ins {
 		// fetch the creds from the terraform state.
-		var f5Username string
-		var f5Password string
-		var f5RegistrationKey string
+		f5Username := ""
+		f5Password := ""
+		f5RegistrationKey := ""
 		for _, value := range d.Get("instance").([]interface{}) {
 			cfg := value.(map[string]interface{})
 			if cfg["id"].(int) == in.Id || cfg["name"].(string) == in.Name {
@@ -183,23 +183,16 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 		instance := map[string]interface{}{
 			"name":                       in.Name,
 			"id":                         in.Id,
-			"credential_id":              in.CredentialId,
-			"registration_credential_id": in.RegistrationCredentialId,
 			"license_type":               in.LicenseType,
+			"registration_credential_id": in.RegistrationCredentialId,
+			"credential_id":              in.CredentialId,
 			"version":                    in.Version,
-			"hostname_fqdn":              in.HostNameFqdn,
 			"deployment_option":          in.Deployment.Option,
 			"deployment_type":            in.Deployment.Type,
-		}
-
-		if f5RegistrationKey != "" {
-			instance["f5_registration_key"] = f5RegistrationKey
-		}
-		if f5Username != "" {
-			instance["f5_username"] = f5Username
-		}
-		if f5Password != "" {
-			instance["f5_password"] = f5Password
+			"hostname_fqdn":              in.HostNameFqdn,
+			"f5_registration_key":        f5RegistrationKey,
+			"f5_username":                f5Username,
+			"f5_password":                f5Password,
 		}
 
 		instances = append(instances, instance)
@@ -213,7 +206,7 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	instances, err := expandF5Instances(
-		d.Get("instances").([]interface{}), m)
+		d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

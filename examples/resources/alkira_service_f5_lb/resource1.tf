@@ -4,7 +4,7 @@ resource "alkira_service_f5_lb" "example_lb_1" {
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   prefix_list_id      = alkira_list_prefix_list.example_prefix_list.id
-  instances {
+  instance {
     deployment_type = "GOOD"
     hostname_fqdn   = "example_lb_1.hostname"
     license_type    = "PAY_AS_YOU_GO"
@@ -14,7 +14,7 @@ resource "alkira_service_f5_lb" "example_lb_1" {
     f5_username     = "admin"
 
   }
-  instances {
+  instance {
     deployment_type = "GOOD"
     hostname_fqdn   = "example_lb_1.hostname"
     license_type    = "PAY_AS_YOU_GO"

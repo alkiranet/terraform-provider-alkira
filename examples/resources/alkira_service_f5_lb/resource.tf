@@ -3,7 +3,7 @@ resource "alkira_service_f5_lb" "example_lb" {
   description         = "example_lb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
-  instances {
+  instance {
     deployment_type     = "ALL"
     hostname_fqdn       = "example_lb.hostname"
     license_type        = "BRING_YOUR_OWN"
