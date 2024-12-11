@@ -26,6 +26,7 @@ type ConnectorInternet struct {
 	Enabled             bool                 `json:"enabled"`
 	Id                  json.Number          `json:"id,omitempty"`              // response only
 	ImplicitGroupId     int                  `json:"implicitGroupId,omitempty"` // response only
+	PublicIps           []string             `json:"publicIps,omitempty"`
 	Name                string               `json:"name"`
 	NumOfPublicIPs      int                  `json:"numOfPublicIPs,omitempty"`
 	Segments            []string             `json:"segments"`
