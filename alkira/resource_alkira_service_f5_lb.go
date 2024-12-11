@@ -292,13 +292,12 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	segments := make([]string, len(lb.Segments))
 
 	for i, seg := range lb.Segments {
-		seg, err := getSegmentIdByName(seg, m)
+		segId, err := getSegmentIdByName(seg, m)
 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		// segId, _ := strconv.Atoi(seg)
-		segments[i] = seg
+		segments[i] = segId
 	}
 	d.Set("segment_ids", segments)
 
