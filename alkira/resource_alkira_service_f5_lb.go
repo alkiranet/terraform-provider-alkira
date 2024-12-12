@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -111,7 +110,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"instances": {
+			"instance": {
 				Description: "An array containing the properties for each F5 load" +
 					" balancer instance.",
 				Type:     schema.TypeList,
@@ -241,7 +240,6 @@ func resourceF5LoadBalancerCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(string(response.Id))
-	d.Set("instances", setF5Instances(d, response.Instances))
 
 	if client.Provision {
 		d.Set("provision_state", provState)
@@ -276,31 +274,30 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("description", lb.Description)
 	d.Set("cxp", lb.Cxp)
 	d.Set("size", lb.Size)
-	d.Set("instances", lb.Instances)
 	d.Set("billing_tag_ids", lb.BillingTags)
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
+	d.Set("service_group_name", lb.ServiceGroupName)
 
-	segmentOptions, err := deflateF5SegmentOptions(lb.SegmentOptions, m)
+	segmentOptions, err := setF5SegmentOptions(lb.SegmentOptions, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.Set("segment_options", segmentOptions)
 
-	instance := setF5Instances(d, lb.Instances)
-	d.Set("instances", instance)
+	instances := setF5Instances(d, lb.Instances)
+	d.Set("instance", instances)
 
 	// Set segments
-	segments := make([]int, len(lb.Segments))
+	segments := make([]string, len(lb.Segments))
 
-	for _, seg := range lb.Segments {
-		seg, err := getSegmentIdByName(seg, m)
+	for i, seg := range lb.Segments {
+		segId, err := getSegmentIdByName(seg, m)
 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		segId, _ := strconv.Atoi(seg)
-		segments = append(segments, segId)
+		segments[i] = segId
 	}
 	d.Set("segment_ids", segments)
 

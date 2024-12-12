@@ -40,6 +40,9 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 					regCredId := rawRegCredId.(string)
 					if regCredId == "" {
 						credentialName := instanceStruct.Name + "registration" + randomNameSuffix()
+						if len(instanceStruct.Name) > 255 {
+							credentialName = instanceStruct.Name[0:225] + "registration" + randomNameSuffix()
+						}
 						credentialF5Registration := alkira.CredentialF5InstanceRegistration{
 							RegistrationKey: tfInstance["f5_registration_key"].(string),
 						}
@@ -80,7 +83,10 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 			credId := rawCredId.(string)
 
 			if credId == "" {
-				credentialName := instanceStruct.Name + randomNameSuffix()
+				credentialName := instanceStruct.Name + "credential" + randomNameSuffix()
+				if len(instanceStruct.Name) > 255 {
+					credentialName = instanceStruct.Name[0:225] + "credential" + randomNameSuffix()
+				}
 				credentialF5Instance := alkira.CredentialF5Instance{
 					UserName: tfInstance["f5_username"].(string),
 					Password: tfInstance["f5_password"].(string),
@@ -135,7 +141,7 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 	return segmentOptions, nil
 }
 
-func deflateF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string]interface{}, error) {
+func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string]interface{}, error) {
 	if in == nil {
 		return nil, errors.New("[ERROR] Segment options is nil.")
 	}
@@ -163,59 +169,39 @@ func deflateF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[st
 	return segmentOptions, nil
 }
 
-func setF5Instances(d *schema.ResourceData, c []alkira.F5Instance) []map[string]interface{} {
+// Set `instance` block from the API response, except the creds.
+func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[string]interface{} {
 	var instances []map[string]interface{}
 
-	for _, instance := range d.Get("instances").([]interface{}) {
-		tfInstance := instance.(map[string]interface{})
-
-		for _, apiInstance := range c {
-			if tfInstance["id"].(int) == apiInstance.Id || tfInstance["name"].(string) == apiInstance.Name {
-				instanceStruct := map[string]interface{}{
-					"name":                       apiInstance.Name,
-					"id":                         apiInstance.Id,
-					"credential_id":              apiInstance.CredentialId,
-					"registration_credential_id": apiInstance.RegistrationCredentialId,
-					"license_type":               apiInstance.LicenseType,
-					"version":                    apiInstance.Version,
-					"hostname_fqdn":              apiInstance.HostNameFqdn,
-					"deployment_option":          apiInstance.Deployment.Option,
-					"deployment_type":            apiInstance.Deployment.Type,
-					"f5_username":                tfInstance["f5_username"].(string),
-					"f5_password":                tfInstance["f5_password"].(string),
-					"f5_registration_key":        tfInstance["f5_registration_key"].(string),
-				}
-				instances = append(instances, instanceStruct)
-				break
+	for _, in := range ins {
+		// fetch the creds from the terraform state.
+		f5Username := ""
+		f5Password := ""
+		f5RegistrationKey := ""
+		for _, value := range d.Get("instance").([]interface{}) {
+			cfg := value.(map[string]interface{})
+			if cfg["id"].(int) == in.Id || cfg["name"].(string) == in.Name {
+				f5Username = cfg["f5_username"].(string)
+				f5Password = cfg["f5_password"].(string)
+				f5RegistrationKey = cfg["f5_registration_key"].(string)
 			}
 		}
-	}
-
-	for _, apiInstance := range c {
-		new := true
-
-		for _, instance := range d.Get("instances").([]interface{}) {
-			configInstance := instance.(map[string]interface{})
-
-			if configInstance["id"].(int) == apiInstance.Id || configInstance["name"].(string) == apiInstance.Name {
-				new = false
-				break
-			}
-		}
-		if new {
-			instanceStruct := map[string]interface{}{
-				"credential_id":              apiInstance.CredentialId,
-				"registration_credential_id": apiInstance.RegistrationCredentialId,
-				"license_type":               apiInstance.LicenseType,
-				"version":                    apiInstance.Version,
-				"hostname_fqdn":              apiInstance.HostNameFqdn,
-				"deployment_option":          apiInstance.Deployment.Option,
-				"deployment_type":            apiInstance.Deployment.Type,
-			}
-			instances = append(instances, instanceStruct)
-			break
+		instance := map[string]interface{}{
+			"name":                       in.Name,
+			"id":                         in.Id,
+			"license_type":               in.LicenseType,
+			"registration_credential_id": in.RegistrationCredentialId,
+			"credential_id":              in.CredentialId,
+			"version":                    in.Version,
+			"deployment_option":          in.Deployment.Option,
+			"deployment_type":            in.Deployment.Type,
+			"hostname_fqdn":              in.HostNameFqdn,
+			"f5_registration_key":        f5RegistrationKey,
+			"f5_username":                f5Username,
+			"f5_password":                f5Password,
 		}
 
+		instances = append(instances, instance)
 	}
 	return instances
 }
@@ -226,7 +212,7 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	instances, err := expandF5Instances(
-		d.Get("instances").([]interface{}), m)
+		d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

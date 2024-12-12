@@ -1,4 +1,4 @@
-resource "alkira_service_f5_lb" "example_lb_1" {
+resource "alkira_service_f5_lb" "example_lb_4" {
   name                = "example_lb_1"
   description         = "example_lb_1 description."
   cxp                 = "US-WEST"
@@ -9,16 +9,6 @@ resource "alkira_service_f5_lb" "example_lb_1" {
     hostname_fqdn   = "example_lb_1.hostname"
     license_type    = "PAY_AS_YOU_GO"
     name            = "example_lb_1_instance_1"
-    version         = "17.1.1.1-0.0.2"
-    f5_password     = "passwordispassword"
-    f5_username     = "admin"
-
-  }
-  instance {
-    deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
-    license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_2"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"

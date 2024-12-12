@@ -8,5 +8,4 @@ resource "alkira_service_f5_vserver_endpoint" "example_vserver" {
   protocol                = "UDP"
   port_ranges             = ["-1"]
   snat                    = "AUTOMAP"
-
 }
