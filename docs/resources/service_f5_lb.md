@@ -41,16 +41,16 @@ resource "alkira_service_f5_lb" "example_lb" {
 or `license_type` = `PAY_AS_YOU_GO`
 ```terraform
 resource "alkira_service_f5_lb" "example_lb" {
-  name                = "example"
-  description         = "example description."
+  name                = "example-lb"
+  description         = "example-lb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example.hostname"
+    hostname_fqdn   = "examplelb.hostname"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example-instance-1"
+    name            = "example-lb-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -68,16 +68,16 @@ resource "alkira_service_f5_lb" "example_lb" {
  User can add multiple `instances` 
  ```terraform
 resource "alkira_service_f5_lb" "example_lb" {
-  name                = "example"
-  description         = "example description."
+  name                = "example-lb"
+  description         = "example-lb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example.hostname.1"
+    hostname_fqdn   = "examplelb.hostname.1"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example-instance-1"
+    name            = "example-lb-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -85,9 +85,9 @@ resource "alkira_service_f5_lb" "example_lb" {
   }
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example.hostname.2"
+    hostname_fqdn   = "examplelb.hostname.2"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example-instance-2"
+    name            = "example-lb-instance-2"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -105,16 +105,16 @@ resource "alkira_service_f5_lb" "example_lb" {
  User can also add configure multiple segments with `segment_options`
  ```terraform
 resource "alkira_service_f5_lb" "example_lb" {
-  name                = "example"
-  description         = "example description."
+  name                = "example-lb"
+  description         = "example-lb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example.hostname.1"
+    hostname_fqdn   = "examplelb.hostname.1"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example-instance-1"
+    name            = "example-lb-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -122,9 +122,9 @@ resource "alkira_service_f5_lb" "example_lb" {
   }
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example.hostname.2"
+    hostname_fqdn   = "examplelb.hostname.2"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example-instance-2"
+    name            = "example-lb-instance-2"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
