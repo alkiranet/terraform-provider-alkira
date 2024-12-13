@@ -12,20 +12,21 @@ F5 Load Balancer Service.
 User can use `license_type` = `BRING_YOUR_OWN`
 ```terraform
 resource "alkira_service_f5_lb" "example_lb" {
-  name                = "example_lb"
-  description         = "example_lb description."
+  name                = "example-lb"
+  description         = "example-lb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
+  prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
-    deployment_type     = "ALL"
-    hostname_fqdn       = "example_lb.hostname"
+    deployment_type     = "LTM_DNS"
+    hostname_fqdn       = "examplelb.hostname"
     license_type        = "BRING_YOUR_OWN"
-    name                = "example_lb_instance_1"
+    name                = "example-lb-instance_1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "ONE_BOOT_LOCATION"
+    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
-    f5_password         = "verysecretpassword"
+    f5_password         = "passwordispassword"
 
   }
   segment_ids = [alkira_segment.example_segment.id]
@@ -39,17 +40,17 @@ resource "alkira_service_f5_lb" "example_lb" {
 ```
 or `license_type` = `PAY_AS_YOU_GO`
 ```terraform
-resource "alkira_service_f5_lb" "example_lb_4" {
-  name                = "example_lb_1"
-  description         = "example_lb_1 description."
+resource "alkira_service_f5_lb" "example_lb" {
+  name                = "example"
+  description         = "example description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
-  prefix_list_id      = alkira_list_prefix_list.example_prefix_list.id
+  prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example.hostname"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_1"
+    name            = "example-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -60,23 +61,23 @@ resource "alkira_service_f5_lb" "example_lb_4" {
     elb_nic_count = 2
     segment_id    = alkira_segment.example_segment.id
   }
-  service_group_name = "example_service_group_1"
+  service_group_name = "example_service_group"
   size               = "2LARGE"
 }
 ``` 
  User can add multiple `instances` 
  ```terraform
-resource "alkira_service_f5_lb" "example_lb_1" {
-  name                = "example_lb_1"
-  description         = "example_lb_1 description."
+resource "alkira_service_f5_lb" "example_lb" {
+  name                = "example"
+  description         = "example description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
-  prefix_list_id      = alkira_list_prefix_list.example_prefix_list.id
+  prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example.hostname.1"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_1"
+    name            = "example-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -84,9 +85,9 @@ resource "alkira_service_f5_lb" "example_lb_1" {
   }
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example.hostname.2"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_2"
+    name            = "example-instance-2"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -97,23 +98,23 @@ resource "alkira_service_f5_lb" "example_lb_1" {
     elb_nic_count = 2
     segment_id    = alkira_segment.example_segment.id
   }
-  service_group_name = "example_service_group_1"
+  service_group_name = "example_service_group"
   size               = "2LARGE"
 }
 ```
  User can also add configure multiple segments with `segment_options`
  ```terraform
-resource "alkira_service_f5_lb" "example_lb_2" {
-  name                = "example_lb_1"
-  description         = "example_lb_2 description."
+resource "alkira_service_f5_lb" "example_lb" {
+  name                = "example"
+  description         = "example description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
-  prefix_list_id      = alkira_list_prefix_list.example_prefix_list.id
+  prefix_list_id      = alkira_policy_prefix_list.example_prefix_list.id
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example.hostname.1"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_1"
+    name            = "example-instance-1"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
@@ -121,24 +122,24 @@ resource "alkira_service_f5_lb" "example_lb_2" {
   }
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example.hostname.2"
     license_type    = "PAY_AS_YOU_GO"
-    name            = "example_lb_1_instance_2"
+    name            = "example-instance-2"
     version         = "17.1.1.1-0.0.2"
     f5_password     = "passwordispassword"
     f5_username     = "admin"
 
   }
-  segment_ids = [alkira_segment.example_segment.id]
+  segment_ids = [alkira_segment.example_segment_1.id, alkira_segment.example_segment_2.id]
   segment_options {
-    elb_nic_count = 2
-    segment_id    = alkira_segment.example_segment.id
+    elb_nic_count = 1
+    segment_id    = alkira_segment.example_segment_1.id
   }
   segment_options {
-    elb_nic_count = 2
-    segment_id    = alkira_segment_1.example_segment.id
+    elb_nic_count = 1
+    segment_id    = alkira_segment.example_segment_2.id
   }
-  service_group_name = "example_service_group_1"
+  service_group_name = "example_service_group"
   size               = "2LARGE"
 }
 ```
