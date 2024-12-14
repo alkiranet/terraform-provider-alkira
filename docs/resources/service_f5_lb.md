@@ -17,12 +17,12 @@ resource "alkira_service_f5_lb" "example_lb" {
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   instance {
-    deployment_type     = "ALL"
+    deployment_type     = "LTM_DNS"
     hostname_fqdn       = "example_lb.hostname"
     license_type        = "BRING_YOUR_OWN"
     name                = "example_lb_instance_1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "ONE_BOOT_LOCATION"
+    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"
@@ -84,7 +84,7 @@ resource "alkira_service_f5_lb" "example_lb_1" {
   }
   instance {
     deployment_type = "GOOD"
-    hostname_fqdn   = "example_lb_1.hostname"
+    hostname_fqdn   = "example_lb_2.hostname"
     license_type    = "PAY_AS_YOU_GO"
     name            = "example_lb_1_instance_2"
     version         = "17.1.1.1-0.0.2"
@@ -129,14 +129,14 @@ resource "alkira_service_f5_lb" "example_lb_2" {
     f5_username     = "admin"
 
   }
-  segment_ids = [alkira_segment.example_segment.id]
-  segment_options {
-    elb_nic_count = 2
-    segment_id    = alkira_segment.example_segment.id
-  }
+  segment_ids = [alkira_segment_1.example_segment.id, alkira_segment_2.example_segment.id]
   segment_options {
     elb_nic_count = 2
     segment_id    = alkira_segment_1.example_segment.id
+  }
+  segment_options {
+    elb_nic_count = 2
+    segment_id    = alkira_segment_2.example_segment.id
   }
   service_group_name = "example_service_group_1"
   size               = "2LARGE"
@@ -172,7 +172,7 @@ resource "alkira_service_f5_lb" "example_lb_2" {
 
 Required:
 
-- `deployment_type` (String) The deployment type used for the F5 load balancer instance. Can be one of `GOOD`, `BETTER`, `BEST`, `LTM_DNS` or `ALL`, deployment types `GOOD`, `BETTER` and `BEST` are only applicable to license_type `PAY_AS_YOU_GO` `LTM_DNS` and `ALL` are only applicable to license_type `BRING_YOUR_OWN`
+- `deployment_type` (String) The deployment type used for the F5 load balancer instance. Can be one of `GOOD` or `LTM_DNS`, deployment type `GOOD` is only applicable to license_type `PAY_AS_YOU_GO` `LTM_DNS` is only applicable to license_type `BRING_YOUR_OWN`
 - `hostname_fqdn` (String) The FQDN defined in route 53.
 - `license_type` (String) The type of license used for the F5 load balancer instance. Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`
 - `name` (String) Name of the F5 load balancer instance.
@@ -181,7 +181,7 @@ Required:
 Optional:
 
 - `credential_id` (String) ID of the F5 load balancer credential. If the `credential_id` is not passed, `f5_username` and `f5_password` is required to create new credentials.
-- `deployment_option` (String) The deployment option of the F5 LB instance, can be one of `ONE_BOOT_LOCATION` or `TWO_BOOT_LOCATION`. Only required when license_type is `BRING_YOUR_OWN`.
+- `deployment_option` (String) The deployment option of the F5 LB instance, is `TWO_BOOT_LOCATION`. Only required when license_type is `BRING_YOUR_OWN`.
 - `f5_password` (String, Sensitive) Password for the F5 load balancer. This can also be set by `ALKIRA_F5_PASSWORD` environment variable.
 - `f5_registration_key` (String, Sensitive) Registration key for the F5 load balancer. Only required if `license_type` is `BRING_YOUR_OWN`. This can also be set by `ALKIRA_F5_REGISTRATION_KEY` environment variable.
 - `f5_username` (String, Sensitive) Username for the F5 load balancer. Username is `admin` for AWS CXP and `akadmin`  for Azure CXP any other value will be rejected. This can also be set by `ALKIRA_F5_USERNAME` environment variable.
