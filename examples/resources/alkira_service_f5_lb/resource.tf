@@ -4,12 +4,12 @@ resource "alkira_service_f5_lb" "example_lb" {
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example_global_cidr.id
   instance {
-    deployment_type     = "ALL"
+    deployment_type     = "LTM_DNS"
     hostname_fqdn       = "example_lb.hostname"
     license_type        = "BRING_YOUR_OWN"
     name                = "example_lb_instance_1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "ONE_BOOT_LOCATION"
+    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"
