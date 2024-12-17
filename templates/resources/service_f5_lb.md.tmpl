@@ -9,9 +9,11 @@ description: |-
 
 {{ .Description | trimspace }}
 
-User can use `license_type` = `BRING_YOUR_OWN`
+F5 Load Balancer Service supports two `license_type`.
+
+`license_type`: `BRING_YOUR_OWN`
 {{ tffile "examples/resources/alkira_service_f5_lb/resource.tf" }}
-or `license_type` = `PAY_AS_YOU_GO`
+or `license_type`: `PAY_AS_YOU_GO`
 {{ tffile "examples/resources/alkira_service_f5_lb/resource3.tf" }} 
  User can add multiple `instances` 
  {{tffile "examples/resources/alkira_service_f5_lb/resource1.tf"}}

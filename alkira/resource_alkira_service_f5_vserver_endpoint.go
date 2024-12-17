@@ -33,7 +33,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "Name of F5 vServer Endpoint.",
+				Description: "Name of the F5 vServer Endpoint.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -44,17 +44,18 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"f5_service_instance_ids": {
-				Description: "An array of F5 service instance IDs",
-				Type:        schema.TypeSet,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "An array of F5 service instance IDs." +
+					" A maximum of 2 instances are allowed.",
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"type": {
 				Description: "The type of endpoint." +
-					"Can be one of `ELB`, `BOTH`.",
+					" Only `ELB` is supported for now.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ELB", "BOTH"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ELB"}, false),
 			},
 			"segment_id": {
 				Description: "ID of the segment associated with" +
@@ -69,10 +70,10 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"protocol": {
 				Description: "The portocol used for the endpoint." +
-					"Can be one of `TCP`, `UDP` or `ICMP`.",
+					" Can be one of `TCP` or `UDP`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
 			},
 			"port_ranges": {
 				Description: "An array of ports or port ranges." +
@@ -84,7 +85,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"snat": {
 				Description: "SNAT for the endpoint." +
-					"Can be one of `AUTOMAP`.",
+					" Only `AUTOMAP` is supported for now.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP"}, false),
