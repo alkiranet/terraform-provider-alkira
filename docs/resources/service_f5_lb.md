@@ -183,7 +183,6 @@ Required:
 Optional:
 
 - `credential_id` (String) ID of the F5 load balancer credential. If the `credential_id` is not passed, `f5_username` and `f5_password` is required to create new credentials.
-- `deployment_option` (String) The deployment option of the F5 LB instance, Only supports `TWO_BOOT_LOCATION` for now. Only required when license_type is `BRING_YOUR_OWN`.
 - `f5_password` (String, Sensitive) Password for the F5 load balancer. This can also be set by `ALKIRA_F5_PASSWORD` environment variable.
 - `f5_registration_key` (String, Sensitive) Registration key for the F5 load balancer. Only required if `license_type` is `BRING_YOUR_OWN`. This can also be set by `ALKIRA_F5_REGISTRATION_KEY` environment variable.
 - `f5_username` (String, Sensitive) Username for the F5 load balancer. Username is `admin` for AWS CXP and `akadmin`  for Azure CXP any other value will be rejected. This can also be set by `ALKIRA_F5_USERNAME` environment variable.

@@ -189,16 +189,17 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"deployment_option": {
-							Description: "The deployment option of the F5 LB instance," +
-								" Only supports `TWO_BOOT_LOCATION` for now." +
-								" Only required when license_type is `BRING_YOUR_OWN`.",
-							ValidateFunc: validation.StringInSlice(
-								[]string{"TWO_BOOT_LOCATION"},
-								false),
-							Type:     schema.TypeString,
-							Optional: true,
-						},
+						// "deployment_option": {
+						// 	Description: "The deployment option of the F5 LB instance," +
+						// 		" Only supports `TWO_BOOT_LOCATION` for now." +
+						// 		" Only required when license_type is `BRING_YOUR_OWN`.",
+						// 	ValidateFunc: validation.StringInSlice(
+						// 		[]string{"TWO_BOOT_LOCATION"},
+						// 		false),
+						// 	Type:     schema.TypeString,
+						// 	Optional: true,
+						// 	Default:  "TWO_BOOT_LOCATION",
+						// },
 						"deployment_type": {
 							Description: "The deployment type used for the F5 load balancer instance." +
 								" Can be one of `GOOD` or `LTM_DNS`. The `deployment_type`:" +

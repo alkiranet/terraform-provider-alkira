@@ -74,9 +74,6 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 		if deploymentType, ok := tfInstance["deployment_type"]; ok {
 			instanceDeployment.Type = deploymentType.(string)
 		}
-		if deploymentOption, ok := tfInstance["deployment_option"]; ok {
-			instanceDeployment.Option = deploymentOption.(string)
-		}
 		instanceStruct.Deployment = instanceDeployment
 
 		if rawCredId, ok := tfInstance["credential_id"]; ok {
@@ -193,7 +190,6 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 			"registration_credential_id": in.RegistrationCredentialId,
 			"credential_id":              in.CredentialId,
 			"version":                    in.Version,
-			"deployment_option":          in.Deployment.Option,
 			"deployment_type":            in.Deployment.Type,
 			"hostname_fqdn":              in.HostNameFqdn,
 			"f5_registration_key":        f5RegistrationKey,
