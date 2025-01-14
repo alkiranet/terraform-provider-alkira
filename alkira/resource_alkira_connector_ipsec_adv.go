@@ -71,8 +71,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			"destination_type": {
 				Description: "The destination type of the connector. The value " +
 					"could be `IPSEC_ENDPOINT`, `AWS_VPN_CONNECTION`, " +
-					"`AZURE_VPN_CONNECTION`. The default value is " +
-					"`IPSEC_ENDPOINT`.",
+					"`AZURE_VPN_CONNECTION`. The default value is `IPSEC_ENDPOINT`.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "IPSEC_ENDPOINT",
@@ -125,8 +124,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Default:  1,
 			},
 			"vpn_mode": &schema.Schema{
-				Description: "The VPN mode could be only set to " +
-					"`ROUTE_BASED` for now.",
+				Description: "The VPN mode could be only set to `ROUTE_BASED` " +
+					"for now.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "ROUTE_BASED",
@@ -144,9 +143,9 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 							Required:    true,
 						},
 						"customer_gateway_ip": {
-							Description: "The IP address of the customer " +
-								"gateway. This should be `0.0.0.0` to indicate " +
-								"that this is a dynamic gateway.",
+							Description: "The IP address of the customer gateway. " +
+								"This should be `0.0.0.0` to signify that this " +
+								"is a dynamic gateway.",
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -154,7 +153,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 							Description: "The value could be `ACTIVE` or" +
 								"`STANDBY`. A gateway in `STANDBY` mode " +
 								"will not be used for traffic unless all " +
-								"other gateways for the connector are down. " +
+								"other gateway for the connector are down. " +
 								"There can only be one gateway in `STANDBY` " +
 								"mode per connector and there must be at " +
 								"least one gateway that isn't in `STANDBY` " +
@@ -232,6 +231,64 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"dpd_delay": {
+													Description: "Interval to check the " +
+														"liveness of a peer.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"dpd_timeout": {
+													Description: "Timeouts to check the " +
+														"liveness of a peer. IKEv1 only.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"esp_rekey_time": {
+													Description: "IPsec SA rekey time in " +
+														"seconds.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"esp_life_time": {
+													Description: "Maximum IPsec ESP lifetime" +
+														"if the IPsec ESP does not rekey.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"esp_random_time": {
+													Description: "Time range from which to " +
+														"choose a random value to subtract " +
+														"from rekey times in seconds.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"esp_encryption_algorithms": {
+													Description: "Encryption algorithms to use for " +
+														"IPsec SA. Value could be `AES256CBC`, " +
+														"`AES192CBC`, `AES128CBC`, `AES256GCM16` " +
+														"`3DESCBC`, or `NULL`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
+												"esp_integrity_algorithms": {
+													Description: "Integrity algorithms to use for " +
+														"IPsec SA. Value could `SHA1`, `SHA256`, " +
+														"`SHA384`, `SHA512` or `MD5`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
+												"esp_dh_group_numbers": {
+													Description: "Diffie Hellman groups to use " +
+														"for IPsec SA. Value could `MODP1024`, " +
+														"`MODP2048`, `MODP3072`, `MODP4096`, " +
+														"`MODP6144`, `MODP8192`, `ECP256`, " +
+														"`ECP384`, `ECP521` and `CURVE25519`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
 												"initiator": {
 													Description: "When true CXP will initiate " +
 														"the IKE connection and if false then " +
@@ -249,6 +306,65 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 													ValidateFunc: validation.StringInSlice([]string{
 														"IKEv1", "IKEv2"}, false),
 												},
+												"ike_rekey_time": {
+													Description: "IKE tunnel rekey time.",
+													Type:        schema.TypeInt,
+													Required:    true,
+												},
+												"ike_over_time": {
+													Description: "Maximum IKE SA lifetime if " +
+														"the IKE SA does not rekey.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"ike_random_time": {
+													Description: "Time range from which to " +
+														"choose a random value to " +
+														"subtract from rekey times.",
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"ike_encryption_algorithms": {
+													Description: "Encryption algorithms to use " +
+														"for IKE SA, one of `AES256CBC`, `AES192CBC`," +
+														"`AES128CBC` and `3DESCBC`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
+												"ike_integrity_algorithms": {
+													Description: "Integrity algorithms to use " +
+														"for IKE SA, one of `SHA1`, `SHA256`, " +
+														"`SHA384`, `SHA512`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
+												"ike_dh_group_numbers": {
+													Description: "Diffie Hellman groups to use " +
+														"for IKE SA, one of `MODP1024`, " +
+														"`MODP2048`, `MODP3072`, `MODP4096`, " +
+														"`MODP6144`, `MODP8192`, `ECP256`, " +
+														"`ECP384`, `ECP521`, `CURVE25519`.",
+													Type:     schema.TypeList,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Required: true,
+												},
+												"local_auth_type": {
+													Description: "Local-ID type - IKE identity " +
+														"to use for authentication round, one " +
+														"of `FQDN`, `USER_FQDN`, `KEYID`, " +
+														"`IP_ADDR`.",
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"FQDN", "USER_FQDN", "KEYID", "IP_ADDR"}, false),
+												},
+												"local_auth_value": {
+													Description: "Local-ID value.",
+													Type:        schema.TypeString,
+													Required:    true,
+												},
 												"remote_auth_type": {
 													Description: "Remote-ID type - IKE " +
 														"identity to use for authentication " +
@@ -263,6 +379,12 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 													Description: "Remote-ID value.",
 													Type:        schema.TypeString,
 													Required:    true,
+												},
+												"replay_window_size": {
+													Description: "IPsec replay window for the " +
+														"IPsec SA.",
+													Type:     schema.TypeInt,
+													Required: true,
 												},
 											},
 										},
