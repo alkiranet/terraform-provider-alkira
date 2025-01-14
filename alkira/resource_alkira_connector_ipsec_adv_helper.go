@@ -434,40 +434,56 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 		return nil
 	}
 
-	advancedConfig := make(map[string]interface{})
+	var tunnel map[string]interface{}
 
-	advancedConfig["dpd_delay"] = tunnelConfig.Advanced.DPDDelay
-	advancedConfig["dpd_timeout"] = tunnelConfig.Advanced.DPDTimeout
-	advancedConfig["esp_dh_group_numbers"] = tunnelConfig.Advanced.EspDHGroupNumbers
-	advancedConfig["esp_encryption_algorithms"] = tunnelConfig.Advanced.EspEncryptionAlgorithms
-	advancedConfig["esp_integrity_algorithms"] = tunnelConfig.Advanced.EspIntegrityAlgorithms
-	advancedConfig["esp_life_time"] = tunnelConfig.Advanced.EspLifeTime
-	advancedConfig["esp_random_time"] = tunnelConfig.Advanced.EspRandomTime
-	advancedConfig["esp_rekey_time"] = tunnelConfig.Advanced.EspRekeyTime
-	advancedConfig["ike_dh_group_numbers"] = tunnelConfig.Advanced.IkeDHGroupNumbers
-	advancedConfig["ike_encryption_algorithms"] = tunnelConfig.Advanced.IkeEncryptionAlgorithms
-	advancedConfig["ike_integrity_algorithms"] = tunnelConfig.Advanced.IkeIntegrityAlgorithms
-	advancedConfig["ike_over_time"] = tunnelConfig.Advanced.IkeOverTime
-	advancedConfig["ike_random_time"] = tunnelConfig.Advanced.IkeRandomTime
-	advancedConfig["ike_rekey_time"] = tunnelConfig.Advanced.IkeRekeyTime
-	advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
-	advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
-	advancedConfig["local_auth_type"] = tunnelConfig.Advanced.LocalAuthType
-	advancedConfig["local_auth_value"] = tunnelConfig.Advanced.LocalAuthValue
-	advancedConfig["remote_auth_type"] = tunnelConfig.Advanced.RemoteAuthType
-	advancedConfig["remote_auth_value"] = tunnelConfig.Advanced.RemoteAuthValue
-	advancedConfig["replay_window_size"] = tunnelConfig.Advanced.ReplayWindowSize
+	// If advanced_option is not there, don't set it
+	if tunnelConfig.Advanced != nil {
+		advancedConfig := make(map[string]interface{})
 
-	tunnel = map[string]interface{}{
-		"number":                                 tunnelConfig.TunnelNo,
-		"preshared_key":                          tunnelConfig.PresharedKey,
-		"profile_id":                             tunnelConfig.ProfileId,
-		"id":                                     tunnelConfig.Id,
-		"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
-		"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
-		"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
-		"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
-		"advanced_options":                       []interface{}{advancedConfig},
+		advancedConfig["dpd_delay"] = tunnelConfig.Advanced.DPDDelay
+		advancedConfig["dpd_timeout"] = tunnelConfig.Advanced.DPDTimeout
+		advancedConfig["esp_dh_group_numbers"] = tunnelConfig.Advanced.EspDHGroupNumbers
+		advancedConfig["esp_encryption_algorithms"] = tunnelConfig.Advanced.EspEncryptionAlgorithms
+		advancedConfig["esp_integrity_algorithms"] = tunnelConfig.Advanced.EspIntegrityAlgorithms
+		advancedConfig["esp_life_time"] = tunnelConfig.Advanced.EspLifeTime
+		advancedConfig["esp_random_time"] = tunnelConfig.Advanced.EspRandomTime
+		advancedConfig["esp_rekey_time"] = tunnelConfig.Advanced.EspRekeyTime
+		advancedConfig["ike_dh_group_numbers"] = tunnelConfig.Advanced.IkeDHGroupNumbers
+		advancedConfig["ike_encryption_algorithms"] = tunnelConfig.Advanced.IkeEncryptionAlgorithms
+		advancedConfig["ike_integrity_algorithms"] = tunnelConfig.Advanced.IkeIntegrityAlgorithms
+		advancedConfig["ike_over_time"] = tunnelConfig.Advanced.IkeOverTime
+		advancedConfig["ike_random_time"] = tunnelConfig.Advanced.IkeRandomTime
+		advancedConfig["ike_rekey_time"] = tunnelConfig.Advanced.IkeRekeyTime
+		advancedConfig["ike_version"] = tunnelConfig.Advanced.IkeVersion
+		advancedConfig["initiator"] = tunnelConfig.Advanced.Initiator
+		advancedConfig["local_auth_type"] = tunnelConfig.Advanced.LocalAuthType
+		advancedConfig["local_auth_value"] = tunnelConfig.Advanced.LocalAuthValue
+		advancedConfig["remote_auth_type"] = tunnelConfig.Advanced.RemoteAuthType
+		advancedConfig["remote_auth_value"] = tunnelConfig.Advanced.RemoteAuthValue
+		advancedConfig["replay_window_size"] = tunnelConfig.Advanced.ReplayWindowSize
+
+		tunnel = map[string]interface{}{
+			"number":                                 tunnelConfig.TunnelNo,
+			"preshared_key":                          tunnelConfig.PresharedKey,
+			"profile_id":                             tunnelConfig.ProfileId,
+			"id":                                     tunnelConfig.Id,
+			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
+			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
+			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
+			"advanced_options":                       []interface{}{advancedConfig},
+		}
+	} else {
+		tunnel = map[string]interface{}{
+			"number":                                 tunnelConfig.TunnelNo,
+			"preshared_key":                          tunnelConfig.PresharedKey,
+			"profile_id":                             tunnelConfig.ProfileId,
+			"id":                                     tunnelConfig.Id,
+			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
+			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
+			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
+		}
 	}
 
 	return tunnel

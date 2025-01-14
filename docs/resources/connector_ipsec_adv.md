@@ -94,13 +94,13 @@ resource "alkira_connector_ipsec_adv" "test" {
 
 Required:
 
-- `customer_gateway_ip` (String) The IP address of the customer gateway. This should be `0.0.0.0` to signify that this is a dynamic gateway.
+- `customer_gateway_ip` (String) The IP address of the customer gateway. This should be `0.0.0.0` to indicate that this is a dynamic gateway.
 - `name` (String) The name of the endpoint.
 - `tunnel` (Block List, Min: 1) Tunnel of the gateway. The number of the tunnels should be equal to `tunnel_per_gateway`. (see [below for nested schema](#nestedblock--gateway--tunnel))
 
 Optional:
 
-- `ha_mode` (String) The value could be `ACTIVE` or`STANDBY`. A gateway in `STANDBY` mode will not be used for traffic unless all other gateway for the connector are down. There can only be one gateway in `STANDBY` mode per connector and there must be at least one gateway that isn't in `STANDBY` mode per connector.
+- `ha_mode` (String) The value could be `ACTIVE` or`STANDBY`. A gateway in `STANDBY` mode will not be used for traffic unless all other gateways for the connector are down. There can only be one gateway in `STANDBY` mode per connector and there must be at least one gateway that isn't in `STANDBY` mode per connector.
 
 Read-Only:
 
@@ -114,13 +114,12 @@ Required:
 - `customer_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the customer end of the tunnel.
 - `cxp_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the CXP end of the tunnel.
 - `cxp_end_public_ip_reservation_id` (String) The public IP reservation ID of the CXP end of the tunnel.
-- `preshared_key` (String) The preshared key of the tunnel
+- `preshared_key` (String) The pre-shared key of the tunnel.
 
 Optional:
 
 - `advanced_options` (Block List, Max: 1) Advanced options for the IPSec gateway. (see [below for nested schema](#nestedblock--gateway--tunnel--advanced_options))
-- `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel.
-- `profile_id` (Number) The profile ID of the tunnel.
+- `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`). `advanced_options` block is required when this is used.
 
 Read-Only:
 

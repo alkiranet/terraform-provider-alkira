@@ -71,7 +71,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			"destination_type": {
 				Description: "The destination type of the connector. The value " +
 					"could be `IPSEC_ENDPOINT`, `AWS_VPN_CONNECTION`, " +
-					"`AZURE_VPN_CONNECTION`. The default value is `IPSEC_ENDPOINT`.",
+					"`AZURE_VPN_CONNECTION`. The default value is " +
+					"`IPSEC_ENDPOINT`.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "IPSEC_ENDPOINT",
@@ -124,8 +125,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Default:  1,
 			},
 			"vpn_mode": &schema.Schema{
-				Description: "The VPN mode could be only set to `ROUTE_BASED` " +
-					"for now.",
+				Description: "The VPN mode could be only set to " +
+					"`ROUTE_BASED` for now.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "ROUTE_BASED",
@@ -143,9 +144,9 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 							Required:    true,
 						},
 						"customer_gateway_ip": {
-							Description: "The IP address of the customer gateway. " +
-								"This should be `0.0.0.0` to signify that this " +
-								"is a dynamic gateway.",
+							Description: "The IP address of the customer " +
+								"gateway. This should be `0.0.0.0` to indicate " +
+								"that this is a dynamic gateway.",
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -153,7 +154,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 							Description: "The value could be `ACTIVE` or" +
 								"`STANDBY`. A gateway in `STANDBY` mode " +
 								"will not be used for traffic unless all " +
-								"other gateway for the connector are down. " +
+								"other gateways for the connector are down. " +
 								"There can only be one gateway in `STANDBY` " +
 								"mode per connector and there must be at " +
 								"least one gateway that isn't in `STANDBY` " +
