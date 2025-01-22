@@ -163,7 +163,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Optional: true,
 			},
 			"ilb_credential_id": {
-				Description: "AWS Credential ID of the ILB Target.  This can only be used if the associated connector is an AWS_VPC",
+				Description: "The credential ID of AWS account for `target` when `target`'s `type` is `ILB_NAME`.  This field can only be used when `connector_type` is `AWS_VPC`",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
