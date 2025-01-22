@@ -162,6 +162,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				},
 				Optional: true,
 			},
+			"ilb_credential_id": {
+				Description: "The credential ID of AWS account for `target` when `target`'s `type` is `ILB_NAME`.  This field can only be used when `connector_type` is `AWS_VPC`",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"target": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
@@ -256,6 +261,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("internet_protocol", app.InternetProtocol)
 	d.Set("public_ips", app.PublicIps)
 	d.Set("size", app.Size)
+	d.Set("ilb_credential_id", app.IlbCredentialId)
 
 	// Segment
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
@@ -400,6 +406,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		SnatIpv4Ranges:                pool,
 		Size:                          d.Get("size").(string),
 		Targets:                       targets,
+		IlbCredentialId:               d.Get("ilb_credential_id").(string),
 	}
 
 	return request, nil
