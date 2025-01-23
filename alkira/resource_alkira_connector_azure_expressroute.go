@@ -153,6 +153,77 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
+						"segment_options": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment_name": {
+										Description: "The name of an existing segment.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"customer_gateways": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Description: "Name of the customer gateway.",
+													Type:        schema.TypeString,
+													Required:    true,
+												},
+												"tunnels": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Description: "Name of the tunnel.",
+																Type:        schema.TypeString,
+																Required:    true,
+															},
+															"initiator": {
+																Description: "Whether this end initiates the tunnel.",
+																Type:        schema.TypeBool,
+																Optional:    true,
+															},
+															"profile_id": {
+																Description: "The profile ID for the tunnel.",
+																Type:        schema.TypeInt,
+																Optional:    true,
+															},
+															"ike_version": {
+																Description: "IKE protocol version.",
+																Type:        schema.TypeString,
+																Optional:    true,
+															},
+															"pre_shared_key": {
+																Description: "Pre-shared key for tunnel authentication.",
+																Type:        schema.TypeString,
+																Optional:    true,
+																Sensitive:   true,
+															},
+															"remote_auth_type": {
+																Description: "Remote authentication type.",
+																Type:        schema.TypeString,
+																Optional:    true,
+															},
+															"remote_auth_value": {
+																Description: "Remote authentication value.",
+																Type:        schema.TypeString,
+																Optional:    true,
+																Sensitive:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -200,13 +271,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 
 // resourceConnectorAzureExpressRouteCreate create an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 
 	request, err := generateConnectorAzureExpressRouteRequest(d, m)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -237,14 +306,12 @@ func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.Res
 
 // resourceConnectorAzureExpressRouteRead get and save an Azure ExpressRoute connectors
 func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 
 	// GET
 	connector, provState, err := api.GetById(d.Id())
-
 	if err != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -304,13 +371,11 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 
 // resourceConnectorAzureExpressRouteUpdate update an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 
 	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -339,7 +404,6 @@ func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
@@ -366,7 +430,6 @@ func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.Res
 
 // generateConnectorAzureExpressRouteRequest generate a request for Azure ExpressRoute connector
 func generateConnectorAzureExpressRouteRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureExpressRoute, error) {
-
 	billingTags := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
 	instances, err := expandAzureExpressRouteInstances(d.Get("instances").([]interface{}), m)
