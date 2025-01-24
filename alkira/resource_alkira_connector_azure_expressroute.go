@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage Azure ExpressRoute Connector. (**BETA**)",
+		Description: "Manages an Azure ExpressRoute Connector. This resource is in **BETA** and may require careful handling.",
 
 		CreateContext: resourceConnectorAzureExpressRouteCreate,
 		ReadContext:   resourceConnectorAzureExpressRouteRead,
@@ -36,7 +36,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the connector.",
+				Description: "The unique name of the Azure ExpressRoute connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -46,175 +46,172 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Optional:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`," +
-					" `2LARGE`, `5LARGE`, `10LARGE`.",
+				Description: "The size of the connector. Valid values are " +
+					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, or `10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"enabled": {
-				Description: "Is the connector enabled. Default is `true`.",
+				Description: "Whether the connector is enabled. Defaults to `true`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
 			},
 			"vhub_prefix": {
-				Description: "IP address prefix for VWAN Hub. This should be a `/23` prefix.",
+				Description: "The CIDR block (in `/23` notation) reserved for the Azure Virtual WAN Hub.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`",
+				Description: "The encapsulation protocol for the tunnels. Valid " +
+					"values are `VXLAN` or `VXLAN_GPE`. Defaults to `VXLAN_GPE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "VXLAN_GPE",
 				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE"}, false),
 			},
 			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
+				Description: "The Cloud Exchange Point (CXP) where the connector will be provisioned.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"group": {
-				Description: "The group of the connector.",
+				Description: "The organizational group to which this connector belongs within the Alkira platform.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"provision_state": {
-				Description: "The provision state of the connector.",
+				Description: "The current provisioning state of the connector, as reported by the Alkira platform.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"billing_tag_ids": {
-				Description: "Billing tags to be associated with " +
-					"the resource. (see resource `alkira_billing_tag`).",
+				Description: "A list of billing tag IDs to associate with this connector. Billing" +
+					" tags must be created using the `alkira_billing_tag` resource.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"instances": {
-				Type:     schema.TypeList,
-				Required: true,
+				Description: "Configuration for individual Azure ExpressRoute instances linked to this connector.",
+				Type:        schema.TypeList,
+				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "User provided connector instance name.",
+							Description: "A user-defined name for the connector instance.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Description: "The auto-generated ID of the connector instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 						"expressroute_circuit_id": {
-							Description: "ExpressRoute circuit ID from Azure. " +
-								"ExpresRoute Circuit should have a private " +
-								"peering connection provisioned, also an valid " +
-								"authorization key associated with it.",
+							Description: "The Azure-assigned ID of the ExpressRoute Circuit." +
+								" The circuit must have private peering configured and a valid authorization key.",
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"redundant_router": {
-							Description: "Indicates if ExpressRoute Circuit " +
-								"terminates on redundant routers on customer side.",
+							Description: "Whether the ExpressRoute Circuit connects to redundant" +
+								" routers on the customer side. Defaults to `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
 						"loopback_subnet": {
-							Description: "A `/26` subnet from which loopback " +
-								"IPs would be used to establish underlay " +
-								"VXLAN GPE tunnels.",
+							Description: "A `/26` subnet used to allocate loopback IPs for " +
+								"establishing `VXLAN/GPE` underlay tunnels.",
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"credential_id": {
-							Description: "An opaque identifier generated when " +
-								"storing Azure VNET credentials.",
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "The credential ID obtained after storing Azure VNET credentials in the Alkira platform.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 						"gateway_mac_address": {
-							Description: "An array containing the mac addresses " +
-								"of VXLAN gateways reachable through ExpressRoute " +
-								"circuit. The field is only expected if VXLAN " +
-								"tunnel protocol is selected, and 2 gateway MAC " +
-								"addresses are expected only if `redundant_router` " +
-								"is enabled.",
+							Description: "MAC addresses of VXLAN gateways accessible via the ExpressRoute Circuit." +
+								" Required if `tunnel_protocol` is `VXLAN`. Provide two addresses if `redundant_router` is `true`.",
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"virtual_network_interface": {
-							Description: "This is an optional field if the " +
-								"`tunnel_protocol` is `VXLAN`. If not specified " +
-								"Alkira allocates unique VNI from the range " +
-								"`[16773023, 16777215]`.",
+							Description: "Virtual Network Interface (VNI) identifiers. " +
+								"If unspecified, Alkira auto-allocates from the range `16773023-16777215`." +
+								" Onlyapplicable for `VXLAN` tunnels.",
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"segment_options": {
-							Type:     schema.TypeList,
-							Required: true,
+							Description: "Instance level segment specific routing and gateway configurations.",
+							Type:        schema.TypeList,
+							Required:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"segment_name": {
-										Description: "The name of an existing segment.",
+										Description: "The name of an existing segment in the Alkira environment.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
 									"customer_gateways": {
+										Description: "Customer gateway configurations for `IPSEC` tunnels. " +
+											"Requiredonly if `tunnel_protocol` is `IPSEC`.",
 										Type:     schema.TypeList,
 										Required: true,
-										Description: "Customer Gateway configuration. " +
-											"The size of the list can be max of 2. " +
-											"Only required if tunnel protocol is IPSEC",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
-													Description: "Name of the customer gateway.",
+													Description: "A unique name for the customer gateway.",
 													Type:        schema.TypeString,
 													Required:    true,
 												},
 												"tunnels": {
-													Type:        schema.TypeList,
-													Required:    true,
-													Description: "Tunnels for customer gateway, at least one " + "tunnel is required when tunnel protocol is `IPSEC`",
+													Description: "Tunnel configurations for the gateway. " +
+														"At least one tunnel is required for `IPSEC`.",
+													Type:     schema.TypeList,
+													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"name": {
-																Description: "Name of the tunnel.",
+																Description: "A unique name for the tunnel.",
 																Type:        schema.TypeString,
 																Required:    true,
 															},
 															"initiator": {
-																Description: "Whether this end initiates the tunnel.",
+																Description: "Whether this endpoint initiates the tunnel connection.",
 																Type:        schema.TypeBool,
 																Optional:    true,
 															},
 															"profile_id": {
-																Description: "The profile ID for the tunnel.",
+																Description: "The ID of the tunnel profile to use.",
 																Type:        schema.TypeInt,
 																Optional:    true,
 															},
 															"ike_version": {
-																Description: "IKE protocol version. Only `IKEv2` is supported for now.",
+																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
 																Type:        schema.TypeString,
 																Optional:    true,
 															},
 															"pre_shared_key": {
-																Description: "Pre-shared key for tunnel authentication.",
-																Type:        schema.TypeString,
-																Optional:    true,
-																Sensitive:   true,
+																Description: "The pre-shared key for tunnel authentication. " +
+																	"This field is sensitive and will not be displayed in logs.",
+																Type:      schema.TypeString,
+																Optional:  true,
+																Sensitive: true,
 															},
 															"remote_auth_type": {
-																Description: "Remote authentication type. Only `FQDN` is supported for now.",
-																Type:        schema.TypeString,
-																Optional:    true,
+																Description: "The authentication type for the remote endpoint. " +
+																	"Only `FQDN` iscurrently supported.",
+																Type:     schema.TypeString,
+																Optional: true,
 															},
 															"remote_auth_value": {
-																Description: "Remote authentication value.",
+																Description: "The authentication value for the remote endpoint. This field is sensitive.",
 																Type:        schema.TypeString,
 																Optional:    true,
 																Sensitive:   true,
@@ -232,39 +229,37 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				},
 			},
 			"segment_options": {
-				Type:     schema.TypeList,
-				Required: true,
+				Description: "Global segment routing and policy configurations for the connector.",
+				Type:        schema.TypeList,
+				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_name": {
-							Description: "The name of an existing segment.",
+							Description: "The name of the segment to associate with this connector.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
 						"segment_id": {
-							Description: "The ID of the segment.",
+							Description: "The auto-generated ID of the segment within the Alkira platform.",
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
 						"customer_asn": {
-							Description: "ASN on the customer premise side.",
+							Description: "The Autonomous System Number (ASN) configured on the customer's premises.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"disable_internet_exit": {
-							Description: "Enable or disable access to the " +
-								"internet when traffic arrives via this " +
-								"connector.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
+							Description: "When enabled, traffic arriving via this connector cannot access the internet. Defaults to `true`.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
 						},
 						"advertise_on_prem_routes": {
-							Description: "Allow routes from the branch/premises " +
-								"to be advertised to the cloud.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Description: "When enabled, routes from on-premises networks are advertised to Azure. Defaults to `false`.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
 						},
 					},
 				},
@@ -273,33 +268,29 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 	}
 }
 
-// resourceConnectorAzureExpressRouteCreate create an Azure ExpressRoute connector
+// resourceConnectorAzureExpressRouteCreate creates an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// INIT
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	api := alkira.NewConnectorAzureExpressRoute(client)
 
 	request, err := generateConnectorAzureExpressRouteRequest(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// CREATE
 	resource, provState, err, provErr := api.Create(request)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
-
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION (CREATE) FAILED",
+				Summary:  "Provisioning (Create) Failed",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -308,18 +299,16 @@ func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.Res
 	return resourceConnectorAzureExpressRouteRead(ctx, d, m)
 }
 
-// resourceConnectorAzureExpressRouteRead get and save an Azure ExpressRoute connectors
+// resourceConnectorAzureExpressRouteRead retrieves and updates the state of an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// INIT
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	api := alkira.NewConnectorAzureExpressRoute(client)
 
-	// GET
 	connector, provState, err := api.GetById(d.Id())
 	if err != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "FAILED TO GET RESOURCE",
+			Summary:  "Failed to Retrieve Resource",
 			Detail:   fmt.Sprintf("%s", err),
 		}}
 	}
@@ -334,59 +323,52 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("vhub_prefix", connector.VhubPrefix)
 
-	var instances []map[string]interface{}
-	for _, instance := range connector.Instances {
-		instances = append(instances, flattenInstance(instance))
+	instances := make([]map[string]interface{}, len(connector.Instances))
+	for i, instance := range connector.Instances {
+		instances[i] = flattenInstance(instance)
 	}
 	d.Set("instances", instances)
 
-	var segments []map[string]interface{}
-	for _, seg := range connector.SegmentOptions {
-		i := map[string]interface{}{
+	segments := make([]map[string]interface{}, len(connector.SegmentOptions))
+	for i, seg := range connector.SegmentOptions {
+		segments[i] = map[string]interface{}{
 			"segment_name":             seg.SegmentName,
 			"segment_id":               seg.SegmentId,
 			"customer_asn":             seg.CustomerAsn,
 			"disable_internet_exit":    seg.DisableInternetExit,
 			"advertise_on_prem_routes": seg.AdvertiseOnPremRoutes,
 		}
-		segments = append(segments, i)
 	}
 	d.Set("segment_options", segments)
 
-	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
 	return nil
 }
 
-// resourceConnectorAzureExpressRouteUpdate update an Azure ExpressRoute connector
+// resourceConnectorAzureExpressRouteUpdate updates an existing Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// INIT
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	api := alkira.NewConnectorAzureExpressRoute(client)
 
 	connector, err := generateConnectorAzureExpressRouteRequest(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// UPDATE
 	provState, err, provErr := api.Update(d.Id(), connector)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
-
 		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
-				Summary:  "PROVISION (UPDATE) FAILED",
+				Summary:  "Provisioning (Update) Failed",
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
@@ -395,24 +377,22 @@ func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.Res
 	return resourceConnectorAzureExpressRouteRead(ctx, d, m)
 }
 
+// resourceConnectorAzureExpressRouteDelete removes an Azure ExpressRoute connector
 func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// INIT
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
+	api := alkira.NewConnectorAzureExpressRoute(client)
 
-	// DELETE
-	provState, err, provErr := api.Delete((d.Id()))
-
+	provState, err, provErr := api.Delete(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "PROVISION (DELETE) FAILED",
+			Summary:  "Provisioning (Delete) Failed",
 			Detail:   fmt.Sprintf("%s", provErr),
 		}}
 	}
@@ -420,7 +400,7 @@ func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-// generateConnectorAzureExpressRouteRequest generate a request for Azure ExpressRoute connector
+// generateConnectorAzureExpressRouteRequest constructs a request for Azure ExpressRoute connector operations
 func generateConnectorAzureExpressRouteRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAzureExpressRoute, error) {
 	billingTags := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 

@@ -2,12 +2,12 @@
 page_title: "alkira_connector_azure_expressroute Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Azure ExpressRoute Connector. (BETA)
+  Manages an Azure ExpressRoute Connector. This resource is in BETA and may require careful handling.
 ---
 
 # alkira_connector_azure_expressroute (Resource)
 
-Manage Azure ExpressRoute Connector. (**BETA**)
+Manages an Azure ExpressRoute Connector. This resource is in **BETA** and may require careful handling.
 # Simple Example with one segment Option
 ```terraform
 resource "alkira_connector_azure_expressroute" "example" {
@@ -141,12 +141,12 @@ resource "alkira_connector_azure_expressroute" "example2" {
 
 ### Required
 
-- `cxp` (String) The CXP where the connector should be provisioned.
-- `instances` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instances))
-- `name` (String) The name of the connector.
-- `segment_options` (Block List, Min: 1) (see [below for nested schema](#nestedblock--segment_options))
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.
-- `vhub_prefix` (String) IP address prefix for VWAN Hub. This should be a `/23` prefix.
+- `cxp` (String) The Cloud Exchange Point (CXP) where the connector will be provisioned.
+- `instances` (Block List, Min: 1) Configuration for individual Azure ExpressRoute instances linked to this connector. (see [below for nested schema](#nestedblock--instances))
+- `name` (String) The unique name of the Azure ExpressRoute connector.
+- `segment_options` (Block List, Min: 1) Global segment routing and policy configurations for the connector. (see [below for nested schema](#nestedblock--segment_options))
+- `size` (String) The size of the connector. Valid values are `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, or `10LARGE`.
+- `vhub_prefix` (String) The CIDR block (in `/23` notation) reserved for the Azure Virtual WAN Hub.
 
 ### Optional
 
@@ -159,60 +159,60 @@ resource "alkira_connector_azure_expressroute" "example2" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provision_state` (String) The provision state of the connector.
+- `provision_state` (String) The current provisioning state of the connector, as reported by the Alkira platform.
 
 <a id="nestedblock--instances"></a>
 ### Nested Schema for `instances`
 
 Required:
 
-- `credential_id` (String) An opaque identifier generated when storing Azure VNET credentials.
-- `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpresRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
-- `loopback_subnet` (String) A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.
-- `name` (String) User provided connector instance name.
-- `segment_options` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instances--segment_options))
+- `credential_id` (String) The credential ID obtained after storing Azure VNET credentials in the Alkira platform.
+- `expressroute_circuit_id` (String) The Azure-assigned ID of the ExpressRoute Circuit. The circuit must have private peering configured and a valid authorization key.
+- `loopback_subnet` (String) A `/26` subnet used to allocate loopback IPs for establishing `VXLAN/GPE` underlay tunnels.
+- `name` (String) A user-defined name for the connector instance.
+- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations. (see [below for nested schema](#nestedblock--instances--segment_options))
 
 Optional:
 
-- `gateway_mac_address` (List of String) An array containing the mac addresses of VXLAN gateways reachable through ExpressRoute circuit. The field is only expected if VXLAN tunnel protocol is selected, and 2 gateway MAC addresses are expected only if `redundant_router` is enabled.
-- `redundant_router` (Boolean) Indicates if ExpressRoute Circuit terminates on redundant routers on customer side.
-- `virtual_network_interface` (List of Number) This is an optional field if the `tunnel_protocol` is `VXLAN`. If not specified Alkira allocates unique VNI from the range `[16773023, 16777215]`.
+- `gateway_mac_address` (List of String) MAC addresses of VXLAN gateways accessible via the ExpressRoute Circuit. Required if `tunnel_protocol` is `VXLAN`. Provide two addresses if `redundant_router` is `true`.
+- `redundant_router` (Boolean) Whether the ExpressRoute Circuit connects to redundant routers on the customer side. Defaults to `false`.
+- `virtual_network_interface` (List of Number) Virtual Network Interface (VNI) identifiers. If unspecified, Alkira auto-allocates from the range `16773023-16777215`. Onlyapplicable for `VXLAN` tunnels.
 
 Read-Only:
 
-- `id` (Number)
+- `id` (Number) The auto-generated ID of the connector instance.
 
 <a id="nestedblock--instances--segment_options"></a>
 ### Nested Schema for `instances.segment_options`
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) Customer Gateway configuration. The size of the list can be max of 2. Only required if tunnel protocol is IPSEC (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
-- `segment_name` (String) The name of an existing segment.
+- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Requiredonly if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
+- `segment_name` (String) The name of an existing segment in the Alkira environment.
 
 <a id="nestedblock--instances--segment_options--customer_gateways"></a>
 ### Nested Schema for `instances.segment_options.customer_gateways`
 
 Required:
 
-- `name` (String) Name of the customer gateway.
-- `tunnels` (Block List, Min: 1) Tunnels for customer gateway, at least one tunnel is required when tunnel protocol is `IPSEC` (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways--tunnels))
+- `name` (String) A unique name for the customer gateway.
+- `tunnels` (Block List, Min: 1) Tunnel configurations for the gateway. At least one tunnel is required for `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways--tunnels))
 
 <a id="nestedblock--instances--segment_options--customer_gateways--tunnels"></a>
 ### Nested Schema for `instances.segment_options.customer_gateways.tunnels`
 
 Required:
 
-- `name` (String) Name of the tunnel.
+- `name` (String) A unique name for the tunnel.
 
 Optional:
 
-- `ike_version` (String) IKE protocol version. Only `IKEv2` is supported for now.
-- `initiator` (Boolean) Whether this end initiates the tunnel.
-- `pre_shared_key` (String, Sensitive) Pre-shared key for tunnel authentication.
-- `profile_id` (Number) The profile ID for the tunnel.
-- `remote_auth_type` (String) Remote authentication type. Only `FQDN` is supported for now.
-- `remote_auth_value` (String, Sensitive) Remote authentication value.
+- `ike_version` (String) The IKE protocol version. Currently, only `IKEv2` is supported.
+- `initiator` (Boolean) Whether this endpoint initiates the tunnel connection.
+- `pre_shared_key` (String, Sensitive) The pre-shared key for tunnel authentication. This field is sensitive and will not be displayed in logs.
+- `profile_id` (Number) The ID of the tunnel profile to use.
+- `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
+- `remote_auth_value` (String, Sensitive) The authentication value for the remote endpoint. This field is sensitive.
 
 
 
@@ -223,16 +223,16 @@ Optional:
 
 Required:
 
-- `customer_asn` (Number) ASN on the customer premise side.
-- `segment_name` (String) The name of an existing segment.
+- `customer_asn` (Number) The Autonomous System Number (ASN) configured on the customer's premises.
+- `segment_name` (String) The name of the segment to associate with this connector.
 
 Optional:
 
-- `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud.
-- `disable_internet_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector.
+- `advertise_on_prem_routes` (Boolean) When enabled, routes from on-premises networks are advertised to Azure. Defaults to `false`.
+- `disable_internet_exit` (Boolean) When enabled, traffic arriving via this connector cannot access the internet. Defaults to `true`.
 
 Read-Only:
 
-- `segment_id` (Number) The ID of the segment.
+- `segment_id` (Number) The auto-generated ID of the segment within the Alkira platform.
 
 
