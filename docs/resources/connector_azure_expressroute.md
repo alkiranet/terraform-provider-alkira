@@ -35,11 +35,11 @@ resource "alkira_connector_azure_expressroute" "example" {
         name = "gateway1"
         tunnels {
           name              = "tunnel1"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = true
           pre_shared_key    = "secretkey123"
           profile_id        = 1
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvalue123"
         }
       }
@@ -63,17 +63,15 @@ resource "alkira_connector_azure_expressroute" "example2" {
   enabled         = true
   vhub_prefix     = "10.129.0.0/23"
   cxp             = "USWEST-AZURE-1"
-  tunnel_protocol = "VXLAN_GPE"
+  tunnel_protocol = "IPSEC"
   group           = alkira_group.example.name
 
   instances {
-    name                      = "InstanceName"
-    expressroute_circuit_id   = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName2>"
-    redundant_router          = true
-    loopback_subnet           = "192.168.19.0/26"
-    credential_id             = alkira_credential_azure_vnet.example2.id
-    gateway_mac_address       = ["00:1A:2B:3C:4D:5F", "00:6F:7G:8H:9I:0K"]
-    virtual_network_interface = [16773026, 16773027]
+    name                    = "InstanceName"
+    expressroute_circuit_id = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName2>"
+    redundant_router        = true
+    loopback_subnet         = "192.168.19.0/26"
+    credential_id           = alkira_credential_azure_vnet.example2.id
 
     segment_options {
       segment_name = alkira_segment.example.name
@@ -81,20 +79,20 @@ resource "alkira_connector_azure_expressroute" "example2" {
         name = "gateway1"
         tunnels {
           name              = "tunnel1"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = true
           pre_shared_key    = "secretkey456"
           profile_id        = 2
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvalue456"
         }
         tunnels {
           name              = "tunnel2"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = false
           pre_shared_key    = "secretkey789"
           profile_id        = 3
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvalue789"
         }
       }
@@ -102,11 +100,11 @@ resource "alkira_connector_azure_expressroute" "example2" {
         name = "gateway2"
         tunnels {
           name              = "tunnel1"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = true
           pre_shared_key    = "secretkeyabc"
           profile_id        = 4
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvalueabc"
         }
       }
@@ -118,11 +116,11 @@ resource "alkira_connector_azure_expressroute" "example2" {
         name = "gateway3"
         tunnels {
           name              = "tunnel1"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = true
           pre_shared_key    = "secretkeyxyz"
           profile_id        = 5
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvaluexyz"
         }
       }
@@ -189,7 +187,7 @@ Read-Only:
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
+- `customer_gateways` (Block List, Min: 1) Customer Gateway configuration. The size of the list can be max of 2. Only required if tunnel protocol is IPSEC (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
 - `segment_name` (String) The name of an existing segment.
 
 <a id="nestedblock--instances--segment_options--customer_gateways"></a>
@@ -198,7 +196,7 @@ Required:
 Required:
 
 - `name` (String) Name of the customer gateway.
-- `tunnels` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways--tunnels))
+- `tunnels` (Block List, Min: 1) Tunnels for customer gateway, at least one tunnel is required when tunnel protocol is `IPSEC` (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways--tunnels))
 
 <a id="nestedblock--instances--segment_options--customer_gateways--tunnels"></a>
 ### Nested Schema for `instances.segment_options.customer_gateways.tunnels`
@@ -209,11 +207,11 @@ Required:
 
 Optional:
 
-- `ike_version` (String) IKE protocol version.
+- `ike_version` (String) IKE protocol version. Only `IKEv2` is supported for now.
 - `initiator` (Boolean) Whether this end initiates the tunnel.
 - `pre_shared_key` (String, Sensitive) Pre-shared key for tunnel authentication.
 - `profile_id` (Number) The profile ID for the tunnel.
-- `remote_auth_type` (String) Remote authentication type.
+- `remote_auth_type` (String) Remote authentication type. Only `FQDN` is supported for now.
 - `remote_auth_value` (String, Sensitive) Remote authentication value.
 
 

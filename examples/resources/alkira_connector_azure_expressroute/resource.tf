@@ -23,11 +23,11 @@ resource "alkira_connector_azure_expressroute" "example" {
         name = "gateway1"
         tunnels {
           name              = "tunnel1"
-          ike_version       = "v2"
+          ike_version       = "IKEv2"
           initiator         = true
           pre_shared_key    = "secretkey123"
           profile_id        = 1
-          remote_auth_type  = "psk"
+          remote_auth_type  = "FQDN"
           remote_auth_value = "authvalue123"
         }
       }

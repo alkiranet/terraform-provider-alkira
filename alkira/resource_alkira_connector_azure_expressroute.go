@@ -166,6 +166,9 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 									"customer_gateways": {
 										Type:     schema.TypeList,
 										Required: true,
+										Description: "Customer Gateway configuration. " +
+											"The size of the list can be max of 2. " +
+											"Only required if tunnel protocol is IPSEC",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
@@ -174,8 +177,9 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 													Required:    true,
 												},
 												"tunnels": {
-													Type:     schema.TypeList,
-													Required: true,
+													Type:        schema.TypeList,
+													Required:    true,
+													Description: "Tunnels for customer gateway, at least one " + "tunnel is required when tunnel protocol is `IPSEC`",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"name": {
@@ -194,7 +198,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Optional:    true,
 															},
 															"ike_version": {
-																Description: "IKE protocol version.",
+																Description: "IKE protocol version. Only `IKEv2` is supported for now.",
 																Type:        schema.TypeString,
 																Optional:    true,
 															},
@@ -205,7 +209,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Sensitive:   true,
 															},
 															"remote_auth_type": {
-																Description: "Remote authentication type.",
+																Description: "Remote authentication type. Only `FQDN` is supported for now.",
 																Type:        schema.TypeString,
 																Optional:    true,
 															},
@@ -332,23 +336,11 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 
 	var instances []map[string]interface{}
 	for _, instance := range connector.Instances {
-		i := map[string]interface{}{
-			"credential_id":             instance.CredentialId,
-			"expressroute_circuit_id":   instance.ExpressRouteCircuitId,
-			"gateway_mac_address":       instance.GatewayMacAddress,
-			"id":                        instance.Id,
-			"loopback_subnet":           instance.LoopbackSubnet,
-			"name":                      instance.Name,
-			"redundant_router":          instance.RedundantRouter,
-			"virtual_network_interface": instance.Vnis,
-		}
-		instances = append(instances, i)
+		instances = append(instances, flattenInstance(instance))
 	}
-
 	d.Set("instances", instances)
 
 	var segments []map[string]interface{}
-
 	for _, seg := range connector.SegmentOptions {
 		i := map[string]interface{}{
 			"segment_name":             seg.SegmentName,
