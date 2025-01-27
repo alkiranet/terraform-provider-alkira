@@ -52,7 +52,7 @@ resource "alkira_connector_azure_expressroute" "example2" {
     }
 
     segment_options {
-      segment_name = alkira_segment.example.name
+      segment_name = alkira_segment.example1.name
       customer_gateways {
         name = "gateway3"
         tunnels {
@@ -71,6 +71,12 @@ resource "alkira_connector_azure_expressroute" "example2" {
   segment_options {
     segment_name             = alkira_segment.example.name
     customer_asn             = "65514"
+    disable_internet_exit    = false
+    advertise_on_prem_routes = false
+  }
+  segment_options {
+    segment_name             = alkira_segment.example1.name
+    customer_asn             = "65515"
     disable_internet_exit    = false
     advertise_on_prem_routes = false
   }

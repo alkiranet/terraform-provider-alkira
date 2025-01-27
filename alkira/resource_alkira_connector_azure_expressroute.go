@@ -64,11 +64,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 			},
 			"tunnel_protocol": {
 				Description: "The encapsulation protocol for the tunnels. Valid " +
-					"values are `VXLAN` or `VXLAN_GPE`. Defaults to `VXLAN_GPE`.",
+					"values are `VXLAN` or `VXLAN_GPE` or `IPSEC`. Defaults to `VXLAN_GPE`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "VXLAN_GPE",
-				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE", "IPSEC"}, false),
 			},
 			"cxp": {
 				Description: "The Cloud Exchange Point (CXP) where the connector will be provisioned.",
@@ -148,9 +148,10 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"segment_options": {
-							Description: "Instance level segment specific routing and gateway configurations.",
-							Type:        schema.TypeList,
-							Required:    true,
+							Description: "Instance level segment specific routing and gateway configurations." +
+								"Only required when `tunnel_protocol` is `IPSEC`.",
+							Type:     schema.TypeList,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"segment_name": {
@@ -160,7 +161,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 									},
 									"customer_gateways": {
 										Description: "Customer gateway configurations for `IPSEC` tunnels. " +
-											"Requiredonly if `tunnel_protocol` is `IPSEC`.",
+											"Required only if `tunnel_protocol` is `IPSEC`.",
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Resource{

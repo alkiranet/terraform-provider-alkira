@@ -111,7 +111,7 @@ resource "alkira_connector_azure_expressroute" "example2" {
     }
 
     segment_options {
-      segment_name = alkira_segment.example.name
+      segment_name = alkira_segment.example1.name
       customer_gateways {
         name = "gateway3"
         tunnels {
@@ -130,6 +130,12 @@ resource "alkira_connector_azure_expressroute" "example2" {
   segment_options {
     segment_name             = alkira_segment.example.name
     customer_asn             = "65514"
+    disable_internet_exit    = false
+    advertise_on_prem_routes = false
+  }
+  segment_options {
+    segment_name             = alkira_segment.example1.name
+    customer_asn             = "65515"
     disable_internet_exit    = false
     advertise_on_prem_routes = false
   }
@@ -154,7 +160,7 @@ resource "alkira_connector_azure_expressroute" "example2" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Whether the connector is operational. Defaults to `true`.
 - `group` (String) The organizational group to which this connector belongs within the Alkira platform.
-- `tunnel_protocol` (String) The encapsulation protocol for the tunnels. Valid values are `VXLAN` or `VXLAN_GPE`. Defaults to `VXLAN_GPE`.
+- `tunnel_protocol` (String) The encapsulation protocol for the tunnels. Valid values are `VXLAN` or `VXLAN_GPE` or `IPSEC`. Defaults to `VXLAN_GPE`.
 
 ### Read-Only
 
@@ -170,7 +176,7 @@ Required:
 - `expressroute_circuit_id` (String) The Azure-assigned ID of the ExpressRoute Circuit. The circuit must have private peering configured and a valid authorization key.
 - `loopback_subnet` (String) A `/26` subnet used to allocate loopback IPs for establishing `VXLAN/GPE` underlay tunnels.
 - `name` (String) A user-defined name for the connector instance.
-- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations. (see [below for nested schema](#nestedblock--instances--segment_options))
+- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options))
 
 Optional:
 
@@ -187,7 +193,7 @@ Read-Only:
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Requiredonly if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
+- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Required only if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
 - `segment_name` (String) The name of an existing segment in the Alkira environment.
 
 <a id="nestedblock--instances--segment_options--customer_gateways"></a>
