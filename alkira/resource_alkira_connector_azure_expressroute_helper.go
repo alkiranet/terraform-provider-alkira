@@ -103,6 +103,9 @@ func expandCustomerGateways(in []interface{}) ([]alkira.CustomerGateway, error) 
 		if v, ok := cgMap["name"].(string); ok {
 			customerGateway.Name = v
 		}
+		if v, ok := cgMap["id"].(string); ok {
+			customerGateway.Id = v
+		}
 
 		// Tunnels
 		tunnels, err := expandCustomerGatewayTunnels(cgMap["tunnels"].([]interface{}))
@@ -125,6 +128,9 @@ func expandCustomerGatewayTunnels(in []interface{}) ([]alkira.CustomerGatewayTun
 
 		if v, ok := tMap["name"].(string); ok {
 			tunnel.Name = v
+		}
+		if v, ok := tMap["id"].(string); ok {
+			tunnel.Id = v
 		}
 		if v, ok := tMap["initiator"].(bool); ok {
 			tunnel.Initiator = v
@@ -221,6 +227,7 @@ func flattenCustomerGateways(customerGateways []alkira.CustomerGateway) []interf
 	for i, cg := range customerGateways {
 		c := map[string]interface{}{
 			"name":    cg.Name,
+			"id":      cg.Id,
 			"tunnels": flattenCustomerGatewayTunnels(cg.Tunnels),
 		}
 		result[i] = c
@@ -238,6 +245,7 @@ func flattenCustomerGatewayTunnels(tunnels []alkira.CustomerGatewayTunnel) []int
 	for i, t := range tunnels {
 		tunnel := map[string]interface{}{
 			"name":              t.Name,
+			"id":                t.Id,
 			"initiator":         t.Initiator,
 			"profile_id":        t.ProfileId,
 			"ike_version":       t.IkeVersion,

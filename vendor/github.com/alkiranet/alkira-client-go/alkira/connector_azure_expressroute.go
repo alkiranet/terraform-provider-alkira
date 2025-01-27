@@ -33,10 +33,12 @@ type InstanceSegmentOption struct {
 
 type CustomerGateway struct {
 	Name    string                  `json:"name"`
+	Id      string                  `json:"id,omitempty"`
 	Tunnels []CustomerGatewayTunnel `json:"tunnels"`
 }
 type CustomerGatewayTunnel struct {
 	Name            string `json:"name"`
+	Id              string `json:"id,omitempty"`
 	Initiator       bool   `json:"initiator,omitempty"`
 	ProfileId       int    `json:"profileId,omitempty"`
 	IkeVersion      string `json:"ikeVersion,omitempty"`
