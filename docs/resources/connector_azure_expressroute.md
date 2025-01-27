@@ -150,11 +150,11 @@ resource "alkira_connector_azure_expressroute" "example2" {
 
 ### Optional
 
-- `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
+- `billing_tag_ids` (Set of Number) A list of billing tag IDs to associate with this connector. Billing tags must be created using the `alkira_billing_tag` resource.
 - `description` (String) The description of the connector.
-- `enabled` (Boolean) Is the connector enabled. Default is `true`.
-- `group` (String) The group of the connector.
-- `tunnel_protocol` (String) The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`
+- `enabled` (Boolean) Whether the connector is operational. Defaults to `true`.
+- `group` (String) The organizational group to which this connector belongs within the Alkira platform.
+- `tunnel_protocol` (String) The encapsulation protocol for the tunnels. Valid values are `VXLAN` or `VXLAN_GPE`. Defaults to `VXLAN_GPE`.
 
 ### Read-Only
 
@@ -213,6 +213,10 @@ Optional:
 - `profile_id` (Number) The ID of the tunnel profile to use.
 - `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
 - `remote_auth_value` (String, Sensitive) The authentication value for the remote endpoint. This field is sensitive.
+
+Read-Only:
+
+- `id` (String) The ID of the tunnel.
 
 
 

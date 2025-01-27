@@ -177,6 +177,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"id": {
+																Description: "The ID of the tunnel.",
+																Type:        schema.TypeString,
+																Computed:    true,
+															},
 															"name": {
 																Description: "A unique name for the tunnel.",
 																Type:        schema.TypeString,
