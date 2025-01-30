@@ -170,7 +170,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the connector, one of `5XSMALL`,`XSMALL`,`SMALL`, " +
-					"`MEDIUM`, `LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
