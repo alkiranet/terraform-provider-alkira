@@ -59,12 +59,12 @@ resource "alkira_internet_application" "test" {
 - `bi_directional_az` (String) Bi-directional IFA AZ. The value could be either `AZ0` or `AZ1`
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `byoip_id` (Number) BYOIP ID.
+- `ilb_credential_id` (String) The credential ID of AWS account for `target` when `target`'s `type` is `ILB_NAME`.  This field can only be used when `connector_type` is `AWS_VPC`
 - `inbound_connector_id` (String) Inbound connector ID.
 - `inbound_connector_type` (String) The inbound connector type specifies how the internet application is to be opened up to the external world. By `DEFAULT` the native cloud internet connector is used. In this scenario, Alkira takes care of creating this inbound internet connector implicitly. If instead inbound access is via the `AKAMAI_PROLEXIC` connector, then you need to create and configure that connector and use it with the internet application.
 - `internet_protocol` (String) Internet Protocol to be associated with the internet application. The value could be: `IPV4`, `IPV6` or `BOTH`. In order to use the option `IPV6` or `BOTH`, `enable_ipv6_to_ipv4_translation` should be enabled on the associated segment and a valid IP pool range should be provided. `IPV6` and `BOTH` options are only available to Internet Applications on AWS CXPs. (**BETA**)
 - `public_ips` (List of String) This option pertains to the `AKAMAI_PROLEXIC` `inbound_connector_type`. The public IPs are to be used to access the internet application. These public IPs must belong to one of the BYOIP ranges configured for the connector-akamai-prolexic.
 - `source_nat_ip_pool` (Block Set) A IP range to use for source NAT with this internet application. It could be only one defined for now. The endpoints of each range are inclusive. Source NAT can only be used if `inbound_connector_type` is `DEFAULT`. (see [below for nested schema](#nestedblock--source_nat_ip_pool))
-- `ilb_credential_id` (String) The credential ID of AWS account for `target` when `target`'s `type` is `ILB_NAME`.  This field can only be used when `connector_type` is `AWS_VPC`
 
 ### Read-Only
 
