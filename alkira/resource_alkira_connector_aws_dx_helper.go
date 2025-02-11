@@ -118,6 +118,9 @@ func expandAwsDirectConnectInstances(in []interface{}, m interface{}) ([]alkira.
 		if v, ok := cfg["gateway_mac_address"].(string); ok {
 			ins.GatewayMacAddress = v
 		}
+		if v, ok := cfg["vni"].(int); ok {
+			ins.Vni = v
+		}
 		if v, ok := cfg["segment_options"].(*schema.Set); ok {
 			segmentOptions, err := expandAwsDirectConnectSegmentOptions(v, m)
 
@@ -224,6 +227,7 @@ func setAwsDirectConnectInstance(d *schema.ResourceData, m interface{}, connecto
 			"aws_region":          ins.CustomerRegion,
 			"credential_id":       ins.CredentialId,
 			"gateway_mac_address": ins.GatewayMacAddress,
+			"vni":                 ins.Vni,
 			"segment_options":     segmentOptions,
 		}
 		instances = append(instances, instance)
