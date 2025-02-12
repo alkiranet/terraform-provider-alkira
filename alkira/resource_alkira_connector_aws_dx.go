@@ -90,6 +90,12 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with " +
+					"the connector.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"instance": {
 				Description: "AWS DirectConnect (DX) instance.",
 				Type:        schema.TypeList,
@@ -338,6 +344,7 @@ func resourceConnectorAwsDxRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("cxp", connector.Cxp)
 	d.Set("group", connector.Group)
 	d.Set("size", connector.Size)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("enabled", connector.Enabled)

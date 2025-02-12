@@ -74,6 +74,7 @@ resource "alkira_connector_aws_dx" "test" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector.
 
 ### Read-Only
 
