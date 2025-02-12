@@ -154,6 +154,7 @@ func generateAwsDirectConnectRequest(d *schema.ResourceData, m interface{}) (*al
 		Group:          d.Get("group").(string),
 		TunnelProtocol: d.Get("tunnel_protocol").(string),
 		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		ScaleGroupId:   d.Get("scale_group_id").(string),
 		Size:           d.Get("size").(string),
 		Instances:      instances,
 	}

@@ -49,6 +49,7 @@ type ConnectorAwsDirectConnect struct {
 	Group           string                              `json:"group,omitempty"`
 	ImplicitGroupId int                                 `json:"implicitGroupId,omitempty"` // response only
 	Size            string                              `json:"size"`
+	ScaleGroupId    string                              `json:"scaleGroupId,omitempty"`
 	TunnelProtocol  string                              `json:"tunnelProtocol"`
 	Instances       []ConnectorAwsDirectConnectInstance `json:"instances"`
 }
