@@ -53,6 +53,12 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"size": {
 				Description: "Size of the service, one of" +
 					" `SMALL`, `MEDIUM`, `LARGE`" +
@@ -268,6 +274,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
 	d.Set("service_group_name", lb.ServiceGroupName)
+	d.Set("implicit_group_id", lb.ImplicitGroupId)
 
 	segmentOptions, err := setF5SegmentOptions(lb.SegmentOptions, m)
 	if err != nil {
