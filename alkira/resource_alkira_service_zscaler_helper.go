@@ -57,8 +57,14 @@ func expandZscalerIpsecConfigurations(in *schema.Set) (*alkira.ZscalerIpSecConfi
 	return ip, nil
 }
 
-func deflateZscalerIpsecConfiguration(z *alkira.ZscalerIpSecConfig) []map[string]interface{} {
+func deflateZscalerIpsecConfiguration(z *alkira.ZscalerIpSecConfig) ([]map[string]interface{}, error) {
+
+	if z == nil {
+		return nil, errors.New("invalid ipsec_configuration")
+	}
+
 	cfg := make(map[string]interface{})
+
 	cfg["esp_dh_group_number"] = z.EspDhGroupNumber
 	cfg["esp_encryption_algorithm"] = z.EspEncryptionAlgorithm
 	cfg["esp_integrity_algorithm"] = z.EspIntegrityAlgorithm
@@ -71,5 +77,5 @@ func deflateZscalerIpsecConfiguration(z *alkira.ZscalerIpSecConfig) []map[string
 	cfg["pre_shared_key"] = z.PreSharedKey
 	cfg["ping_probe_ip"] = z.PingProbeIp
 
-	return []map[string]interface{}{cfg}
+	return []map[string]interface{}{cfg}, nil
 }
