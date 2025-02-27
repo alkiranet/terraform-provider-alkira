@@ -40,6 +40,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"description": {
+				Description: "The description of the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`," +
 					" `2LARGE`, `5LARGE`, `10LARGE`.",
@@ -254,6 +259,7 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	d.Set("group", connector.Group)
 	d.Set("enabled", connector.Enabled)
 	d.Set("name", connector.Name)
+	d.Set("description", connector.Description)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("vhub_prefix", connector.VhubPrefix)
 
@@ -375,6 +381,7 @@ func generateConnectorAzureExpressRouteRequest(d *schema.ResourceData, m interfa
 
 	request := &alkira.ConnectorAzureExpressRoute{
 		Name:           d.Get("name").(string),
+		Description:    d.Get("description").(string),
 		Size:           d.Get("size").(string),
 		BillingTags:    billingTags,
 		Enabled:        d.Get("enabled").(bool),
