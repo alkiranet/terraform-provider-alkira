@@ -271,10 +271,16 @@ func resourceZscalerRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(err)
 	}
 
+	ipsecConfig, err := deflateZscalerIpsecConfiguration(z.IpsecConfiguration)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.Set("billing_tag_ids", z.BillingTags)
 	d.Set("cxp", z.Cxp)
 	d.Set("description", z.Description)
-	d.Set("ipsec_configuration", deflateZscalerIpsecConfiguration(z.IpsecConfiguration))
+	d.Set("ipsec_configuration", ipsecConfig)
 	d.Set("name", z.Name)
 	d.Set("primary_public_edge_ip", z.PrimaryPublicEdgeIp)
 	d.Set("secondary_public_edge_ip", z.SecondaryPublicEdgeIp)
