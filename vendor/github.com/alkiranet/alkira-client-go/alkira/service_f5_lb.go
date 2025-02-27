@@ -13,6 +13,7 @@ type ServiceF5Lb struct {
 	Id               json.Number     `json:"id,omitempty"`
 	Name             string          `json:"name"`
 	ServiceGroupName string          `json:"serviceGroupName"`
+	ImplicitGroupId  int             `json:"implicitGroupId,omitempty"` // response only
 	Instances        []F5Instance    `json:"instances"`
 	Segments         []string        `json:"segments"`
 	BillingTags      []int           `json:"billingTags,omitempty"`

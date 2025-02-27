@@ -19,10 +19,8 @@ in the same format as in the example:
 resource "alkira_connector_aruba_edge" "test1" {
   boost_mode      = false
   cxp             = "US-WEST"
-  gateway_gbp_asn = 22
   group           = alkira_group.test.name
   name            = "thisisanewname"
-  segment_ids     = [alkira_segment.test1.id]
   size            = "SMALL"
   tunnel_protocol = "IPSEC"
   version         = "9.0.3.3"
@@ -30,7 +28,7 @@ resource "alkira_connector_aruba_edge" "test1" {
   aruba_edge_vrf_mapping {
     segment_id                 = alkira_segment.test1.id
     aruba_edge_connect_segment = "aruba_edge_segment_name"
-    gateway_gbp_asn            = 88
+    gateway_bgp_asn            = 88
   }
 
   instances {
@@ -58,10 +56,8 @@ resource "alkira_connector_aruba_edge" "test1" {
 
 - `aruba_edge_vrf_mapping` (Block Set, Min: 1) The connector will accept multiple segments as a part of VRF mappings. (see [below for nested schema](#nestedblock--aruba_edge_vrf_mapping))
 - `cxp` (String) The CXP where the connector should be provisioned.
-- `gateway_gbp_asn` (Number) The gateway BGP ASN.
 - `instances` (Block List, Min: 1) The Aruba Edge connector instances. (see [below for nested schema](#nestedblock--instances))
 - `name` (String) The name of the connector.
-- `segment_ids` (Set of String) The IDs of the segments associated with theAruba Edge connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE`.
 - `version` (String) The version of the Aruba Edge. Please check Alkira Portal for all supported versions.
 
@@ -86,7 +82,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 Required:
 
 - `aruba_edge_connect_segment` (String) The segment of the Aruba Edge connector.
-- `gateway_gbp_asn` (Number) The gateway BGP ASN.
+- `gateway_bgp_asn` (Number) The gateway BGP ASN.
 - `segment_id` (String) The segment ID associated with the Aruba Edge connector.
 
 Optional:

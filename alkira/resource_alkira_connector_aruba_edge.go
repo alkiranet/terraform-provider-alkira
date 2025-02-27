@@ -68,7 +68,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"gateway_gbp_asn": {
+						"gateway_bgp_asn": {
 							Description: "The gateway BGP ASN.",
 							Type:        schema.TypeInt,
 							Required:    true,
@@ -95,11 +95,6 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
 				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"gateway_gbp_asn": {
-				Description: "The gateway BGP ASN.",
-				Type:        schema.TypeInt,
 				Required:    true,
 			},
 			"group": {
@@ -170,13 +165,6 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Description: "The description of the connector.",
 				Type:        schema.TypeString,
 				Optional:    true,
-			},
-			"segment_ids": {
-				Description: "The IDs of the segments associated with the" +
-					"Aruba Edge connector.",
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
@@ -272,22 +260,14 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	segmentIds, err := convertSegmentNamesToSegmentIds(connector.Segments, m)
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	d.Set("aruba_edge_vrf_mapping", arubaEdgeMappings)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("boost_mode", connector.BoostMode)
 	d.Set("cxp", connector.Cxp)
-	d.Set("gateway_gbp_asn", connector.GatewayBgpAsn)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
 	d.Set("name", connector.Name)
-	d.Set("segment_ids", segmentIds)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("version", connector.Version)
@@ -366,15 +346,6 @@ func resourceConnectorArubaEdgeDelete(ctx context.Context, d *schema.ResourceDat
 func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorArubaEdge, error) {
 
 	//
-	// Segments
-	//
-	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
 	// Instances
 	//
 	instances, err := expandArubaEdgeInstances(d.Get("instances").([]interface{}), m.(*alkira.AlkiraClient))
@@ -397,11 +368,9 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		BillingTags:          convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		BoostMode:            d.Get("boost_mode").(bool),
 		Cxp:                  d.Get("cxp").(string),
-		GatewayBgpAsn:        d.Get("gateway_gbp_asn").(int),
 		Group:                d.Get("group").(string),
 		Instances:            instances,
 		Name:                 d.Get("name").(string),
-		Segments:             segmentNames,
 		Size:                 d.Get("size").(string),
 		TunnelProtocol:       d.Get("tunnel_protocol").(string),
 		Version:              d.Get("version").(string),
