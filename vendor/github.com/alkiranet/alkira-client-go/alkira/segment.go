@@ -34,7 +34,6 @@ type Segment struct {
 	IpBlock                                           string                     `json:"ipBlock,omitempty"`
 	IpBlocks                                          SegmentIpBlocks            `json:"ipBlocks,omitempty"`
 	Name                                              string                     `json:"name"`
-	OverlappingRouteValidationEnabled                 bool                       `json:"overlappingRouteValidationEnabled"`
 	ReservePublicIPsForUserAndSiteConnectivity        bool                       `json:"reservePublicIPsForUserAndSiteConnectivity,omitempty"`
 	ReservePublicIPsForUserAndSiteConnectivityForCXPs []string                   `json:"reservePublicIPsForUserAndSiteConnectivityForCXPs,omitempty"`
 	SrcIpv4PoolList                                   []SegmentSrcIpv4PoolList   `json:"srcIpv4PoolList,omitempty"`
