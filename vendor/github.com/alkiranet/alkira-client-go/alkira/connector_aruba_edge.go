@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2025 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -8,17 +8,15 @@ import (
 )
 
 type ConnectorArubaEdge struct {
-	ArubaEdgeVrfMappings []ArubaEdgeVRFMappings `json:"arubaEdgeVRFMappings,omitempty"`
+	ArubaEdgeVrfMappings []ArubaEdgeVRFMappings `json:"arubaEdgeVRFMappings"`
 	BillingTags          []int                  `json:"billingTags"`
 	BoostMode            bool                   `json:"boostMode"`
 	Cxp                  string                 `json:"cxp"`
-	GatewayBgpAsn        int                    `json:"gatewayBgpAsn"`
 	Group                string                 `json:"group,omitempty"`
 	Id                   json.Number            `json:"id,omitempty"`              // response only
 	ImplicitGroupId      int                    `json:"implicitGroupId,omitempty"` // response only
 	Instances            []ArubaEdgeInstance    `json:"instances"`
 	Name                 string                 `json:"name"`
-	Segments             []string               `json:"segments"`
 	Size                 string                 `json:"size"`
 	TunnelProtocol       string                 `json:"tunnelProtocol"`
 	Version              string                 `json:"version"`

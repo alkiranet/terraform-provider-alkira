@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2025 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -77,7 +77,6 @@ type ConnectorAzureVnet struct {
 	Id                                json.Number           `json:"id,omitempty"`              // RESPONSE ONLY
 	ImplicitGroupId                   int                   `json:"implicitGroupId,omitempty"` // RESPONSE ONLY
 	Name                              string                `json:"name"`
-	NativeServices                    []string              `json:"nativeServices,omitempty"`
 	NativeServiceNames                []string              `json:"nativeServiceNames,omitempty"`
 	ResourceGroupName                 string                `json:"resourceGroupName,omitempty"`
 	SecondaryCXPs                     []string              `json:"secondaryCXPs,omitempty"`
