@@ -139,7 +139,7 @@ Read-Only:
 Required:
 
 - `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
-- `initiator` (Boolean) When false CXP will initiate the IKE connection and in all other cases the customer gateway should initiate the IKE connection. When `gateway_ip_type` is `DYNAMIC`,initiator must be `true`.
+- `initiator` (Boolean) When false CXP will initiate the IKE connection and in all other cases the customer gateway should initiate IKE connection. When `gateway_ip_type` is `DYNAMIC`,initiator must be `true`.
 - `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
 - `remote_auth_value` (String) Remote-ID value.
 

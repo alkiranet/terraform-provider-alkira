@@ -107,7 +107,7 @@ Required:
 
 - `customer_gateway_ip` (String) The IP address of the customer gateway.
 - `name` (String) The name of the endpoint.
-- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explictly unlike portal.
+- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explictly.
 
 Optional:
 
@@ -129,12 +129,12 @@ Required:
 - `esp_dh_group_numbers` (List of String) Diffie Hellman groups to use for IPsec SA. Value could `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519` and `NONE`.
 - `esp_encryption_algorithms` (List of String) Encryption algorithms to use for IPsec SA. Value could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` `3DESCBC`, or `NULL`.
 - `esp_integrity_algorithms` (List of String) Integrity algorithms to use for IPsec SA. Value could `SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.
-- `ike_dh_group_numbers` (List of String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.
+- `ike_dh_group_numbers` (List of String) Diffie Hellman groups to use for IKE SA, one of `MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, `MODP8192`, `ECP256`, `ECP384`, `ECP521`, or `CURVE25519`.
 - `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.
 - `ike_integrity_algorithms` (List of String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 - `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
-- `initiator` (Boolean) When false CXP will initiate the IKE connection and in all other cases the customer gateway should initiate the IKE connection. When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.
-- `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
+- `initiator` (Boolean) When the value is `false`, CXP will initiate the IKE connection and in all other cases the customer gateway should initiate IKE connection. When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.
+- `remote_auth_type` (String) IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, or `IP_ADDR`.
 - `remote_auth_value` (String) Remote-ID value.
 
 
