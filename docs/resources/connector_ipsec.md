@@ -133,7 +133,7 @@ Required:
 - `ike_encryption_algorithms` (List of String) Encryption algorithms to use for IKE SA, one of `AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.
 - `ike_integrity_algorithms` (List of String) Integrity algorithms to use for IKE SA, one of `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 - `ike_version` (String) IKE version, either `IKEv1` or `IKEv2`
-- `initiator` (Boolean) When true CXP will initiate the IKE connection and if false then the customer gateway should initiate IKE. When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.
+- `initiator` (Boolean) When false CXP will initiate the IKE connection and in all other cases the customer gateway should initiate the IKE connection. When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.
 - `remote_auth_type` (String) Remote-ID type - IKE identity to use for authentication round, one of `FQDN`, `USER_FQDN`, `KEYID`, `IP_ADDR`.
 - `remote_auth_value` (String) Remote-ID value.
 
