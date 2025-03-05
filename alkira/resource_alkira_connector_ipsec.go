@@ -45,9 +45,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The CXP where the connector should be " +
+					"provisioned.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",
@@ -89,8 +90,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 						"preshared_keys": {
 							Description: "An array of preshared keys, one per " +
-								"tunnel. The value needs to be provided explictly " +
-								"unlike portal.",
+								"tunnel. The value needs to be provided explictly.",
 							Type: schema.TypeList,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -127,9 +127,10 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 								"endpoint in `STANDBY` mode per connector and " +
 								"there must be at least one endpoint " +
 								"that isn't in `STANDBY` mode per connector.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ACTIVE", "STANDBY"}, false),
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"ACTIVE", "STANDBY"}, false),
 						},
 						"advanced_options": {
 							Description: "Advanced options for IPSec endpoint.",
@@ -137,67 +138,85 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"esp_encryption_algorithms": {
-										Description: "Encryption algorithms to use for IPsec SA. Value " +
-											"could be `AES256CBC`, `AES192CBC`, `AES128CBC`, `AES256GCM16` " +
+										Description: "Encryption algorithms to " +
+											"use for IPsec SA. Value " +
+											"could be `AES256CBC`, `AES192CBC`, " +
+											"`AES128CBC`, `AES256GCM16` " +
 											"`3DESCBC`, or `NULL`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"esp_integrity_algorithms": {
-										Description: "Integrity algorithms to use for IPsec SA. Value could " +
-											"`SHA1`, `SHA256`, `SHA384`, `SHA512` or `MD5`.",
+										Description: "Integrity algorithms to " +
+											"use for IPsec SA. Value could " +
+											"`SHA1`, `SHA256`, `SHA384`, " +
+											"`SHA512` or `MD5`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"esp_dh_group_numbers": {
-										Description: "Diffie Hellman groups to use for IPsec SA. Value could " +
-											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
-											"`MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519` and `NONE`.",
+										Description: "Diffie Hellman groups to use " +
+											"for IPsec SA. Value could " +
+											"`MODP1024`, `MODP2048`, `MODP3072`, " +
+											"`MODP4096`, `MODP6144`, " +
+											"`MODP8192`, `ECP256`, `ECP384`, " +
+											"`ECP521`, `CURVE25519` and `NONE`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"initiator": {
-										Description: "When false CXP will initiate the IKE connection " +
-											"and in all other cases the customer gateway should initiate IKE connection. " +
-											"When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.",
+										Description: "When the value is `false`, " +
+											"CXP will initiate the IKE connection " +
+											"and in all other cases the customer " +
+											"gateway should initiate IKE connection. " +
+											"When `gateway_ip_type` is `DYNAMIC`, " +
+											"initiator must be `true`.",
 										Type:     schema.TypeBool,
 										Required: true,
 									},
 									"ike_version": {
-										Description:  "IKE version, either `IKEv1` or `IKEv2`",
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"IKEv1", "IKEv2"}, false),
+										Description: "IKE version, either `IKEv1` " +
+											"or `IKEv2`",
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"IKEv1", "IKEv2"}, false),
 									},
 									"ike_encryption_algorithms": {
-										Description: "Encryption algorithms to use for IKE SA, one of " +
-											"`AES256CBC`, `AES192CBC`, `AES128CBC` and `3DESCBC`.",
+										Description: "Encryption algorithms to " +
+											"use for IKE SA, one of " +
+											"`AES256CBC`, `AES192CBC`, " +
+											"`AES128CBC` and `3DESCBC`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"ike_integrity_algorithms": {
-										Description: "Integrity algorithms to use for IKE SA, one of " +
+										Description: "Integrity algorithms to use " +
+											"for IKE SA, one of " +
 											"`SHA1`, `SHA256`, `SHA384`, `SHA512`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"ike_dh_group_numbers": {
-										Description: "Diffie Hellman groups to use for IKE SA, one of " +
-											"`MODP1024`, `MODP2048`, `MODP3072`, `MODP4096`, `MODP6144`, " +
-											"`MODP8192`, `ECP256`, `ECP384`, `ECP521`, `CURVE25519`.",
+										Description: "Diffie Hellman groups to " +
+											"use for IKE SA, one of `MODP1024`, " +
+											"`MODP2048`, `MODP3072`, `MODP4096`, " +
+											"`MODP6144`, `MODP8192`, `ECP256`, " +
+											"`ECP384`, `ECP521`, or `CURVE25519`.",
 										Type:     schema.TypeList,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 										Required: true,
 									},
 									"remote_auth_type": {
-										Description: "Remote-ID type - IKE identity to use for " +
-											"authentication round, one of `FQDN`, `USER_FQDN`, " +
-											"`KEYID`, `IP_ADDR`.",
+										Description: "IKE identity to use for " +
+											"authentication round, one of " +
+											"`FQDN`, `USER_FQDN`, " +
+											"`KEYID`, or `IP_ADDR`.",
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice(
