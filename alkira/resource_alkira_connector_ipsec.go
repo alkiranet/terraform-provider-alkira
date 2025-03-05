@@ -160,8 +160,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 										Required: true,
 									},
 									"initiator": {
-										Description: "When true CXP will initiate the IKE connection " +
-											"and if false then the customer gateway should initiate IKE. " +
+										Description: "When false CXP will initiate the IKE connection " +
+											"and in all other cases the customer gateway should initiate IKE connection. " +
 											"When `gateway_ip_type` is `DYNAMIC`, initiator must be `true`.",
 										Type:     schema.TypeBool,
 										Required: true,
