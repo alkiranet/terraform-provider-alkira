@@ -167,6 +167,7 @@ resource "alkira_service_f5_lb" "example-lb-2" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
 - `provision_state` (String) The provisioning state of the resource.
 
 <a id="nestedblock--instance"></a>
