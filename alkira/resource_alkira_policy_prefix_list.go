@@ -141,6 +141,9 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("description", list.Description)
 	d.Set("prefixes", list.Prefixes)
 
+	// Set "prefix_ranges" block
+	setPrefixRanges(d, list.PrefixRanges)
+
 	// Set provision state
 	if client.Provision == true && provState != "" {
 		d.Set("provision_state", provState)
