@@ -118,9 +118,10 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 							Required:    true,
 						},
 						"dx_asn": {
-							Description: "The ASN of AWS side of the connection.",
-							Type:        schema.TypeInt,
-							Required:    true,
+							Description: "The ASN of AWS side of the " +
+								"connection.",
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 						"dx_gateway_ip": {
 							Description: "Valid IP from underlay_prefix " +
@@ -157,10 +158,10 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 							Optional: true,
 						},
 						"vlan_id": {
-							Description: "This is the ID of customer facing " +
-								"VLAN provided by the co-location provider, " +
-								"configured for the link between colo provider " +
-								"and the customer router.",
+							Description: "ID of customer facing VLAN " +
+								"provided by the co-location provider, " +
+								"configured for the link between colo " +
+								"provider and the customer router.",
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -189,8 +190,8 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 							Optional: true,
 						},
 						"segment_options": {
-							Description: "Options for each segment associated " +
-								"with the instance.",
+							Description: "Options for each segment " +
+								"associated with the instance.",
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
@@ -201,9 +202,10 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 										Required:    true,
 									},
 									"on_prem_segment_asn": {
-										Description: "The ASN of customer on-prem side.",
-										Type:        schema.TypeInt,
-										Required:    true,
+										Description: "The ASN of customer " +
+											"on-prem side.",
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 									"customer_loopback_ip": {
 										Description: "Customer loopback IP " +

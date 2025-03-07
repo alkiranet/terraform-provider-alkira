@@ -93,9 +93,10 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Optional:    true,
 			},
 			"segment_options": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "The segment options as used by your F5 Load Balancer.",
+				Type:     schema.TypeSet,
+				Required: true,
+				Description: "The segment options as used by your F5 Load " +
+					"Balancer.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -104,17 +105,19 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required:    true,
 						},
 						"elb_nic_count": {
-							Description: "Number of NICs to allocate for the segment.",
-							Type:        schema.TypeInt,
-							Required:    true,
+							Description: "Number of NICs to allocate for " +
+								"the segment.",
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 					},
 				},
 			},
 			"service_group_name": {
-				Description: "Name of the service group to be associated with the service.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "Name of the service group to be associated " +
+					"with the service.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"instance": {
 				Description: "An array containing the properties for each F5 load" +

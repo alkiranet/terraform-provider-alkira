@@ -47,7 +47,7 @@ resource "alkira_internet_application" "test" {
 ### Required
 
 - `connector_id` (Number) Connector ID.
-- `connector_type` (String) Connector Type.The value could be `AWS_VPC`, `AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` `ARUBA_EDGE_CONNECT`, `EXPRESS_ROUTE`.
+- `connector_type` (String) Connector Type.The value could be `AWS_VPC`, `AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` `ARUBA_EDGE_CONNECT`, or `EXPRESS_ROUTE`.
 - `fqdn_prefix` (String) User provided FQDN prefix that will be published on AWS Route 53.
 - `name` (String) The name of the internet application.
 - `segment_id` (String) The ID of segment associated with the internet application.
@@ -59,12 +59,12 @@ resource "alkira_internet_application" "test" {
 - `bi_directional_az` (String) Bi-directional IFA AZ. The value could be either `AZ0` or `AZ1`
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `byoip_id` (Number) BYOIP ID.
-- `ilb_credential_id` (String) The credential ID of AWS account for `target` when `target`'s `type` is `ILB_NAME`.  This field can only be used when `connector_type` is `AWS_VPC`
+- `ilb_credential_id` (String) The credential ID of AWS account for `target` This field can only be used when `connector_type` is `AWS_VPC` and `target`'s `type` is `ILB_NAME`.
 - `inbound_connector_id` (String) Inbound connector ID.
-- `inbound_connector_type` (String) The inbound connector type specifies how the internet application is to be opened up to the external world. By `DEFAULT` the native cloud internet connector is used. In this scenario, Alkira takes care of creating this inbound internet connector implicitly. If instead inbound access is via the `AKAMAI_PROLEXIC` connector, then you need to create and configure that connector and use it with the internet application.
-- `internet_protocol` (String) Internet Protocol to be associated with the internet application. The value could be: `IPV4`, `IPV6` or `BOTH`. In order to use the option `IPV6` or `BOTH`, `enable_ipv6_to_ipv4_translation` should be enabled on the associated segment and a valid IP pool range should be provided. `IPV6` and `BOTH` options are only available to Internet Applications on AWS CXPs. (**BETA**)
+- `inbound_connector_type` (String) This field defines how the internet application to be opened up to the public. Value `DEFAULT` means that the native cloud internet connector is used. In this case, Alkira takes care of creating this inbound internet connector implicitly. When value `AKAMAI_PROLEXIC` is used it means that the inbound traffic is through `alkira_connector_akamai_prolexic`. You need to create and configure that connector and use it with the internet application.
+- `internet_protocol` (String) Protocol to be associated with the resource. The value could be: `IPV4`, `IPV6` or `BOTH`. In order to use the option `IPV6` or `BOTH`, field `enable_ipv6_to_ipv4_translation` should be enabled on the associated segment and a valid IP pool range should be provided. `IPV6` and `BOTH` options are only available to Internet Applications on AWS CXPs. (**BETA**)
 - `public_ips` (List of String) This option pertains to the `AKAMAI_PROLEXIC` `inbound_connector_type`. The public IPs are to be used to access the internet application. These public IPs must belong to one of the BYOIP ranges configured for the connector-akamai-prolexic.
-- `source_nat_ip_pool` (Block Set) A IP range to use for source NAT with this internet application. It could be only one defined for now. The endpoints of each range are inclusive. Source NAT can only be used if `inbound_connector_type` is `DEFAULT`. (see [below for nested schema](#nestedblock--source_nat_ip_pool))
+- `source_nat_ip_pool` (Block Set) A IP range to be used for source NAT with this internet application. It could be only one defined for now. The endpoints of each range are inclusive. Source NAT can only be used if `inbound_connector_type` is `DEFAULT`. (see [below for nested schema](#nestedblock--source_nat_ip_pool))
 
 ### Read-Only
 
@@ -77,7 +77,7 @@ resource "alkira_internet_application" "test" {
 
 Required:
 
-- `port_ranges` (List of String) list of ports or port ranges. Values can be mixed i.e. `["20", "100-200"]`. An array with only the value `-1` means any port.
+- `port_ranges` (List of String) list of ports or port ranges. Values can be mixed i.e. `["20", "100-200"]`. Value ["-1"] means any port.
 - `type` (String) The type of the target, one of `IP` or `ILB_NAME`.
 - `value` (String) IFA ILB name or private IP.
 
