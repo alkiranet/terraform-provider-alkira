@@ -5,7 +5,7 @@ resource "alkira_connector_azure_expressroute" "example" {
   enabled         = true
   vhub_prefix     = "10.129.0.0/23"
   cxp             = "USWEST-AZURE-1"
-  tunnel_protocol = "VXLAN_GPE"
+  tunnel_protocol = "IPSEC"
   group           = alkira_group.example.name
 
   instances {
