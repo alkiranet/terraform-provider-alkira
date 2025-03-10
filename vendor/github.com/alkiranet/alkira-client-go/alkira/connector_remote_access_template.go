@@ -22,6 +22,7 @@ type ConnectorRemoteAccessAdvancedOptions struct {
 	EnableDynamicRegionMapping bool   `json:"enableDynamicRegionMapping"`
 	MaxActiveUsersThreshold    int    `json:"maxActiveUsersThreshold"`
 	NameServer                 string `json:"nameServer"`
+	FallbackToTcp              bool   `json:"fallbackToTcp"`
 }
 
 type ConnectorRemoteAccessArguments struct {
