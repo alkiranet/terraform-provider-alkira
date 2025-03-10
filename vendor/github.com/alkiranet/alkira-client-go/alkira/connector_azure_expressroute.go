@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2025 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -28,6 +28,7 @@ type ConnectorAzureExpressRouteInstance struct {
 
 type ConnectorAzureExpressRoute struct {
 	Name            string                               `json:"name"`
+	Description     string                               `json:"description,omitempty"`
 	Id              json.Number                          `json:"id,omitempty"`
 	Size            string                               `json:"size"`
 	Enabled         bool                                 `json:"enabled"`

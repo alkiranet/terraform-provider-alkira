@@ -233,11 +233,17 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"initiator": {
-													Description: "When true CXP will initiate " +
-														"the IKE connection and if false then " +
-														"the customer gateway should initiate " +
-														"IKE. When `gateway_ip_type` is `DYNAMIC`," +
-														"initiator must be `true`.",
+													Description: "When the value " +
+														"is `false`, CXP will " +
+														"initiate the IKE connection " +
+														"and in all other cases, " +
+														"the customer gateway " +
+														"will initiate the IKE " +
+														"connection. When " +
+														"`gateway_ip_type` is " +
+														"`DYNAMIC`," +
+														"this field must be " +
+														"`true`.",
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -250,9 +256,10 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 														"IKEv1", "IKEv2"}, false),
 												},
 												"remote_auth_type": {
-													Description: "Remote-ID type - IKE " +
-														"identity to use for authentication " +
-														"round, one of `FQDN`, `USER_FQDN`, " +
+													Description: "IKE identity " +
+														"to use for authentication " +
+														"round, one of `FQDN`, " +
+														"`USER_FQDN`, " +
 														"`KEYID`, `IP_ADDR`.",
 													Type:     schema.TypeString,
 													Required: true,

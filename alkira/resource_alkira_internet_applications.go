@@ -42,8 +42,8 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
 			"bi_directional_az": {
-				Description: "Bi-directional IFA AZ. The value could be either " +
-					"`AZ0` or `AZ1`",
+				Description: "Bi-directional IFA AZ. The value could be " +
+					"either `AZ0` or `AZ1`",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -60,7 +60,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			"connector_type": {
 				Description: "Connector Type.The value could be `AWS_VPC`, " +
 					"`AZURE_VNET`, `GCP_VPC`, `OCI_VCN`, `SD_WAN`, `IP_SEC` " +
-					"`ARUBA_EDGE_CONNECT`, `EXPRESS_ROUTE`.",
+					"`ARUBA_EDGE_CONNECT`, or `EXPRESS_ROUTE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -81,12 +81,15 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Optional:    true,
 			},
 			"inbound_connector_type": {
-				Description: "The inbound connector type specifies how the internet application " +
-					"is to be opened up to the external world. By `DEFAULT` the native cloud " +
-					"internet connector is used. In this scenario, Alkira takes care of creating " +
-					"this inbound internet connector implicitly. If instead inbound access is via " +
-					"the `AKAMAI_PROLEXIC` connector, then you need to create and configure " +
-					"that connector and use it with the internet application.",
+				Description: "This field defines how the internet application " +
+					"to be opened up to the public. Value `DEFAULT` means that " +
+					"the native cloud internet connector is used. In this " +
+					"case, Alkira takes care of creating this inbound internet " +
+					"connector implicitly. When value `AKAMAI_PROLEXIC` is used " +
+					"it means that the inbound traffic is through " +
+					"`alkira_connector_akamai_prolexic`. You need to create " +
+					"and configure that connector and use it with the " +
+					"internet application.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "DEFAULT",
@@ -94,10 +97,10 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					"DEFAULT", "AKAMAI_PROLEXIC"}, false),
 			},
 			"internet_protocol": {
-				Description: "Internet Protocol to be associated with the " +
-					"internet application. The value could be: `IPV4`, " +
-					"`IPV6` or `BOTH`. In order to use the option `IPV6` or " +
-					"`BOTH`, `enable_ipv6_to_ipv4_translation` " +
+				Description: "Protocol to be associated with the resource. " +
+					"The value could be: `IPV4`, `IPV6` or `BOTH`. In order " +
+					"to use the option `IPV6` or `BOTH`, field " +
+					"`enable_ipv6_to_ipv4_translation` " +
 					"should be enabled on the associated segment " +
 					"and a valid IP pool range should be provided. " +
 					"`IPV6` and `BOTH` options are only available to Internet " +
@@ -141,10 +144,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Required: true,
 			},
 			"source_nat_ip_pool": {
-				Description: "A IP range to use for source NAT with this internet " +
-					"application. It could be only one defined for now. The endpoints " +
-					"of each range are inclusive. Source NAT can only be used if " +
-					"`inbound_connector_type` is `DEFAULT`.",
+				Description: "A IP range to be used for source NAT with this " +
+					"internet application. It could be only one defined for " +
+					"now. The endpoints of each range are inclusive. Source " +
+					"NAT can only be used if `inbound_connector_type` is " +
+					"`DEFAULT`.",
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -162,15 +166,24 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				},
 				Optional: true,
 			},
+			"ilb_credential_id": {
+				Description: "The credential ID of AWS account for `target` " +
+					"This field can only be used when `connector_type` is " +
+					"`AWS_VPC` and `target`'s `type` is `ILB_NAME`.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"target": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Description:  "The type of the target, one of `IP` or `ILB_NAME`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"IP", "ILB_NAME"}, false),
+							Description: "The type of the target, one of " +
+								"`IP` or `ILB_NAME`.",
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"IP", "ILB_NAME"}, false),
 						},
 						"value": {
 							Description: "IFA ILB name or private IP.",
@@ -178,9 +191,10 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 							Required:    true,
 						},
 						"port_ranges": {
-							Description: "list of ports or port ranges. Values can be " +
-								"mixed i.e. `[\"20\", \"100-200\"]`. An array with only the " +
-								"value `-1` means any port.",
+							Description: "list of ports or port ranges. " +
+								"Values can be mixed i.e. " +
+								"`[\"20\", \"100-200\"]`. Value [\"-1\"] " +
+								"means any port.",
 							Type:     schema.TypeList,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
@@ -256,6 +270,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("internet_protocol", app.InternetProtocol)
 	d.Set("public_ips", app.PublicIps)
 	d.Set("size", app.Size)
+	d.Set("ilb_credential_id", app.IlbCredentialId)
 
 	// Segment
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
@@ -400,6 +415,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		SnatIpv4Ranges:                pool,
 		Size:                          d.Get("size").(string),
 		Targets:                       targets,
+		IlbCredentialId:               d.Get("ilb_credential_id").(string),
 	}
 
 	return request, nil
