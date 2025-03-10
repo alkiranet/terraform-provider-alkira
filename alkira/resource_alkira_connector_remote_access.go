@@ -128,6 +128,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 					" Default value is `false`.",
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"concurrent_sessions_alert_threshold": {
 				Description: "The threshhold for concurrent sessions alert.",
