@@ -1,5 +1,6 @@
 resource "alkira_connector_azure_expressroute" "example" {
   name            = "example"
+  description     = "example connector"
   size            = "LARGE"
   enabled         = true
   vhub_prefix     = "10.129.0.0/23"

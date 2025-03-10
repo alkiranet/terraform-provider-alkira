@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2020-2025 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -39,6 +39,7 @@ type InternetApplication struct {
 	SnatIpv4Ranges                []*InternetApplicationSnatIpv4 `json:"snatIpv4Ranges,omitempty"`
 	Size                          string                         `json:"size"`
 	Targets                       []InternetApplicationTargets   `json:"targets,omitempty"`
+	IlbCredentialId               string                         `json:"ilbCredentialId,omitempty"`
 }
 
 // NewInternetApplication new internet application

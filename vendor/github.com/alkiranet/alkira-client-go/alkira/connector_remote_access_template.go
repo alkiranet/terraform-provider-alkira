@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2024 Alkira Inc. All Rights Reserved.
+// Copyright (C) 2022-2025 Alkira Inc. All Rights Reserved.
 
 package alkira
 
@@ -22,6 +22,7 @@ type ConnectorRemoteAccessAdvancedOptions struct {
 	EnableDynamicRegionMapping bool   `json:"enableDynamicRegionMapping"`
 	MaxActiveUsersThreshold    int    `json:"maxActiveUsersThreshold"`
 	NameServer                 string `json:"nameServer"`
+	FallbackToTcp              bool   `json:"fallbackToTcp"`
 }
 
 type ConnectorRemoteAccessArguments struct {

@@ -274,6 +274,7 @@ func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interfac
 	return segmentOptions, nil
 }
 
+// expand "instance" block from config to generate request payload
 func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
@@ -343,60 +344,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 	return instances, nil
 }
 
-func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []map[string]interface{} {
-	var instances []map[string]interface{}
-
-	for _, value := range d.Get("instance").([]interface{}) {
-		cfg := value.(map[string]interface{})
-
-		for _, ins := range c {
-			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
-				instance := map[string]interface{}{
-					"name":           ins.Name,
-					"id":             ins.Id,
-					"credential_id":  ins.CredentialId,
-					"auth_key":       cfg["auth_key"].(string),
-					"auth_code":      cfg["auth_code"].(string),
-					"enable_traffic": ins.TrafficEnabled,
-				}
-				instances = append(instances, instance)
-				break
-			}
-		}
-	}
-
-	for _, instance := range c {
-		new := true
-
-		// Check if the instance already exists in the Terraform config
-		for _, ins := range d.Get("instance").([]interface{}) {
-			cfg := ins.(map[string]interface{})
-
-			if cfg["id"].(int) == instance.Id || cfg["name"].(string) == instance.Name {
-				new = false
-				break
-			}
-		}
-
-		// If the instance is new, add it to the tail of the list,
-		// this will generate a diff
-		if new {
-			instance := map[string]interface{}{
-				"credential_id":  instance.CredentialId,
-				"name":           instance.Name,
-				"id":             instance.Id,
-				"enable_traffic": instance.TrafficEnabled,
-			}
-
-			instances = append(instances, instance)
-			break
-		}
-	}
-
-	return instances
-}
-
-// generateServicePanRequest generate request payload for creating and updating service.
+// generate request payload
 func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
 
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
@@ -461,4 +409,36 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	return service, nil
+}
+
+// Set "instance" blocks from API response
+func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []map[string]interface{} {
+	var instances []map[string]interface{}
+
+	for _, ins := range c {
+
+		// locate the hidden credential from existing Terraform state
+		var authKey string
+		var authCode string
+
+		for _, value := range d.Get("instance").([]interface{}) {
+			cfg := value.(map[string]interface{})
+			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
+				authKey = cfg["auth_key"].(string)
+				authCode = cfg["auth_code"].(string)
+			}
+		}
+
+		instance := map[string]interface{}{
+			"name":           ins.Name,
+			"id":             ins.Id,
+			"auth_key":       authKey,
+			"auth_code":      authCode,
+			"credential_id":  ins.CredentialId,
+			"enable_traffic": ins.TrafficEnabled,
+		}
+		instances = append(instances, instance)
+	}
+
+	return instances
 }
