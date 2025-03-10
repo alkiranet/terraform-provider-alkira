@@ -125,7 +125,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 			},
 			"fallback_to_tcp": {
 				Description: "Fallback to TCP when UDP fails." +
-					"Default value is `false`.",
+					" Default value is `false`.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
