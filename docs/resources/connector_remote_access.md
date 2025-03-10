@@ -46,6 +46,7 @@ resource "alkira_connector_remote_access" "example" {
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `concurrent_sessions_alert_threshold` (Number) The threshhold for concurrent sessions alert.
 - `enable_dynamic_region_mapping` (Boolean) Enable dynamic region mapping. Default value is `true`.
+- `fallback_to_tcp` (Boolean) Fallback to TCP when UDP fails.Default value is `false`.
 - `ldap_settings` (Block Set) LDAP Settings when `authentication_mode` is `LDAP`. (see [below for nested schema](#nestedblock--ldap_settings))
 - `name_server` (String) Name server.
 

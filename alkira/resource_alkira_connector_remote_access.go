@@ -123,6 +123,12 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"fallback_to_tcp": {
+				Description: "Fallback to TCP when UDP fails." +
+					"Default value is `false`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"concurrent_sessions_alert_threshold": {
 				Description: "The threshhold for concurrent sessions alert.",
 				Type:        schema.TypeInt,

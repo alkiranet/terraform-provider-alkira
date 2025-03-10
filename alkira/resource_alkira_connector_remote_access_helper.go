@@ -151,6 +151,7 @@ func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{})
 			EnableDynamicRegionMapping: d.Get("enable_dynamic_region_mapping").(bool),
 			MaxActiveUsersThreshold:    d.Get("concurrent_sessions_alert_threshold").(int),
 			NameServer:                 d.Get("name_server").(string),
+			FallbackToTcp:              d.Get("fallback_to_tcp").(bool),
 		},
 		Arguments: []alkira.ConnectorRemoteAccessArguments{alkira.ConnectorRemoteAccessArguments{
 			BillingTags: convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
@@ -217,6 +218,7 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 
 	d.Set("enable_dynamic_region_mapping", connector.AdvancedOptions.EnableDynamicRegionMapping)
 	d.Set("name_server", connector.AdvancedOptions.NameServer)
+	d.Set("fallback_to_tcp", connector.AdvancedOptions.FallbackToTcp)
 	d.Set("concurrent_sessions_alert_threshold", connector.AdvancedOptions.MaxActiveUsersThreshold)
 	d.Set("cxp", connector.Arguments[0].Cxp)
 	d.Set("billing_tag_ids", connector.Arguments[0].BillingTags)
