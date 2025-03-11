@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraF5LoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Description:   "F5 Load Balancer Service.",
+		Description:   "F5 Load Balancer Service. (**BETA**)",
 		CreateContext: resourceF5LoadBalancerCreate,
 		ReadContext:   resourceF5LoadBalancerRead,
 		UpdateContext: resourceF5LoadBalancerUpdate,

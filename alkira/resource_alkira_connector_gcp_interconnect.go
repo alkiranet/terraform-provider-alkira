@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage GCP Interconnect.",
+		Description: "Manage GCP Interconnect. (**BETA**)",
 
 		CreateContext: resourceConnectorGcpInterconnectCreate,
 		ReadContext:   resourceConnectorGcpInterconnectRead,

@@ -12,7 +12,7 @@ import (
 
 func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Description:   "",
+		Description:   "Resource for managing F5 vServer endpoint. (**BETA**)",
 		CreateContext: resourceF5vServerEndpointCreate,
 		ReadContext:   resourceF5vServerEndpointRead,
 		UpdateContext: resourceF5vServerEndpointUpdate,

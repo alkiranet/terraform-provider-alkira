@@ -3,12 +3,12 @@
 page_title: "alkira_connector_aws_dx Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage AWS Direct Connect (DX) connector.
+  Manage AWS Direct Connect (DX) connector. (BETA)
 ---
 
 # alkira_connector_aws_dx (Resource)
 
-Manage AWS Direct Connect (DX) connector.
+Manage AWS Direct Connect (DX) connector. (**BETA**)
 
 ## Example Usage
 
