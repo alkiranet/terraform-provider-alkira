@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraConnectorAwsDx() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage AWS Direct Connect (DX) connector.",
+		Description: "Manage AWS Direct Connect (DX) connector. (**BETA**)",
 
 		CreateContext: resourceConnectorAwsDxCreate,
 		ReadContext:   resourceConnectorAwsDxRead,

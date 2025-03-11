@@ -2,12 +2,12 @@
 page_title: "alkira_service_f5_lb Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  F5 Load Balancer Service.
+  F5 Load Balancer Service. (BETA)
 ---
 
 # alkira_service_f5_lb (Resource)
 
-F5 Load Balancer Service.
+F5 Load Balancer Service. (**BETA**)
 
 F5 Load Balancer Service supports two `license_type`.
 

@@ -2,12 +2,12 @@
 page_title: "alkira_connector_gcp_interconnect Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage GCP Interconnect.
+  Manage GCP Interconnect. (BETA)
 ---
 
 # alkira_connector_gcp_interconnect (Resource)
 
-Manage GCP Interconnect.
+Manage GCP Interconnect. (**BETA**)
 
 ## Example Usage
 

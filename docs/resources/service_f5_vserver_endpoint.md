@@ -2,12 +2,12 @@
 page_title: "alkira_service_f5_vserver_endpoint Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  
+  Resource for managing F5 vServer endpoint. (BETA)
 ---
 
 # alkira_service_f5_vserver_endpoint (Resource)
 
-
+Resource for managing F5 vServer endpoint. (**BETA**)
 Each vServer can be mapped to an instance of a F5 Load Balancer Service.
 ```terraform
 resource "alkira_service_f5_vserver_endpoint" "example-vserver" {
