@@ -63,11 +63,12 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`",
+				Description: "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`, `IPSEC`." +
+					" Default is `VXLAN_GPE`",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "VXLAN_GPE",
-				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE", "IPSEC"}, false),
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -107,7 +108,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 						},
 						"expressroute_circuit_id": {
 							Description: "ExpressRoute circuit ID from Azure. " +
-								"ExpresRoute Circuit should have a private " +
+								"ExpressRoute Circuit should have a private " +
 								"peering connection provisioned, also an valid " +
 								"authorization key associated with it.",
 							Type:     schema.TypeString,
@@ -152,6 +153,93 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"segment_options": {
+							Description: "Instance level segment specific routing and gateway configurations." +
+								"Only required when `tunnel_protocol` is `IPSEC`. " +
+								"There must be a one-to-one correspondence between " +
+								"segments defined in instance-level `segment_options` " +
+								"and global-level `segment_options`",
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment_name": {
+										Description: "The name of an existing segment in the Alkira environment.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"customer_gateways": {
+										Description: "Customer gateway configurations for `IPSEC` tunnels. " +
+											"Required only if `tunnel_protocol` is `IPSEC`.",
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Description: "A unique name for the customer gateway.",
+													Type:        schema.TypeString,
+													Required:    true,
+												},
+												"tunnels": {
+													Description: "Tunnel configurations for the gateway. " +
+														"At least one tunnel is required for `IPSEC`.",
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"id": {
+																Description: "The ID of the tunnel.",
+																Type:        schema.TypeString,
+																Computed:    true,
+															},
+															"name": {
+																Description: "A unique name for the tunnel.",
+																Type:        schema.TypeString,
+																Required:    true,
+															},
+															"initiator": {
+																Description: "Whether this endpoint initiates the tunnel connection.",
+																Type:        schema.TypeBool,
+																Optional:    true,
+															},
+															"profile_id": {
+																Description: "The ID of the tunnel profile to use.",
+																Type:        schema.TypeInt,
+																Optional:    true,
+															},
+															"ike_version": {
+																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
+																Type:        schema.TypeString,
+																Optional:    true,
+															},
+															"pre_shared_key": {
+																Description: "The pre-shared key for tunnel authentication. " +
+																	"This field is sensitive and will not be displayed in logs.",
+																Type:      schema.TypeString,
+																Optional:  true,
+																Sensitive: true,
+															},
+															"remote_auth_type": {
+																Description: "The authentication type for the remote endpoint. " +
+																	"Only `FQDN` iscurrently supported.",
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"remote_auth_value": {
+																Description: "The authentication value for the remote endpoint. This field is sensitive.",
+																Type:        schema.TypeString,
+																Optional:    true,
+																Sensitive:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -263,34 +351,22 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("vhub_prefix", connector.VhubPrefix)
 
-	var instances []map[string]interface{}
-	for _, instance := range connector.Instances {
-		i := map[string]interface{}{
-			"credential_id":             instance.CredentialId,
-			"expressroute_circuit_id":   instance.ExpressRouteCircuitId,
-			"gateway_mac_address":       instance.GatewayMacAddress,
-			"id":                        instance.Id,
-			"loopback_subnet":           instance.LoopbackSubnet,
-			"name":                      instance.Name,
-			"redundant_router":          instance.RedundantRouter,
-			"virtual_network_interface": instance.Vnis,
-		}
-		instances = append(instances, i)
+	instances := make([]map[string]interface{}, len(connector.Instances))
+	for i, instance := range connector.Instances {
+		instances[i] = flattenInstance(instance)
 	}
 
 	d.Set("instances", instances)
 
-	var segments []map[string]interface{}
-
-	for _, seg := range connector.SegmentOptions {
-		i := map[string]interface{}{
+	segments := make([]map[string]interface{}, len(connector.SegmentOptions))
+	for i, seg := range connector.SegmentOptions {
+		segments[i] = map[string]interface{}{
 			"segment_name":             seg.SegmentName,
 			"segment_id":               seg.SegmentId,
 			"customer_asn":             seg.CustomerAsn,
 			"disable_internet_exit":    seg.DisableInternetExit,
 			"advertise_on_prem_routes": seg.AdvertiseOnPremRoutes,
 		}
-		segments = append(segments, i)
 	}
 	d.Set("segment_options", segments)
 

@@ -16,14 +16,36 @@ type ConnectorAzureExpressRouteSegment struct {
 }
 
 type ConnectorAzureExpressRouteInstance struct {
-	Name                  string   `json:"name"`
-	Id                    int      `json:"id,omitempty"`
-	ExpressRouteCircuitId string   `json:"expressRouteCircuitId"`
-	RedundantRouter       bool     `json:"redundantRouter,omitempty"`
-	LoopbackSubnet        string   `json:"loopbackSubnet,omitempty"`
-	CredentialId          string   `json:"credentialId"`
-	GatewayMacAddress     []string `json:"gatewayMacAddresses,omitempty"`
-	Vnis                  []int    `json:"vnis,omitempty"`
+	Name                  string                  `json:"name"`
+	Id                    int                     `json:"id,omitempty"`
+	ExpressRouteCircuitId string                  `json:"expressRouteCircuitId"`
+	RedundantRouter       bool                    `json:"redundantRouter,omitempty"`
+	LoopbackSubnet        string                  `json:"loopbackSubnet,omitempty"`
+	CredentialId          string                  `json:"credentialId"`
+	GatewayMacAddress     []string                `json:"gatewayMacAddresses,omitempty"`
+	Vnis                  []int                   `json:"vnis,omitempty"`
+	SegmentOptions        []InstanceSegmentOption `json:"segmentOptions"`
+}
+
+type InstanceSegmentOption struct {
+	SegmentName      string            `json:"segmentName"`
+	CustomerGateways []CustomerGateway `json:"customerGateways"`
+}
+
+type CustomerGateway struct {
+	Name    string                  `json:"name"`
+	Id      string                  `json:"id,omitempty"`
+	Tunnels []CustomerGatewayTunnel `json:"tunnels"`
+}
+type CustomerGatewayTunnel struct {
+	Name            string `json:"name"`
+	Id              string `json:"id,omitempty"`
+	Initiator       bool   `json:"initiator,omitempty"`
+	ProfileId       int    `json:"profileId,omitempty"`
+	IkeVersion      string `json:"ikeVersion,omitempty"`
+	PreSharedKey    string `json:"preSharedKey,omitempty"`
+	RemoteAuthType  string `json:"remoteAuthType,omitempty"`
+	RemoteAuthValue string `json:"remoteAuthValue,omitempty"`
 }
 
 type ConnectorAzureExpressRoute struct {
