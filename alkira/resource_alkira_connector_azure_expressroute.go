@@ -63,11 +63,12 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Required:    true,
 			},
 			"tunnel_protocol": {
-				Description:  "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`",
+				Description: "The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`, `IPSEC`." +
+					" Default is `VXLAN_GPE`",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "VXLAN_GPE",
-				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"VXLAN", "VXLAN_GPE", "IPSEC"}, false),
 			},
 			"cxp": {
 				Description: "The CXP where the connector should be provisioned.",
@@ -107,7 +108,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 						},
 						"expressroute_circuit_id": {
 							Description: "ExpressRoute circuit ID from Azure. " +
-								"ExpresRoute Circuit should have a private " +
+								"ExpressRoute Circuit should have a private " +
 								"peering connection provisioned, also an valid " +
 								"authorization key associated with it.",
 							Type:     schema.TypeString,
@@ -155,7 +156,10 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 						},
 						"segment_options": {
 							Description: "Instance level segment specific routing and gateway configurations." +
-								"Only required when `tunnel_protocol` is `IPSEC`.",
+								"Only required when `tunnel_protocol` is `IPSEC`. " +
+								"There must be a one-to-one correspondence between " +
+								"segments defined in instance-level `segment_options` " +
+								"and global-level `segment_options`",
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{

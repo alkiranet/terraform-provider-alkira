@@ -8,10 +8,57 @@ description: |-
 # {{.Name}} ({{.Type}})
 
 {{ .Description | trimspace }}
-# Simple Example with one segment Option
+
+
+This example demonstrates a straightforward Azure ExpressRoute connector configuration with minimal settings
 {{ tffile "examples/resources/alkira_connector_azure_expressroute/resource.tf" }}
 
-# Multiple Segment Options
+This example demonstrates a high-availability configuration with redundant routers and multiple gateway MAC addresses for VXLAN connectivity
 {{ tffile "examples/resources/alkira_connector_azure_expressroute/resource1.tf" }}
+
+This example demonstrates a configuration with multiple segments and IPsec tunnels with various authentication and security settings
+{{ tffile "examples/resources/alkira_connector_azure_expressroute/resource2.tf" }}
+
+This example demonstrates configuring multiple ExpressRoute circuit instances within a single connector resource
+{{ tffile "examples/resources/alkira_connector_azure_expressroute/resource3.tf" }}
+
+
+## Understanding Connector Components
+
+### 1. Connector Base Configuration
+
+The connector requires basic information such as:
+- Name and description
+- Size (from SMALL to 10LARGE)
+- CXP location (where the connector is provisioned)
+- VHUB prefix (a /23 CIDR block for the virtual hub)
+- Tunnel protocol (VXLAN, VXLAN_GPE, or IPSEC)
+
+### 2. ExpressRoute Circuit Instances
+
+Each connector must have at least one ExpressRoute circuit instance, which specifies:
+- Circuit identifier from Azure
+- Loopback subnet (/26) for establishing VXLAN GPE tunnels
+- Azure credentials
+- Optional redundant router configuration
+- For VXLAN: Gateway MAC addresses and optional virtual network interfaces
+- For IPsec: Segment-specific gateway and tunnel configurations
+
+### 3. Segment Options
+
+Segment options define routing parameters for each network segment, including:
+- Customer ASN (Autonomous System Number)
+- Internet exit controls
+- On-premises route advertisement options
+
+## Important Notes
+
+- The VHUB prefix must be a `/23` CIDR block
+- The loopback subnet must be a `/26` CIDR block
+- For VXLAN with redundant routers, two gateway MAC addresses are required
+- For IPsec tunnels, at least one customer gateway with one tunnel is required per segment
+- Currently, only IKEv2 and FQDN authentication are supported for IPsec tunnels
+- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options`.
+  Every segment referenced within an instance must also have a corresponding global segment options entry with the same segment name.
 
 {{ .SchemaMarkdown | trimspace }}

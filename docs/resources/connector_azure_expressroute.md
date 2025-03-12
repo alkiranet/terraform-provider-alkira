@@ -8,139 +8,285 @@ description: |-
 # alkira_connector_azure_expressroute (Resource)
 
 Manage Azure ExpressRoute Connector. (**BETA**)
-# Simple Example with one segment Option
+
+
+This example demonstrates a straightforward Azure ExpressRoute connector configuration with minimal settings
 ```terraform
-resource "alkira_connector_azure_expressroute" "example" {
-  name            = "example"
-  description     = "example connector"
-  size            = "LARGE"
+resource "alkira_connector_azure_expressroute" "basic" {
+  name            = "basic-expressroute"
+  description     = "Basic ExpressRoute connector with VXLAN_GPE"
+  size            = "MEDIUM"
   enabled         = true
-  vhub_prefix     = "10.129.0.0/23"
+  vhub_prefix     = "10.130.0.0/23"
   cxp             = "USWEST-AZURE-1"
-  tunnel_protocol = "IPSEC"
-  group           = alkira_group.example.name
+  tunnel_protocol = "VXLAN_GPE" # Default tunnel protocol
+  group           = alkira_group.networking.name
 
   instances {
-    name                      = "InstanceName"
-    expressroute_circuit_id   = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName>"
-    redundant_router          = true
-    loopback_subnet           = "192.168.18.0/26"
-    credential_id             = alkira_credential_azure_vnet.example.id
-    gateway_mac_address       = ["00:1A:2B:3C:4D:5E", "00:6F:7G:8H:9I:0J"]
-    virtual_network_interface = [16773024, 16773025]
-
+    name                    = "primary-instance"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/primary-circuit"
+    redundant_router        = false # Single router configuration
+    loopback_subnet         = "192.168.20.0/26"
+    credential_id           = alkira_credential_azure_vnet.prod.id
     segment_options {
-      segment_name = alkira_segment.example.name
+      segment_name = alkira_segment.prod.name
       customer_gateways {
         name = "gateway1"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkey123"
-          profile_id        = 1
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalue123"
-        }
       }
     }
   }
 
   segment_options {
-    segment_name             = alkira_segment.example.name
-    customer_asn             = "65514"
-    disable_internet_exit    = false
-    advertise_on_prem_routes = false
+    segment_name             = alkira_segment.prod.name
+    customer_asn             = "65001"
+    disable_internet_exit    = true
+    advertise_on_prem_routes = true
   }
 }
 ```
 
-# Multiple Segment Options
+This example demonstrates a high-availability configuration with redundant routers and multiple gateway MAC addresses for VXLAN connectivity
 ```terraform
-resource "alkira_connector_azure_expressroute" "example2" {
-  name            = "example2"
+resource "alkira_connector_azure_expressroute" "ha_config" {
+  name            = "ha-expressroute"
+  description     = "High availability ExpressRoute connector"
   size            = "LARGE"
   enabled         = true
-  vhub_prefix     = "10.129.0.0/23"
-  cxp             = "USWEST-AZURE-1"
-  tunnel_protocol = "IPSEC"
-  group           = alkira_group.example.name
+  vhub_prefix     = "10.131.0.0/23"
+  cxp             = "USEAST-AZURE-1"
+  tunnel_protocol = "VXLAN"
+  group           = alkira_group.core_network.name
+  billing_tag_ids = [alkira_billing_tag.production.id, alkira_billing_tag.networking.id]
 
   instances {
-    name                    = "InstanceName"
-    expressroute_circuit_id = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName2>"
-    redundant_router        = true
-    loopback_subnet         = "192.168.19.0/26"
-    credential_id           = alkira_credential_azure_vnet.example2.id
+    name                    = "ha-instance"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/ha-circuit"
+    redundant_router        = true # Enable redundant routers for high availability
+    loopback_subnet         = "192.168.21.0/26"
+    credential_id           = alkira_credential_azure_vnet.prod.id
+
+    # MAC addresses of customer VXLAN gateways
+    gateway_mac_address = ["00:1A:2B:3C:4D:5E", "00:6F:7G:8H:9I:0J"]
+
+    # Optional virtual network interface IDs
+    virtual_network_interface = [16774000, 16774001]
 
     segment_options {
-      segment_name = alkira_segment.example.name
+      segment_name = alkira_segment.prod.name
       customer_gateways {
         name = "gateway1"
+      }
+    }
+
+  }
+
+  segment_options {
+    segment_name             = alkira_segment.prod.name
+    customer_asn             = "65002"
+    disable_internet_exit    = false
+    advertise_on_prem_routes = true
+  }
+}
+```
+
+This example demonstrates a configuration with multiple segments and IPsec tunnels with various authentication and security settings
+```terraform
+resource "alkira_connector_azure_expressroute" "multi_segment" {
+  name            = "multi-segment-ipsec"
+  description     = "ExpressRoute connector with multiple segments and IPsec tunnels"
+  size            = "2LARGE"
+  enabled         = true
+  vhub_prefix     = "10.132.0.0/23"
+  cxp             = "USWEST-AZURE-1"
+  tunnel_protocol = "IPSEC" # Using IPsec for tunnel protocol
+  group           = alkira_group.security.name
+
+  instances {
+    name                    = "multi-segment-instance"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/multi-segment-circuit"
+    redundant_router        = true
+    loopback_subnet         = "192.168.22.0/26"
+    credential_id           = alkira_credential_azure_vnet.security.id
+
+    # First segment options with primary gateway
+    segment_options {
+      segment_name = alkira_segment.dmz.name
+      customer_gateways {
+        name = "dmz-primary-gateway"
         tunnels {
-          name              = "tunnel1"
+          name              = "primary-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
-          pre_shared_key    = "secretkey456"
-          profile_id        = 2
+          pre_shared_key    = "psk-dmz-primary-123!"
+          profile_id        = 10
           remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalue456"
+          remote_auth_value = "dmz-gateway.example.com"
         }
+      }
+    }
+
+    # Second segment options with primary and backup gateways
+    segment_options {
+      segment_name = alkira_segment.internal.name
+
+      # Primary gateway for internal segment
+      customer_gateways {
+        name = "internal-primary-gateway"
         tunnels {
-          name              = "tunnel2"
+          name              = "primary-tunnel"
+          ike_version       = "IKEv2"
+          initiator         = true
+          pre_shared_key    = "psk-internal-primary-456!"
+          profile_id        = 11
+          remote_auth_type  = "FQDN"
+          remote_auth_value = "internal-primary.example.com"
+        }
+      }
+
+      # Backup gateway for internal segment
+      customer_gateways {
+        name = "internal-backup-gateway"
+        tunnels {
+          name              = "backup-tunnel"
+          ike_version       = "IKEv2"
+          initiator         = false # Waiting for initiation from customer side
+          pre_shared_key    = "psk-internal-backup-789!"
+          profile_id        = 12
+          remote_auth_type  = "FQDN"
+          remote_auth_value = "internal-backup.example.com"
+        }
+      }
+    }
+  }
+
+  # Global segment options for DMZ
+  segment_options {
+    segment_name             = alkira_segment.dmz.name
+    customer_asn             = "65003"
+    disable_internet_exit    = true
+    advertise_on_prem_routes = false
+  }
+
+  # Global segment options for internal
+  segment_options {
+    segment_name             = alkira_segment.internal.name
+    customer_asn             = "65004"
+    disable_internet_exit    = false
+    advertise_on_prem_routes = true
+  }
+}
+```
+
+This example demonstrates configuring multiple ExpressRoute circuit instances within a single connector resource
+```terraform
+resource "alkira_connector_azure_expressroute" "multi_instance" {
+  name            = "multi-instance-connector"
+  description     = "ExpressRoute connector with multiple circuit instances"
+  size            = "5LARGE"
+  enabled         = true
+  vhub_prefix     = "10.133.0.0/23"
+  cxp             = "USEAST-AZURE-1"
+  tunnel_protocol = "IPSEC"
+  group           = alkira_group.global_network.name
+
+  # First ExpressRoute circuit instance
+  instances {
+    name                    = "primary-circuit"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/primary-circuit"
+    redundant_router        = true
+    loopback_subnet         = "192.168.23.0/26"
+    credential_id           = alkira_credential_azure_vnet.primary.id
+
+    segment_options {
+      segment_name = alkira_segment.prod.name
+      customer_gateways {
+        name = "prod-gateway"
+        tunnels {
+          name              = "prod-tunnel"
+          ike_version       = "IKEv2"
+          initiator         = true
+          pre_shared_key    = "psk-prod-primary-123!"
+          profile_id        = 20
+          remote_auth_type  = "FQDN"
+          remote_auth_value = "prod-gateway.example.com"
+        }
+      }
+    }
+  }
+
+  # Second ExpressRoute circuit instance
+  instances {
+    name                    = "backup-circuit"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/backup-circuit"
+    redundant_router        = false
+    loopback_subnet         = "192.168.24.0/26"
+    credential_id           = alkira_credential_azure_vnet.backup.id
+
+    segment_options {
+      segment_name = alkira_segment.prod.name
+      customer_gateways {
+        name = "backup-gateway"
+        tunnels {
+          name              = "backup-tunnel"
           ike_version       = "IKEv2"
           initiator         = false
-          pre_shared_key    = "secretkey789"
-          profile_id        = 3
+          pre_shared_key    = "psk-backup-456!"
+          profile_id        = 21
           remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalue789"
-        }
-      }
-      customer_gateways {
-        name = "gateway2"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkeyabc"
-          profile_id        = 4
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalueabc"
-        }
-      }
-    }
-
-    segment_options {
-      segment_name = alkira_segment.example1.name
-      customer_gateways {
-        name = "gateway3"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkeyxyz"
-          profile_id        = 5
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvaluexyz"
+          remote_auth_value = "backup-gateway.example.com"
         }
       }
     }
   }
 
+  # Global segment options
   segment_options {
-    segment_name             = alkira_segment.example.name
-    customer_asn             = "65514"
+    segment_name             = alkira_segment.prod.name
+    customer_asn             = "65005"
     disable_internet_exit    = false
-    advertise_on_prem_routes = false
-  }
-  segment_options {
-    segment_name             = alkira_segment.example1.name
-    customer_asn             = "65515"
-    disable_internet_exit    = false
-    advertise_on_prem_routes = false
+    advertise_on_prem_routes = true
   }
 }
 ```
+
+
+## Understanding Connector Components
+
+### 1. Connector Base Configuration
+
+The connector requires basic information such as:
+- Name and description
+- Size (from SMALL to 10LARGE)
+- CXP location (where the connector is provisioned)
+- VHUB prefix (a /23 CIDR block for the virtual hub)
+- Tunnel protocol (VXLAN, VXLAN_GPE, or IPSEC)
+
+### 2. ExpressRoute Circuit Instances
+
+Each connector must have at least one ExpressRoute circuit instance, which specifies:
+- Circuit identifier from Azure
+- Loopback subnet (/26) for establishing VXLAN GPE tunnels
+- Azure credentials
+- Optional redundant router configuration
+- For VXLAN: Gateway MAC addresses and optional virtual network interfaces
+- For IPsec: Segment-specific gateway and tunnel configurations
+
+### 3. Segment Options
+
+Segment options define routing parameters for each network segment, including:
+- Customer ASN (Autonomous System Number)
+- Internet exit controls
+- On-premises route advertisement options
+
+## Important Notes
+
+- The VHUB prefix must be a `/23` CIDR block
+- The loopback subnet must be a `/26` CIDR block
+- For VXLAN with redundant routers, two gateway MAC addresses are required
+- For IPsec tunnels, at least one customer gateway with one tunnel is required per segment
+- Currently, only IKEv2 and FQDN authentication are supported for IPsec tunnels
+- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options`.
+  Every segment referenced within an instance must also have a corresponding global segment options entry with the same segment name.
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
@@ -160,7 +306,7 @@ resource "alkira_connector_azure_expressroute" "example2" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `tunnel_protocol` (String) The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`. Default is `VXLAN_GPE`
+- `tunnel_protocol` (String) The tunnel protocol. One of `VXLAN`, `VXLAN_GPE`, `IPSEC`. Default is `VXLAN_GPE`
 
 ### Read-Only
 
@@ -173,10 +319,10 @@ resource "alkira_connector_azure_expressroute" "example2" {
 Required:
 
 - `credential_id` (String) An opaque identifier generated when storing Azure VNET credentials.
-- `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpresRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
+- `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpressRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
 - `loopback_subnet` (String) A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.
 - `name` (String) User provided connector instance name.
-- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options))
+- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options` (see [below for nested schema](#nestedblock--instances--segment_options))
 
 Optional:
 

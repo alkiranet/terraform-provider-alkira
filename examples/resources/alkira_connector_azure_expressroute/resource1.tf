@@ -1,83 +1,40 @@
-resource "alkira_connector_azure_expressroute" "example2" {
-  name            = "example2"
+resource "alkira_connector_azure_expressroute" "ha_config" {
+  name            = "ha-expressroute"
+  description     = "High availability ExpressRoute connector"
   size            = "LARGE"
   enabled         = true
-  vhub_prefix     = "10.129.0.0/23"
-  cxp             = "USWEST-AZURE-1"
-  tunnel_protocol = "IPSEC"
-  group           = alkira_group.example.name
+  vhub_prefix     = "10.131.0.0/23"
+  cxp             = "USEAST-AZURE-1"
+  tunnel_protocol = "VXLAN"
+  group           = alkira_group.core_network.name
+  billing_tag_ids = [alkira_billing_tag.production.id, alkira_billing_tag.networking.id]
 
   instances {
-    name                    = "InstanceName"
-    expressroute_circuit_id = "/subscriptions/<Id>/resourceGroups/<GroupName>/providers/Microsoft.Network/expressRouteCircuits/<CircuitName2>"
-    redundant_router        = true
-    loopback_subnet         = "192.168.19.0/26"
-    credential_id           = alkira_credential_azure_vnet.example2.id
+    name                    = "ha-instance"
+    expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/ha-circuit"
+    redundant_router        = true # Enable redundant routers for high availability
+    loopback_subnet         = "192.168.21.0/26"
+    credential_id           = alkira_credential_azure_vnet.prod.id
+
+    # MAC addresses of customer VXLAN gateways
+    gateway_mac_address = ["00:1A:2B:3C:4D:5E", "00:6F:7G:8H:9I:0J"]
+
+    # Optional virtual network interface IDs
+    virtual_network_interface = [16774000, 16774001]
 
     segment_options {
-      segment_name = alkira_segment.example.name
+      segment_name = alkira_segment.prod.name
       customer_gateways {
         name = "gateway1"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkey456"
-          profile_id        = 2
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalue456"
-        }
-        tunnels {
-          name              = "tunnel2"
-          ike_version       = "IKEv2"
-          initiator         = false
-          pre_shared_key    = "secretkey789"
-          profile_id        = 3
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalue789"
-        }
-      }
-      customer_gateways {
-        name = "gateway2"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkeyabc"
-          profile_id        = 4
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvalueabc"
-        }
       }
     }
 
-    segment_options {
-      segment_name = alkira_segment.example1.name
-      customer_gateways {
-        name = "gateway3"
-        tunnels {
-          name              = "tunnel1"
-          ike_version       = "IKEv2"
-          initiator         = true
-          pre_shared_key    = "secretkeyxyz"
-          profile_id        = 5
-          remote_auth_type  = "FQDN"
-          remote_auth_value = "authvaluexyz"
-        }
-      }
-    }
   }
 
   segment_options {
-    segment_name             = alkira_segment.example.name
-    customer_asn             = "65514"
+    segment_name             = alkira_segment.prod.name
+    customer_asn             = "65002"
     disable_internet_exit    = false
-    advertise_on_prem_routes = false
-  }
-  segment_options {
-    segment_name             = alkira_segment.example1.name
-    customer_asn             = "65515"
-    disable_internet_exit    = false
-    advertise_on_prem_routes = false
+    advertise_on_prem_routes = true
   }
 }
