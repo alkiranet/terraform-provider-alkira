@@ -332,7 +332,7 @@ Optional:
 
 Read-Only:
 
-- `id` (Number)
+- `id` (Number) The ID of this resource.
 
 <a id="nestedblock--instances--segment_options"></a>
 ### Nested Schema for `instances.segment_options`

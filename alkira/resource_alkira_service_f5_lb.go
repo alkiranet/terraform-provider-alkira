@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraF5LoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Description:   "F5 Load Balancer Service.",
+		Description:   "F5 Load Balancer Service. (**BETA**)",
 		CreateContext: resourceF5LoadBalancerCreate,
 		ReadContext:   resourceF5LoadBalancerRead,
 		UpdateContext: resourceF5LoadBalancerUpdate,
@@ -53,6 +53,12 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"implicit_group_id": {
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"size": {
 				Description: "Size of the service, one of" +
 					" `SMALL`, `MEDIUM`, `LARGE`" +
@@ -87,9 +93,10 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Optional:    true,
 			},
 			"segment_options": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "The segment options as used by your F5 Load Balancer.",
+				Type:     schema.TypeSet,
+				Required: true,
+				Description: "The segment options as used by your F5 Load " +
+					"Balancer.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
@@ -98,17 +105,19 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required:    true,
 						},
 						"elb_nic_count": {
-							Description: "Number of NICs to allocate for the segment.",
-							Type:        schema.TypeInt,
-							Required:    true,
+							Description: "Number of NICs to allocate for " +
+								"the segment.",
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 					},
 				},
 			},
 			"service_group_name": {
-				Description: "Name of the service group to be associated with the service.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "Name of the service group to be associated " +
+					"with the service.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"instance": {
 				Description: "An array containing the properties for each F5 load" +
@@ -268,6 +277,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
 	d.Set("service_group_name", lb.ServiceGroupName)
+	d.Set("implicit_group_id", lb.ImplicitGroupId)
 
 	segmentOptions, err := setF5SegmentOptions(lb.SegmentOptions, m)
 	if err != nil {

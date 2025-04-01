@@ -3,12 +3,12 @@
 page_title: "alkira_connector_aws_dx Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage AWS Direct Connect (DX) connector.
+  Manage AWS Direct Connect (DX) connector. (BETA)
 ---
 
 # alkira_connector_aws_dx (Resource)
 
-Manage AWS Direct Connect (DX) connector.
+Manage AWS Direct Connect (DX) connector. (**BETA**)
 
 ## Example Usage
 
@@ -93,7 +93,7 @@ Required:
 - `name` (String) The name of the instance.
 - `on_prem_asn` (Number) The customer underlay ASN.
 - `segment_options` (Block Set, Min: 1) Options for each segment associated with the instance. (see [below for nested schema](#nestedblock--instance--segment_options))
-- `vlan_id` (Number) This is the ID of customer facing VLAN provided by the co-location provider, configured for the link between colo provider and the customer router.
+- `vlan_id` (Number) ID of customer facing VLAN provided by the co-location provider, configured for the link between colo provider and the customer router.
 
 Optional:
 

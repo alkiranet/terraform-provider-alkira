@@ -2,12 +2,12 @@
 page_title: "alkira_connector_gcp_interconnect Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage GCP Interconnect.
+  Manage GCP Interconnect. (BETA)
 ---
 
 # alkira_connector_gcp_interconnect (Resource)
 
-Manage GCP Interconnect.
+Manage GCP Interconnect. (**BETA**)
 
 ## Example Usage
 
@@ -123,17 +123,17 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 ### Required
 
 - `cxp` (String) The CXP where the connector should be provisioned.
-- `instances` (Block List, Min: 1) A list of instances of the Interconnect (see [below for nested schema](#nestedblock--instances))
+- `instances` (Block List, Min: 1) A list of instances of the InterConnect (see [below for nested schema](#nestedblock--instances))
 - `loopback_prefixes` (Set of String) A list of prefixes that should be associated with the connector. Eg :["10.30.0.0/24"]
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.
-- `tunnel_protocol` (String) The tunnel protocol used by the connector.Can be one of `GRE`, `IPSEC`, `VXLAN`, `VXLAN_GPE`.
+- `tunnel_protocol` (String) The tunnel protocol used by the connector.Can be one of `GRE`, `IPSEC`, `VXLAN`, or `VXLAN_GPE`.
 
 ### Optional
 
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
-- `enabled` (Boolean) Is the connector enabled. Default is `true`.
+- `enabled` (Boolean) Whether the connector is enabled. Default value is `true`.
 - `group` (String) The group of the connector.
 - `scale_group_id` (String) The ID of the scale group associated with the connector.
 
@@ -148,7 +148,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 Required:
 
 - `customer_asn` (Number) The customer ASN.
-- `edge_availability_domain` (String) The Availability Domain of the instance.Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.
+- `edge_availability_domain` (String) The Availability domain of the instance. The value could be one of `AVAILABILITY_DOMAIN_1` or `AVAILABILITY_DOMAIN_2`.
 - `name` (String) The name of the instance.
 - `segment_options` (Block List, Min: 1) Options for each segment associated with the instance. (see [below for nested schema](#nestedblock--instances--segment_options))
 
@@ -173,7 +173,7 @@ Required:
 Optional:
 
 - `advertise_default_route` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default value is `true`.
-- `advertise_on_prem_routes` (Boolean) Advertise on-prem routes. Default is `false`.
+- `advertise_on_prem_routes` (Boolean) Advertise on-prem routes. Default value is `false`.
 
 <a id="nestedblock--instances--segment_options--customer_gateways"></a>
 ### Nested Schema for `instances.segment_options.customer_gateways`

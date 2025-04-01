@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 	return &schema.Resource{
-		Description: "Manage GCP Interconnect.",
+		Description: "Manage GCP Interconnect. (**BETA**)",
 
 		CreateContext: resourceConnectorGcpInterconnectCreate,
 		ReadContext:   resourceConnectorGcpInterconnectRead,
@@ -52,15 +52,17 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Optional:    true,
 			},
 			"cxp": {
-				Description: "The CXP where the connector should be provisioned.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The CXP where the connector should be " +
+					"provisioned.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"enabled": {
-				Description: "Is the connector enabled. Default is `true`.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
+				Description: "Whether the connector is enabled. Default " +
+					"value is `true`.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"group": {
 				Description: "The group of the connector.",
@@ -69,10 +71,11 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			},
 			"tunnel_protocol": {
 				Description: "The tunnel protocol used by the connector." +
-					"Can be one of `GRE`, `IPSEC`, `VXLAN`, `VXLAN_GPE`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"GRE", "IPSEC", "VXLAN", "VXLAN_GPE"}, false),
+					"Can be one of `GRE`, `IPSEC`, `VXLAN`, or `VXLAN_GPE`.",
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"GRE", "IPSEC", "VXLAN", "VXLAN_GPE"}, false),
 			},
 			"billing_tag_ids": {
 				Description: "Billing tags to be associated with " +
@@ -90,7 +93,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"instances": {
-				Description: "A list of instances of the Interconnect",
+				Description: "A list of instances of the InterConnect",
 				Type:        schema.TypeList,
 				Required:    true,
 				Elem: &schema.Resource{
@@ -106,16 +109,20 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"edge_availability_domain": {
-							Description: "The Availability Domain of the instance." +
-								"Can be one of `AVAILABILITY_DOMAIN_1`, `AVAILABILITY_DOMAIN_2`.",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
+							Description: "The Availability domain of the " +
+								"instance. The value could be one of " +
+								"`AVAILABILITY_DOMAIN_1` or " +
+								"`AVAILABILITY_DOMAIN_2`.",
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"AVAILABILITY_DOMAIN_1", "AVAILABILITY_DOMAIN_2"}, false),
 						},
 						"segment_options": {
-							Description: "Options for each segment associated with the instance.",
-							Type:        schema.TypeList,
-							Required:    true,
+							Description: "Options for each segment associated " +
+								"with the instance.",
+							Type:     schema.TypeList,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"segment_id": {
@@ -124,10 +131,11 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 										Required:    true,
 									},
 									"advertise_on_prem_routes": {
-										Description: "Advertise on-prem routes. Default is `false`.",
-										Default:     false,
-										Optional:    true,
-										Type:        schema.TypeBool,
+										Description: "Advertise on-prem routes. " +
+											"Default value is `false`.",
+										Default:  false,
+										Optional: true,
+										Type:     schema.TypeBool,
 									},
 									"advertise_default_route": {
 										Description: "Enable or disable access " +
@@ -139,21 +147,26 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 										Default:  true,
 									},
 									"customer_gateways": {
-										Description: "The customer gateway associated with the segment.",
-										Type:        schema.TypeList,
-										Required:    true,
+										Description: "The customer gateway " +
+											"associated with the segment.",
+										Type:     schema.TypeList,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"loopback_ip": {
-													Description: "The customer gateway IP address " +
-														"which is set as tunnel source.",
+													Description: "The customer " +
+														"gateway IP address " +
+														"which is set as " +
+														"tunnel source.",
 													Type:     schema.TypeString,
 													Optional: true,
 												},
 												"tunnel_count": {
-													Description: "Number of tunnels per customer gateway.",
-													Type:        schema.TypeInt,
-													Required:    true,
+													Description: "Number of " +
+														"tunnels per customer " +
+														"gateway.",
+													Type:     schema.TypeInt,
+													Required: true,
 												},
 											},
 										},
@@ -167,19 +180,22 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Required:    true,
 						},
 						"bgp_auth_key": {
-							Description: "The BGP MD5 authentication key to authenticate Alkira CXP.",
-							Type:        schema.TypeString,
-							Optional:    true,
+							Description: "The BGP MD5 authentication key " +
+								"to authenticate Alkira CXP.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"gateway_mac_address": {
 							Description: "The MAC address of the gateway." +
-								"It's required if the `tunnel_protocol` is `VXLAN`.",
+								"It's required if the `tunnel_protocol` " +
+								"is `VXLAN`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"vni_id": {
 							Description: "The VXLAN Network Identifier." +
-								"It's required if the `tunnel_protocol` is `VXLAN`.",
+								"It's required if the `tunnel_protocol` " +
+								"is `VXLAN`.",
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -188,14 +204,16 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			},
 
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The ID of the scale group associated with " +
+					"the connector.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"implicit_group_id": {
-				Description: "The ID of the implicit group associated with the connector.",
-				Type:        schema.TypeInt,
-				Computed:    true,
+				Description: "The ID of the implicit group associated " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
