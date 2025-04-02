@@ -28,16 +28,10 @@ resource "alkira_connector_azure_expressroute" "basic" {
     redundant_router        = false # Single router configuration
     loopback_subnet         = "192.168.20.0/26"
     credential_id           = alkira_credential_azure_vnet.prod.id
-    segment_options {
-      segment_name = alkira_segment.prod.name
-      customer_gateways {
-        name = "gateway1"
-      }
-    }
   }
 
   segment_options {
-    segment_name             = alkira_segment.prod.name
+    segment_id               = alkira_segment.prod.id
     customer_asn             = "65001"
     disable_internet_exit    = true
     advertise_on_prem_routes = true
@@ -71,17 +65,10 @@ resource "alkira_connector_azure_expressroute" "ha_config" {
     # Optional virtual network interface IDs
     virtual_network_interface = [16774000, 16774001]
 
-    segment_options {
-      segment_name = alkira_segment.prod.name
-      customer_gateways {
-        name = "gateway1"
-      }
-    }
-
   }
 
   segment_options {
-    segment_name             = alkira_segment.prod.name
+    segment_id               = alkira_segment.prod.id
     customer_asn             = "65002"
     disable_internet_exit    = false
     advertise_on_prem_routes = true
@@ -108,12 +95,24 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
     loopback_subnet         = "192.168.22.0/26"
     credential_id           = alkira_credential_azure_vnet.security.id
 
-    # First segment options with primary gateway
-    segment_options {
-      segment_name = alkira_segment.dmz.name
+    # First ipsec customer gateway with primary gateway
+    ipsec_customer_gateway {
+      segment_id = alkira_segment.dmz.id
       customer_gateways {
         name = "dmz-primary-gateway"
-        tunnels {
+        tunnel {
+          name              = "primary-tunnel"
+          ike_version       = "IKEv2"
+          initiator         = true
+          pre_shared_key    = "psk-dmz-primary-123!"
+          profile_id        = 10
+          remote_auth_type  = "FQDN"
+          remote_auth_value = "dmz-gateway.example.com"
+        }
+      }
+      customer_gateways {
+        name = "dmz-backup-gateway"
+        tunnel {
           name              = "primary-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
@@ -125,14 +124,14 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       }
     }
 
-    # Second segment options with primary and backup gateways
-    segment_options {
-      segment_name = alkira_segment.internal.name
+    # Second ipsec customer gateway with primary and backup gateways
+    ipsec_customer_gateway {
+      segment_id = alkira_segment.internal.id
 
       # Primary gateway for internal segment
       customer_gateways {
         name = "internal-primary-gateway"
-        tunnels {
+        tunnel {
           name              = "primary-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
@@ -146,7 +145,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       # Backup gateway for internal segment
       customer_gateways {
         name = "internal-backup-gateway"
-        tunnels {
+        tunnel {
           name              = "backup-tunnel"
           ike_version       = "IKEv2"
           initiator         = false # Waiting for initiation from customer side
@@ -161,7 +160,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
 
   # Global segment options for DMZ
   segment_options {
-    segment_name             = alkira_segment.dmz.name
+    segment_id               = alkira_segment.dmz.id
     customer_asn             = "65003"
     disable_internet_exit    = true
     advertise_on_prem_routes = false
@@ -169,7 +168,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
 
   # Global segment options for internal
   segment_options {
-    segment_name             = alkira_segment.internal.name
+    segment_id               = alkira_segment.internal.id
     customer_asn             = "65004"
     disable_internet_exit    = false
     advertise_on_prem_routes = true
@@ -193,15 +192,15 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
   instances {
     name                    = "primary-circuit"
     expressroute_circuit_id = "/subscriptions/12345678-abcd-efgh-ijkl-1234567890ab/resourceGroups/network-rg/providers/Microsoft.Network/expressRouteCircuits/primary-circuit"
-    redundant_router        = true
+    redundant_router        = false
     loopback_subnet         = "192.168.23.0/26"
     credential_id           = alkira_credential_azure_vnet.primary.id
 
-    segment_options {
-      segment_name = alkira_segment.prod.name
+    iposec_customer_gateway {
+      segment_id = alkira_segment.prod.id
       customer_gateways {
         name = "prod-gateway"
-        tunnels {
+        tunnel {
           name              = "prod-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
@@ -222,11 +221,11 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
     loopback_subnet         = "192.168.24.0/26"
     credential_id           = alkira_credential_azure_vnet.backup.id
 
-    segment_options {
-      segment_name = alkira_segment.prod.name
+    ipsec_customer_gateway {
+      segment_id = alkira_segment.prod.id
       customer_gateways {
         name = "backup-gateway"
-        tunnels {
+        tunnel {
           name              = "backup-tunnel"
           ike_version       = "IKEv2"
           initiator         = false
@@ -241,7 +240,7 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
 
   # Global segment options
   segment_options {
-    segment_name             = alkira_segment.prod.name
+    segment_id               = alkira_segment.prod.id
     customer_asn             = "65005"
     disable_internet_exit    = false
     advertise_on_prem_routes = true
@@ -285,7 +284,7 @@ Segment options define routing parameters for each network segment, including:
 - For VXLAN with redundant routers, two gateway MAC addresses are required
 - For IPsec tunnels, at least one customer gateway with one tunnel is required per segment
 - Currently, only IKEv2 and FQDN authentication are supported for IPsec tunnels
-- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options`.
+- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in the `ipsec_customer_gateway` and global-level `segment_options`.
   Every segment referenced within an instance must also have a corresponding global segment options entry with the same segment name.
 
 <!-- schema generated by tfplugindocs -->
@@ -320,9 +319,9 @@ Required:
 
 - `credential_id` (String) An opaque identifier generated when storing Azure VNET credentials.
 - `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpressRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
+- `ipsec_customer_gateway` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. There must be a one-to-one correspondence between segments defined in `ipsec_customer_gateway` and global-level `ipsec_customer_gateway` (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway))
 - `loopback_subnet` (String) A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.
 - `name` (String) User provided connector instance name.
-- `segment_options` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options` (see [below for nested schema](#nestedblock--instances--segment_options))
 
 Optional:
 
@@ -332,26 +331,26 @@ Optional:
 
 Read-Only:
 
-- `id` (Number) The ID of this resource.
+- `id` (Number)
 
-<a id="nestedblock--instances--segment_options"></a>
-### Nested Schema for `instances.segment_options`
+<a id="nestedblock--instances--ipsec_customer_gateway"></a>
+### Nested Schema for `instances.ipsec_customer_gateway`
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Required only if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways))
-- `segment_name` (String) The name of an existing segment in the Alkira environment.
+- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Required only if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways))
+- `segment_id` (String) The ID of an existing segment in the Alkira environment.
 
-<a id="nestedblock--instances--segment_options--customer_gateways"></a>
-### Nested Schema for `instances.segment_options.customer_gateways`
+<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateways"></a>
+### Nested Schema for `instances.ipsec_customer_gateway.customer_gateways`
 
 Required:
 
 - `name` (String) A unique name for the customer gateway.
-- `tunnels` (Block List, Min: 1) Tunnel configurations for the gateway. At least one tunnel is required for `IPSEC`. (see [below for nested schema](#nestedblock--instances--segment_options--customer_gateways--tunnels))
+- `tunnel` (Block List, Min: 1) Tunnel configurations for the gateway. At least one tunnel is required for `IPSEC`. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways--tunnel))
 
-<a id="nestedblock--instances--segment_options--customer_gateways--tunnels"></a>
-### Nested Schema for `instances.segment_options.customer_gateways.tunnels`
+<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateways--tunnel"></a>
+### Nested Schema for `instances.ipsec_customer_gateway.customer_gateways.tunnel`
 
 Required:
 
@@ -380,13 +379,9 @@ Read-Only:
 Required:
 
 - `customer_asn` (Number) ASN on the customer premise side.
-- `segment_name` (String) The name of an existing segment.
+- `segment_id` (Number) The ID of the segment.
 
 Optional:
 
 - `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud.
 - `disable_internet_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector.
-
-Read-Only:
-
-- `segment_id` (Number) The ID of the segment.

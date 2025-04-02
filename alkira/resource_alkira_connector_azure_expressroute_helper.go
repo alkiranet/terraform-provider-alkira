@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
@@ -52,8 +53,8 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 		r.Vnis = vnis
 
 		// Segment Options
-		if v, ok := instanceCfg["segment_options"].([]interface{}); ok {
-			segmentOptions, err := expandInstanceSegmentOptions(v)
+		if v, ok := instanceCfg["ipsec_customer_gateway"].([]interface{}); ok {
+			segmentOptions, err := expandInstanceSegmentOptions(v, m)
 			if err != nil {
 				return nil, err
 			}
@@ -65,14 +66,18 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 
 	return instances, nil
 }
-func expandInstanceSegmentOptions(in []interface{}) ([]alkira.InstanceSegmentOption, error) {
+func expandInstanceSegmentOptions(in []interface{}, m interface{}) ([]alkira.InstanceSegmentOption, error) {
 	segmentOptions := make([]alkira.InstanceSegmentOption, 0)
 	for _, segOpt := range in {
 		segOptMap := segOpt.(map[string]interface{})
 		segmentOption := alkira.InstanceSegmentOption{}
 
-		if v, ok := segOptMap["segment_name"].(string); ok {
-			segmentOption.SegmentName = v
+		if v, ok := segOptMap["segment_id"].(string); ok {
+			segmentName, err := getSegmentNameById(v, m)
+			if err != nil {
+				return nil, err
+			}
+			segmentOption.SegmentName = segmentName
 		}
 
 		// Customer Gateways
@@ -102,7 +107,7 @@ func expandCustomerGateways(in []interface{}) ([]alkira.CustomerGateway, error) 
 		}
 
 		// Tunnels
-		tunnels, err := expandCustomerGatewayTunnels(cgMap["tunnels"].([]interface{}))
+		tunnels, err := expandCustomerGatewayTunnels(cgMap["tunnel"].([]interface{}))
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +184,7 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 
 	return segments, nil
 }
-func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance) map[string]interface{} {
+func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance, m interface{}) map[string]interface{} {
 	result := map[string]interface{}{
 		"credential_id":             instance.CredentialId,
 		"expressroute_circuit_id":   instance.ExpressRouteCircuitId,
@@ -189,21 +194,26 @@ func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance) map[str
 		"name":                      instance.Name,
 		"redundant_router":          instance.RedundantRouter,
 		"virtual_network_interface": instance.Vnis,
-		"segment_options":           flattenInstanceSegmentOptions(instance.SegmentOptions),
+		"ipsec_customer_gateway":    flattenInstanceSegmentOptions(instance.SegmentOptions, m),
 	}
 	return result
 }
 
 // flattenInstanceSegmentOptions flattens the segment options for an instance
-func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption) []interface{} {
+func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption, m interface{}) []interface{} {
 	if segmentOptions == nil {
 		return nil
 	}
 
 	result := make([]interface{}, len(segmentOptions))
 	for i, segOpt := range segmentOptions {
+		segmentId, err := getSegmentIdByName(segOpt.SegmentName, m)
+		if err != nil {
+			log.Printf("[DEBUG] Unable to find segment ID for name %s: %v", segOpt.SegmentName, err)
+			return nil
+		}
 		s := map[string]interface{}{
-			"segment_name":      segOpt.SegmentName,
+			"segment_id":        segmentId,
 			"customer_gateways": flattenCustomerGateways(segOpt.CustomerGateways),
 		}
 		result[i] = s
@@ -220,9 +230,9 @@ func flattenCustomerGateways(customerGateways []alkira.CustomerGateway) []interf
 	result := make([]interface{}, len(customerGateways))
 	for i, cg := range customerGateways {
 		c := map[string]interface{}{
-			"name":    cg.Name,
-			"id":      cg.Id,
-			"tunnels": flattenCustomerGatewayTunnels(cg.Tunnels),
+			"name":   cg.Name,
+			"id":     cg.Id,
+			"tunnel": flattenCustomerGatewayTunnels(cg.Tunnels),
 		}
 		result[i] = c
 	}

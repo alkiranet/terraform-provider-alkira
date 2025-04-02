@@ -14,16 +14,10 @@ resource "alkira_connector_azure_expressroute" "basic" {
     redundant_router        = false # Single router configuration
     loopback_subnet         = "192.168.20.0/26"
     credential_id           = alkira_credential_azure_vnet.prod.id
-    segment_options {
-      segment_name = alkira_segment.prod.name
-      customer_gateways {
-        name = "gateway1"
-      }
-    }
   }
 
   segment_options {
-    segment_name             = alkira_segment.prod.name
+    segment_id               = alkira_segment.prod.id
     customer_asn             = "65001"
     disable_internet_exit    = true
     advertise_on_prem_routes = true

@@ -58,7 +58,7 @@ Segment options define routing parameters for each network segment, including:
 - For VXLAN with redundant routers, two gateway MAC addresses are required
 - For IPsec tunnels, at least one customer gateway with one tunnel is required per segment
 - Currently, only IKEv2 and FQDN authentication are supported for IPsec tunnels
-- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in instance-level `segment_options` and global-level `segment_options`.
+- **Segment mapping requirement**: There must be a one-to-one correspondence between segments defined in the `ipsec_customer_gateway` and global-level `segment_options`.
   Every segment referenced within an instance must also have a corresponding global segment options entry with the same segment name.
 
 {{ .SchemaMarkdown | trimspace }}

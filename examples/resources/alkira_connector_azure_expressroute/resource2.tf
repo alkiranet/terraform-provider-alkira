@@ -17,12 +17,24 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
     loopback_subnet         = "192.168.22.0/26"
     credential_id           = alkira_credential_azure_vnet.security.id
 
-    # First segment options with primary gateway
-    segment_options {
-      segment_name = alkira_segment.dmz.name
+    # First ipsec customer gateway with primary gateway
+    ipsec_customer_gateway {
+      segment_id = alkira_segment.dmz.id
       customer_gateways {
         name = "dmz-primary-gateway"
-        tunnels {
+        tunnel {
+          name              = "primary-tunnel"
+          ike_version       = "IKEv2"
+          initiator         = true
+          pre_shared_key    = "psk-dmz-primary-123!"
+          profile_id        = 10
+          remote_auth_type  = "FQDN"
+          remote_auth_value = "dmz-gateway.example.com"
+        }
+      }
+      customer_gateways {
+        name = "dmz-backup-gateway"
+        tunnel {
           name              = "primary-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
@@ -34,14 +46,14 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       }
     }
 
-    # Second segment options with primary and backup gateways
-    segment_options {
-      segment_name = alkira_segment.internal.name
+    # Second ipsec customer gateway with primary and backup gateways
+    ipsec_customer_gateway {
+      segment_id = alkira_segment.internal.id
 
       # Primary gateway for internal segment
       customer_gateways {
         name = "internal-primary-gateway"
-        tunnels {
+        tunnel {
           name              = "primary-tunnel"
           ike_version       = "IKEv2"
           initiator         = true
@@ -55,7 +67,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       # Backup gateway for internal segment
       customer_gateways {
         name = "internal-backup-gateway"
-        tunnels {
+        tunnel {
           name              = "backup-tunnel"
           ike_version       = "IKEv2"
           initiator         = false # Waiting for initiation from customer side
@@ -70,7 +82,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
 
   # Global segment options for DMZ
   segment_options {
-    segment_name             = alkira_segment.dmz.name
+    segment_id               = alkira_segment.dmz.id
     customer_asn             = "65003"
     disable_internet_exit    = true
     advertise_on_prem_routes = false
@@ -78,7 +90,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
 
   # Global segment options for internal
   segment_options {
-    segment_name             = alkira_segment.internal.name
+    segment_id               = alkira_segment.internal.id
     customer_asn             = "65004"
     disable_internet_exit    = false
     advertise_on_prem_routes = true

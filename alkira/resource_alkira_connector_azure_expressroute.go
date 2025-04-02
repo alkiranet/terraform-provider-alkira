@@ -154,18 +154,18 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
-						"segment_options": {
+						"ipsec_customer_gateway": {
 							Description: "Instance level segment specific routing and gateway configurations." +
 								"Only required when `tunnel_protocol` is `IPSEC`. " +
 								"There must be a one-to-one correspondence between " +
-								"segments defined in instance-level `segment_options` " +
-								"and global-level `segment_options`",
+								"segments defined in `ipsec_customer_gateway` " +
+								"and global-level `ipsec_customer_gateway`",
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"segment_name": {
-										Description: "The name of an existing segment in the Alkira environment.",
+									"segment_id": {
+										Description: "The ID of an existing segment in the Alkira environment.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
@@ -181,7 +181,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 													Type:        schema.TypeString,
 													Required:    true,
 												},
-												"tunnels": {
+												"tunnel": {
 													Description: "Tunnel configurations for the gateway. " +
 														"At least one tunnel is required for `IPSEC`.",
 													Type:     schema.TypeList,
@@ -249,15 +249,10 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"segment_name": {
-							Description: "The name of an existing segment.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"segment_id": {
 							Description: "The ID of the segment.",
 							Type:        schema.TypeInt,
-							Computed:    true,
+							Required:    true,
 						},
 						"customer_asn": {
 							Description: "ASN on the customer premise side.",
@@ -353,7 +348,7 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 
 	instances := make([]map[string]interface{}, len(connector.Instances))
 	for i, instance := range connector.Instances {
-		instances[i] = flattenInstance(instance)
+		instances[i] = flattenInstance(instance, m)
 	}
 
 	d.Set("instances", instances)
@@ -361,7 +356,6 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	segments := make([]map[string]interface{}, len(connector.SegmentOptions))
 	for i, seg := range connector.SegmentOptions {
 		segments[i] = map[string]interface{}{
-			"segment_name":             seg.SegmentName,
 			"segment_id":               seg.SegmentId,
 			"customer_asn":             seg.CustomerAsn,
 			"disable_internet_exit":    seg.DisableInternetExit,

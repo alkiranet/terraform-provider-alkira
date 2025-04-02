@@ -22,17 +22,10 @@ resource "alkira_connector_azure_expressroute" "ha_config" {
     # Optional virtual network interface IDs
     virtual_network_interface = [16774000, 16774001]
 
-    segment_options {
-      segment_name = alkira_segment.prod.name
-      customer_gateways {
-        name = "gateway1"
-      }
-    }
-
   }
 
   segment_options {
-    segment_name             = alkira_segment.prod.name
+    segment_id               = alkira_segment.prod.id
     customer_asn             = "65002"
     disable_internet_exit    = false
     advertise_on_prem_routes = true
