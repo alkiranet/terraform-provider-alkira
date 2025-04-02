@@ -10,7 +10,6 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid Azure ExpressRoute Instance input")
 	}
-
 	instances := make([]alkira.ConnectorAzureExpressRouteInstance, len(in))
 	for i, instance := range in {
 		r := alkira.ConnectorAzureExpressRouteInstance{}
@@ -33,11 +32,19 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			r.CredentialId = v
 		}
-		if v, ok := instanceCfg["gateway_mac_address"].([]string); ok {
-			r.GatewayMacAddress = v
+		if v, ok := instanceCfg["gateway_mac_address"].([]interface{}); ok && len(v) > 0 {
+			macAddresses := make([]string, len(v))
+			for i, mac := range v {
+				macAddresses[i] = mac.(string)
+			}
+			r.GatewayMacAddress = macAddresses
 		}
-		if v, ok := instanceCfg["virtual_network_interface"].([]int); ok {
-			r.Vnis = v
+		if v, ok := instanceCfg["virtual_network_interface"].([]interface{}); ok && len(v) > 0 {
+			vnis := make([]int, len(v))
+			for i, vni := range v {
+				vnis[i] = vni.(int)
+			}
+			r.Vnis = vnis
 		}
 		instances[i] = r
 	}
@@ -54,21 +61,27 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 	for i, segment := range seg {
 		r := alkira.ConnectorAzureExpressRouteSegment{}
 		instanceCfg := segment.(map[string]interface{})
+
 		if v, ok := instanceCfg["segment_name"].(string); ok {
 			r.SegmentName = v
 		}
+
+		if v, ok := instanceCfg["segment_id"].(int); ok {
+			r.SegmentId = v
+		}
+
 		if v, ok := instanceCfg["customer_asn"].(int); ok {
 			r.CustomerAsn = v
 		}
-		if v, ok := instanceCfg["customer_asn"].(int); ok {
-			r.CustomerAsn = v
-		}
-		if v, ok := instanceCfg["disabled_internet_exit"].(bool); ok {
+
+		if v, ok := instanceCfg["disable_internet_exit"].(bool); ok {
 			r.DisableInternetExit = v
 		}
+
 		if v, ok := instanceCfg["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
 		}
+
 		segments[i] = r
 	}
 
