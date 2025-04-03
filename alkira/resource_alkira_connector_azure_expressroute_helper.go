@@ -80,7 +80,7 @@ func expandInstanceSegmentOptions(in []interface{}, m interface{}) ([]alkira.Ins
 		}
 
 		// Customer Gateways
-		customerGateways, err := expandCustomerGateways(segOptMap["customer_gateways"].([]interface{}))
+		customerGateways, err := expandCustomerGateways(segOptMap["customer_gateway"].([]interface{}))
 		if err != nil {
 			return nil, err
 		}
@@ -215,8 +215,8 @@ func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption
 			return nil, err
 		}
 		s := map[string]interface{}{
-			"segment_id":        segmentId,
-			"customer_gateways": flattenCustomerGateways(segOpt.CustomerGateways),
+			"segment_id":       segmentId,
+			"customer_gateway": flattenCustomerGateways(segOpt.CustomerGateways),
 		}
 		result[i] = s
 	}

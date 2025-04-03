@@ -167,7 +167,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 										Type:        schema.TypeString,
 										Required:    true,
 									},
-									"customer_gateways": {
+									"customer_gateway": {
 										Description: "Customer gateway configurations for `IPSEC` tunnels. ",
 										Type:        schema.TypeList,
 										Required:    true,

@@ -20,7 +20,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
     # First ipsec customer gateway with primary gateway
     ipsec_customer_gateway {
       segment_id = alkira_segment.dmz.id
-      customer_gateways {
+      customer_gateway {
         name = "dmz-primary-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -32,7 +32,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
           remote_auth_value = "dmz-gateway.example.com"
         }
       }
-      customer_gateways {
+      customer_gateway {
         name = "dmz-backup-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -51,7 +51,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       segment_id = alkira_segment.internal.id
 
       # Primary gateway for internal segment
-      customer_gateways {
+      customer_gateway {
         name = "internal-primary-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -65,7 +65,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       }
 
       # Backup gateway for internal segment
-      customer_gateways {
+      customer_gateway {
         name = "internal-backup-gateway"
         tunnel {
           name              = "backup-tunnel"

@@ -98,7 +98,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
     # First ipsec customer gateway with primary gateway
     ipsec_customer_gateway {
       segment_id = alkira_segment.dmz.id
-      customer_gateways {
+      customer_gateway {
         name = "dmz-primary-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -110,7 +110,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
           remote_auth_value = "dmz-gateway.example.com"
         }
       }
-      customer_gateways {
+      customer_gateway {
         name = "dmz-backup-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -129,7 +129,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       segment_id = alkira_segment.internal.id
 
       # Primary gateway for internal segment
-      customer_gateways {
+      customer_gateway {
         name = "internal-primary-gateway"
         tunnel {
           name              = "primary-tunnel"
@@ -143,7 +143,7 @@ resource "alkira_connector_azure_expressroute" "multi_segment" {
       }
 
       # Backup gateway for internal segment
-      customer_gateways {
+      customer_gateway {
         name = "internal-backup-gateway"
         tunnel {
           name              = "backup-tunnel"
@@ -198,7 +198,7 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
 
     iposec_customer_gateway {
       segment_id = alkira_segment.prod.id
-      customer_gateways {
+      customer_gateway {
         name = "prod-gateway"
         tunnel {
           name              = "prod-tunnel"
@@ -223,7 +223,7 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
 
     ipsec_customer_gateway {
       segment_id = alkira_segment.prod.id
-      customer_gateways {
+      customer_gateway {
         name = "backup-gateway"
         tunnel {
           name              = "backup-tunnel"
@@ -338,19 +338,19 @@ Read-Only:
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways))
+- `customer_gateway` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateway))
 - `segment_id` (String) The ID of a segment.
 
-<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateways"></a>
-### Nested Schema for `instances.ipsec_customer_gateway.customer_gateways`
+<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateway"></a>
+### Nested Schema for `instances.ipsec_customer_gateway.customer_gateway`
 
 Required:
 
 - `name` (String) A unique name for the customer gateway.
-- `tunnel` (Block List, Min: 1) Tunnel configurations for the gateway. At least one tunnel is required for `IPSEC`. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways--tunnel))
+- `tunnel` (Block List, Min: 1) Tunnel configurations for the gateway. At least one tunnel is required for `IPSEC`. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateway--tunnel))
 
-<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateways--tunnel"></a>
-### Nested Schema for `instances.ipsec_customer_gateway.customer_gateways.tunnel`
+<a id="nestedblock--instances--ipsec_customer_gateway--customer_gateway--tunnel"></a>
+### Nested Schema for `instances.ipsec_customer_gateway.customer_gateway.tunnel`
 
 Required:
 

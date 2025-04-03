@@ -18,7 +18,7 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
 
     iposec_customer_gateway {
       segment_id = alkira_segment.prod.id
-      customer_gateways {
+      customer_gateway {
         name = "prod-gateway"
         tunnel {
           name              = "prod-tunnel"
@@ -43,7 +43,7 @@ resource "alkira_connector_azure_expressroute" "multi_instance" {
 
     ipsec_customer_gateway {
       segment_id = alkira_segment.prod.id
-      customer_gateways {
+      customer_gateway {
         name = "backup-gateway"
         tunnel {
           name              = "backup-tunnel"
