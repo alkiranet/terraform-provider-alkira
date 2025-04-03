@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"errors"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
@@ -184,7 +183,11 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 
 	return segments, nil
 }
-func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance, m interface{}) map[string]interface{} {
+func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance, m interface{}) (map[string]interface{}, error) {
+	ipsecCustomerGateway, err := flattenInstanceSegmentOptions(instance.SegmentOptions, m)
+	if err != nil {
+		return nil, err
+	}
 	result := map[string]interface{}{
 		"credential_id":             instance.CredentialId,
 		"expressroute_circuit_id":   instance.ExpressRouteCircuitId,
@@ -194,23 +197,22 @@ func flattenInstance(instance alkira.ConnectorAzureExpressRouteInstance, m inter
 		"name":                      instance.Name,
 		"redundant_router":          instance.RedundantRouter,
 		"virtual_network_interface": instance.Vnis,
-		"ipsec_customer_gateway":    flattenInstanceSegmentOptions(instance.SegmentOptions, m),
+		"ipsec_customer_gateway":    ipsecCustomerGateway,
 	}
-	return result
+	return result, nil
 }
 
 // flattenInstanceSegmentOptions flattens the segment options for an instance
-func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption, m interface{}) []interface{} {
+func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption, m interface{}) ([]interface{}, error) {
 	if segmentOptions == nil {
-		return nil
+		return nil, nil
 	}
 
 	result := make([]interface{}, len(segmentOptions))
 	for i, segOpt := range segmentOptions {
 		segmentId, err := getSegmentIdByName(segOpt.SegmentName, m)
 		if err != nil {
-			log.Printf("[DEBUG] Unable to find segment ID for name %s: %v", segOpt.SegmentName, err)
-			return nil
+			return nil, err
 		}
 		s := map[string]interface{}{
 			"segment_id":        segmentId,
@@ -218,7 +220,7 @@ func flattenInstanceSegmentOptions(segmentOptions []alkira.InstanceSegmentOption
 		}
 		result[i] = s
 	}
-	return result
+	return result, nil
 }
 
 // flattenCustomerGateways flattens the customer gateways for a segment option

@@ -319,13 +319,13 @@ Required:
 
 - `credential_id` (String) An opaque identifier generated when storing Azure VNET credentials.
 - `expressroute_circuit_id` (String) ExpressRoute circuit ID from Azure. ExpressRoute Circuit should have a private peering connection provisioned, also an valid authorization key associated with it.
-- `ipsec_customer_gateway` (Block List, Min: 1) Instance level segment specific routing and gateway configurations.Only required when `tunnel_protocol` is `IPSEC`. There must be a one-to-one correspondence between segments defined in `ipsec_customer_gateway` and global-level `ipsec_customer_gateway` (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway))
 - `loopback_subnet` (String) A `/26` subnet from which loopback IPs would be used to establish underlay VXLAN GPE tunnels.
 - `name` (String) User provided connector instance name.
 
 Optional:
 
 - `gateway_mac_address` (List of String) An array containing the mac addresses of VXLAN gateways reachable through ExpressRoute circuit. The field is only expected if VXLAN tunnel protocol is selected, and 2 gateway MAC addresses are expected only if `redundant_router` is enabled.
+- `ipsec_customer_gateway` (Block List) IPSec customer gateway configuration. The block is only required when tunnel_protocol is IPSEC. All segments defined in the segment_options should be configured here as well. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway))
 - `redundant_router` (Boolean) Indicates if ExpressRoute Circuit terminates on redundant routers on customer side.
 - `virtual_network_interface` (List of Number) This is an optional field if the `tunnel_protocol` is `VXLAN`. If not specified Alkira allocates unique VNI from the range `[16773023, 16777215]`.
 
@@ -338,8 +338,8 @@ Read-Only:
 
 Required:
 
-- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. Required only if `tunnel_protocol` is `IPSEC`. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways))
-- `segment_id` (String) The ID of an existing segment in the Alkira environment.
+- `customer_gateways` (Block List, Min: 1) Customer gateway configurations for `IPSEC` tunnels. (see [below for nested schema](#nestedblock--instances--ipsec_customer_gateway--customer_gateways))
+- `segment_id` (String) The ID of a segment.
 
 <a id="nestedblock--instances--ipsec_customer_gateway--customer_gateways"></a>
 ### Nested Schema for `instances.ipsec_customer_gateway.customer_gateways`
@@ -361,7 +361,7 @@ Optional:
 - `ike_version` (String) The IKE protocol version. Currently, only `IKEv2` is supported.
 - `initiator` (Boolean) Whether this endpoint initiates the tunnel connection.
 - `pre_shared_key` (String, Sensitive) The pre-shared key for tunnel authentication. This field is sensitive and will not be displayed in logs.
-- `profile_id` (Number) The ID of the tunnel profile to use.
+- `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`).
 - `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
 - `remote_auth_value` (String, Sensitive) The authentication value for the remote endpoint. This field is sensitive.
 

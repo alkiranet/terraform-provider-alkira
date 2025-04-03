@@ -155,25 +155,22 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"ipsec_customer_gateway": {
-							Description: "Instance level segment specific routing and gateway configurations." +
-								"Only required when `tunnel_protocol` is `IPSEC`. " +
-								"There must be a one-to-one correspondence between " +
-								"segments defined in `ipsec_customer_gateway` " +
-								"and global-level `ipsec_customer_gateway`",
+							Description: "IPSec customer gateway configuration. The block is only " +
+								"required when tunnel_protocol is IPSEC. All segments defined in the " +
+								"segment_options should be configured here as well.",
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"segment_id": {
-										Description: "The ID of an existing segment in the Alkira environment.",
+										Description: "The ID of a segment.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
 									"customer_gateways": {
-										Description: "Customer gateway configurations for `IPSEC` tunnels. " +
-											"Required only if `tunnel_protocol` is `IPSEC`.",
-										Type:     schema.TypeList,
-										Required: true,
+										Description: "Customer gateway configurations for `IPSEC` tunnels. ",
+										Type:        schema.TypeList,
+										Required:    true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
@@ -201,17 +198,20 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 															"initiator": {
 																Description: "Whether this endpoint initiates the tunnel connection.",
 																Type:        schema.TypeBool,
+																Default:     false,
 																Optional:    true,
 															},
 															"profile_id": {
-																Description: "The ID of the tunnel profile to use.",
-																Type:        schema.TypeInt,
-																Optional:    true,
+																Description: "The ID of the IPSec Tunnel " +
+																	"Profile (`connector_ipsec_tunnel_profile`). ",
+																Type:     schema.TypeInt,
+																Optional: true,
 															},
 															"ike_version": {
 																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
 																Type:        schema.TypeString,
 																Optional:    true,
+																Default:     "IKEv2",
 															},
 															"pre_shared_key": {
 																Description: "The pre-shared key for tunnel authentication. " +
@@ -348,7 +348,13 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 
 	instances := make([]map[string]interface{}, len(connector.Instances))
 	for i, instance := range connector.Instances {
-		instances[i] = flattenInstance(instance, m)
+		instances[i], err = flattenInstance(instance, m)
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+		}
 	}
 
 	d.Set("instances", instances)
