@@ -163,8 +163,12 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 	for i, segment := range seg {
 		r := alkira.ConnectorAzureExpressRouteSegment{}
 		instanceCfg := segment.(map[string]interface{})
-		if v, ok := instanceCfg["segment_name"].(string); ok {
-			r.SegmentName = v
+		if v, ok := instanceCfg["segment_id"].(string); ok {
+			segmentName, err := getSegmentNameById(v, m)
+			if err != nil {
+				return nil, err
+			}
+			r.SegmentName = segmentName
 		}
 		if v, ok := instanceCfg["customer_asn"].(int); ok {
 			r.CustomerAsn = v
