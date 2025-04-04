@@ -22,5 +22,4 @@ To start using the provider, you will need Terraform 1.0 or above.
 ## Development Requirements
 
 -	[Terraform Latest Release](https://developer.hashicorp.com/terraform/downloads)
--	[Go](https://golang.org/doc/install) 1.20.x (to build the provider
-     plugin on all architectures, especially Apple M1)
+-	[Go](https://golang.org/doc/install) 1.23.8
