@@ -205,7 +205,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Description: "The ID of the IPSec Tunnel " +
 																	"Profile (`connector_ipsec_tunnel_profile`). ",
 																Type:     schema.TypeInt,
-																Optional: true,
+																Required: true,
 															},
 															"ike_version": {
 																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
@@ -217,19 +217,19 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Description: "The pre-shared key for tunnel authentication. " +
 																	"This field is sensitive and will not be displayed in logs.",
 																Type:      schema.TypeString,
-																Optional:  true,
+																Required:  true,
 																Sensitive: true,
 															},
 															"remote_auth_type": {
 																Description: "The authentication type for the remote endpoint. " +
 																	"Only `FQDN` iscurrently supported.",
 																Type:     schema.TypeString,
-																Optional: true,
+																Required: true,
 															},
 															"remote_auth_value": {
 																Description: "The authentication value for the remote endpoint. This field is sensitive.",
 																Type:        schema.TypeString,
-																Optional:    true,
+																Required:    true,
 																Sensitive:   true,
 															},
 														},
@@ -361,8 +361,16 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 
 	segments := make([]map[string]interface{}, len(connector.SegmentOptions))
 	for i, seg := range connector.SegmentOptions {
+		segmentId, err := getSegmentIdByName(seg.SegmentName, m)
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+
+		}
 		segments[i] = map[string]interface{}{
-			"segment_id":               seg.SegmentId,
+			"segment_id":               segmentId,
 			"customer_asn":             seg.CustomerAsn,
 			"disable_internet_exit":    seg.DisableInternetExit,
 			"advertise_on_prem_routes": seg.AdvertiseOnPremRoutes,
