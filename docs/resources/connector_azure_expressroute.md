@@ -355,15 +355,15 @@ Required:
 Required:
 
 - `name` (String) A unique name for the tunnel.
-- `pre_shared_key` (String, Sensitive) The pre-shared key for tunnel authentication. This field is sensitive and will not be displayed in logs.
-- `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`).
-- `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
-- `remote_auth_value` (String, Sensitive) The authentication value for the remote endpoint. This field is sensitive.
 
 Optional:
 
 - `ike_version` (String) The IKE protocol version. Currently, only `IKEv2` is supported.
 - `initiator` (Boolean) Whether this endpoint initiates the tunnel connection.
+- `pre_shared_key` (String, Sensitive) The pre-shared key for tunnel authentication. This field is sensitive and will not be displayed in logs.
+- `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`).
+- `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
+- `remote_auth_value` (String, Sensitive) The authentication value for the remote endpoint. This field is sensitive.
 
 Read-Only:
 

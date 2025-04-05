@@ -198,14 +198,14 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 															"initiator": {
 																Description: "Whether this endpoint initiates the tunnel connection.",
 																Type:        schema.TypeBool,
-																Default:     false,
+																Default:     true,
 																Optional:    true,
 															},
 															"profile_id": {
 																Description: "The ID of the IPSec Tunnel " +
 																	"Profile (`connector_ipsec_tunnel_profile`). ",
 																Type:     schema.TypeInt,
-																Required: true,
+																Optional: true,
 															},
 															"ike_version": {
 																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
@@ -217,19 +217,19 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Description: "The pre-shared key for tunnel authentication. " +
 																	"This field is sensitive and will not be displayed in logs.",
 																Type:      schema.TypeString,
-																Required:  true,
+																Optional:  true,
 																Sensitive: true,
 															},
 															"remote_auth_type": {
 																Description: "The authentication type for the remote endpoint. " +
 																	"Only `FQDN` iscurrently supported.",
 																Type:     schema.TypeString,
-																Required: true,
+																Optional: true,
 															},
 															"remote_auth_value": {
 																Description: "The authentication value for the remote endpoint. This field is sensitive.",
 																Type:        schema.TypeString,
-																Required:    true,
+																Optional:    true,
 																Sensitive:   true,
 															},
 														},
