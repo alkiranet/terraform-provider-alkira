@@ -196,10 +196,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Required:    true,
 															},
 															"initiator": {
-																Description: "Whether this endpoint initiates the tunnel connection.",
-																Type:        schema.TypeBool,
-																Default:     true,
-																Optional:    true,
+																Description: "Whether this endpoint initiates the tunnel connection. " +
+																	"Default value is `true`.",
+																Type:     schema.TypeBool,
+																Default:  true,
+																Optional: true,
 															},
 															"profile_id": {
 																Description: "The ID of the IPSec Tunnel " +

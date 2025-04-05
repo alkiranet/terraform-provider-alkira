@@ -359,7 +359,7 @@ Required:
 Optional:
 
 - `ike_version` (String) The IKE protocol version. Currently, only `IKEv2` is supported.
-- `initiator` (Boolean) Whether this endpoint initiates the tunnel connection.
+- `initiator` (Boolean) Whether this endpoint initiates the tunnel connection. Default value is `true`.
 - `pre_shared_key` (String, Sensitive) The pre-shared key for tunnel authentication. This field is sensitive and will not be displayed in logs.
 - `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`).
 - `remote_auth_type` (String) The authentication type for the remote endpoint. Only `FQDN` iscurrently supported.
