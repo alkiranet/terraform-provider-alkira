@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 )
@@ -74,6 +75,7 @@ func expandInstanceSegmentOptions(in []interface{}, m interface{}) ([]alkira.Ins
 		if v, ok := segOptMap["segment_id"].(string); ok {
 			segmentName, err := getSegmentNameById(v, m)
 			if err != nil {
+				log.Printf("Unable to fetch segment_name for segment_id", v)
 				return nil, err
 			}
 			segmentOption.SegmentName = segmentName
@@ -166,6 +168,7 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 		if v, ok := instanceCfg["segment_id"].(string); ok {
 			segmentName, err := getSegmentNameById(v, m)
 			if err != nil {
+				log.Printf("Unable to fetch segment_name for segment_id", v)
 				return nil, err
 			}
 			r.SegmentName = segmentName
