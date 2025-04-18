@@ -39,6 +39,7 @@ resource "alkira_connector_aws_tgw" "example" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector.
 - `static_route_prefix_list_ids` (Set of Number) Policy Prefixes to be associated with connector's VPN route.
 
 ### Read-Only
