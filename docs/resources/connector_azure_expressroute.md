@@ -379,7 +379,7 @@ Read-Only:
 Required:
 
 - `customer_asn` (Number) ASN on the customer premise side.
-- `segment_id` (Number) The ID of the segment.
+- `segment_id` (String) The ID of the segment.
 
 Optional:
 
