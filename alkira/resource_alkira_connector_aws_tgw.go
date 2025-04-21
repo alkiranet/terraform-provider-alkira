@@ -99,6 +99,11 @@ func resourceAlkiraConnectorAwsTgw() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -166,6 +171,7 @@ func resourceConnectorAwsTgwRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("size", connector.Size)
 	d.Set("static_route_prefix_list_ids", connector.StaticRoutes)
 	d.Set("description", connector.Description)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -266,6 +272,7 @@ func generateConnectorAwsTgwRequest(d *schema.ResourceData, m interface{}) (*alk
 		Segments:                  []string{segmentName},
 		Size:                      d.Get("size").(string),
 		Description:               d.Get("description").(string),
+		ScaleGroupId:              d.Get("scale_group_id").(string),
 	}
 
 	return request, nil
