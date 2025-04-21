@@ -212,7 +212,6 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 																Description: "The IKE protocol version. Currently, only `IKEv2` is supported.",
 																Type:        schema.TypeString,
 																Optional:    true,
-																Default:     "IKEv2",
 															},
 															"pre_shared_key": {
 																Description: "The pre-shared key for tunnel authentication. " +
