@@ -7,7 +7,7 @@ resource "alkira_service_infoblox" "test" {
   service_group_name  = "serviceGroupName"
   shared_secret       = "thisisanewsecredet"
 
-  instances {
+  instance {
     anycast_enabled = false
     hostname        = "hostname.localdomain"
     model           = "TE-V1425"
@@ -16,14 +16,6 @@ resource "alkira_service_infoblox" "test" {
     version         = "8.5.2"
   }
 
-  instances {
-    anycast_enabled = false
-    hostname        = "hostname.localdomain"
-    model           = "TE-V1425"
-    password        = "password1234"
-    type            = "MASTER_CANDIDATE"
-    version         = "8.5.2"
-  }
 
   anycast {
     enabled = false
