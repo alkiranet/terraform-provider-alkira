@@ -31,9 +31,9 @@ func generateHTTPSProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 		CaCertificate:         d.Get("ca_certificate").(string),
 	}
 
-	if headers, ok := d.GetOk("headers"); ok {
-		httpsParams.Headers = convertMapToStringMapHTTPS(headers.(map[string]interface{}))
-	}
+	// if headers, ok := d.GetOk("headers"); ok {
+	// 	httpsParams.Headers = convertMapToStringMapHTTPS(headers.(map[string]interface{}))
+	// }
 
 	if validators, ok := d.GetOk("validators"); ok {
 		httpsParams.Validators = expandValidatorsHTTPS(validators.([]interface{}))
@@ -66,7 +66,7 @@ func setHTTPSProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("server_name", params.ServerName)
 	d.Set("disable_cert_validation", params.DisableCertValidation)
 	d.Set("ca_certificate", params.CaCertificate)
-	d.Set("headers", params.Headers)
+	// d.Set("headers", params.Headers)
 	d.Set("validators", flattenValidatorsHTTPS(params.Validators))
 
 	return nil

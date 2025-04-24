@@ -27,9 +27,9 @@ func generateHTTPProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 		URI: d.Get("uri").(string),
 	}
 
-	if headers, ok := d.GetOk("headers"); ok {
-		httpParams.Headers = convertMapToStringMapHTTP(headers.(map[string]interface{}))
-	}
+	// if headers, ok := d.GetOk("headers"); ok {
+	// 	httpParams.Headers = convertMapToStringMapHTTP(headers.(map[string]interface{}))
+	// }
 
 	if validators, ok := d.GetOk("validators"); ok {
 		httpParams.Validators = expandValidatorsHTTP(validators.([]interface{}))
@@ -59,7 +59,7 @@ func setHTTPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	}
 
 	d.Set("uri", params.URI)
-	d.Set("headers", params.Headers)
+	// d.Set("headers", params.Headers)
 	d.Set("validators", flattenValidatorsHTTP(params.Validators))
 
 	return nil
