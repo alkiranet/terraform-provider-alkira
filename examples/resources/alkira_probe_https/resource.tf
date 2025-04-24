@@ -6,5 +6,5 @@ resource "alkira_probe_https" "basic_https" {
     id   = alkira_internet_application.example_application.id
   }
 
-  uri = "/api/status"
+  uri = "www.alkira.net/api/status"
 }

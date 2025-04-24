@@ -7,7 +7,7 @@ resource "alkira_probe_http" "advanced_http" {
     id   = alkira_internet_application.example_application.id
   }
 
-  uri = "/api/health"
+  uri = "www.alkira.net/api/health"
 
   headers = {
     "Authorization" = "Bearer token123"

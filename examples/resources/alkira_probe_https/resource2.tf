@@ -7,7 +7,7 @@ resource "alkira_probe_https" "no_cert_validation" {
     id   = alkira_internet_application.example_application.id
   }
 
-  uri                     = "/dashboard"
+  uri                     = "www.alkira.net/api/dashboard"
   disable_cert_validation = true
 
   validators {

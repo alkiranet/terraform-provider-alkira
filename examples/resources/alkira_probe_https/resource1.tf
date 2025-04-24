@@ -7,7 +7,7 @@ resource "alkira_probe_https" "custom_cert_https" {
     id   = alkira_internet_application.example_application.id
   }
 
-  uri         = "/secure/endpoint"
+  uri         = "www.alkira.net/secure/endpoint"
   server_name = "api.example.com"
 
   ca_certificate = file("${path.module}/certs/exmaple_ca.pem")
