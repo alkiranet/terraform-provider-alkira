@@ -16,7 +16,6 @@ This resource supports advanced TLS options like certificate validation, SNI, an
 Connection will always be initiated to the EIPs associated with the Internet Application, 
 the host specified in the uri will be added to the host header
 
-~>**NOTE:**   This is a non-provisionable resource.
 
 ## Example Usage
 
@@ -51,10 +50,6 @@ resource "alkira_probe_https" "custom_cert_https" {
   server_name = "api.example.com"
 
   ca_certificate = file("${path.module}/certs/exmaple_ca.pem")
-
-  headers = {
-    "Authorization" = "Basic dXNlcjpwYXNzd29yZA=="
-  }
 
   validators {
     type        = "STATUS_CODE"
@@ -106,12 +101,11 @@ resource "alkira_probe_https" "no_cert_validation" {
 - `ca_certificate` (String) Required when certificate validation is enabled and certificate is self assigned.
 - `disable_cert_validation` (Boolean) Whether to disable certificate validation.
 - `enabled` (Boolean) Whether the probe is enabled.
-- `failure_threshold` (Number) The number of consecutive failures required to mark the probe as failed.
-- `headers` (Map of String) HTTP headers to include in the request.
-- `period_seconds` (Number) How often (in seconds) to perform the probe.
+- `failure_threshold` (Number) The number of consecutive failures required to mark the probe as failed. Default is `3`, and the maximum value allowed is `50`.
+- `period_seconds` (Number) How often (in seconds) to perform the probe. Default value is `60`, and the maximum value allowed is `360`.
 - `server_name` (String) The server name for TLS SNI.
-- `success_threshold` (Number) The number of consecutive successes required to mark the probe as successful.
-- `timeout_seconds` (Number) Number of seconds after which the probe times out.
+- `success_threshold` (Number) The number of consecutive successes required to mark the probe as successful. Default value is `1`, and the maximum value allowed is `50`.
+- `timeout_seconds` (Number) Number of seconds after which the probe times out. Default value is `60`, and the maximum value allowed is `360`. `timeout_seconds` should always be greater than `period_seconds`.
 - `validators` (Block List) Validators for the HTTP response. (see [below for nested schema](#nestedblock--validators))
 
 ### Read-Only

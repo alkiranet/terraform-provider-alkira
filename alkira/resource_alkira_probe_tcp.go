@@ -58,24 +58,33 @@ func resourceAlkiraProbeTCP() *schema.Resource {
 				Required:    true,
 			},
 			"failure_threshold": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of consecutive failures required to mark the probe as failed.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  3,
+				Description: "The number of consecutive failures required to mark the probe as failed." +
+					" Default is `3`, and the maximum value allowed is `50`.",
 			},
 			"success_threshold": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of consecutive successes required to mark the probe as successful.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+				Description: "The number of consecutive successes required to mark the probe as successful." +
+					" Default value is `1`, and the maximum value allowed is `50`.",
 			},
 			"period_seconds": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "How often (in seconds) to perform the probe.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+				Description: "How often (in seconds) to perform the probe." +
+					" Default value is `60`, and the maximum value allowed is `360`.",
 			},
 			"timeout_seconds": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Number of seconds after which the probe times out.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+				Description: "Number of seconds after which the probe times out." +
+					" Default value is `60`, and the maximum value allowed is `360`." +
+					" `timeout_seconds` should always be greater than `period_seconds`.",
 			},
 		},
 	}
@@ -114,7 +123,7 @@ func resourceProbeTCPRead(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	if probe.Type != "TCP" {
-		return diag.Errorf("Retrieved probe is not of TCP type")
+		return diag.Errorf("Probe type mismatch.")
 	}
 
 	if err := setTCPProbeState(probe, d); err != nil {

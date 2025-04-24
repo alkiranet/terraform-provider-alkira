@@ -12,10 +12,6 @@ resource "alkira_probe_https" "custom_cert_https" {
 
   ca_certificate = file("${path.module}/certs/exmaple_ca.pem")
 
-  headers = {
-    "Authorization" = "Basic dXNlcjpwYXNzd29yZA=="
-  }
-
   validators {
     type        = "STATUS_CODE"
     status_code = "200"

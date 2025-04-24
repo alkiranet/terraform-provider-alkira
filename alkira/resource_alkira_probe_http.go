@@ -58,12 +58,13 @@ func resourceAlkiraProbeHTTP() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"headers": {
-				Description: "HTTP headers to include in the request.",
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
+			// will be enabled in phase 2.
+			// "headers": {
+			// 	Description: "HTTP headers to include in the request.",
+			// 	Type:        schema.TypeMap,
+			// 	Optional:    true,
+			// 	Elem:        &schema.Schema{Type: schema.TypeString},
+			// },
 			"validators": {
 				Description: "Validators for the HTTP response.",
 				Type:        schema.TypeList,
@@ -78,39 +79,46 @@ func resourceAlkiraProbeHTTP() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"HTTP_STATUS_CODE", "HTTP_RESPONSE_BODY"}, false),
 						},
 						"status_code": {
-							Type:          schema.TypeString,
-							Description:   "Response code the response should have.",
-							Optional:      true,
-							ConflictsWith: []string{"regex"},
+							Type:        schema.TypeString,
+							Description: "Response code the response should have.",
+							Optional:    true,
 						},
 						"regex": {
-							Description:   "Regex the response body should match.",
-							Type:          schema.TypeString,
-							ConflictsWith: []string{"status_code"},
-							Optional:      true,
+							Description: "Regex the response body should match.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 					},
 				},
 			},
 			"failure_threshold": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of consecutive failures required to mark the probe as failed.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  3,
+				Description: "The number of consecutive failures required to mark the probe as failed." +
+					" Default is `3`, and the maximum value allowed is `50`.",
 			},
 			"success_threshold": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of consecutive successes required to mark the probe as successful.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+				Description: "The number of consecutive successes required to mark the probe as successful." +
+					" Default value is `1`, and the maximum value allowed is `50`.",
 			},
 			"period_seconds": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "How often (in seconds) to perform the probe.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+				Description: "How often (in seconds) to perform the probe." +
+					" Default value is `60`, and the maximum value allowed is `360`.",
 			},
 			"timeout_seconds": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Number of seconds after which the probe times out.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+				Description: "Number of seconds after which the probe times out." +
+					" Default value is `60`, and the maximum value allowed is `360`." +
+					" `timeout_seconds` should always be greater than `period_seconds`.",
 			},
 		},
 	}
@@ -149,7 +157,7 @@ func resourceProbeHTTPRead(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	if probe.Type != "HTTP" {
-		return diag.Errorf("Retrieved probe is not of HTTP type")
+		return diag.Errorf("Probe type mismatch.")
 	}
 
 	if err := setHTTPProbeState(probe, d); err != nil {
