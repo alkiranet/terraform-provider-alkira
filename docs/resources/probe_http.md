@@ -24,10 +24,7 @@ This example demonstrates a simple HTTP probe that checks a health endpoint:
 resource "alkira_probe_http" "basic_http" {
   name = "basic-http-probe"
 
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
+  network_entity_id = alkira_internet_application.example_application.id
 
   uri = "www.alkira.net/api/health"
 }
@@ -75,7 +72,7 @@ resource "alkira_probe_http" "advanced_http" {
 ### Required
 
 - `name` (String) The name of the HTTP probe.
-- `network_entity` (Block List, Min: 1, Max: 1) Network entity configuration. (see [below for nested schema](#nestedblock--network_entity))
+- `network_entity_id` (String) The ID of the internet application network entity to probe.
 - `uri` (String) The URI to probe.
 
 ### Optional
@@ -90,15 +87,6 @@ resource "alkira_probe_http" "advanced_http" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--network_entity"></a>
-### Nested Schema for `network_entity`
-
-Required:
-
-- `id` (String) The ID of the network entity.
-- `type` (String) The type of network entity to probe. Only `INTERNET_APPLICATION` supported for now.
-
 
 <a id="nestedblock--validators"></a>
 ### Nested Schema for `validators`

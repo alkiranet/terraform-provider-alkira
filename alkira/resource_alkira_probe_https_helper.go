@@ -20,8 +20,10 @@ func generateHTTPSProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 	}
 
 	// Network Entity
-	networkEntity := expandNetworkEntityHTTPS(d.Get("network_entity").([]interface{}))
-	probe.NetworkEntity = *networkEntity
+	probe.NetworkEntity = alkira.ProbeNetworkEntity{
+		Type: "INTERNET_APPLICATION", // Hardcode type
+		ID:   d.Get("network_entity_id").(string),
+	}
 
 	// HTTPS Parameters
 	httpsParams := &alkira.HttpsProbe{
@@ -30,10 +32,6 @@ func generateHTTPSProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 		DisableCertValidation: d.Get("disable_cert_validation").(bool),
 		CaCertificate:         d.Get("ca_certificate").(string),
 	}
-
-	// if headers, ok := d.GetOk("headers"); ok {
-	// 	httpsParams.Headers = convertMapToStringMapHTTPS(headers.(map[string]interface{}))
-	// }
 
 	if validators, ok := d.GetOk("validators"); ok {
 		httpsParams.Validators = expandValidatorsHTTPS(validators.([]interface{}))
@@ -54,7 +52,7 @@ func setHTTPSProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("timeout_seconds", probe.TimeoutSeconds)
 
 	// Network Entity
-	d.Set("network_entity", flattenNetworkEntityHTTPS(&probe.NetworkEntity))
+	d.Set("network_entity_id", probe.NetworkEntity.ID)
 
 	// HTTPS Parameters
 	var params alkira.HttpsProbe
@@ -70,25 +68,6 @@ func setHTTPSProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("validators", flattenValidatorsHTTPS(params.Validators))
 
 	return nil
-}
-
-func expandNetworkEntityHTTPS(input []interface{}) *alkira.ProbeNetworkEntity {
-	if len(input) == 0 {
-		return nil
-	}
-
-	entity := input[0].(map[string]interface{})
-	return &alkira.ProbeNetworkEntity{
-		Type: entity["type"].(string),
-		ID:   entity["id"].(string),
-	}
-}
-
-func flattenNetworkEntityHTTPS(entity *alkira.ProbeNetworkEntity) []interface{} {
-	return []interface{}{map[string]interface{}{
-		"type": entity.Type,
-		"id":   entity.ID,
-	}}
 }
 
 func expandValidatorsHTTPS(input []interface{}) []alkira.ProbeValidator {

@@ -32,39 +32,16 @@ func resourceAlkiraProbeHTTP() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
-			"network_entity": {
-				Description: "Network entity configuration.",
-				Type:        schema.TypeList,
+			"network_entity_id": {
+				Description: "The ID of the internet application network entity to probe.",
+				Type:        schema.TypeString,
 				Required:    true,
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Description: "The type of network entity to probe." +
-								" Only `INTERNET_APPLICATION` supported for now.",
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"id": {
-							Description: "The ID of the network entity.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-					},
-				},
 			},
 			"uri": {
 				Description: "The URI to probe.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			// will be enabled in phase 2.
-			// "headers": {
-			// 	Description: "HTTP headers to include in the request.",
-			// 	Type:        schema.TypeMap,
-			// 	Optional:    true,
-			// 	Elem:        &schema.Schema{Type: schema.TypeString},
-			// },
 			"validators": {
 				Description: "Validators for the HTTP response.",
 				Type:        schema.TypeList,

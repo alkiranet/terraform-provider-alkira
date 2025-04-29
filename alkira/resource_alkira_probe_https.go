@@ -53,6 +53,11 @@ func resourceAlkiraProbeHTTPS() *schema.Resource {
 					},
 				},
 			},
+			"network_entity_id": {
+				Description: "The ID of the internet application network entity to probe.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
 			"uri": {
 				Description: "The URI to probe.",
 				Type:        schema.TypeString,
@@ -75,13 +80,6 @@ func resourceAlkiraProbeHTTPS() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			// will be enabled in phase 2.
-			// "headers": {
-			// 	Description: "HTTP headers to include in the request.",
-			// 	Type:        schema.TypeMap,
-			// 	Optional:    true,
-			// 	Elem:        &schema.Schema{Type: schema.TypeString},
-			// },
 			"validators": {
 				Description: "Validators for the HTTP response.",
 				Type:        schema.TypeList,

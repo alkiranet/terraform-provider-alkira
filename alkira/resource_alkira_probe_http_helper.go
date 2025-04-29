@@ -19,17 +19,15 @@ func generateHTTPProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 	}
 
 	// Network Entity
-	networkEntity := expandNetworkEntityHTTP(d.Get("network_entity").([]interface{}))
-	probe.NetworkEntity = *networkEntity
+	probe.NetworkEntity = alkira.ProbeNetworkEntity{
+		Type: "INTERNET_APPLICATION", // Hardcode type
+		ID:   d.Get("network_entity_id").(string),
+	}
 
 	// HTTP Parameters
 	httpParams := &alkira.HttpProbe{
 		URI: d.Get("uri").(string),
 	}
-
-	// if headers, ok := d.GetOk("headers"); ok {
-	// 	httpParams.Headers = convertMapToStringMapHTTP(headers.(map[string]interface{}))
-	// }
 
 	if validators, ok := d.GetOk("validators"); ok {
 		httpParams.Validators = expandValidatorsHTTP(validators.([]interface{}))
@@ -50,7 +48,7 @@ func setHTTPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("timeout_seconds", probe.TimeoutSeconds)
 
 	// Network Entity
-	d.Set("network_entity", flattenNetworkEntityHTTP(&probe.NetworkEntity))
+	d.Set("network_entity_id", probe.NetworkEntity.ID)
 
 	// HTTP Parameters
 	var params alkira.HttpProbe
@@ -63,25 +61,6 @@ func setHTTPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("validators", flattenValidatorsHTTP(params.Validators))
 
 	return nil
-}
-
-func expandNetworkEntityHTTP(input []interface{}) *alkira.ProbeNetworkEntity {
-	if len(input) == 0 {
-		return nil
-	}
-
-	entity := input[0].(map[string]interface{})
-	return &alkira.ProbeNetworkEntity{
-		Type: entity["type"].(string),
-		ID:   entity["id"].(string),
-	}
-}
-
-func flattenNetworkEntityHTTP(entity *alkira.ProbeNetworkEntity) []interface{} {
-	return []interface{}{map[string]interface{}{
-		"type": entity.Type,
-		"id":   entity.ID,
-	}}
 }
 
 func expandValidatorsHTTP(input []interface{}) []alkira.ProbeValidator {

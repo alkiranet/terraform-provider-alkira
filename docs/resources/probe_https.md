@@ -25,10 +25,7 @@ This example demonstrates a simple HTTPS probe that monitors an API status endpo
 resource "alkira_probe_https" "basic_https" {
   name = "basic-https-probe"
 
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
+  network_entity_id = alkira_internet_application.example_application.id
 
   uri = "www.alkira.net/api/status"
 }
@@ -94,6 +91,7 @@ resource "alkira_probe_https" "no_cert_validation" {
 
 - `name` (String) The name of the HTTPS probe.
 - `network_entity` (Block List, Min: 1, Max: 1) Network entity configuration. (see [below for nested schema](#nestedblock--network_entity))
+- `network_entity_id` (String) The ID of the internet application network entity to probe.
 - `uri` (String) The URI to probe.
 
 ### Optional
