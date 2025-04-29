@@ -84,7 +84,7 @@ func resourceAlkiraProbeTCP() *schema.Resource {
 				Default:  60,
 				Description: "Number of seconds after which the probe times out." +
 					" Default value is `60`, and the maximum value allowed is `360`." +
-					" `timeout_seconds` should always be greater than `period_seconds`.",
+					" `timeout_seconds` should always be less than or equal to `period_seconds`.",
 			},
 		},
 	}

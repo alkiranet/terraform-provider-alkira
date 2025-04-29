@@ -68,7 +68,7 @@ resource "alkira_probe_tcp" "full_tcp" {
 - `failure_threshold` (Number) The number of consecutive failures required to mark the probe as failed. Default is `3`, and the maximum value allowed is `50`.
 - `period_seconds` (Number) How often (in seconds) to perform the probe. Default value is `60`, and the maximum value allowed is `360`.
 - `success_threshold` (Number) The number of consecutive successes required to mark the probe as successful. Default value is `1`, and the maximum value allowed is `50`.
-- `timeout_seconds` (Number) Number of seconds after which the probe times out. Default value is `60`, and the maximum value allowed is `360`. `timeout_seconds` should always be greater than `period_seconds`.
+- `timeout_seconds` (Number) Number of seconds after which the probe times out. Default value is `60`, and the maximum value allowed is `360`. `timeout_seconds` should always be less than or equal to `period_seconds`.
 
 ### Read-Only
 

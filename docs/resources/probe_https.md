@@ -103,7 +103,7 @@ resource "alkira_probe_https" "no_cert_validation" {
 - `period_seconds` (Number) How often (in seconds) to perform the probe. Default value is `60`, and the maximum value allowed is `360`.
 - `server_name` (String) The server name for TLS SNI.
 - `success_threshold` (Number) The number of consecutive successes required to mark the probe as successful. Default value is `1`, and the maximum value allowed is `50`.
-- `timeout_seconds` (Number) Number of seconds after which the probe times out. Default value is `60`, and the maximum value allowed is `360`. `timeout_seconds` should always be greater than `period_seconds`.
+- `timeout_seconds` (Number) Number of seconds after which the probe times out. Default value is `60`, and the maximum value allowed is `360`. `timeout_seconds` should always be less than or equal to `period_seconds`.
 - `validators` (Block List) Validators for the HTTP response. (see [below for nested schema](#nestedblock--validators))
 
 ### Read-Only
