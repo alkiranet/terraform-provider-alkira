@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+The `alkira_probe_http` resource allows you to configure and manage HTTP probes in the Alkira network.
+HTTP probes help monitor the health and availability of services by periodically sending HTTP requests 
+to specified endpoints and evaluating the responses based on configurable validation criteria.
+Connection will always be initiated to the EIPs associated with the Internet Application, 
+the host specified in the uri will be added to the host header
+
+
+## Example Usage
+
+### Basic HTTP Probe
+This example demonstrates a simple HTTP probe that checks a health endpoint:
+{{ tffile "examples/resources/alkira_probe_http/resource.tf" }}
+
+### Advanced HTTP Probe with Headers and Validators
+This example demonstrates a more advanced HTTP probe with custom headers and response validation:
+{{ tffile "examples/resources/alkira_probe_http/resource1.tf" }} 
+{{ .SchemaMarkdown | trimspace }}
+
+
