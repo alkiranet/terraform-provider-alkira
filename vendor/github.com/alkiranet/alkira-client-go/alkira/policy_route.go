@@ -20,6 +20,8 @@ type RoutePolicy struct {
 	AdvertiseOnPremRoutes         bool               `json:"advertiseOnPremRoutes,omitempty"`
 	AdvertiseCustomRoutesPrefixId int                `json:"advertiseCustomRoutesPrefixId,omitempty"`
 	EnableASOverride              *bool              `json:"enableASOverride,omitempty"`
+	TargetConnectorCategory       string             `json:"targetConnectorCategory,omitempty"`
+	SourceRoutesPrefixListId      int                `json:"sourceRoutesPrefixListId,omitempty"`
 	Rules                         []RoutePolicyRules `json:"rules,omitempty"`
 }
 
@@ -47,6 +49,7 @@ type RoutePolicyRulesSet struct {
 	AsPathPrepend     string `json:"asPathPrepend"`
 	Community         string `json:"community"`
 	ExtendedCommunity string `json:"extendedCommunity"`
+	Med               int    `json:"med,omitempty"`
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
