@@ -84,6 +84,7 @@ Optional:
 - `routes_distribution_restricted_cxps` (List of String) List of cxps to which routes distribution is restricted. Should be used only with distributionType `RESTRICTED_CXPS`.
 - `routes_distribution_type` (String) Redistribute routes that match with this rule match codition to. The value could be `ALL`, `LOCAL_ONLY` and `RESTRICTED_CXPS`.
 - `set_as_path_prepend` (String) Allows to prepend one or more AS numbers to the current AS PATH. Each AS number can be a value from 0 through 65535. Example - 100 100 100.
+- `set_as_path_replace_with_segment_asn` (String) ASNs that will be replaced with the local segment ASN. Accepts a comma-separated string of ASNs or 'ALL'. Can be null. This option can be applied only to USERS_AND_SITES connectors.
 - `set_community` (String) Allows to add one or more community attributes to the existing communities on the route. Community attribute is specified in this format: `as-number:community-value`. as-number and community-value can be a value from `0` through `65535`. Example: `65512:20 65512:21`.
 - `set_extended_community` (String) Allows to add one or more extended community attributes to the existing extended communities on the route. Extended community attribute is specified in this format: `type:administrator:assigned-number`. Currently only type origin(soo) is supported.
 
