@@ -20,8 +20,10 @@ func generateTCPProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 	}
 
 	// Network Entity
-	networkEntity := expandNetworkEntityTCP(d.Get("network_entity").([]interface{}))
-	probe.NetworkEntity = *networkEntity
+	probe.NetworkEntity = alkira.ProbeNetworkEntity{
+		Type: "INTERNET_APPLICATION", // Hardcode type
+		ID:   d.Get("network_entity_id").(string),
+	}
 
 	// TCP Parameters
 	tcpParams := &alkira.TcpProbe{
@@ -40,9 +42,7 @@ func setTCPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("success_threshold", probe.SuccessThreshold)
 	d.Set("period_seconds", probe.PeriodSeconds)
 	d.Set("timeout_seconds", probe.TimeoutSeconds)
-
-	// Network Entity
-	d.Set("network_entity", flattenNetworkEntityTCP(&probe.NetworkEntity))
+	d.Set("network_entity_id", &probe.NetworkEntity.ID)
 
 	// TCP Parameters
 	var params alkira.TcpProbe
@@ -53,23 +53,4 @@ func setTCPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("port", params.Port)
 
 	return nil
-}
-
-func expandNetworkEntityTCP(input []interface{}) *alkira.ProbeNetworkEntity {
-	if len(input) == 0 {
-		return nil
-	}
-
-	entity := input[0].(map[string]interface{})
-	return &alkira.ProbeNetworkEntity{
-		Type: entity["type"].(string),
-		ID:   entity["id"].(string),
-	}
-}
-
-func flattenNetworkEntityTCP(entity *alkira.ProbeNetworkEntity) []interface{} {
-	return []interface{}{map[string]interface{}{
-		"type": entity.Type,
-		"id":   entity.ID,
-	}}
 }

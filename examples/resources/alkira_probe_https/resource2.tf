@@ -2,10 +2,7 @@ resource "alkira_probe_https" "no_cert_validation" {
   name    = "https-no-cert-validation"
   enabled = true
 
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
+  network_entity_id = alkira_internet_application.example_application.id
 
   uri                     = "www.alkira.net/api/dashboard"
   disable_cert_validation = true
