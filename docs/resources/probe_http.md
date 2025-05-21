@@ -34,21 +34,10 @@ resource "alkira_probe_http" "basic_http" {
 This example demonstrates a more advanced HTTP probe with custom headers and response validation:
 ```terraform
 resource "alkira_probe_http" "advanced_http" {
-  name    = "http-with-validators"
-  enabled = true
-
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
-
-  uri = "www.alkira.net/api/health"
-
-  headers = {
-    "Authorization" = "Bearer token123"
-    "Content-Type"  = "application/json"
-    "Accept"        = "application/json"
-  }
+  name              = "http-with-validators"
+  enabled           = true
+  network_entity_id = alkira_internet_application.example_application.id
+  uri               = "www.alkira.net/api/health"
 
   validators {
     type        = "STATUS_CODE"

@@ -179,7 +179,7 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 		if v, ok := instanceCfg["customer_asn"].(int); ok {
 			r.CustomerAsn = v
 		}
-		if v, ok := instanceCfg["disabled_internet_exit"].(bool); ok {
+		if v, ok := instanceCfg["disable_internet_exit"].(bool); ok {
 			r.DisableInternetExit = v
 		}
 		if v, ok := instanceCfg["advertise_on_prem_routes"].(bool); ok {
