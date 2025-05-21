@@ -72,6 +72,8 @@ func expandPolicyRoutingRuleSet(in map[string]interface{}) (*alkira.RoutePolicyR
 	}
 	if v, ok := in["set_med"].(int); ok {
 		set.Med = v
+	if v, ok := in["set_as_path_replace_with_segment_asn"].(string); ok {
+		set.AsPathReplaceWithSegmentAsn = v
 	}
 
 	return &set, nil
@@ -199,6 +201,10 @@ func setPolicyRoutingRules(in []alkira.RoutePolicyRules, d *schema.ResourceData)
 			r["set_community"] = rule.Set.Community
 			r["set_extended_community"] = rule.Set.ExtendedCommunity
 			r["set_med"] = rule.Set.Med
+
+      if rule.Set.AsPathReplaceWithSegmentAsn != "" {
+				r["set_as_path_replace_with_segment_asn"] = rule.Set.AsPathReplaceWithSegmentAsn
+			}
 		}
 
 		if rule.InterCxpRoutesRedistribution != nil {

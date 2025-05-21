@@ -227,6 +227,13 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"set_as_path_replace_with_segment_asn": {
+							Description: "ASNs that will be replaced with the local segment ASN. " +
+								"Accepts a comma-separated string of ASNs or 'ALL'. Can be null. " +
+								"This option can be applied only to USERS_AND_SITES connectors.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"set_extended_community": {
 							Description: "Allows to add one or more extended " +
 								"community attributes to the existing extended " +

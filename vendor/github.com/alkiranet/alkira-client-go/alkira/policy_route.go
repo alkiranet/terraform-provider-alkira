@@ -46,10 +46,11 @@ type RoutePolicyRulesMatch struct {
 }
 
 type RoutePolicyRulesSet struct {
-	AsPathPrepend     string `json:"asPathPrepend"`
-	Community         string `json:"community"`
-	ExtendedCommunity string `json:"extendedCommunity"`
-	Med               int    `json:"med,omitempty"`
+	AsPathPrepend               string `json:"asPathPrepend"`
+	Community                   string `json:"community"`
+	ExtendedCommunity           string `json:"extendedCommunity"`
+	Med                         int    `json:"med,omitempty"`
+  AsPathReplaceWithSegmentAsn string `json:"asPathReplaceWithSegmentAsn,omitempty"`
 }
 
 type RoutePolicyRulesInterCxpRoutesRedistribution struct {
