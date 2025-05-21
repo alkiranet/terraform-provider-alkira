@@ -23,14 +23,9 @@ When used with InternetApplication both the EIPs associated with the network ent
 This example demonstrates a simple TCP probe that verifies web server connectivity:
 ```terraform
 resource "alkira_probe_tcp" "basic_tcp" {
-  name = "basic-tcp-probe"
-
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
-
-  port = 80
+  name              = "basic-tcp-probe"
+  network_entity_id = alkira_internet_application.example_application.id
+  port              = 80
 }
 ```
 
@@ -38,14 +33,9 @@ resource "alkira_probe_tcp" "basic_tcp" {
 This example shows a TCP probe with custom thresholds and timing parameters:
 ```terraform
 resource "alkira_probe_tcp" "full_tcp" {
-  name    = "tcp-full-options"
-  enabled = true
-
-  network_entity {
-    type = "INTERNET_APPLICATION"
-    id   = alkira_internet_application.example_application.id
-  }
-
+  name              = "tcp-full-options"
+  enabled           = true
+  network_entity_id = alkira_internet_application.example_application.id
   port              = 443
   failure_threshold = 5
   success_threshold = 3
@@ -59,7 +49,7 @@ resource "alkira_probe_tcp" "full_tcp" {
 ### Required
 
 - `name` (String) The name of the TCP probe.
-- `network_entity` (Block List, Min: 1, Max: 1) Network entity configuration. (see [below for nested schema](#nestedblock--network_entity))
+- `network_entity_id` (String) The ID of the internet application network entity to probe.
 - `port` (Number) The TCP port to probe.
 
 ### Optional
@@ -73,13 +63,5 @@ resource "alkira_probe_tcp" "full_tcp" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--network_entity"></a>
-### Nested Schema for `network_entity`
-
-Required:
-
-- `id` (String) The ID of the network entity.
-- `type` (String) The type of network entity to probe. Only `INTERNET_APPLICATION` supported for now.
 
 
