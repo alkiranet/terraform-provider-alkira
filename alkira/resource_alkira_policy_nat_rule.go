@@ -65,6 +65,13 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(
 					[]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
+			"direction": {
+				Description: "The direction of NAT rule. The value could be `INBOUND` or `OUTBOUND`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"INBOUND", "OUTBOUND"}, false),
+			},
 			"match": {
 				Description: "Match condition for the rule.",
 				Type:        schema.TypeSet,
@@ -209,6 +216,23 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"dst_addr_translation_routing_track_prefixes": {
+							Description: "The list of prefixes to track.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"dst_addr_translation_routing_track_prefix_list_ids": {
+							Description: "The list of prefix list IDs to track.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"dst_addr_translation_routing_invalidate_prefixes": {
+							Description: "Whether to invalidate the track prefixes.",
+							Type:        schema.TypeBool,
+							Optional:    true,
 						},
 						"egress_type": {
 							Description: "The egress type to use with the " +
