@@ -77,6 +77,10 @@ func expandPolicyRoutingRuleSet(in map[string]interface{}) (*alkira.RoutePolicyR
 		set.AsPathReplaceWithSegmentAsn = v
 	}
 
+	if reflect.DeepEqual(set, alkira.RoutePolicyRulesSet{}) {
+		return nil, nil
+	}
+
 	return &set, nil
 }
 
