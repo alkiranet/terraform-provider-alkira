@@ -23,7 +23,7 @@ cloud.google.com/go/storage/internal/apiv2/stubs
 # github.com/agext/levenshtein v1.2.2
 ## explicit
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v1.55.0
+# github.com/alkiranet/alkira-client-go v1.55.1
 ## explicit; go 1.20
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-cidr v1.0.1

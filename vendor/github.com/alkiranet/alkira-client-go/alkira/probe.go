@@ -13,6 +13,7 @@ type Probe struct {
 	Name             string             `json:"name"`
 	Type             string             `json:"type"`
 	Parameters       json.RawMessage    `json:"parameters"`
+	Description      string             `json:"description"`
 	Enabled          bool               `json:"enabled"`
 	NetworkEntity    ProbeNetworkEntity `json:"networkEntity"`
 	FailureThreshold int                `json:"failureThreshold,omitempty"`
