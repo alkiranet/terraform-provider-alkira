@@ -12,6 +12,7 @@ func generateHTTPSProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 	probe := &alkira.Probe{
 		Name:             d.Get("name").(string),
 		Type:             "HTTPS",
+		Description:      d.Get("description").(string),
 		Enabled:          d.Get("enabled").(bool),
 		FailureThreshold: d.Get("failure_threshold").(int),
 		SuccessThreshold: d.Get("success_threshold").(int),
@@ -45,6 +46,7 @@ func generateHTTPSProbeRequest(d *schema.ResourceData) (*alkira.Probe, error) {
 
 func setHTTPSProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("name", probe.Name)
+	d.Set("description", probe.Description)
 	d.Set("enabled", probe.Enabled)
 	d.Set("failure_threshold", probe.FailureThreshold)
 	d.Set("success_threshold", probe.SuccessThreshold)
