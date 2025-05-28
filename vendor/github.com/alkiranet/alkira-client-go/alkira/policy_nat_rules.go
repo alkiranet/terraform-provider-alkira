@@ -15,7 +15,7 @@ type NatPolicyRule struct {
 	Match       NatRuleMatch  `json:"match"`
 	Action      NatRuleAction `json:"action"`
 	Category    string        `json:"category"`
-	Direction   string        `json:"direction"`
+	Direction   string        `json:"direction,omitempty"`
 }
 
 type NatRuleMatch struct {
