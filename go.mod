@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/alkiranet/alkira-client-go v1.54.1
+	github.com/alkiranet/alkira-client-go v1.55.1
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.1.0
 	github.com/stretchr/testify v1.8.4
