@@ -172,9 +172,11 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"src_addr_translation_routing_track_invalidate_prefixes": {
-							Description: "Whether to invalidate the track prefixes.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Whether to invalidate the track prefixes. " +
+								"Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"dst_addr_translation_type": {
 							Description: "The translation type are: `STATIC_IP`, " +
@@ -230,9 +232,11 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"dst_addr_translation_routing_invalidate_prefixes": {
-							Description: "Whether to invalidate the track prefixes.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Whether to invalidate the track prefixes. " +
+								"Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"egress_type": {
 							Description: "The egress type to use with the " +
