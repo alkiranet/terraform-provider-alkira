@@ -66,6 +66,7 @@ resource "alkira_probe_http" "advanced_http" {
 
 ### Optional
 
+- `description` (String) The description of the probe.
 - `enabled` (Boolean) Whether the probe is enabled.
 - `failure_threshold` (Number) The number of consecutive failures required to mark the probe as failed. Default is `3`, and the maximum value allowed is `50`.
 - `period_seconds` (Number) How often (in seconds) to perform the probe. Default value is `60`, and the maximum value allowed is `360`.
