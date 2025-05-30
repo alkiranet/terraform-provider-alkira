@@ -94,6 +94,7 @@ resource "alkira_probe_https" "no_cert_validation" {
 ### Optional
 
 - `ca_certificate` (String) Required when certificate validation is enabled and certificate is self assigned.
+- `description` (String) The description of the probe.
 - `disable_cert_validation` (Boolean) Whether to disable certificate validation.
 - `enabled` (Boolean) Whether the probe is enabled.
 - `failure_threshold` (Number) The number of consecutive failures required to mark the probe as failed. Default is `3`, and the maximum value allowed is `50`.
