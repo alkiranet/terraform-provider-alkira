@@ -32,6 +32,11 @@ func resourceAlkiraProbeHTTPS() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"description": {
+				Description: "The description of the probe.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"network_entity": {
 				Description: "Network entity configuration.",
 				Type:        schema.TypeList,

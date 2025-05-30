@@ -31,6 +31,11 @@ func resourceAlkiraProbeTCP() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
+			"description": {
+				Description: "The description of the probe.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"network_entity_id": {
 				Description: "The ID of the internet application network entity to probe.",
 				Type:        schema.TypeString,
