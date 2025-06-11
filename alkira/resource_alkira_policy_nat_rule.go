@@ -65,13 +65,6 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(
 					[]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
 			},
-			"direction": {
-				Description: "The direction of NAT rule. The value could be `INBOUND` or `OUTBOUND`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"INBOUND", "OUTBOUND"}, false),
-			},
 			"match": {
 				Description: "Match condition for the rule.",
 				Type:        schema.TypeSet,
@@ -172,11 +165,9 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"src_addr_translation_routing_track_invalidate_prefixes": {
-							Description: "Whether to invalidate the track prefixes. " +
-								"Default value is `false`.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Description: "Whether to invalidate the track prefixes.",
+							Type:        schema.TypeBool,
+							Optional:    true,
 						},
 						"dst_addr_translation_type": {
 							Description: "The translation type are: `STATIC_IP`, " +
@@ -215,25 +206,6 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 						"dst_addr_translation_advertise_to_connector": {
 							Description: "Whether the destination address " +
 								"should be advertised to connector.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"dst_addr_translation_routing_track_prefixes": {
-							Description: "The list of prefixes to track.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Optional:    true,
-						},
-						"dst_addr_translation_routing_track_prefix_list_ids": {
-							Description: "The list of prefix list IDs to track.",
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
-							Optional:    true,
-						},
-						"dst_addr_translation_routing_invalidate_prefixes": {
-							Description: "Whether to invalidate the track prefixes. " +
-								"Default value is `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,

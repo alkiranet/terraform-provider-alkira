@@ -35,7 +35,7 @@ resource "alkira_list_as_path" "test" {
 }
 
 resource "alkira_list_global_cidr" "ciscofdtv" {
-  name        = "acceptance-test-ciscofdtv"
+  name        = "acceptance-test"
   description = "terraform test global cidr list for cisco ftdv"
   values      = ["192.168.0.0/24"]
   cxp         = var.cxp
