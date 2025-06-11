@@ -29,7 +29,6 @@ This resource is usually used along with policy resources:`policy_nat_policy`.
 
 - `category` (String) The category of NAT rule. The value could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy rule.
-- `direction` (String) The direction of NAT rule. The value could be `INBOUND` or `OUTBOUND`.
 
 ### Read-Only
 
@@ -46,15 +45,12 @@ Optional:
 - `dst_addr_translation_ports` (List of String) The port list to translate the destination prefixes to.
 - `dst_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `dst_addr_translation_prefixes` (List of String) The list of prefixes.
-- `dst_addr_translation_routing_invalidate_prefixes` (Boolean) Whether to invalidate the track prefixes. Default value is `false`.
-- `dst_addr_translation_routing_track_prefix_list_ids` (List of Number) The list of prefix list IDs to track.
-- `dst_addr_translation_routing_track_prefixes` (List of String) The list of prefixes to track.
 - `dst_addr_translation_type` (String) The translation type are: `STATIC_IP`, `STATIC_IP_AND_PORT` , `STATIC_PORT` and `NONE`. Default value is `NONE`.
 - `egress_type` (String) The egress type to use with the match. Options are are `ALKIRA_PUBLIC_IP` or `BYOIP`.
 - `src_addr_translation_match_and_invalidate` (Boolean) Whether the translation match and invalidate. Default is `true`.
 - `src_addr_translation_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `src_addr_translation_prefixes` (List of String) The list of prefixes.
-- `src_addr_translation_routing_track_invalidate_prefixes` (Boolean) Whether to invalidate the track prefixes. Default value is `false`.
+- `src_addr_translation_routing_track_invalidate_prefixes` (Boolean) Whether to invalidate the track prefixes.
 - `src_addr_translation_routing_track_prefix_list_ids` (List of Number) The list of prefix list IDs.
 - `src_addr_translation_routing_track_prefixes` (List of String) The list of prefixes to track.
 - `src_addr_translation_type` (String) The translation type are: `STATIC_IP`, `DYNAMIC_IP_AND_PORT` and `NONE`. Default value is `NONE`.
