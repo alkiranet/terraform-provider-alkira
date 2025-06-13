@@ -87,7 +87,6 @@ resource "alkira_probe_https" "no_cert_validation" {
 ### Required
 
 - `name` (String) The name of the HTTPS probe.
-- `network_entity` (Block List, Min: 1, Max: 1) Network entity configuration. (see [below for nested schema](#nestedblock--network_entity))
 - `network_entity_id` (String) The ID of the internet application network entity to probe.
 - `uri` (String) The URI to probe.
 
@@ -107,15 +106,6 @@ resource "alkira_probe_https" "no_cert_validation" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedblock--network_entity"></a>
-### Nested Schema for `network_entity`
-
-Required:
-
-- `id` (String) The ID of the network entity.
-- `type` (String) The type of network entity to probe. Only `INTERNET_APPLICATION` supported for now.
-
 
 <a id="nestedblock--validators"></a>
 ### Nested Schema for `validators`
