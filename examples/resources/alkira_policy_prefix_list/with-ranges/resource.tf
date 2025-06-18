@@ -3,15 +3,14 @@ resource "alkira_policy_prefix_list" "ranges" {
   description = "Prefix list with CIDR ranges"
 
   prefix_range {
-    prefix = "10.1.0.0/16"
-    le     = 20
-    ge     = 18
+    prefix      = "10.1.0.0/16"
+    le          = 20
+    ge          = 18
     description = "Flexible range for branch offices"
   }
 
-  prefixes = [
-    {
-      prefix = "192.168.100.0/24"
-    }
-  ]
+  prefixes {
+    prefix = "192.168.100.0/24"
+  }
 }
+
