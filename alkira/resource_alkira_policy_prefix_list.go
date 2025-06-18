@@ -50,7 +50,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			"prefixes": {
 				Description: "A list of prefixes with their descriptions.",
 				Type:        schema.TypeList,
-				Required:    true,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix": {

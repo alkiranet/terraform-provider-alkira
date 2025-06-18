@@ -9,8 +9,5 @@ resource "alkira_policy_prefix_list" "ranges" {
     description = "Flexible range for branch offices"
   }
 
-  prefixes {
-    prefix = "192.168.100.0/24"
-  }
 }
 
