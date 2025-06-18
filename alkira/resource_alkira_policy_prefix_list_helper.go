@@ -53,3 +53,40 @@ func expandPrefixListPrefixRanges(in []interface{}) ([]alkira.PolicyPrefixListRa
 
 	return prefixListRanges, nil
 }
+
+func extractPrefixesFromSchema(d *schema.ResourceData) []string {
+	var prefixes []string
+	if v, ok := d.GetOk("prefixes"); ok {
+		for _, p := range v.([]interface{}) {
+			prefixMap := p.(map[string]interface{})
+			prefixes = append(prefixes, prefixMap["prefix"].(string))
+		}
+	}
+	return prefixes
+}
+
+func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPrefixListDetails {
+	details := make(map[string]*alkira.PolicyPrefixListDetails)
+	if v, ok := d.GetOk("prefixes"); ok {
+		for _, p := range v.([]interface{}) {
+			prefixMap := p.(map[string]interface{})
+			prefix := prefixMap["prefix"].(string)
+			if desc, ok := prefixMap["description"].(string); ok && desc != "" {
+				details[prefix] = &alkira.PolicyPrefixListDetails{Description: desc}
+			}
+		}
+	}
+	return details
+}
+
+func setPrefixesWithDescriptions(d *schema.ResourceData, prefixes []string, details map[string]*alkira.PolicyPrefixListDetails) {
+	var prefixList []map[string]interface{}
+	for _, p := range prefixes {
+		prefixEntry := map[string]interface{}{"prefix": p}
+		if details[p] != nil {
+			prefixEntry["description"] = details[p].Description
+		}
+		prefixList = append(prefixList, prefixEntry)
+	}
+	d.Set("prefixes", prefixList)
+}
