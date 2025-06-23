@@ -13,9 +13,10 @@ func setPrefixRanges(d *schema.ResourceData, r []alkira.PolicyPrefixListRange) {
 
 	for _, rng := range r {
 		prefixRange := map[string]interface{}{
-			"prefix": rng.Prefix,
-			"le":     rng.Le,
-			"ge":     rng.Ge,
+			"prefix":      rng.Prefix,
+			"le":          rng.Le,
+			"ge":          rng.Ge,
+			"description": rng.Description,
 		}
 		prefixRanges = append(prefixRanges, prefixRange)
 	}
@@ -47,9 +48,57 @@ func expandPrefixListPrefixRanges(in []interface{}) ([]alkira.PolicyPrefixListRa
 		if v, ok := value["ge"].(int); ok {
 			prefixListRange.Ge = v
 		}
+		if v, ok := value["description"].(string); ok {
+			prefixListRange.Description = v
+		}
 
 		prefixListRanges[i] = prefixListRange
 	}
 
 	return prefixListRanges, nil
+}
+
+func extractPrefixes(d *schema.ResourceData) []string {
+	var prefixes []string
+	if v, ok := d.GetOk("prefixes"); ok {
+		for _, p := range v.([]interface{}) {
+			prefixMap := p.(map[string]interface{})
+			prefixes = append(prefixes, prefixMap["prefix"].(string))
+		}
+	}
+	return prefixes
+}
+
+func expandPrefixListPrefixes(d *schema.ResourceData) ([]string, map[string]*alkira.PolicyPrefixListDetails) {
+
+	prefixes := extractPrefixes(d)
+	prefixMap := buildPrefixDetailsMap(d)
+	return prefixes, prefixMap
+
+}
+
+func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPrefixListDetails {
+	details := make(map[string]*alkira.PolicyPrefixListDetails)
+	if v, ok := d.GetOk("prefixes"); ok {
+		for _, p := range v.([]interface{}) {
+			prefixMap := p.(map[string]interface{})
+			prefix := prefixMap["prefix"].(string)
+			if desc, ok := prefixMap["description"].(string); ok && desc != "" {
+				details[prefix] = &alkira.PolicyPrefixListDetails{Description: desc}
+			}
+		}
+	}
+	return details
+}
+
+func setPrefixes(d *schema.ResourceData, prefixes []string, details map[string]*alkira.PolicyPrefixListDetails) {
+	var prefixList []map[string]interface{}
+	for _, p := range prefixes {
+		prefixEntry := map[string]interface{}{"prefix": p}
+		if details[p] != nil {
+			prefixEntry["description"] = details[p].Description
+		}
+		prefixList = append(prefixList, prefixEntry)
+	}
+	d.Set("prefixes", prefixList)
 }
