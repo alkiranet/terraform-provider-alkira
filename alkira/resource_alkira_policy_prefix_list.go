@@ -156,7 +156,7 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
-	setPrefixesWithDescriptions(d, list.Prefixes, list.PrefixDetails)
+	setPrefixes(d, list.Prefixes, list.PrefixDetails)
 
 	// Set "prefix_ranges" block
 	setPrefixRanges(d, list.PrefixRanges)
@@ -235,12 +235,13 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	if err != nil {
 		return nil, err
 	}
+	prefixes, prefixDetailsMap := expandPrefixListPrefixes(d)
 
 	list := &alkira.PolicyPrefixList{
 		Description:   d.Get("description").(string),
 		Name:          d.Get("name").(string),
-		Prefixes:      extractPrefixesFromSchema(d),
-		PrefixDetails: buildPrefixDetailsMap(d),
+		Prefixes:      prefixes,
+		PrefixDetails: prefixDetailsMap,
 		PrefixRanges:  prefixRanges,
 	}
 
