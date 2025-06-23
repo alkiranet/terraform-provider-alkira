@@ -48,10 +48,23 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Computed:    true,
 			},
 			"prefixes": {
-				Description: "A list of prefixes.",
-				Type:        schema.TypeSet,
-				Required:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of prefixes with their descriptions.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The network prefix in CIDR notation.",
+						},
+						"description": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Description for the prefix.",
+						},
+					},
+				},
 			},
 			"prefix_range": {
 				Description: "A valid prefix range that could be used to " +
@@ -65,6 +78,10 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 								"`x.x.x.x/m` format.",
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"le": {
 							Description: "Integer less than `32` but " +
@@ -139,7 +156,7 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
-	d.Set("prefixes", list.Prefixes)
+	setPrefixes(d, list.Prefixes, list.PrefixDetails)
 
 	// Set "prefix_ranges" block
 	setPrefixRanges(d, list.PrefixRanges)
@@ -218,12 +235,14 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	if err != nil {
 		return nil, err
 	}
+	prefixes, prefixDetailsMap := expandPrefixListPrefixes(d)
 
 	list := &alkira.PolicyPrefixList{
-		Description:  d.Get("description").(string),
-		Name:         d.Get("name").(string),
-		Prefixes:     convertTypeSetToStringList(d.Get("prefixes").(*schema.Set)),
-		PrefixRanges: prefixRanges,
+		Description:   d.Get("description").(string),
+		Name:          d.Get("name").(string),
+		Prefixes:      prefixes,
+		PrefixDetails: prefixDetailsMap,
+		PrefixRanges:  prefixRanges,
 	}
 
 	return list, nil
