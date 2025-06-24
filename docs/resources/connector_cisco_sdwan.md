@@ -41,6 +41,7 @@ resource "alkira_connector_cisco_sdwan" "test" {
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`.
+- `type` (String) The type of Cisco SD-WAN. Can be of type `VEDGE`, `CSR` or `CAT8000V`.
 - `vedge` (Block List, Min: 1) Cisco vEdge (see [below for nested schema](#nestedblock--vedge))
 - `version` (String) The version of Cisco SD-WAN. Please check Alkira Portal for all supported versions.
 - `vrf_segment_mapping` (Block Set, Min: 1) Specify target segment for VRF. (see [below for nested schema](#nestedblock--vrf_segment_mapping))
@@ -52,7 +53,6 @@ resource "alkira_connector_cisco_sdwan" "test" {
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `tunnel_protocol` (String) The tunnel protocol for the connector one of `IPSEC` or `GRE`.
-- `type` (String) The type of Cisco SD-WAN. Default value is `VEDGE`.
 
 ### Read-Only
 

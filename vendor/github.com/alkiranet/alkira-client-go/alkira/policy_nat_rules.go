@@ -15,6 +15,7 @@ type NatPolicyRule struct {
 	Match       NatRuleMatch  `json:"match"`
 	Action      NatRuleAction `json:"action"`
 	Category    string        `json:"category"`
+	Direction   string        `json:"direction,omitempty"`
 }
 
 type NatRuleMatch struct {
@@ -43,13 +44,14 @@ type NatRuleActionSrcTranslation struct {
 }
 
 type NatRuleActionDstTranslation struct {
-	TranslationType            string   `json:"translationType"`
-	TranslatedPrefixes         []string `json:"translatedPrefixes,omitempty"`
-	TranslatedPrefixListIds    []int    `json:"translatedPrefixListIds,omitempty"`
-	TranslatedPortList         []string `json:"translatedPortList,omitempty"`
-	TranslatedPolicyFqdnListId int      `json:"translatedPolicyFqdnListId,omitempty"`
-	Bidirectional              *bool    `json:"bidirectional,omitempty"`
-	AdvertiseToConnector       *bool    `json:"advertiseToConnector,omitempty"`
+	TranslationType            string                `json:"translationType"`
+	TranslatedPrefixes         []string              `json:"translatedPrefixes,omitempty"`
+	TranslatedPrefixListIds    []int                 `json:"translatedPrefixListIds,omitempty"`
+	TranslatedPortList         []string              `json:"translatedPortList,omitempty"`
+	TranslatedPolicyFqdnListId int                   `json:"translatedPolicyFqdnListId,omitempty"`
+	Bidirectional              *bool                 `json:"bidirectional,omitempty"`
+	AdvertiseToConnector       *bool                 `json:"advertiseToConnector,omitempty"`
+	RoutingOptions             NatRuleRoutingOptions `json:"routingOptions,omitempty"`
 }
 
 type NatRuleRoutingOptions struct {

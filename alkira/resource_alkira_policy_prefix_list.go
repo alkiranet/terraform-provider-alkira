@@ -48,10 +48,30 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Computed:    true,
 			},
 			"prefixes": {
-				Description: "A list of prefixes.",
+				Description: "A list of prefixes. (**DEPRECATED**)",
 				Type:        schema.TypeSet,
-				Required:    true,
+				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"prefix": {
+				Description: "Prefix with description. This new block should " +
+					"replace the old `prefixes` field.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The network prefix in CIDR notation.",
+						},
+						"description": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Description for the prefix.",
+						},
+					},
+				},
 			},
 			"prefix_range": {
 				Description: "A valid prefix range that could be used to " +
@@ -65,6 +85,10 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 								"`x.x.x.x/m` format.",
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"le": {
 							Description: "Integer less than `32` but " +
@@ -139,7 +163,9 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
-	d.Set("prefixes", list.Prefixes)
+
+	// Set "prefix" block
+	setPrefix(d, list.Prefixes, list.PrefixDetails)
 
 	// Set "prefix_ranges" block
 	setPrefixRanges(d, list.PrefixRanges)
@@ -209,22 +235,4 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
-
-	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
-
-	if err != nil {
-		return nil, err
-	}
-
-	list := &alkira.PolicyPrefixList{
-		Description:  d.Get("description").(string),
-		Name:         d.Get("name").(string),
-		Prefixes:     convertTypeSetToStringList(d.Get("prefixes").(*schema.Set)),
-		PrefixRanges: prefixRanges,
-	}
-
-	return list, nil
 }

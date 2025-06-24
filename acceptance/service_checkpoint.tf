@@ -22,7 +22,7 @@ resource "alkira_service_checkpoint" "test" {
     global_cidr_list_id = alkira_list_global_cidr.checkpoint.id
     segment_id          = alkira_segment.test1.id
 
-    username = "checkpoint_user"
+    username = "checkpoint-user"
     password = "abcd1234"
 
     # domain only required when configuration_mode is AUTOMATED and
@@ -67,7 +67,7 @@ resource "alkira_service_checkpoint" "test2" {
     configuration_mode  = "AUTOMATED"
     global_cidr_list_id = alkira_list_global_cidr.checkpoint.id
     ips                 = ["54.69.129.30"]
-    username            = "checkpoint_user"
+    username            = "checkpoint-user"
     password            = "Alkira2023"
     reachability        = "PUBLIC"
     type                = "SMS"
