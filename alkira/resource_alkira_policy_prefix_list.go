@@ -48,12 +48,19 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Computed:    true,
 			},
 			"prefixes": {
-				Description: "A list of prefixes with their descriptions.",
-				Type:        schema.TypeList,
+				Description: "A list of prefixes. (**DEPRECATED**)",
+				Type:        schema.TypeSet,
 				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"prefix": {
+				Description: "Prefix with description. This new block should " +
+					"replace the old `prefixes` field.",
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						"cidr": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The network prefix in CIDR notation.",
@@ -156,7 +163,9 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
-	setPrefixes(d, list.Prefixes, list.PrefixDetails)
+
+	// Set "prefix" block
+	setPrefix(d, list.Prefixes, list.PrefixDetails)
 
 	// Set "prefix_ranges" block
 	setPrefixRanges(d, list.PrefixRanges)
@@ -226,24 +235,4 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
-
-	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
-
-	if err != nil {
-		return nil, err
-	}
-	prefixes, prefixDetailsMap := expandPrefixListPrefixes(d)
-
-	list := &alkira.PolicyPrefixList{
-		Description:   d.Get("description").(string),
-		Name:          d.Get("name").(string),
-		Prefixes:      prefixes,
-		PrefixDetails: prefixDetailsMap,
-		PrefixRanges:  prefixRanges,
-	}
-
-	return list, nil
 }

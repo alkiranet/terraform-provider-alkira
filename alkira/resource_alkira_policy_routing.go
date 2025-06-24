@@ -61,9 +61,10 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			"direction": {
 				Description: "The direction of the route, `INBOUND` " +
 					"or `OUTBOUND`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"INBOUND", "OUTBOUND"}, false),
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define " +
@@ -73,11 +74,13 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			},
 			"target_connector_category": {
 				Description: "The category of connectors this policy targets. " +
-					"Value could be `USERS_AND_SITES` or `CLOUD`. Default is `USERS_AND_SITES`.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "USERS_AND_SITES",
-				ValidateFunc: validation.StringInSlice([]string{"USERS_AND_SITES", "CLOUD"}, false),
+					"Value could be `USERS_AND_SITES` or `CLOUD`. Default is " +
+					"`USERS_AND_SITES`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "USERS_AND_SITES",
+				ValidateFunc: validation.StringInSlice(
+					[]string{"USERS_AND_SITES", "CLOUD"}, false),
 			},
 			"source_routes_prefix_list_id": {
 				Description: "Prefix list ID to source routes from cloud connectors.",
