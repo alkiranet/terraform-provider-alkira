@@ -18,7 +18,7 @@ When `panorama_enabled` is set to `true`, `pan_username` and `pan_password` are 
 ```terraform
 resource "alkira_service_pan" "test1" {
   name                   = "PanFwTest"
-  bundle                 = "PAN_VM_300_BUNDLE_2"
+  bundle                 = "VM_SERIES_BUNDLE_1"
   cxp                    = "US-WEST"
   global_protect_enabled = false
   license_type           = "PAY_AS_YOU_GO"
@@ -37,8 +37,8 @@ resource "alkira_service_pan" "test1" {
   #
   # When panorama is enabled, username and password are required.
   #
-  pan_password           = "Ak12345678"
-  pan_username           = "admin"
+  pan_password = "Ak12345678"
+  pan_username = "admin"
 
   registration_pin_id     = "1234567890ABCDEF"
   registration_pin_value  = "1234567890ABCDEF"

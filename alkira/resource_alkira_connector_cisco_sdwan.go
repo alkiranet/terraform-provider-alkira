@@ -75,10 +75,11 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Computed: true,
 			},
 			"type": {
-				Description: "The type of Cisco SD-WAN. Default value is `VEDGE`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "VEDGE",
+				Description: "The type of Cisco SD-WAN. " +
+					"Can be of type `VEDGE`, `CSR` or `CAT8000V`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"VEDGE", "CSR", "CAT8000V"}, false),
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +

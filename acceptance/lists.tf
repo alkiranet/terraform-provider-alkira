@@ -1,13 +1,20 @@
 resource "alkira_policy_prefix_list" "test1" {
   name        = "acceptance-test-prefix-list"
   description = "terraform test policy prefix list"
-  prefixes    = ["0.0.0.0/0"]
+
+  prefix {
+    cidr = "0.0.0.0/0"
+    description = "first prefix"
+  }
 }
 
 resource "alkira_policy_prefix_list" "test2" {
   name        = "acceptance-test-prefix-list-ranges"
   description = "terraform test policy prefix list"
-  prefixes    = ["0.0.0.0/0"]
+
+  prefix {
+    cidr = "0.0.0.0/0"
+  }
 
   prefix_range {
     prefix = "0.0.0.0/0"
@@ -51,4 +58,8 @@ resource "alkira_list_global_cidr" "checkpoint" {
 
 data "alkira_policy_prefix_list" "prefix1" {
   name = "acceptance-data-prefix1"
+}
+
+data "alkira_list_global_cidr" "data-cidr" {
+  name = "acceptance-data-cidr"
 }

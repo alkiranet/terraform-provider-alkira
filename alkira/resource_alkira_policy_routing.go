@@ -61,15 +61,30 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			"direction": {
 				Description: "The direction of the route, `INBOUND` " +
 					"or `OUTBOUND`.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"INBOUND", "OUTBOUND"}, false),
 			},
 			"segment_id": {
 				Description: "IDs of segments that will define " +
 					"the policy scope.",
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"target_connector_category": {
+				Description: "The category of connectors this policy targets. " +
+					"Value could be `USERS_AND_SITES` or `CLOUD`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"USERS_AND_SITES", "CLOUD"}, false),
+			},
+			"source_routes_prefix_list_id": {
+				Description: "Prefix list ID to source routes from cloud " +
+					"connectors.",
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"included_group_ids": {
 				Description: "Defines the scope for the policy. Connector associated " +
@@ -198,6 +213,12 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"set_med": {
+							Description: "Multi Exit Discriminator. BGP attribute to suggest " +
+								"the preferred path into your network. Lower values are more preferred.",
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"set_community": {
 							Description: "Allows to add one or more community " +
 								"attributes to the existing communities on the " +
@@ -205,6 +226,13 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"format: `as-number:community-value`. as-number " +
 								"and community-value can be a value from `0` through " +
 								"`65535`. Example: `65512:20 65512:21`.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"set_as_path_replace_with_segment_asn": {
+							Description: "ASNs that will be replaced with the local segment ASN. " +
+								"Accepts a comma-separated string of ASNs or 'ALL'. Can be null. " +
+								"This option can be applied only to USERS_AND_SITES connectors.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -316,6 +344,8 @@ func resourcePolicyRoutingRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
 	d.Set("included_group_ids", policy.IncludedGroups)
 	d.Set("name", policy.Name)
+	d.Set("target_connector_category", policy.TargetConnectorCategory)
+	d.Set("source_routes_prefix_list_id", policy.SourceRoutesPrefixListId)
 
 	//
 	// Set segment
@@ -454,6 +484,8 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
 		EnableASOverride:              enableASOverride,
 		AdvertiseCustomRoutesPrefixId: d.Get("advertise_custom_routes_prefix_id").(int),
+		TargetConnectorCategory:       d.Get("target_connector_category").(string),
+		SourceRoutesPrefixListId:      d.Get("source_routes_prefix_list_id").(int),
 		Rules:                         rules,
 	}
 

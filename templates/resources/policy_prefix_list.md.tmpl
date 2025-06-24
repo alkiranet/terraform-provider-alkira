@@ -1,0 +1,36 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+With release `v1.4.0`, the old field `prefixes` has been replaced by
+the new `prefix` block now. Please migrate your old config.
+
+
+## Example Usage
+
+Basic Usage
+
+{{ tffile "examples/resources/alkira_policy_prefix_list/basic/resource.tf" }}
+
+With Descriptions
+
+{{ tffile "examples/resources/alkira_policy_prefix_list/with-descriptions/resource.tf" }}
+
+With CIDR Ranges
+
+{{ tffile "examples/resources/alkira_policy_prefix_list/with-ranges/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
