@@ -74,18 +74,17 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			},
 			"target_connector_category": {
 				Description: "The category of connectors this policy targets. " +
-					"Value could be `USERS_AND_SITES` or `CLOUD`. Default is " +
-					"`USERS_AND_SITES`.",
+					"Value could be `USERS_AND_SITES` or `CLOUD`.",
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "USERS_AND_SITES",
 				ValidateFunc: validation.StringInSlice(
 					[]string{"USERS_AND_SITES", "CLOUD"}, false),
 			},
 			"source_routes_prefix_list_id": {
-				Description: "Prefix list ID to source routes from cloud connectors.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Description: "Prefix list ID to source routes from cloud " +
+					"connectors.",
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"included_group_ids": {
 				Description: "Defines the scope for the policy. Connector associated " +
