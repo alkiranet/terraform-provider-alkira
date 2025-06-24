@@ -57,7 +57,7 @@ resource "alkira_policy_routing" "test" {
 - `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. Implicit group ID of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
 - `rule` (Block List) (see [below for nested schema](#nestedblock--rule))
 - `source_routes_prefix_list_id` (Number) Prefix list ID to source routes from cloud connectors.
-- `target_connector_category` (String) The category of connectors this policy targets. Value could be `USERS_AND_SITES` or `CLOUD`. Default is `USERS_AND_SITES`.
+- `target_connector_category` (String) The category of connectors this policy targets. Value could be `USERS_AND_SITES` or `CLOUD`.
 
 ### Read-Only
 
