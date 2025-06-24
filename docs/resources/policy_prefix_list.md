@@ -9,6 +9,10 @@ description: |-
 
 Manage policy prefix list.
 
+With release `v1.4.0`, the old field `prefixes` has been replaced by
+the new `prefix` block now. Please migrate your old config.
+
+
 ## Example Usage
 
 Basic Usage
@@ -74,13 +78,26 @@ resource "alkira_policy_prefix_list" "ranges" {
 ### Optional
 
 - `description` (String) The description of the prefix list.
+- `prefix` (Block List) Prefix with description. This new block should replace the old `prefixes` field. (see [below for nested schema](#nestedblock--prefix))
 - `prefix_range` (Block List) A valid prefix range that could be used to define a prefix of type `ROUTE`. (see [below for nested schema](#nestedblock--prefix_range))
-- `prefixes` (Block List) A list of prefixes with their descriptions. (see [below for nested schema](#nestedblock--prefixes))
+- `prefixes` (Set of String) A list of prefixes. (**DEPRECATED**)
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provisioning state of the resource.
+
+<a id="nestedblock--prefix"></a>
+### Nested Schema for `prefix`
+
+Required:
+
+- `cidr` (String) The network prefix in CIDR notation.
+
+Optional:
+
+- `description` (String) Description for the prefix.
+
 
 <a id="nestedblock--prefix_range"></a>
 ### Nested Schema for `prefix_range`
@@ -94,18 +111,6 @@ Optional:
 - `description` (String)
 - `ge` (Number) Integer less than `32` but greater than mask `m` in prefix and less than `le`.
 - `le` (Number) Integer less than `32` but greater than mask `m` in prefix
-
-
-<a id="nestedblock--prefixes"></a>
-### Nested Schema for `prefixes`
-
-Required:
-
-- `prefix` (String) The network prefix in CIDR notation.
-
-Optional:
-
-- `description` (String) Description for the prefix.
 
 ## Import
 
