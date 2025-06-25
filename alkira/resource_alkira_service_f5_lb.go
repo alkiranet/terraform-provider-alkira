@@ -199,11 +199,13 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required:    true,
 						},
 						"deployment_type": {
-							Description: "The deployment type used for the F5 load balancer instance." +
-								" Can be one of `GOOD` or `LTM_DNS`. The `deployment_type`:" +
-								" `GOOD`, `BETTER` and `BEST` is only applicable to `license_type`: `PAY_AS_YOU_GO` and" +
-								" `deployment_type`: `LTM_DNS` is only applicable to" +
-								" `license_type`: `BRING_YOUR_OWN`.",
+							Description: "The deployment type used for the F5 " +
+								"load balancer instance.The value could be one " +
+								"of `GOOD`, `BETTER`, `BEST` or `LTM_DNS`. Type " +
+								"`GOOD`, `BETTER` and `BEST` is only applicable " +
+								"when `license_type` is `PAY_AS_YOU_GO`. " +
+								"`LTM_DNS` is only applicable when `license_type` " +
+								"`BRING_YOUR_OWN`.",
 							Type: schema.TypeString,
 							ValidateFunc: validation.StringInSlice(
 								[]string{"GOOD", "LTM_DNS", "BETTER", "BEST"},
