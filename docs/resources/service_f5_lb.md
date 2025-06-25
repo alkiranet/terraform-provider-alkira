@@ -175,7 +175,7 @@ resource "alkira_service_f5_lb" "example-lb-2" {
 
 Required:
 
-- `deployment_type` (String) The deployment type used for the F5 load balancer instance. Can be one of `GOOD` or `LTM_DNS`. The `deployment_type`: `GOOD`, `BETTER` and `BEST` is only applicable to `license_type`: `PAY_AS_YOU_GO` and `deployment_type`: `LTM_DNS` is only applicable to `license_type`: `BRING_YOUR_OWN`.
+- `deployment_type` (String) The deployment type used for the F5 load balancer instance.The value could be one of `GOOD`, `BETTER`, `BEST` or `LTM_DNS`. Type `GOOD`, `BETTER` and `BEST` is only applicable when `license_type` is `PAY_AS_YOU_GO`. `LTM_DNS` is only applicable when `license_type` `BRING_YOUR_OWN`.
 - `hostname_fqdn` (String) The FQDN defined in route 53.
 - `license_type` (String) The type of license used for the F5 load balancer instance. Can be one of `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`
 - `name` (String) Name of the F5 load balancer instance.
