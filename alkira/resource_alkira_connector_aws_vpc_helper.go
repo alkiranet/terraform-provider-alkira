@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// setTgwAttachement set tgw_attachement blocks
+// setTgwAttachment set tgw_attachment blocks
 func setTgwAttachment(d *schema.ResourceData, tgwAttachments []alkira.TgwAttachment) {
 
 	var attachments []map[string]interface{}
@@ -33,7 +33,7 @@ func setTgwAttachment(d *schema.ResourceData, tgwAttachments []alkira.TgwAttachm
 		new := true
 
 		// Check if the gateway already exists in the Terraform config
-		for _, tgw := range d.Get("tgw_attachement").([]interface{}) {
+		for _, tgw := range d.Get("tgw_attachment").([]interface{}) {
 			a := tgw.(map[string]interface{})
 
 			if a["subnet_id"].(string) == cfg.SubnetId {
@@ -192,7 +192,7 @@ func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 
 	vpcRouting := alkira.ConnectorAwsVpcRouting{
 		Export: exportOptions,
-		Import: alkira.ImportOptions{routeTables},
+		Import: alkira.ImportOptions{RouteTables: routeTables},
 	}
 
 	request := &alkira.ConnectorAwsVpc{

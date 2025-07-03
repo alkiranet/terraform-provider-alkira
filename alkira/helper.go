@@ -212,8 +212,7 @@ func randomNameSuffix() string {
 
 	for i := 0; i < lengthNewStr; i++ {
 		j := rand.Intn(max-min) + min
-		s := string(possibleChars[j])
-		sb.WriteString(s)
+		sb.WriteRune(possibleChars[j])
 	}
 
 	return sb.String()

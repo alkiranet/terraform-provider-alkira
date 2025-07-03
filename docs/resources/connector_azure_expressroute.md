@@ -331,7 +331,7 @@ Optional:
 
 Read-Only:
 
-- `id` (Number) The ID of this resource.
+- `id` (Number)
 
 <a id="nestedblock--instances--ipsec_customer_gateway"></a>
 ### Nested Schema for `instances.ipsec_customer_gateway`

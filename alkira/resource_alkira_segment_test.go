@@ -55,7 +55,7 @@ func TestSegmentSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
 		},
 	}
 
-	setCidrsSegmentRead(d, s)
+	setCidrsSegmentRead(d, &s)
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
@@ -76,7 +76,7 @@ func TestSegmentSetCidrSegmentReadIpBlockContainedIpBlocks(t *testing.T) {
 		},
 	}
 
-	setCidrsSegmentRead(d, s)
+	setCidrsSegmentRead(d, &s)
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
@@ -97,7 +97,7 @@ func TestSetCidrSegmentReadIpBlockAndIpBlocksPopulated(t *testing.T) {
 		},
 	}
 
-	setCidrsSegmentRead(d, s)
+	setCidrsSegmentRead(d, &s)
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 

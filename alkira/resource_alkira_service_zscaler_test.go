@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -29,12 +30,13 @@ func TestGenerateRequesetServiceZscaler(t *testing.T) {
 
 	expectedTunnelType := "IPSEC"
 
-	z := &alkira.Zscaler{
+	z := &alkira.ServiceZscaler{
 		TunnelType:         expectedTunnelType,
 		IpsecConfiguration: &expectedIpSecConfig,
 	}
 
-	deflatedIpSecCfg := deflateZscalerIpsecConfiguration(&expectedIpSecConfig)
+	deflatedIpSecCfg, err := deflateZscalerIpsecConfiguration(&expectedIpSecConfig)
+	require.NoError(t, err)
 	r := resourceAlkiraServiceZscaler()
 	d := r.TestResourceData()
 
@@ -47,7 +49,7 @@ func TestGenerateRequesetServiceZscaler(t *testing.T) {
 	require.Equal(t, expectedIpSecConfig, *actual.IpsecConfiguration)
 }
 
-func serveZscaler(t *testing.T, z *alkira.Zscaler) *alkira.AlkiraClient {
+func serveZscaler(t *testing.T, z *alkira.ServiceZscaler) *alkira.AlkiraClient {
 	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, req *http.Request) {
 			json.NewEncoder(w).Encode(z)
@@ -56,9 +58,12 @@ func serveZscaler(t *testing.T, z *alkira.Zscaler) *alkira.AlkiraClient {
 	))
 	t.Cleanup(server.Close)
 
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
+
 	return &alkira.AlkiraClient{
 		URI:             server.URL,
 		TenantNetworkId: "0",
-		Client:          &http.Client{Timeout: time.Duration(1) * time.Second},
+		Client:          retryClient,
 	}
 }

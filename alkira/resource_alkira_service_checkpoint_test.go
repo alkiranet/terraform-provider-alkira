@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 // TEST HELPER
-func serveCheckpoint(t *testing.T, c *alkira.Checkpoint) *alkira.AlkiraClient {
+func serveCheckpoint(t *testing.T, c *alkira.ServiceCheckpoint) *alkira.AlkiraClient {
 	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, req *http.Request) {
 			json.NewEncoder(w).Encode(c)
@@ -20,9 +21,12 @@ func serveCheckpoint(t *testing.T, c *alkira.Checkpoint) *alkira.AlkiraClient {
 	))
 	t.Cleanup(server.Close)
 
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
+
 	return &alkira.AlkiraClient{
 		URI:             server.URL,
 		TenantNetworkId: "0",
-		Client:          &http.Client{Timeout: time.Duration(1) * time.Second},
+		Client:          retryClient,
 	}
 }
