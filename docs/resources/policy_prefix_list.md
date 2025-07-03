@@ -22,11 +22,11 @@ resource "alkira_policy_prefix_list" "example" {
   name        = "example-prefix-list"
   description = "Basic example prefix list"
 
-  prefixes {
-    prefix = "10.0.0.0/24"
+  prefix {
+    cidr = "10.0.0.0/24"
   }
-  prefixes {
-    prefix = "192.168.1.0/24"
+  prefix {
+    cidr = "192.168.1.0/24"
   }
 
 }
@@ -35,16 +35,16 @@ resource "alkira_policy_prefix_list" "example" {
 With Descriptions
 
 ```terraform
-resource "alkira_policy_prefix_list" "descriptive" {
-  name        = "descriptive-prefixes"
+resource "alkira_policy_prefix_list" "test" {
+  name        = "test-list"
   description = "Prefix list with detailed descriptions"
 
-  prefixes {
-    prefix      = "10.2.3.0/24"
+  prefix {
+    cidr        = "10.2.3.0/24"
     description = "Production subnet for US-East-1"
   }
-  prefixes {
-    prefix      = "10.4.6.0/24"
+  prefix {
+    cidr        = "10.4.6.0/24"
     description = "Staging environment subnet"
   }
 
@@ -60,11 +60,10 @@ resource "alkira_policy_prefix_list" "ranges" {
 
   prefix_range {
     prefix      = "10.1.0.0/16"
+    description = "Flexible range for branch offices"
     le          = 20
     ge          = 18
-    description = "Flexible range for branch offices"
   }
-
 }
 ```
 
