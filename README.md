@@ -1,4 +1,4 @@
-![unit-test](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/unit-test.yml/badge.svg)
+![unit-test](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/unit-test.yaml/badge.svg)
 ![acceptance-preprod](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance-preprod.yml/badge.svg)
 ![acceptance-prod](https://github.com/alkiranet/terraform-provider-alkira/actions/workflows/acceptance-prod.yml/badge.svg)
 
