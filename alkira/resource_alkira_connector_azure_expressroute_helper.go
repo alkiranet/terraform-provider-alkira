@@ -11,7 +11,6 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("Invalid Azure ExpressRoute Instance input")
 	}
-
 	instances := make([]alkira.ConnectorAzureExpressRouteInstance, len(in))
 	for i, instance := range in {
 		r := alkira.ConnectorAzureExpressRouteInstance{}
@@ -34,6 +33,7 @@ func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			r.CredentialId = v
 		}
+
 		// Gateway MAC Addresses
 		gatewayMacAddresses := []string{}
 		if v, ok := instanceCfg["gateway_mac_address"].([]interface{}); ok {
@@ -165,6 +165,7 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 	for i, segment := range seg {
 		r := alkira.ConnectorAzureExpressRouteSegment{}
 		instanceCfg := segment.(map[string]interface{})
+
 		if v, ok := instanceCfg["segment_id"].(string); ok {
 			segmentName, err := getSegmentNameById(v, m)
 			if err != nil {
@@ -173,18 +174,19 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 			}
 			r.SegmentName = segmentName
 		}
+
 		if v, ok := instanceCfg["customer_asn"].(int); ok {
 			r.CustomerAsn = v
 		}
-		if v, ok := instanceCfg["customer_asn"].(int); ok {
-			r.CustomerAsn = v
-		}
+
 		if v, ok := instanceCfg["disable_internet_exit"].(bool); ok {
 			r.DisableInternetExit = v
 		}
+
 		if v, ok := instanceCfg["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
 		}
+
 		segments[i] = r
 	}
 

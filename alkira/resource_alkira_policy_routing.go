@@ -87,18 +87,21 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Optional: true,
 			},
 			"included_group_ids": {
-				Description: "Defines the scope for the policy. Connector associated " +
-					"with group IDs metioned here is where this policy would be applied. " +
-					"Group IDs that associated with branch/on-premise connectors can be " +
-					"used here. These group should not contain any cloud connector.",
+				Description: "Defines the scope for the policy. Connector " +
+					"associated with group IDs metioned here is where this " +
+					"policy would be applied. Group IDs that associated with " +
+					"branch/on-premise connectors can be used here. These " +
+					"group should not contain any cloud connector.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"excluded_group_ids": {
-				Description: "Excludes given associated connector from `included_groups`. " +
-					"Implicit group ID of a branch/on-premise connector for which a user " +
-					"defined group is used in `included_groups` can be used here.",
+				Description: "Excludes given associated connector from " +
+					"`included_groups`. `implicit_group_id` of a " +
+					"branch/on-premise connector for which a user " +
+					"defined group is used in `included_groups` can be used " +
+					"here.",
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
@@ -214,8 +217,10 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 							Optional: true,
 						},
 						"set_med": {
-							Description: "Multi Exit Discriminator. BGP attribute to suggest " +
-								"the preferred path into your network. Lower values are more preferred.",
+							Description: "Multi Exit Discriminator. BGP " +
+								"attribute to suggest the preferred path " +
+								"into your network. Lower values are more " +
+								"preferred.",
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -224,15 +229,17 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 								"attributes to the existing communities on the " +
 								"route. Community attribute is specified in this " +
 								"format: `as-number:community-value`. as-number " +
-								"and community-value can be a value from `0` through " +
-								"`65535`. Example: `65512:20 65512:21`.",
+								"and community-value can be a value from `0` " +
+								"through `65535`. Example: `65512:20 65512:21`.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"set_as_path_replace_with_segment_asn": {
-							Description: "ASNs that will be replaced with the local segment ASN. " +
-								"Accepts a comma-separated string of ASNs or 'ALL'. Can be null. " +
-								"This option can be applied only to USERS_AND_SITES connectors.",
+							Description: "ASNs that will be replaced with the " +
+								"local segment ASN. Accepts a comma-separated " +
+								"string of ASNs or 'ALL'. Can be null. This " +
+								"option can be applied only to " +
+								"`USERS_AND_SITES` connectors.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
