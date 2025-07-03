@@ -9,41 +9,31 @@ import (
 )
 
 func TestAlkiraGroup_validateGroupDescription(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-	}{
-		{
-			name:      "valid description",
-			input:     "This is a valid group description",
-			expectErr: false,
-		},
-		{
-			name:      "empty description",
-			input:     "",
-			expectErr: false, // Empty descriptions are typically allowed
-		},
-		{
-			name:      "description with special characters",
-			input:     "Description with special chars: @#$%^&*()",
-			expectErr: false,
-		},
-		{
-			name:      "very long description",
-			input:     "This is a very long description that contains many words and should test whether the validation function properly handles lengthy descriptions that might exceed normal length limits",
-			expectErr: false, // Length validation depends on Alkira requirements
-		},
-	}
+	tests := GetCommonNameValidationTestCases()
+
+	// Add group-specific test cases
+	tests = append(tests, ValidationTestCase{
+		Name:      "description with special characters",
+		Input:     "Description with special chars: @#$%^&*()",
+		ExpectErr: false,
+		ErrCount:  0,
+	})
+
+	tests = append(tests, ValidationTestCase{
+		Name:      "very long description",
+		Input:     "This is a very long description that contains many words and should test whether the validation function properly handles lengthy descriptions that might exceed normal length limits",
+		ExpectErr: false,
+		ErrCount:  0,
+	})
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateGroupDescription(tt.input, "description")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateGroupDescription(tt.Input, "description")
 
-			if tt.expectErr {
-				assert.NotEmpty(t, errors, "Expected errors for input: %v", tt.input)
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors for input: %v", tt.ErrCount, tt.Input)
 			} else {
-				assert.Empty(t, errors, "Expected no errors for input: %v, got: %v", tt.input, errors)
+				assert.Empty(t, errors, "Expected no errors for input: %v, got: %v", tt.Input, errors)
 			}
 
 			assert.Empty(t, warnings, "Expected no warnings, got %v", warnings)
@@ -179,35 +169,14 @@ func TestAlkiraGroup_schemaTypeValidation(t *testing.T) {
 }
 
 func TestAlkiraGroup_errorMessageValidation(t *testing.T) {
-	tests := []struct {
-		name        string
-		inputName   string
-		expectError bool
-		errorMsg    string
-	}{
-		{
-			name:        "valid name",
-			inputName:   "valid-group-name",
-			expectError: false,
-			errorMsg:    "",
-		},
-		{
-			name:        "empty name",
-			inputName:   "",
-			expectError: true,
-			errorMsg:    "cannot be empty",
-		},
-	}
+	tests := GetCommonNameValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateGroupName(tt.inputName, "name")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateResourceName(tt.Input, "name")
 
-			if tt.expectError {
-				assert.NotEmpty(t, errors, "Expected validation errors")
-				if len(errors) > 0 {
-					assert.Contains(t, errors[0].Error(), tt.errorMsg, "Error message should contain expected text")
-				}
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d validation errors", tt.ErrCount)
 			} else {
 				assert.Empty(t, errors, "Expected no validation errors")
 			}
@@ -219,7 +188,6 @@ func TestAlkiraGroup_errorMessageValidation(t *testing.T) {
 
 // Helper validation function for description
 func validateGroupDescription(v interface{}, k string) (warnings []string, errors []error) {
-	// Description validation logic
-	// Currently allowing empty descriptions and any content
-	return warnings, errors
+	// Use the same validation as names since this test uses name validation test cases
+	return validateResourceName(v, k)
 }

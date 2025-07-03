@@ -3,12 +3,9 @@ package alkira
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -269,69 +266,33 @@ func TestConnectorAPI_MockServerCRUD(t *testing.T) {
 	})
 }
 
-// Helper function to create mock HTTP server
+// Helper function to create mock HTTP server using shared utility
 func serveMockServer(t *testing.T, data interface{}, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			switch req.Method {
-			case "GET", "POST", "PUT":
-				if data != nil {
-					json.NewEncoder(w).Encode(data)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		switch req.Method {
+		case "GET", "POST", "PUT":
+			if data != nil {
+				json.NewEncoder(w).Encode(data)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
-	}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 }
 
 // Test ID validation for all connector types
 func TestConnectorID_Validation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    json.Number
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    json.Number("123"),
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    json.Number("999999999999"),
-			valid: true,
-		},
-		{
-			name:  "empty ID",
-			id:    json.Number(""),
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.valid {
-				assert.NotEmpty(t, string(tt.id), "Expected valid ID")
-			} else {
-				assert.Empty(t, string(tt.id), "Expected invalid ID")
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			result := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, result, "ID validation result should match expected")
 		})
 	}
 }
@@ -346,7 +307,7 @@ func TestConnectorSize_Validation(t *testing.T) {
 			d := r.TestResourceData()
 
 			d.Set("size", size)
-			assert.Equal(t, size, d.Get("size").(string))
+			assert.Equal(t, size, getStringFromResourceData(d, "size"))
 		})
 	}
 }
@@ -361,7 +322,7 @@ func TestConnectorIPSec_VpnModeValidation(t *testing.T) {
 			d := r.TestResourceData()
 
 			d.Set("vpn_mode", mode)
-			assert.Equal(t, mode, d.Get("vpn_mode").(string))
+			assert.Equal(t, mode, getStringFromResourceData(d, "vpn_mode"))
 		})
 	}
 }
@@ -376,7 +337,7 @@ func TestConnectorAzureVnet_ConnectionModeValidation(t *testing.T) {
 			d := r.TestResourceData()
 
 			d.Set("connection_mode", mode)
-			assert.Equal(t, mode, d.Get("connection_mode").(string))
+			assert.Equal(t, mode, getStringFromResourceData(d, "connection_mode"))
 		})
 	}
 }

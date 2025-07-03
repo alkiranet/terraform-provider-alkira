@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -128,50 +124,45 @@ func TestAlkiraIpReservation_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraIpReservation_validateType(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
+	tests := []ValidationTestCase{
 		{
-			name:      "valid PUBLIC type",
-			input:     "PUBLIC",
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid PUBLIC type",
+			Input:     "PUBLIC",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "valid OVERLAY type",
-			input:     "OVERLAY",
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid OVERLAY type",
+			Input:     "OVERLAY",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "invalid type",
-			input:     "INVALID",
-			expectErr: true,
-			errCount:  1,
+			Name:      "invalid type",
+			Input:     "INVALID",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "empty type",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
+			Name:      "empty type",
+			Input:     "",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "lowercase type",
-			input:     "public",
-			expectErr: true,
-			errCount:  1,
+			Name:      "lowercase type",
+			Input:     "public",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateIpReservationType(tt.input, "type")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateIpReservationType(tt.Input, "type")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -182,56 +173,51 @@ func TestAlkiraIpReservation_validateType(t *testing.T) {
 }
 
 func TestAlkiraIpReservation_validatePrefix(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
+	tests := []ValidationTestCase{
 		{
-			name:      "valid CIDR",
-			input:     "10.1.0.0/24",
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid CIDR",
+			Input:     "10.1.0.0/24",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "valid single IP",
-			input:     "192.168.1.1/32",
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid single IP",
+			Input:     "192.168.1.1/32",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "valid large subnet",
-			input:     "172.16.0.0/16",
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid large subnet",
+			Input:     "172.16.0.0/16",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "invalid CIDR format",
-			input:     "10.1.0.0",
-			expectErr: true,
-			errCount:  1,
+			Name:      "invalid CIDR format",
+			Input:     "10.1.0.0",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "invalid IP",
-			input:     "256.1.0.0/24",
-			expectErr: true,
-			errCount:  1,
+			Name:      "invalid IP",
+			Input:     "256.1.0.0/24",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "empty CIDR",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
+			Name:      "empty CIDR",
+			Input:     "",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validatePrefix(tt.input, "prefix")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validatePrefix(tt.Input, "prefix")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -261,7 +247,7 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 
 	// Test Create operation
 	t.Run("Create", func(t *testing.T) {
-		client := serveIpReservationMockServer(t, mockIpReservation, http.StatusCreated)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(mockIpReservation, http.StatusCreated))
 
 		api := alkira.NewIPReservation(client)
 		response, provState, err, provErr := api.Create(mockIpReservation)
@@ -278,7 +264,7 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 
 	// Test Read operation
 	t.Run("Read", func(t *testing.T) {
-		client := serveIpReservationMockServer(t, mockIpReservation, http.StatusOK)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(mockIpReservation, http.StatusOK))
 
 		api := alkira.NewIPReservation(client)
 		ipReservation, provState, err := api.GetById("123")
@@ -302,7 +288,7 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 			Segment: segmentId,
 		}
 
-		client := serveIpReservationMockServer(t, updatedIpReservation, http.StatusOK)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(updatedIpReservation, http.StatusOK))
 
 		api := alkira.NewIPReservation(client)
 		provState, err, provErr := api.Update("123", updatedIpReservation)
@@ -315,7 +301,7 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 
 	// Test Delete operation
 	t.Run("Delete", func(t *testing.T) {
-		client := serveIpReservationMockServer(t, nil, http.StatusNoContent)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(nil, http.StatusNoContent))
 
 		api := alkira.NewIPReservation(client)
 		provState, err, provErr := api.Delete("123")
@@ -330,7 +316,7 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 func TestAlkiraIpReservation_apiErrorHandling(t *testing.T) {
 	// Test error scenarios
 	t.Run("NotFound", func(t *testing.T) {
-		client := serveIpReservationMockServer(t, nil, http.StatusNotFound)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(nil, http.StatusNotFound))
 
 		api := alkira.NewIPReservation(client)
 		_, _, err := api.GetById("999")
@@ -340,7 +326,7 @@ func TestAlkiraIpReservation_apiErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
-		client := serveIpReservationMockServer(t, nil, http.StatusInternalServerError)
+		client := createMockAlkiraClient(t, createIpReservationMockHandler(nil, http.StatusInternalServerError))
 
 		api := alkira.NewIPReservation(client)
 		_, _, _, _ = api.Create(&alkira.IPReservation{
@@ -369,14 +355,14 @@ func TestAlkiraIpReservation_resourceDataManipulation(t *testing.T) {
 		d.Set("scale_group_id", "sg-123")
 		d.Set("prefix_type", "SEGMENT")
 
-		// Test getting values
-		assert.Equal(t, "test-ip-reservation", d.Get("name").(string))
-		assert.Equal(t, "OVERLAY", d.Get("type").(string))
-		assert.Equal(t, "10.1.0.0/24", d.Get("prefix").(string))
-		assert.Equal(t, "seg-123", d.Get("segment_id").(string))
-		assert.Equal(t, "US-WEST", d.Get("cxp").(string))
-		assert.Equal(t, "sg-123", d.Get("scale_group_id").(string))
-		assert.Equal(t, "SEGMENT", d.Get("prefix_type").(string))
+		// Test getting values using shared utility
+		assert.Equal(t, "test-ip-reservation", getStringFromResourceData(d, "name"))
+		assert.Equal(t, "OVERLAY", getStringFromResourceData(d, "type"))
+		assert.Equal(t, "10.1.0.0/24", getStringFromResourceData(d, "prefix"))
+		assert.Equal(t, "seg-123", getStringFromResourceData(d, "segment_id"))
+		assert.Equal(t, "US-WEST", getStringFromResourceData(d, "cxp"))
+		assert.Equal(t, "sg-123", getStringFromResourceData(d, "scale_group_id"))
+		assert.Equal(t, "SEGMENT", getStringFromResourceData(d, "prefix_type"))
 	})
 
 	t.Run("resource data with changes", func(t *testing.T) {
@@ -394,106 +380,84 @@ func TestAlkiraIpReservation_resourceDataManipulation(t *testing.T) {
 		d.Set("name", "updated-name")
 		d.Set("prefix", "10.2.0.0/24")
 
-		assert.Equal(t, "updated-name", d.Get("name").(string))
-		assert.Equal(t, "10.2.0.0/24", d.Get("prefix").(string))
+		assert.Equal(t, "updated-name", getStringFromResourceData(d, "name"))
+		assert.Equal(t, "10.2.0.0/24", getStringFromResourceData(d, "prefix"))
 	})
 }
 
 func TestAlkiraIpReservation_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
+		t.Run(tt.Name, func(t *testing.T) {
+			result := validateResourceId(tt.Id)
+			if tt.Valid {
+				assert.True(t, result, "Expected valid ID")
 			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
+				assert.False(t, result, "Expected invalid ID")
 			}
 		})
 	}
 }
 
-// Helper function to create mock HTTP server for IP reservations
-func serveIpReservationMockServer(t *testing.T, ipReservation *alkira.IPReservation, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+func TestAlkiraIpReservation_nameValidation(t *testing.T) {
+	tests := GetCommonNameValidationTestCases()
 
-			switch req.Method {
-			case "GET":
-				if ipReservation != nil {
-					json.NewEncoder(w).Encode(ipReservation)
-				}
-			case "POST":
-				if ipReservation != nil {
-					json.NewEncoder(w).Encode(ipReservation)
-				}
-			case "PUT":
-				if ipReservation != nil {
-					json.NewEncoder(w).Encode(ipReservation)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateResourceName(tt.Input, "name")
+
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
+			} else {
+				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
 
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
+			assert.Len(t, warnings, 0, "Expected no warnings, got %v", warnings)
+		})
 	}
 }
 
-// Mock helper functions for testing
+// Helper function to create IP reservation specific mock HTTP handler
+func createIpReservationMockHandler(ipReservation *alkira.IPReservation, statusCode int) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+
+		switch req.Method {
+		case "GET":
+			if ipReservation != nil {
+				json.NewEncoder(w).Encode(ipReservation)
+			}
+		case "POST":
+			if ipReservation != nil {
+				json.NewEncoder(w).Encode(ipReservation)
+			}
+		case "PUT":
+			if ipReservation != nil {
+				json.NewEncoder(w).Encode(ipReservation)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+// Helper function to build IP reservation request from resource data
 func buildIpReservationRequest(d *schema.ResourceData) *alkira.IPReservation {
 	return &alkira.IPReservation{
-		Name:              d.Get("name").(string),
-		Type:              d.Get("type").(string),
-		Prefix:            d.Get("prefix").(string),
-		PrefixLen:         d.Get("prefix_len").(int),
-		PrefixType:        d.Get("prefix_type").(string),
-		FirstIpAssignedTo: d.Get("first_ip_assignment").(string),
-		NodeId:            d.Get("node_id").(string),
-		Cxp:               d.Get("cxp").(string),
-		ScaleGroupId:      d.Get("scale_group_id").(string),
-		Segment:           d.Get("segment_id").(string),
+		Name:              getStringFromResourceData(d, "name"),
+		Type:              getStringFromResourceData(d, "type"),
+		Prefix:            getStringFromResourceData(d, "prefix"),
+		PrefixLen:         getIntFromResourceData(d, "prefix_len"),
+		PrefixType:        getStringFromResourceData(d, "prefix_type"),
+		FirstIpAssignedTo: getStringFromResourceData(d, "first_ip_assignment"),
+		NodeId:            getStringFromResourceData(d, "node_id"),
+		Cxp:               getStringFromResourceData(d, "cxp"),
+		ScaleGroupId:      getStringFromResourceData(d, "scale_group_id"),
+		Segment:           getStringFromResourceData(d, "segment_id"),
 	}
 }
 
@@ -535,13 +499,4 @@ func validatePrefix(v interface{}, k string) (warnings []string, errors []error)
 	}
 
 	return warnings, errors
-}
-
-func containsString(s, substr string) bool {
-	for i := 0; i < len(s)-len(substr)+1; i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

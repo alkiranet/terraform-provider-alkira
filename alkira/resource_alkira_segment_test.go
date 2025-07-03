@@ -14,23 +14,23 @@ func TestSegmentGenerateSegmentRequest(t *testing.T) {
 
 	// Test with multiple CIDR
 	expectedAsn := 2
-	expecedName := "testName"
+	expectedName := "testName"
 	expectedReservePublicIPs := true
 	expectedCidrs := []string{"10.255.254.0/24", "10.255.255.0/24"}
 
 	d.Set("asn", expectedAsn)
-	d.Set("name", expecedName)
+	d.Set("name", expectedName)
 	d.Set("reserve_public_ips", expectedReservePublicIPs)
 	d.Set("cidrs", expectedCidrs)
 
 	s, err := generateSegmentRequest(d)
 
 	require.NoError(t, err)
-	require.Equal(t, s.Asn, expectedAsn)
-	require.Equal(t, s.Name, expecedName)
-	require.Equal(t, s.ReservePublicIPsForUserAndSiteConnectivity, expectedReservePublicIPs)
-	require.Equal(t, s.IpBlock, "") // should be empty becuase IpBlocks can be used even for signle CIDR values
-	require.Equal(t, len(s.IpBlocks.Values), len(expectedCidrs))
+	require.Equal(t, expectedAsn, s.Asn)
+	require.Equal(t, expectedName, s.Name)
+	require.Equal(t, expectedReservePublicIPs, s.ReservePublicIPsForUserAndSiteConnectivity)
+	require.Equal(t, "", s.IpBlock) // should be empty because IpBlocks can be used even for single CIDR values
+	require.Equal(t, len(expectedCidrs), len(s.IpBlocks.Values))
 
 	// Test with single CIDR
 	expectedCidr := "10.255.255.0/24"
@@ -39,8 +39,8 @@ func TestSegmentGenerateSegmentRequest(t *testing.T) {
 
 	s, err = generateSegmentRequest(d)
 	require.NoError(t, err)
-	require.Equal(t, s.IpBlock, "")
-	require.Equal(t, len(s.IpBlocks.Values), 1)
+	require.Equal(t, "", s.IpBlock)
+	require.Equal(t, 1, len(s.IpBlocks.Values))
 }
 
 func TestSegmentSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSegmentSetCidrSegmentReadEmptyIpBlock(t *testing.T) {
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
-	require.Equal(t, len(c), len(expectedValues))
+	require.Equal(t, len(expectedValues), len(c))
 	fmt.Println(c)
 }
 
@@ -80,7 +80,7 @@ func TestSegmentSetCidrSegmentReadIpBlockContainedIpBlocks(t *testing.T) {
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
-	require.Equal(t, len(c), len(expectedValues))
+	require.Equal(t, len(expectedValues), len(c))
 	fmt.Println(c)
 }
 
@@ -101,5 +101,5 @@ func TestSetCidrSegmentReadIpBlockAndIpBlocksPopulated(t *testing.T) {
 
 	c := convertTypeListToStringList(d.Get("cidrs").([]interface{}))
 
-	require.Equal(t, len(c), len(expectedValues)+1)
+	require.Equal(t, len(expectedValues)+1, len(c))
 }

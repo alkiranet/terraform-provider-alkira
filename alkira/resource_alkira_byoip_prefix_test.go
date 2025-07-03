@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -403,43 +399,12 @@ func TestAlkiraByoipPrefix_resourceDataManipulation(t *testing.T) {
 }
 
 func TestAlkiraByoipPrefix_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
-			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			isValid := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, isValid, "Expected ID validation to return %v for %s", tt.Valid, tt.Id)
 		})
 	}
 }
@@ -456,90 +421,44 @@ func TestAlkiraByoipPrefix_customizeDiff(t *testing.T) {
 
 // Helper function to create mock HTTP server for BYOIP prefixes
 func serveByoipPrefixMockServer(t *testing.T, byoipPrefix *alkira.Byoip, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			switch req.Method {
-			case "GET":
-				if byoipPrefix != nil {
-					json.NewEncoder(w).Encode(byoipPrefix)
-				}
-			case "POST":
-				if byoipPrefix != nil {
-					json.NewEncoder(w).Encode(byoipPrefix)
-				}
-			case "PUT":
-				if byoipPrefix != nil {
-					json.NewEncoder(w).Encode(byoipPrefix)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		switch req.Method {
+		case "GET":
+			if byoipPrefix != nil {
+				json.NewEncoder(w).Encode(byoipPrefix)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
+		case "POST":
+			if byoipPrefix != nil {
+				json.NewEncoder(w).Encode(byoipPrefix)
+			}
+		case "PUT":
+			if byoipPrefix != nil {
+				json.NewEncoder(w).Encode(byoipPrefix)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
-	}
+	return createMockAlkiraClient(t, handler)
 }
 
 // Mock helper functions for testing
 func buildByoipPrefixRequest(d *schema.ResourceData) *alkira.Byoip {
-	description := ""
-	if desc := d.Get("description"); desc != nil {
-		description = desc.(string)
-	}
-
-	prefix := ""
-	if p := d.Get("prefix"); p != nil {
-		prefix = p.(string)
-	}
-
-	cxp := ""
-	if c := d.Get("cxp"); c != nil {
-		cxp = c.(string)
-	}
-
-	cloudProvider := ""
-	if cp := d.Get("cloud_provider"); cp != nil {
-		cloudProvider = cp.(string)
-	}
-
-	message := ""
-	if m := d.Get("message"); m != nil {
-		message = m.(string)
-	}
-
-	signature := ""
-	if s := d.Get("signature"); s != nil {
-		signature = s.(string)
-	}
-
-	publicKey := ""
-	if pk := d.Get("public_key"); pk != nil {
-		publicKey = pk.(string)
-	}
-
 	return &alkira.Byoip{
-		Description:   description,
-		Prefix:        prefix,
-		Cxp:           cxp,
-		CloudProvider: cloudProvider,
+		Description:   getStringFromResourceData(d, "description"),
+		Prefix:        getStringFromResourceData(d, "prefix"),
+		Cxp:           getStringFromResourceData(d, "cxp"),
+		CloudProvider: getStringFromResourceData(d, "cloud_provider"),
 		ExtraAttributes: alkira.ByoipExtraAttributes{
-			Message:   message,
-			Signature: signature,
-			PublicKey: publicKey,
+			Message:   getStringFromResourceData(d, "message"),
+			Signature: getStringFromResourceData(d, "signature"),
+			PublicKey: getStringFromResourceData(d, "public_key"),
 		},
 	}
 }
@@ -590,20 +509,4 @@ func validateCxp(v interface{}, k string) (warnings []string, errors []error) {
 
 	errors = append(errors, fmt.Errorf("%q must be one of: %v", k, validCxps))
 	return warnings, errors
-}
-
-func containsString(s, substr string) bool {
-	return len(substr) <= len(s) && (len(substr) == 0 || indexOf(s, substr) >= 0)
-}
-
-func indexOf(s, substr string) int {
-	if len(substr) == 0 {
-		return 0
-	}
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
 }

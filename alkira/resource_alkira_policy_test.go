@@ -2,15 +2,10 @@ package alkira
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,50 +74,14 @@ func TestAlkiraPolicy_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraPolicy_validatePolicyName(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
-		{
-			name:      "valid name",
-			input:     "test-policy",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with numbers",
-			input:     "policy-123",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with underscores",
-			input:     "test_policy_name",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "empty name",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
-		},
-		{
-			name:      "name with spaces",
-			input:     "test policy",
-			expectErr: false,
-			errCount:  0,
-		},
-	}
+	tests := GetCommonNameValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validatePolicyName(tt.input, "name")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateResourceName(tt.Input, "name")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -288,43 +247,12 @@ func TestAlkiraPolicy_resourceDataManipulation(t *testing.T) {
 }
 
 func TestAlkiraPolicy_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
-			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			isValid := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, isValid, "Expected ID validation to return %v for %s", tt.Valid, tt.Id)
 		})
 	}
 }
@@ -341,42 +269,31 @@ func TestAlkiraPolicy_customizeDiff(t *testing.T) {
 
 // Helper function to create mock HTTP server for policies
 func servePolicyMockServer(t *testing.T, policy *alkira.TrafficPolicy, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			switch req.Method {
-			case "GET":
-				if policy != nil {
-					json.NewEncoder(w).Encode(policy)
-				}
-			case "POST":
-				if policy != nil {
-					json.NewEncoder(w).Encode(policy)
-				}
-			case "PUT":
-				if policy != nil {
-					json.NewEncoder(w).Encode(policy)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		switch req.Method {
+		case "GET":
+			if policy != nil {
+				json.NewEncoder(w).Encode(policy)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
+		case "POST":
+			if policy != nil {
+				json.NewEncoder(w).Encode(policy)
+			}
+		case "PUT":
+			if policy != nil {
+				json.NewEncoder(w).Encode(policy)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
-	}
+	return createMockAlkiraClient(t, handler)
 }
 
 // Mock helper functions for testing
@@ -405,12 +322,4 @@ func buildPolicyRequest(d *schema.ResourceData) *alkira.TrafficPolicy {
 		SegmentIds:  []int{5, 6},
 		RuleListId:  1,
 	}
-}
-
-func validatePolicyName(v interface{}, k string) (warnings []string, errors []error) {
-	value := v.(string)
-	if value == "" {
-		errors = append(errors, fmt.Errorf("%q cannot be empty", k))
-	}
-	return warnings, errors
 }

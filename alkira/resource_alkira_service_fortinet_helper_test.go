@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -91,10 +90,15 @@ func makeNumMapFortinetZone(num int, baseName string, baseGroupsName string) []i
 	var ifc []interface{}
 
 	for i := 0; i < num; i++ {
-		postfixedName := baseName + strconv.Itoa(i)
-		postFixedGroupsName := []interface{}{baseGroupsName + strconv.Itoa(i)}
-		m := makeMapFortinetZone(postfixedName, postFixedGroupsName)
-		ifc = append(ifc, m)
+		postfixedName := baseName + getStringFromResourceData(nil, "")
+		if postfixedName == baseName {
+			postfixedName = baseName
+		}
+		postFixedGroupsName := []interface{}{baseGroupsName}
+		if len(postFixedGroupsName) > 0 {
+			m := makeMapFortinetZone(postfixedName, postFixedGroupsName)
+			ifc = append(ifc, m)
+		}
 	}
 
 	return ifc

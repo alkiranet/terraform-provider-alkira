@@ -2,15 +2,10 @@ package alkira
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,50 +88,14 @@ func TestAlkiraGroup_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraGroup_validateGroupName(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
-		{
-			name:      "valid name",
-			input:     "test-group",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with numbers",
-			input:     "test-group-123",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with underscores",
-			input:     "test_group_name",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "empty name",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
-		},
-		{
-			name:      "name with spaces",
-			input:     "test group",
-			expectErr: false,
-			errCount:  0,
-		},
-	}
+	tests := GetCommonNameValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateGroupName(tt.input, "name")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateResourceName(tt.Input, "name")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -323,113 +282,63 @@ func TestAlkiraGroup_resourceDataManipulation(t *testing.T) {
 }
 
 func TestAlkiraGroup_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
-			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			isValid := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, isValid, "Expected ID validation to return %v for %s", tt.Valid, tt.Id)
 		})
 	}
 }
 
 // Helper function to create mock HTTP server for groups
 func serveGroupMockServer(t *testing.T, group *alkira.Group, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			// Handle provisioning requests
-			if req.URL.Query().Get("provision") == "true" {
-				// Mock provision response
-				provisionResponse := map[string]interface{}{
-					"id":     "prov-123",
-					"status": "SUCCESS",
-				}
-				switch req.Method {
-				case "POST", "PUT", "DELETE":
-					json.NewEncoder(w).Encode(provisionResponse)
-					return
-				}
+		// Handle provisioning requests
+		if req.URL.Query().Get("provision") == "true" {
+			// Mock provision response
+			provisionResponse := map[string]interface{}{
+				"id":     "prov-123",
+				"status": "SUCCESS",
 			}
-
 			switch req.Method {
-			case "GET":
-				if group != nil {
-					json.NewEncoder(w).Encode(group)
-				}
-			case "POST":
-				if group != nil {
-					json.NewEncoder(w).Encode(group)
-				}
-			case "PUT":
-				if group != nil {
-					json.NewEncoder(w).Encode(group)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+			case "POST", "PUT", "DELETE":
+				json.NewEncoder(w).Encode(provisionResponse)
+				return
 			}
-		},
-	))
-	t.Cleanup(server.Close)
+		}
 
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
+		switch req.Method {
+		case "GET":
+			if group != nil {
+				json.NewEncoder(w).Encode(group)
+			}
+		case "POST":
+			if group != nil {
+				json.NewEncoder(w).Encode(group)
+			}
+		case "PUT":
+			if group != nil {
+				json.NewEncoder(w).Encode(group)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false, // Disable provisioning to avoid complex mock setup
-	}
+	return createMockAlkiraClient(t, handler)
 }
 
 // Mock helper functions for testing
 func buildGroupRequest(d *schema.ResourceData) *alkira.Group {
 	return &alkira.Group{
-		Name:        d.Get("name").(string),
-		Description: d.Get("description").(string),
+		Name:        getStringFromResourceData(d, "name"),
+		Description: getStringFromResourceData(d, "description"),
 	}
-}
-
-func validateGroupName(v interface{}, k string) (warnings []string, errors []error) {
-	value := v.(string)
-	if value == "" {
-		errors = append(errors, fmt.Errorf("%q cannot be empty", k))
-	}
-	return warnings, errors
 }
