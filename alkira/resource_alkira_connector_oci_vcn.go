@@ -352,7 +352,7 @@ func generateConnectorOciVcnRequest(d *schema.ResourceData, m interface{}) (*alk
 
 	vcnRouting := alkira.ConnectorOciVcnRouting{
 		Export: exportOptions,
-		Import: alkira.ConnectorOciVcnImportOptions{routeTables},
+		Import: alkira.ConnectorOciVcnImportOptions{RouteTables: routeTables},
 	}
 
 	//

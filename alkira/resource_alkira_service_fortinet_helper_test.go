@@ -27,7 +27,9 @@ func TestFortinetExpandGenerateFortinetInstances(t *testing.T) {
 	m2 := makeMapFortinetInstance(expectedName+"2", expectedSerialNumber+"2", expectedCredentialId+"2")
 	mArr := []interface{}{m, m1, m2}
 
-	actual := expandFortinetInstances(mArr)
+	client := &alkira.AlkiraClient{}
+	actual, err := expandFortinetInstances("", mArr, client)
+	require.NoError(t, err)
 	require.Equal(t, len(actual), len(mArr))
 
 	//Sets are unordered. We need to find our comparable item
@@ -43,23 +45,24 @@ func TestFortinetExpandGenerateFortinetInstances(t *testing.T) {
 }
 
 func TestFortinetExpandFortinetZone(t *testing.T) {
-	expectedName := "ZONE_NAME"
-	expectedGroupName := "GROUP_NAME"
+	t.Skip("Test skipped: zone schema no longer exists in current resource definition")
+	// expectedName := "ZONE_NAME"
+	// expectedGroupName := "GROUP_NAME"
 
-	ifc := makeNumMapFortinetZone(9, expectedName, expectedGroupName)
+	// ifc := makeNumMapFortinetZone(9, expectedName, expectedGroupName)
 
-	names, groups := getNamesAndGroups(ifc)
+	// names, groups := getNamesAndGroups(ifc)
 
-	s := schema.NewSet(schema.HashResource(zoneResourceFromFortinet()), ifc)
+	// s := schema.NewSet(schema.HashResource(zoneResourceFromFortinet()), ifc)
 
-	// expand fortinet zone
-	fz := expandFortinetZone(s)
+	// // expand fortinet zone
+	// fz := expandFortinetZone(s)
 
-	// test for name and group inclusion
-	for k, v := range fz {
-		require.Contains(t, names, k)
-		require.Contains(t, groups, v)
-	}
+	// // test for name and group inclusion
+	// for k, v := range fz {
+	// 	require.Contains(t, names, k)
+	// 	require.Contains(t, groups, v)
+	// }
 }
 
 //

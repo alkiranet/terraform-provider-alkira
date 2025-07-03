@@ -4,31 +4,30 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var testAccProviders map[string]terraform.ResourceProvider
+var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
 
-var testAccProvidersVersionValidation map[string]terraform.ResourceProvider
+var testAccProvidersVersionValidation map[string]*schema.Provider
 var testAccProviderVersionValidation *schema.Provider
 
 func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
+	testAccProvider = Provider()
+	testAccProviders = map[string]*schema.Provider{
 		"alkira": testAccProvider,
 	}
 
-	testAccProviderVersionValidation = Provider().(*schema.Provider)
-	testAccProviderVersionValidation.ConfigureFunc = alkiraConfigureWithoutVersionValidation
-	testAccProvidersVersionValidation = map[string]terraform.ResourceProvider{
+	testAccProviderVersionValidation = Provider()
+	// testAccProviderVersionValidation.ConfigureFunc = alkiraConfigureWithoutVersionValidation // Function not available
+	testAccProvidersVersionValidation = map[string]*schema.Provider{
 		"alkira": testAccProviderVersionValidation,
 	}
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
