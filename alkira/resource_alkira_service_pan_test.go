@@ -3,12 +3,9 @@ package alkira
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -67,47 +64,42 @@ func TestAlkiraServicePan_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraServicePan_validateBundle(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
+	tests := []ValidationTestCase{
 		{
-			name:      "Valid VM_SERIES_BUNDLE_1",
-			input:     "VM_SERIES_BUNDLE_1",
-			expectErr: false,
-			errCount:  0,
+			Name:      "Valid VM_SERIES_BUNDLE_1",
+			Input:     "VM_SERIES_BUNDLE_1",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "Valid VM_SERIES_BUNDLE_2",
-			input:     "VM_SERIES_BUNDLE_2",
-			expectErr: false,
-			errCount:  0,
+			Name:      "Valid VM_SERIES_BUNDLE_2",
+			Input:     "VM_SERIES_BUNDLE_2",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "Valid PAN_VM_300_BUNDLE_2",
-			input:     "PAN_VM_300_BUNDLE_2",
-			expectErr: false,
-			errCount:  0,
+			Name:      "Valid PAN_VM_300_BUNDLE_2",
+			Input:     "PAN_VM_300_BUNDLE_2",
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "Invalid bundle",
-			input:     "INVALID_BUNDLE",
-			expectErr: true,
-			errCount:  1,
+			Name:      "Invalid bundle",
+			Input:     "INVALID_BUNDLE",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "Empty string",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
+			Name:      "Empty string",
+			Input:     "",
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "Non-string input",
-			input:     123,
-			expectErr: true,
-			errCount:  1,
+			Name:      "Non-string input",
+			Input:     123,
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 	}
 
@@ -115,13 +107,13 @@ func TestAlkiraServicePan_validateBundle(t *testing.T) {
 	bundleSchema := resource.Schema["bundle"]
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := bundleSchema.ValidateFunc(tt.input, "bundle")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := bundleSchema.ValidateFunc(tt.Input, "bundle")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors for input %v", tt.errCount, tt.input)
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors for input %v", tt.ErrCount, tt.Input)
 			} else {
-				assert.Empty(t, errors, "Expected no errors for input %v", tt.input)
+				assert.Empty(t, errors, "Expected no errors for input %v", tt.Input)
 			}
 			assert.Empty(t, warnings, "Expected no warnings")
 		})
@@ -143,7 +135,12 @@ func TestAlkiraServicePan_expandPanInstances(t *testing.T) {
 		},
 	}
 
-	result, err := expandPanInstances(instances, nil)
+	// Create a mock client since the function requires it
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	result, err := expandPanInstances(instances, mockClient)
 	require.NoError(t, err, "expandPanInstances should not return error")
 	require.Len(t, result, 2, "Should return 2 instances")
 
@@ -187,22 +184,12 @@ func TestAlkiraServicePan_setPanInstances(t *testing.T) {
 }
 
 func TestAlkiraServicePan_createPanCredential(t *testing.T) {
-	// Create mock server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Create mock client using shared utility
+	client := createMockAlkiraClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(`{"id": "credential-123"}`))
-	}))
-	defer server.Close()
-
-	// Create client
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-	client := &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-	}
+	})
 
 	// Test data
 	r := resourceAlkiraServicePan()
@@ -219,20 +206,8 @@ func TestAlkiraServicePan_createPanCredential(t *testing.T) {
 
 // TEST HELPER
 func serveServicePan(t *testing.T, servicePan *alkira.ServicePan) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			json.NewEncoder(w).Encode(servicePan)
-			w.Header().Set("Content-Type", "application/json")
-		},
-	))
-	t.Cleanup(server.Close)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-	}
+	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		json.NewEncoder(w).Encode(servicePan)
+		w.Header().Set("Content-Type", "application/json")
+	})
 }

@@ -3,7 +3,7 @@ package alkira
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
+	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -90,8 +90,8 @@ func TestCheckpointInstancesDeflate(t *testing.T) {
 
 	for i := 0; i < numInstances; i++ {
 		c = append(c, alkira.CheckpointInstance{
-			Name:         testName + strconv.Itoa(i),
-			CredentialId: testCredId + strconv.Itoa(i),
+			Name:         testName + fmt.Sprintf("%d", i),
+			CredentialId: testCredId + fmt.Sprintf("%d", i),
 		})
 	}
 
@@ -181,8 +181,8 @@ func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkir
 
 	for i := 0; i < num; i++ {
 		c := alkira.CheckpointInstance{
-			Name:         seed.Name + strconv.Itoa(i),
-			CredentialId: seed.CredentialId + strconv.Itoa(i),
+			Name:         seed.Name + fmt.Sprintf("%d", i),
+			CredentialId: seed.CredentialId + fmt.Sprintf("%d", i),
 		}
 
 		instances = append(instances, c)

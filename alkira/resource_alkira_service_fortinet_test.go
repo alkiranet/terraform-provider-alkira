@@ -3,12 +3,9 @@ package alkira
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 )
 
 func TestFortinetRead(t *testing.T) {
@@ -24,7 +21,10 @@ func TestFortinetRead(t *testing.T) {
 	// 		Segment:   expectedSegment,
 	// 	},
 	// }
-	// ac := serveFortinet(t, f)
+	// ac := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+	// 	json.NewEncoder(w).Encode(f)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// })
 
 	// r := resourceAlkiraServiceFortinet()
 	// d := r.TestResourceData()
@@ -32,9 +32,9 @@ func TestFortinetRead(t *testing.T) {
 	// err := resourceFortinetRead(nil, d, ac)
 	// require.Nil(t, err)
 
-	// require.Equal(t, expectedCxp, d.Get("cxp"))
-	// require.Equal(t, expectedIp, d.Get("management_server_ip"))
-	// require.Equal(t, expectedSegment, d.Get("management_server_segment"))
+	// require.Equal(t, expectedCxp, getStringFromResourceData(d, "cxp"))
+	// require.Equal(t, expectedIp, getStringFromResourceData(d, "management_server_ip"))
+	// require.Equal(t, expectedSegment, getStringFromResourceData(d, "management_server_segment"))
 }
 
 func TestFortinetReadAutoScale(t *testing.T) {
@@ -44,7 +44,10 @@ func TestFortinetReadAutoScale(t *testing.T) {
 	// f := &alkira.ServiceFortinet{
 	// 	AutoScale: expectedAutoScaleVal,
 	// }
-	// ac := serveFortinet(t, f)
+	// ac := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+	// 	json.NewEncoder(w).Encode(f)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// })
 	// f.ManagementServer = &alkira.FortinetManagmentServer{}
 
 	// r := resourceAlkiraServiceFortinet()
@@ -53,7 +56,7 @@ func TestFortinetReadAutoScale(t *testing.T) {
 	// err := resourceFortinetRead(nil, d, ac)
 	// require.Nil(t, err)
 
-	// require.Equal(t, expectedAutoScaleVal, d.Get("auto_scale"))
+	// require.Equal(t, expectedAutoScaleVal, getStringFromResourceData(d, "auto_scale"))
 }
 
 //
@@ -61,20 +64,8 @@ func TestFortinetReadAutoScale(t *testing.T) {
 //
 
 func serveFortinet(t *testing.T, f *alkira.ServiceFortinet) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			json.NewEncoder(w).Encode(f)
-			w.Header().Set("Content-Type", "application/json")
-		},
-	))
-	t.Cleanup(server.Close)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-	}
+	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		json.NewEncoder(w).Encode(f)
+		w.Header().Set("Content-Type", "application/json")
+	})
 }

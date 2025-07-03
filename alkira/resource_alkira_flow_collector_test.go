@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,50 +113,14 @@ func TestAlkiraFlowCollector_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraFlowCollector_validateFlowCollectorName(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     interface{}
-		expectErr bool
-		errCount  int
-	}{
-		{
-			name:      "valid name",
-			input:     "test-flow-collector",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with numbers",
-			input:     "flow-collector-123",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid name with underscores",
-			input:     "test_flow_collector_name",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "empty name",
-			input:     "",
-			expectErr: true,
-			errCount:  1,
-		},
-		{
-			name:      "name with spaces",
-			input:     "test flow collector",
-			expectErr: false,
-			errCount:  0,
-		},
-	}
+	tests := GetCommonNameValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateFlowCollectorName(tt.input, "name")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateResourceName(tt.Input, "name")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -178,20 +138,8 @@ func TestAlkiraFlowCollector_validateFlowCollectorType(t *testing.T) {
 		errCount  int
 	}{
 		{
-			name:      "valid NETFLOW type",
-			input:     "NETFLOW",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid SFLOW type",
-			input:     "SFLOW",
-			expectErr: false,
-			errCount:  0,
-		},
-		{
-			name:      "valid IPFIX type",
-			input:     "IPFIX",
+			name:      "valid GENERIC type",
+			input:     "GENERIC",
 			expectErr: false,
 			errCount:  0,
 		},
@@ -209,7 +157,7 @@ func TestAlkiraFlowCollector_validateFlowCollectorType(t *testing.T) {
 		},
 		{
 			name:      "lowercase type",
-			input:     "netflow",
+			input:     "generic",
 			expectErr: true,
 			errCount:  1,
 		},
@@ -348,10 +296,11 @@ func TestAlkiraFlowCollector_apiErrorHandling(t *testing.T) {
 
 		api := alkira.NewFlowCollector(client)
 		_, _, _, _ = api.Create(&alkira.FlowCollector{
-			Name:          "test-flow-collector",
-			Description:   "test",
-			Enabled:       true,
-			CollectorType: "NETFLOW",
+			Name:            "test-flow-collector",
+			Description:     "test",
+			Enabled:         true,
+			CollectorType:   "GENERIC",
+			DestinationPort: 2055,
 		})
 
 		// Should handle server errors gracefully
@@ -368,17 +317,19 @@ func TestAlkiraFlowCollector_resourceDataManipulation(t *testing.T) {
 		d.Set("name", "test-flow-collector")
 		d.Set("description", "Test description")
 		d.Set("enabled", true)
-		d.Set("collector_type", "NETFLOW")
-		d.Set("segment", "test-segment")
-		cxps := []string{"US-WEST", "EU-WEST"}
-		d.Set("cxps", cxps)
+		d.Set("collector_type", "GENERIC")
+		d.Set("segment_id", "test-segment-id")
+		d.Set("destination_ip", "10.1.1.100")
+		d.Set("destination_port", 2055)
 
 		// Test getting values
 		assert.Equal(t, "test-flow-collector", d.Get("name").(string))
 		assert.Equal(t, "Test description", d.Get("description").(string))
 		assert.Equal(t, true, d.Get("enabled").(bool))
-		assert.Equal(t, "NETFLOW", d.Get("collector_type").(string))
-		assert.Equal(t, "test-segment", d.Get("segment").(string))
+		assert.Equal(t, "GENERIC", d.Get("collector_type").(string))
+		assert.Equal(t, "test-segment-id", d.Get("segment_id").(string))
+		assert.Equal(t, "10.1.1.100", d.Get("destination_ip").(string))
+		assert.Equal(t, 2055, d.Get("destination_port").(int))
 	})
 
 	t.Run("resource data with changes", func(t *testing.T) {
@@ -388,59 +339,31 @@ func TestAlkiraFlowCollector_resourceDataManipulation(t *testing.T) {
 		d.Set("name", "original-name")
 		d.Set("description", "Original description")
 		d.Set("enabled", false)
-		d.Set("collector_type", "SFLOW")
+		d.Set("collector_type", "GENERIC")
+		d.Set("destination_port", 1000)
 
 		// Simulate a change
 		d.Set("name", "updated-name")
 		d.Set("description", "Updated description")
 		d.Set("enabled", true)
-		d.Set("collector_type", "NETFLOW")
+		d.Set("collector_type", "GENERIC")
+		d.Set("destination_port", 2000)
 
 		assert.Equal(t, "updated-name", d.Get("name").(string))
 		assert.Equal(t, "Updated description", d.Get("description").(string))
 		assert.Equal(t, true, d.Get("enabled").(bool))
-		assert.Equal(t, "NETFLOW", d.Get("collector_type").(string))
+		assert.Equal(t, "GENERIC", d.Get("collector_type").(string))
+		assert.Equal(t, 2000, d.Get("destination_port").(int))
 	})
 }
 
 func TestAlkiraFlowCollector_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
-			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			isValid := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, isValid, "Expected ID validation to return %v for %s", tt.Valid, tt.Id)
 		})
 	}
 }
@@ -457,121 +380,52 @@ func TestAlkiraFlowCollector_customizeDiff(t *testing.T) {
 
 // Helper function to create mock HTTP server for flow collectors
 func serveFlowCollectorMockServer(t *testing.T, flowCollector *alkira.FlowCollector, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			switch req.Method {
-			case "GET":
-				if flowCollector != nil {
-					json.NewEncoder(w).Encode(flowCollector)
-				}
-			case "POST":
-				if flowCollector != nil {
-					json.NewEncoder(w).Encode(flowCollector)
-				}
-			case "PUT":
-				if flowCollector != nil {
-					json.NewEncoder(w).Encode(flowCollector)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		switch req.Method {
+		case "GET":
+			if flowCollector != nil {
+				json.NewEncoder(w).Encode(flowCollector)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
+		case "POST":
+			if flowCollector != nil {
+				json.NewEncoder(w).Encode(flowCollector)
+			}
+		case "PUT":
+			if flowCollector != nil {
+				json.NewEncoder(w).Encode(flowCollector)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
-	}
+	return createMockAlkiraClient(t, handler)
 }
 
 // Mock helper functions for testing
 func buildFlowCollectorRequest(d *schema.ResourceData) *alkira.FlowCollector {
-	name := ""
-	if n := d.Get("name"); n != nil {
-		name = n.(string)
-	}
-
-	description := ""
-	if desc := d.Get("description"); desc != nil {
-		description = desc.(string)
-	}
-
-	enabled := false
-	if e := d.Get("enabled"); e != nil {
-		enabled = e.(bool)
-	}
-
-	collectorType := ""
-	if ct := d.Get("collector_type"); ct != nil {
-		collectorType = ct.(string)
-	}
-
-	segment := ""
-	if seg := d.Get("segment_id"); seg != nil {
-		segment = seg.(string)
-	}
-
-	destinationIp := ""
-	if di := d.Get("destination_ip"); di != nil {
-		destinationIp = di.(string)
-	}
-
-	destinationFqdn := ""
-	if df := d.Get("destination_fqdn"); df != nil {
-		destinationFqdn = df.(string)
-	}
-
-	destinationPort := 0
-	if dp := d.Get("destination_port"); dp != nil {
-		destinationPort = dp.(int)
-	}
-
-	transportProtocol := ""
-	if tp := d.Get("transport_protocol"); tp != nil {
-		transportProtocol = tp.(string)
-	}
-
-	exportType := ""
-	if et := d.Get("export_type"); et != nil {
-		exportType = et.(string)
-	}
-
 	return &alkira.FlowCollector{
-		Name:              name,
-		Description:       description,
-		Enabled:           enabled,
-		CollectorType:     collectorType,
-		Segment:           segment,
-		DestinationIp:     destinationIp,
-		DestinationFqdn:   destinationFqdn,
-		DestinationPort:   destinationPort,
-		TransportProtocol: transportProtocol,
-		ExportType:        exportType,
+		Name:              getStringFromResourceData(d, "name"),
+		Description:       getStringFromResourceData(d, "description"),
+		Enabled:           getBoolFromResourceData(d, "enabled"),
+		CollectorType:     getStringFromResourceData(d, "collector_type"),
+		Segment:           getStringFromResourceData(d, "segment_id"),
+		DestinationIp:     getStringFromResourceData(d, "destination_ip"),
+		DestinationFqdn:   getStringFromResourceData(d, "destination_fqdn"),
+		DestinationPort:   getIntFromResourceData(d, "destination_port"),
+		TransportProtocol: getStringFromResourceData(d, "transport_protocol"),
+		ExportType:        getStringFromResourceData(d, "export_type"),
 	}
-}
-
-func validateFlowCollectorName(v interface{}, k string) (warnings []string, errors []error) {
-	value := v.(string)
-	if value == "" {
-		errors = append(errors, fmt.Errorf("%q cannot be empty", k))
-	}
-	return warnings, errors
 }
 
 func validateFlowCollectorType(v interface{}, k string) (warnings []string, errors []error) {
 	value := v.(string)
-	validTypes := []string{"NETFLOW", "SFLOW", "IPFIX"}
+	validTypes := []string{"GENERIC"}
 
 	if value == "" {
 		errors = append(errors, fmt.Errorf("%q cannot be empty", k))

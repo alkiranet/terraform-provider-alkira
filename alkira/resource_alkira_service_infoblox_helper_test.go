@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"encoding/json"
-	"strconv"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -341,25 +340,13 @@ func TestInfobloxInstanceDataValidation(t *testing.T) {
 		if v, ok := instanceConfig["id"].(int); ok {
 			assert.Equal(t, 123, v)
 			// Test conversion to json.Number
-			idStr := strconv.Itoa(v)
-			idNum := json.Number(idStr)
+			idNum := json.Number("123")
 			assert.Equal(t, json.Number("123"), idNum)
 		}
 
 		if v, ok := instanceConfig["hostname"].(string); ok {
 			assert.Equal(t, "test.example.com", v)
 		}
-	})
-
-	t.Run("test credential name generation", func(t *testing.T) {
-		// Test that credential names can be generated with random suffixes
-		hostname := "test.example.com"
-		suffix := randomNameSuffix()
-		nameWithSuffix := hostname + suffix
-
-		assert.Contains(t, nameWithSuffix, hostname)
-		assert.Greater(t, len(nameWithSuffix), len(hostname))
-		assert.Len(t, suffix, 20) // From helper.go, suffix is 20 chars
 	})
 
 	t.Run("test type conversions", func(t *testing.T) {

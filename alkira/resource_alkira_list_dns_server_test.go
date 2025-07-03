@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -96,62 +92,57 @@ func TestAlkiraListDnsServer_resourceSchema(t *testing.T) {
 }
 
 func TestAlkiraListDnsServer_validateDnsServerIps(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     []interface{}
-		expectErr bool
-		errCount  int
-	}{
+	tests := []ValidationTestCase{
 		{
-			name:      "valid DNS server IPs",
-			input:     []interface{}{"8.8.8.8", "8.8.4.4", "1.1.1.1"},
-			expectErr: false,
-			errCount:  0,
+			Name:      "valid DNS server IPs",
+			Input:     []interface{}{"8.8.8.8", "8.8.4.4", "1.1.1.1"},
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "single valid IP",
-			input:     []interface{}{"8.8.8.8"},
-			expectErr: false,
-			errCount:  0,
+			Name:      "single valid IP",
+			Input:     []interface{}{"8.8.8.8"},
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "private DNS server",
-			input:     []interface{}{"192.168.1.1"},
-			expectErr: false,
-			errCount:  0,
+			Name:      "private DNS server",
+			Input:     []interface{}{"192.168.1.1"},
+			ExpectErr: false,
+			ErrCount:  0,
 		},
 		{
-			name:      "empty list",
-			input:     []interface{}{},
-			expectErr: true,
-			errCount:  1,
+			Name:      "empty list",
+			Input:     []interface{}{},
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "invalid IP format",
-			input:     []interface{}{"invalid-ip"},
-			expectErr: true,
-			errCount:  1,
+			Name:      "invalid IP format",
+			Input:     []interface{}{"invalid-ip"},
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "localhost IP (should be invalid)",
-			input:     []interface{}{"127.0.0.1"},
-			expectErr: true,
-			errCount:  1,
+			Name:      "localhost IP (should be invalid)",
+			Input:     []interface{}{"127.0.0.1"},
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 		{
-			name:      "broadcast IP (should be invalid)",
-			input:     []interface{}{"255.255.255.255"},
-			expectErr: true,
-			errCount:  1,
+			Name:      "broadcast IP (should be invalid)",
+			Input:     []interface{}{"255.255.255.255"},
+			ExpectErr: true,
+			ErrCount:  1,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warnings, errors := validateDnsServerIps(tt.input, "dns_server_ips")
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := validateDnsServerIps(tt.Input, "dns_server_ips")
 
-			if tt.expectErr {
-				assert.Len(t, errors, tt.errCount, "Expected %d errors, got %d", tt.errCount, len(errors))
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors, got %d", tt.ErrCount, len(errors))
 			} else {
 				assert.Len(t, errors, 0, "Expected no errors, got %v", errors)
 			}
@@ -285,10 +276,10 @@ func TestAlkiraListDnsServer_resourceDataManipulation(t *testing.T) {
 		d.Set("segment_id", "seg-123")
 		d.Set("dns_server_ips", []interface{}{"8.8.8.8", "8.8.4.4"})
 
-		// Test getting values
-		assert.Equal(t, "test-dns-list", d.Get("name").(string))
-		assert.Equal(t, "Test description", d.Get("description").(string))
-		assert.Equal(t, "seg-123", d.Get("segment_id").(string))
+		// Test getting values using shared utilities
+		assert.Equal(t, "test-dns-list", getStringFromResourceData(d, "name"))
+		assert.Equal(t, "Test description", getStringFromResourceData(d, "description"))
+		assert.Equal(t, "seg-123", getStringFromResourceData(d, "segment_id"))
 
 		dnsIps := d.Get("dns_server_ips").(*schema.Set).List()
 		assert.Len(t, dnsIps, 2)
@@ -296,90 +287,46 @@ func TestAlkiraListDnsServer_resourceDataManipulation(t *testing.T) {
 		// Test setting computed values
 		err := d.Set("provision_state", "SUCCESS")
 		assert.NoError(t, err)
-		assert.Equal(t, "SUCCESS", d.Get("provision_state").(string))
+		assert.Equal(t, "SUCCESS", getStringFromResourceData(d, "provision_state"))
 	})
 }
 
 func TestAlkiraListDnsServer_idValidation(t *testing.T) {
-	tests := []struct {
-		name  string
-		id    string
-		valid bool
-	}{
-		{
-			name:  "valid numeric ID",
-			id:    "123",
-			valid: true,
-		},
-		{
-			name:  "valid large numeric ID",
-			id:    "999999999999",
-			valid: true,
-		},
-		{
-			name:  "invalid empty ID",
-			id:    "",
-			valid: false,
-		},
-		{
-			name:  "invalid non-numeric ID",
-			id:    "abc",
-			valid: false,
-		},
-	}
+	tests := GetCommonIdValidationTestCases()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := strconv.Atoi(tt.id)
-			if tt.valid {
-				assert.NoError(t, err, "Expected valid ID")
-			} else {
-				if tt.id != "" { // empty string has different error than non-numeric
-					assert.Error(t, err, "Expected invalid ID")
-				}
-			}
+		t.Run(tt.Name, func(t *testing.T) {
+			result := validateResourceId(tt.Id)
+			assert.Equal(t, tt.Valid, result, "ID validation result should match expected")
 		})
 	}
 }
 
-// Helper function to create mock HTTP server for DNS server lists
+// Helper function to create mock HTTP server for DNS server lists using shared utility
 func serveListDnsServerMockServer(t *testing.T, dnsList *alkira.DnsServerList, statusCode int) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(statusCode)
+	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
 
-			switch req.Method {
-			case "GET":
-				if dnsList != nil {
-					json.NewEncoder(w).Encode(dnsList)
-				}
-			case "POST":
-				if dnsList != nil {
-					json.NewEncoder(w).Encode(dnsList)
-				}
-			case "PUT":
-				if dnsList != nil {
-					json.NewEncoder(w).Encode(dnsList)
-				}
-			case "DELETE":
-				// No content for delete
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		switch req.Method {
+		case "GET":
+			if dnsList != nil {
+				json.NewEncoder(w).Encode(dnsList)
 			}
-		},
-	))
-	t.Cleanup(server.Close)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-		Provision:       false,
-	}
+		case "POST":
+			if dnsList != nil {
+				json.NewEncoder(w).Encode(dnsList)
+			}
+		case "PUT":
+			if dnsList != nil {
+				json.NewEncoder(w).Encode(dnsList)
+			}
+		case "DELETE":
+			// No content for delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 }
 
 // Mock helper functions for testing
@@ -392,9 +339,9 @@ func buildListDnsServerRequest(d *schema.ResourceData) *alkira.DnsServerList {
 	}
 
 	return &alkira.DnsServerList{
-		Name:         d.Get("name").(string),
-		Description:  d.Get("description").(string),
-		Segment:      d.Get("segment_id").(string),
+		Name:         getStringFromResourceData(d, "name"),
+		Description:  getStringFromResourceData(d, "description"),
+		Segment:      getStringFromResourceData(d, "segment_id"),
 		DnsServerIps: dnsServerIps,
 	}
 }

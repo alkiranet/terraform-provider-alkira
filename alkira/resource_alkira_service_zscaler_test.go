@@ -3,12 +3,9 @@ package alkira
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -50,20 +47,8 @@ func TestGenerateRequesetServiceZscaler(t *testing.T) {
 }
 
 func serveZscaler(t *testing.T, z *alkira.ServiceZscaler) *alkira.AlkiraClient {
-	server := httptest.NewServer(http.HandlerFunc(
-		func(w http.ResponseWriter, req *http.Request) {
-			json.NewEncoder(w).Encode(z)
-			w.Header().Set("Content-Type", "application/json")
-		},
-	))
-	t.Cleanup(server.Close)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Timeout = time.Duration(1) * time.Second
-
-	return &alkira.AlkiraClient{
-		URI:             server.URL,
-		TenantNetworkId: "0",
-		Client:          retryClient,
-	}
+	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		json.NewEncoder(w).Encode(z)
+		w.Header().Set("Content-Type", "application/json")
+	})
 }
