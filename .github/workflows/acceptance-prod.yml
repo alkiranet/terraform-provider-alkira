@@ -6,6 +6,10 @@ on:
     branches:
       - main
       - dev
+  push:
+    branches:
+      - main
+      - dev
 
 env:
   ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
