@@ -152,6 +152,7 @@ func Provider() *schema.Provider {
 			"alkira_policy_rule":                        dataSourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":                   dataSourceAlkiraPolicyRuleList(),
 			"alkira_segment":                            dataSourceAlkiraSegment(),
+			"alkira_zta_profile":                        dataSourceZtaProfile(),
 		},
 		ConfigureFunc: alkiraConfigure,
 	}
