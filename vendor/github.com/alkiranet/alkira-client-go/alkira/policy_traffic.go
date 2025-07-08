@@ -8,14 +8,15 @@ import (
 )
 
 type TrafficPolicy struct {
-	Description string      `json:"description"`
-	Enabled     bool        `json:"enabled"`
-	FromGroups  []int       `json:"fromGroups"`
-	Id          json.Number `json:"id,omitempty"`
-	Name        string      `json:"name"`
-	RuleListId  int         `json:"ruleListId"`
-	SegmentIds  []int       `json:"segmentIds"`
-	ToGroups    []int       `json:"toGroups"`
+	Description   string      `json:"description"`
+	Enabled       bool        `json:"enabled"`
+	FromGroups    []int       `json:"fromGroups"`
+	Id            json.Number `json:"id,omitempty"`
+	Name          string      `json:"name"`
+	RuleListId    int         `json:"ruleListId"`
+	SegmentIds    []int       `json:"segmentIds"`
+	ToGroups      []int       `json:"toGroups"`
+	ZTAProfileIds []string    `json:"ztaProfileIds"`
 }
 
 // NewTrafficPolicy new traffic policy
