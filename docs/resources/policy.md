@@ -66,6 +66,7 @@ resource "alkira_policy" "test" {
 ### Optional
 
 - `description` (String) The description of the policy.
+- `zta_profile_ids` (List of String) IDs of zta profiles that will define a match in the policy scope.
 
 ### Read-Only
 

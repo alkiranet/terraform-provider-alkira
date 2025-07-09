@@ -78,6 +78,13 @@ func resourceAlkiraPolicy() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
+			"zta_profile_ids": {
+				Description: "IDs of zta profiles that will define a match in " +
+					"the policy scope.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -136,6 +143,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("segment_ids", policy.SegmentIds)
 	d.Set("from_groups", policy.FromGroups)
 	d.Set("to_groups", policy.ToGroups)
+	d.Set("zta_profile_ids", policy.ZTAProfileIds)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -203,13 +211,14 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 func generatePolicyRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicy {
 
 	policy := &alkira.TrafficPolicy{
-		Description: d.Get("description").(string),
-		Enabled:     d.Get("enabled").(bool),
-		FromGroups:  convertTypeListToIntList(d.Get("from_groups").([]interface{})),
-		Name:        d.Get("name").(string),
-		RuleListId:  d.Get("rule_list_id").(int),
-		SegmentIds:  convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
-		ToGroups:    convertTypeListToIntList(d.Get("to_groups").([]interface{})),
+		Description:   d.Get("description").(string),
+		Enabled:       d.Get("enabled").(bool),
+		FromGroups:    convertTypeListToIntList(d.Get("from_groups").([]interface{})),
+		Name:          d.Get("name").(string),
+		RuleListId:    d.Get("rule_list_id").(int),
+		SegmentIds:    convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
+		ToGroups:      convertTypeListToIntList(d.Get("to_groups").([]interface{})),
+		ZTAProfileIds: convertTypeListToStringList(d.Get("zta_profile_ids").([]interface{})),
 	}
 
 	return policy
