@@ -23,8 +23,8 @@ type PolicyPrefixList struct {
 	Id            json.Number                         `json:"id,omitempty"`
 	Name          string                              `json:"name"`
 	Prefixes      []string                            `json:"prefixes"`
-	PrefixDetails map[string]*PolicyPrefixListDetails `json:"prefixDetails",omitempty`
-	PrefixRanges  []PolicyPrefixListRange             `json:"prefixRanges",omitempty`
+	PrefixDetails map[string]*PolicyPrefixListDetails `json:"prefixDetails,omitempty"`
+	PrefixRanges  []PolicyPrefixListRange             `json:"prefixRanges,omitempty"`
 	Type          string                              `json:"type,omitempty"`
 }
 
