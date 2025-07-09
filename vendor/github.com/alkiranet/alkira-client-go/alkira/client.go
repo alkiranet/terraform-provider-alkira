@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
@@ -21,8 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-// Default client timeout is 60s and provision timeout is 240m
-const defaultClientTimeout time.Duration = 60 * time.Second
+// Default provision timeout is 240m
 const defaultProvTimeout time.Duration = 240 * time.Minute
 
 // Default Retry
@@ -45,14 +43,10 @@ type Session struct {
 }
 
 func (s *Session) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	logf("TRACE", "SetCookies URL : %s\n", u.String())
-	logf("TRACE", "SetCookies: %s\n", cookies)
 	s.jar[u.Host] = cookies
 }
 
 func (s *Session) Cookies(u *url.URL) []*http.Cookie {
-	logf("TRACE", "Cookie URL is : %s\n", u.String())
-	logf("TRACE", "Cookie being returned is : %s\n", s.jar[u.Host])
 	return s.jar[u.Host]
 }
 
@@ -62,30 +56,18 @@ func NewAlkiraClient(hostname string, username string, password string, secret s
 	// Construct the portal URI
 	url := "https://" + hostname
 
-	// Set the client timeout
-	clientTimeout := defaultClientTimeout
-
-	if t := os.Getenv("ALKIRA_CLIENT_TIMEOUT"); t != "" {
-		var err error
-		clientTimeout, err = time.ParseDuration(t)
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse ENV variable ALKIRA_CLIENT_TIMEOUT, %v", err)
-		}
-	}
-
 	logf("DEBUG", "ALKIRA-PROVISION: %v", provision)
 
 	if auth == "header" {
 		logf("DEBUG", "ALKIRA-AUTH-METHOD: %v", auth)
-		return NewAlkiraClientWithAuthHeader(url, username, password, secret, clientTimeout, provision)
+		return NewAlkiraClientWithAuthHeader(url, username, password, secret, provision)
 	}
 
-	return NewAlkiraClientInternal(url, username, password, secret, clientTimeout, provision)
+	return NewAlkiraClientInternal(url, username, password, secret, provision)
 }
 
 // NewAlkiraClientWithAuthHeader creates a new internal Alkira client with authentication in header
-func NewAlkiraClientWithAuthHeader(url string, username string, password string, secret string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
+func NewAlkiraClientWithAuthHeader(url string, username string, password string, secret string, provision bool) (*AlkiraClient, error) {
 
 	// Firstly, construct the portal API based URI
 	apiUrl := url + "/api"
@@ -108,7 +90,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	// Create retry-able HTTP client
 	tr := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{},
 	}
 
 	// Config retry client
@@ -175,7 +157,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 }
 
 // NewAlkiraClientInternal creates a new internal Alkira client
-func NewAlkiraClientInternal(url string, username string, password string, secret string, timeout time.Duration, provision bool) (*AlkiraClient, error) {
+func NewAlkiraClientInternal(url string, username string, password string, secret string, provision bool) (*AlkiraClient, error) {
 
 	// Construct the portal URI based on the given endpoint
 	apiUrl := url + "/api"
@@ -189,7 +171,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	// Create retry-able HTTP client
 	tr := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{},
 	}
 
 	retryClient := retryablehttp.NewClient()
