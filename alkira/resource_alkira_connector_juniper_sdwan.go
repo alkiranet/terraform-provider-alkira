@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
@@ -83,8 +82,6 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM", "LARGE", "2LARGE", "4LARGE", "5LARGE"}, false),
 			},
 			"instance": &schema.Schema{
 				Description: "Juniper SSR Connector Instances",
@@ -170,7 +167,6 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 }
 
 func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorJuniperSdwan(m.(*alkira.AlkiraClient))
@@ -212,7 +208,6 @@ func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorJuniperSdwan(m.(*alkira.AlkiraClient))
@@ -256,7 +251,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 		mappings = append(mappings, mapping)
 	}
 
-	d.Set("target_segment", mappings)
+	d.Set("juniper_ssr_vrf_mapping", mappings)
 
 	// Set provision state
 	if client.Provision == true && provState != "" {
@@ -322,7 +317,6 @@ func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.Resource
 			Detail:   fmt.Sprintf("%s", provErr),
 		}}
 	}
-
 	return nil
 }
 

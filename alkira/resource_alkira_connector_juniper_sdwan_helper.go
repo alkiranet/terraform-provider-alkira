@@ -74,11 +74,11 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 	d.Set("instance", instances)
 }
 
-// expandJuniperSdwanVrfMappings expand Juniper SDWAN VRF segment mapping
+// expandJuniperSdwanVrfMappings expand Juniper SD-WAN VRF Mapping
 func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrVrfMapping {
 
 	if in == nil || in.Len() == 0 {
-		log.Printf("[DEBUG] Empty target_segment")
+		log.Printf("[DEBUG] Empty SSR Vrf Mapping")
 		return []alkira.ConnectorJuniperSsrVrfMapping{}
 	}
 
@@ -104,7 +104,7 @@ func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrV
 	return mappings
 }
 
-// expandJuniperSdwanWanInstances expand Juniper SDWAN Instances
+// expandJuniperSdwanWanInstances expand Juniper SD-WAN Instances
 func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.ConnectorJuniperSdwanInstance, error) {
 
 	if in == nil || len(in) == 0 {
@@ -137,7 +137,7 @@ func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]a
 		}
 		if v, ok := t["credential_id"].(string); ok {
 			if v == "" {
-				log.Printf("[DEBUG] Creating Juniper SDWAN instance credential")
+				log.Printf("[DEBUG] Creating Juniper SD-WAN instance credential")
 				credentialName := r.HostName + randomNameSuffix()
 
 				credential := alkira.CredentialUserNamePassword{
@@ -163,7 +163,7 @@ func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]a
 		}
 		if v, ok := t["registration_key_credential_id"].(string); ok {
 			if v == "" {
-				log.Printf("[DEBUG] Creating Juniper SDWAN instance registration key credential")
+				log.Printf("[DEBUG] Creating Juniper SD-WAN instance registration key credential")
 				credentialName := r.HostName + randomNameSuffix()
 
 				credential := alkira.CredentialApiKey{

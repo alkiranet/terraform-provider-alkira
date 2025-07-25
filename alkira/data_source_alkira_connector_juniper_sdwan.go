@@ -7,13 +7,13 @@ import (
 
 func dataSourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 	return &schema.Resource{
-		Description: "Use this data source to get an existing Juniper Sdwan connector.",
+		Description: "Use this data source to get an existing Juniper SD-WAN connector.",
 
 		Read: dataSourceAlkiraConnectorJuniperSdwanRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the Juniper Sdwan connector.",
+				Description: "The name of the Juniper SD-WAN connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
