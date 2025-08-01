@@ -86,6 +86,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 			"instance": &schema.Schema{
 				Description: "Juniper SSR Connector Instances",
 				Type:        schema.TypeList,
+				MinItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"credential_id": {
@@ -130,6 +131,8 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 			"juniper_ssr_vrf_mapping": {
 				Description: "Juniper SSR Vrf Mapping.",
 				Type:        schema.TypeSet,
+				MaxItems:    1,
+				MinItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advertise_on_prem_routes": {
