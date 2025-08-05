@@ -177,6 +177,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"auth_expiry": {
+							Description: "PAN Auth Expiry. The date should be in " +
+								"format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"credential_id": {
 							Description: "ID of PAN instance credential.",
 							Type:        schema.TypeString,
