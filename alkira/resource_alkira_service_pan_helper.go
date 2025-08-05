@@ -287,8 +287,9 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 		r := alkira.ServicePanInstance{}
 		instanceCfg := instance.(map[string]interface{})
 
-		var AuthCode string
-		var AuthKey string
+		var authCode string
+		var authKey string
+		var authExpiry int64
 
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
@@ -297,17 +298,28 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 			r.Name = v
 		}
 		if v, ok := instanceCfg["auth_code"].(string); ok {
-			AuthCode = v
+			authCode = v
 		}
 		if v, ok := instanceCfg["auth_key"].(string); ok {
-			AuthKey = v
+			authKey = v
+		}
+		if v, ok := instanceCfg["auth_expiry"].(string); ok {
+			if v != "" {
+				var err error
+				authExpiry, err = convertInputTimeToEpoch(v)
+
+				if err != nil {
+					log.Printf("[ERROR] failed to parse 'auth_expiry', %v", err)
+					return nil, err
+				}
+			}
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
 				credentialName := r.Name + randomNameSuffix()
 				credentialPanInstance := alkira.CredentialPanInstance{
-					AuthCode: AuthCode,
-					AuthKey:  AuthKey,
+					AuthCode: authCode,
+					AuthKey:  authKey,
 				}
 
 				log.Printf("[INFO] Creating PAN Instance Credential %s", credentialName)
@@ -315,7 +327,7 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 					credentialName,
 					alkira.CredentialTypePanInstance,
 					credentialPanInstance,
-					0,
+					authExpiry,
 				)
 
 				if err != nil {
@@ -420,12 +432,14 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		// locate the hidden credential from existing Terraform state
 		var authKey string
 		var authCode string
+		var authExpiry string
 
 		for _, value := range d.Get("instance").([]interface{}) {
 			cfg := value.(map[string]interface{})
 			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
 				authKey = cfg["auth_key"].(string)
 				authCode = cfg["auth_code"].(string)
+				authExpiry = cfg["auth_expiry"].(string)
 			}
 		}
 
@@ -434,6 +448,7 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 			"id":             ins.Id,
 			"auth_key":       authKey,
 			"auth_code":      authCode,
+			"auth_expiry":    authExpiry,
 			"credential_id":  ins.CredentialId,
 			"enable_traffic": ins.TrafficEnabled,
 		}
