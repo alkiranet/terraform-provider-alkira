@@ -8,7 +8,6 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
@@ -125,12 +124,6 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL",
-					"MEDIUM",
-					"LARGE",
-					"2LARGE",
-					"5LARGE"}, false),
 			},
 			"segment_id": {
 				Description: "The ID of segments associated with the connector. " +

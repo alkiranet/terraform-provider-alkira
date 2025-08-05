@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
@@ -83,9 +82,6 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SMALL", "MEDIUM",
-					"LARGE", "2LARGE"}, false),
 			},
 			"tunnel_protocol": {
 				Description: "Only supported tunnel protocol is `IPSEC` for now.",
