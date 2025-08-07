@@ -368,15 +368,6 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{
-						"SMALL",
-						"MEDIUM",
-						"LARGE",
-						"2LARGE",
-						"5LARGE",
-						"10LARGE",
-					}, false),
 			},
 			"vpn_mode": &schema.Schema{
 				Description: "The mode can be configured either as `ROUTE_BASED` " +
