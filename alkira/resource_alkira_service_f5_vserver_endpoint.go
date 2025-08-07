@@ -178,6 +178,10 @@ func resourceF5vServerEndpointUpdate(ctx context.Context, d *schema.ResourceData
 
 	provState, err, provErr := api.Update(d.Id(), request)
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	if client.Provision == true {
 		d.Set("provision_state", provState)
 		if provState == "FAILED" {
