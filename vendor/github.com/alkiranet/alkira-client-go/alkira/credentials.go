@@ -37,6 +37,8 @@ const (
 	CredentialTypeVmwareSdwanInstance      CredentialType = "vmware-sdwan-connector-instance"
 	CredentialTypeF5Instance               CredentialType = "f5-lb-instance"
 	CredentialTypeF5InstanceRegistration   CredentialType = "f5-lb-registration"
+	CredentialTypeUserNamePassword         CredentialType = "username-password"
+	CredentialTypeApiKey                   CredentialType = "api-key"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -207,6 +209,15 @@ type CredentialResponseDetail struct {
 	Type    string `json:"credentialType"`
 	Name    string `json:"name"`
 	SubType string `json:"subType"`
+}
+
+type CredentialUserNamePassword struct {
+	Password string `json:"password"`
+	Username string `json:"userName"`
+}
+
+type CredentialApiKey struct {
+	ApiKey string `json:"apiKey"`
 }
 
 // CreateCredential create new credential
