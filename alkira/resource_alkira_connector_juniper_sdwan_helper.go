@@ -23,11 +23,8 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 		for _, info := range connector.Instances {
 			if config["id"].(int) == info.Id || config["hostname"].(string) == info.HostName {
 				instance := map[string]interface{}{
-					"credential_id":                  info.CredentialId,
 					"hostname":                       info.HostName,
 					"id":                             info.Id,
-					"username":                       info.UserName,
-					"password":                       config["password"].(string),
 					"registration_key":               config["registration_key"].(string),
 					"registration_key_credential_id": info.RegistrationKeyCredentialId,
 				}
@@ -59,10 +56,8 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 		// this will generate a diff
 		if new {
 			instance := map[string]interface{}{
-				"credential_id":                  info.CredentialId,
 				"hostname":                       info.HostName,
 				"id":                             info.Id,
-				"username":                       info.UserName,
 				"registration_key_credential_id": info.RegistrationKeyCredentialId,
 			}
 
@@ -118,48 +113,13 @@ func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]a
 		r := alkira.ConnectorJuniperSdwanInstance{}
 		t := mapping.(map[string]interface{})
 
-		var username string
-		var password string
 		var registrationKey string
 
 		if v, ok := t["hostname"].(string); ok {
 			r.HostName = v
 		}
-		if v, ok := t["username"].(string); ok {
-			username = v
-			r.UserName = v
-		}
-		if v, ok := t["password"].(string); ok {
-			password = v
-		}
 		if v, ok := t["registration_key"].(string); ok {
 			registrationKey = v
-		}
-		if v, ok := t["credential_id"].(string); ok {
-			if v == "" {
-				log.Printf("[DEBUG] Creating Juniper SD-WAN instance credential")
-				credentialName := r.HostName + randomNameSuffix()
-
-				credential := alkira.CredentialUserNamePassword{
-					Username: username,
-					Password: password,
-				}
-
-				credentialId, err := ac.CreateCredential(
-					credentialName,
-					alkira.CredentialTypeUserNamePassword,
-					credential,
-					0,
-				)
-
-				if err != nil {
-					return nil, err
-				}
-
-				r.CredentialId = credentialId
-			} else {
-				r.CredentialId = v
-			}
 		}
 		if v, ok := t["registration_key_credential_id"].(string); ok {
 			if v == "" {
@@ -170,7 +130,7 @@ func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]a
 					ApiKey: registrationKey,
 				}
 
-				credentialId, err := ac.CreateCredential(
+				credentialId, err := ac.CreateSingleUseCredential(
 					credentialName,
 					alkira.CredentialTypeApiKey,
 					credential,

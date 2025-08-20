@@ -89,21 +89,6 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				MinItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"credential_id": {
-							Description: "The generated username password credential ID.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"username": {
-							Description: "The username of the Juniper instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"password": {
-							Description: "The password of the Juniper instance.",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
 						"registration_key": {
 							Description: "The registration key of the Juniper instance.",
 							Type:        schema.TypeString,
@@ -186,7 +171,6 @@ func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.Resource
 
 	if err != nil {
 		for _, instance := range request.Instances {
-			client.DeleteCredential(instance.CredentialId, alkira.CredentialTypeUserNamePassword)
 			client.DeleteCredential(instance.RegistrationKeyCredentialId, alkira.CredentialTypeApiKey)
 		}
 		return diag.FromErr(err)

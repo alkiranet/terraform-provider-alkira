@@ -16,10 +16,8 @@ type ConnectorJuniperSsrVrfMapping struct {
 }
 
 type ConnectorJuniperSdwanInstance struct {
-	CredentialId                string `json:"credentialId"`
 	RegistrationKeyCredentialId string `json:"registrationKeyCredentialId"`
 	HostName                    string `json:"hostName"`
-	UserName                    string `json:"userName"`
 	Id                          int    `json:"id,omitempty"`
 }
 
