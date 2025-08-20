@@ -34,6 +34,7 @@ type ConnectorJuniperSdwan struct {
 	Size                  string                          `json:"size"`
 	TunnelProtocol        string                          `json:"tunnelProtocol"`
 	Version               string                          `json:"version"`
+	AvailabilityZone      int                             `json:"availabilityZone"`
 	Description           string                          `json:"description,omitempty"`
 }
 

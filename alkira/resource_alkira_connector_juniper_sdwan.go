@@ -77,6 +77,12 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"availability_zone": {
+				Description: "The ID of implicit group automaticaly created " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Required: true,
+			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.",
@@ -220,6 +226,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("enabled", connector.Enabled)
 	d.Set("description", connector.Description)
+	d.Set("availability_zone", connector.AvailabilityZone)
 
 	// Set Juniper instances
 	setJuniperInstances(d, connector)
@@ -330,6 +337,7 @@ func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m interface{})
 		TunnelProtocol:        "GRE",
 		Enabled:               d.Get("enabled").(bool),
 		Description:           d.Get("description").(string),
+		AvailabilityZone:      d.Get("availability_zone").(int),
 	}
 
 	return connector, nil
