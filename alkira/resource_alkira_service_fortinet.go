@@ -278,13 +278,30 @@ func resourceFortinetCreate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
+
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceFortinetRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	// Set provision state
 	if client.Provision == true {
@@ -386,10 +403,27 @@ func resourceFortinetUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceFortinetRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	// Set provision state
@@ -413,7 +447,7 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -421,6 +455,15 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId("")
 
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	// Check provision state
 	if client.Provision == true && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,

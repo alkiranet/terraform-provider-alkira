@@ -42,13 +42,32 @@ func resourceGroupUser(ctx context.Context, d *schema.ResourceData, m interface{
 		Description: d.Get("description").(string),
 	}
 
-	resource, _, err, _ := api.Create(group)
+	resource, _, err, valErr, _ := api.Create(group)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
+
+	// Handle validation error
+	client := m.(*alkira.AlkiraClient)
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceGroupUserRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	return resourceGroupUserRead(ctx, d, m)
 }
@@ -81,10 +100,29 @@ func resourceGroupUserUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	log.Printf("[INFO] Updating User Group (%s)", d.Id())
-	_, err, _ := api.Update(d.Id(), group)
+	_, err, valErr, _ := api.Update(d.Id(), group)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	client := m.(*alkira.AlkiraClient)
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceGroupUserRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	return nil
@@ -93,10 +131,20 @@ func resourceGroupUserUpdate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceGroupUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewUserGroup(m.(*alkira.AlkiraClient))
 
-	_, err, _ := api.Delete(d.Id())
+	_, err, valErr, _ := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	client := m.(*alkira.AlkiraClient)
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
 	}
 
 	d.SetId("")

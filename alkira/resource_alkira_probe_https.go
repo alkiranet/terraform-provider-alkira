@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -132,9 +133,28 @@ func resourceProbeHTTPSCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	response, _, err, _ := api.Create(probe)
+	response, _, err, valErr, _ := api.Create(probe)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve any successfully created state
+		readDiags := resourceProbeHTTPSRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	d.SetId(response.ID)
@@ -175,9 +195,28 @@ func resourceProbeHTTPSUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	_, err, _ = api.Update(d.Id(), probe)
+	_, err, valErr, _ := api.Update(d.Id(), probe)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve current state
+		readDiags := resourceProbeHTTPSRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	return resourceProbeHTTPSRead(ctx, d, m)
@@ -187,9 +226,18 @@ func resourceProbeHTTPSDelete(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewProbe(client)
 
-	_, err, _ := api.Delete(d.Id())
+	_, err, valErr, _ := api.Delete(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
 	}
 
 	d.SetId("")

@@ -295,13 +295,31 @@ func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.Res
 	}
 
 	// CREATE
-	resource, provState, err, provErr := api.Create(request)
+	resource, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorAzureExpressRouteRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	if client.Provision == true {
 		d.Set("provision_state", provState)
@@ -400,10 +418,28 @@ func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.Res
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), connector)
+	provState, err, valErr, provErr := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorAzureExpressRouteRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	// Set provision state
@@ -429,13 +465,22 @@ func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.Res
 	api := alkira.NewConnectorAzureExpressRoute(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete((d.Id()))
+	provState, err, valErr, provErr := api.Delete((d.Id()))
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
 
 	if client.Provision == true && provState != "SUCCESS" {
 		return diag.Diagnostics{{

@@ -78,7 +78,7 @@ func resourceAlkiraPeeringGatewayCxpCreate(ctx context.Context, d *schema.Resour
 	}
 
 	// CREATE
-	response, _, err, _ := api.Create(request)
+	response, _, err, _, _ := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -154,7 +154,7 @@ func resourceAlkiraPeeringGatewayCxpUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	// UPDATE
-	_, err, _ = api.Update(d.Id(), request)
+	_, err, _, _ = api.Update(d.Id(), request)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -167,7 +167,7 @@ func resourceAlkiraPeeringGatewayCxpDelete(ctx context.Context, d *schema.Resour
 	api := alkira.NewPeeringGatewayCxp(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	_, err, _ := api.Delete(d.Id())
+	_, err, _, _ := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
