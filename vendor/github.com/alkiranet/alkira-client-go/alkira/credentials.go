@@ -197,7 +197,7 @@ type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
 	Expires     int64       `json:"expires,omitempty"`
-	IsSingleUse bool        `json:"isSingleUse,omitempty"`
+	SingleUse   bool        `json:"singleUse,omitempty"`
 }
 
 type CredentialResponse struct {
@@ -242,7 +242,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 	return result.Id, nil
 }
 
-// CreateCredential create new credential
+// CreateSingleUseCredential create new single use credential
 func (ac *AlkiraClient) CreateSingleUseCredential(name string, ctype CredentialType, credential interface{}, expires int64) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
 
@@ -251,7 +251,7 @@ func (ac *AlkiraClient) CreateSingleUseCredential(name string, ctype CredentialT
 		Name:        name,
 		Credentials: credential,
 		Expires:     expires,
-		IsSingleUse: true,
+		SingleUse:   true,
 	})
 
 	if err != nil {
