@@ -160,12 +160,13 @@ func TestAlkiraGroup_apiClientCRUD(t *testing.T) {
 		client := serveGroupMockServer(t, mockGroup, http.StatusCreated)
 
 		api := alkira.NewGroup(client)
-		response, provState, err, provErr := api.Create(mockGroup)
+		response, provState, err, valErr, provErr := api.Create(mockGroup)
 
 		assert.NoError(t, err)
 		assert.Equal(t, groupName, response.Name)
 		assert.Equal(t, groupDescription, response.Description)
-		// provErr can be nil or error depending on provisioning setup
+		// valErr and provErr can be nil or error depending on provisioning setup
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -196,10 +197,11 @@ func TestAlkiraGroup_apiClientCRUD(t *testing.T) {
 		client := serveGroupMockServer(t, updatedGroup, http.StatusOK)
 
 		api := alkira.NewGroup(client)
-		provState, err, provErr := api.Update("123", updatedGroup)
+		provState, err, valErr, provErr := api.Update("123", updatedGroup)
 
 		assert.NoError(t, err)
-		// provErr can be nil or error depending on provisioning setup
+		// valErr and provErr can be nil or error depending on provisioning setup
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -210,10 +212,11 @@ func TestAlkiraGroup_apiClientCRUD(t *testing.T) {
 		client := serveGroupMockServer(t, nil, http.StatusNoContent)
 
 		api := alkira.NewGroup(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
-		// provErr can be nil or error depending on provisioning setup
+		// valErr and provErr can be nil or error depending on provisioning setup
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -236,7 +239,7 @@ func TestAlkiraGroup_apiErrorHandling(t *testing.T) {
 		client := serveGroupMockServer(t, nil, http.StatusInternalServerError)
 
 		api := alkira.NewGroup(client)
-		_, _, _, _ = api.Create(&alkira.Group{
+		_, _, _, _, _ = api.Create(&alkira.Group{
 			Name:        "test-group",
 			Description: "test",
 		})

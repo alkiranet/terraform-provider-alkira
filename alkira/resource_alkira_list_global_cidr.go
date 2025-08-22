@@ -81,13 +81,31 @@ func resourceListGlobalCidr(ctx context.Context, d *schema.ResourceData, m inter
 	request := generateListGlobalCidrRequest(d, m)
 
 	// Send request
-	resource, provState, err, provErr := api.Create(request)
+	resource, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(resource.Id))
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListGlobalCidrRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	// Set provision state
 	if client.Provision == true {
@@ -143,10 +161,28 @@ func resourceListGlobalCidrUpdate(ctx context.Context, d *schema.ResourceData, m
 	request := generateListGlobalCidrRequest(d, m)
 
 	// Send request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListGlobalCidrRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	// Set provision state
@@ -170,10 +206,19 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
 	}
 
 	d.SetId("")

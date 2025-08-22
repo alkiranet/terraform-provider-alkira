@@ -262,13 +262,14 @@ func TestAlkiraByoipPrefix_apiClientCRUD(t *testing.T) {
 		client := serveByoipPrefixMockServer(t, mockByoipPrefix, http.StatusCreated)
 
 		api := alkira.NewByoip(client)
-		response, provState, err, provErr := api.Create(mockByoipPrefix)
+		response, provState, err, valErr, provErr := api.Create(mockByoipPrefix)
 
 		assert.NoError(t, err)
 		assert.Equal(t, byoipPrefixDescription, response.Description)
 		assert.Equal(t, prefix, response.Prefix)
 		assert.Equal(t, cxp, response.Cxp)
 		assert.Equal(t, "AWS", response.CloudProvider)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -308,9 +309,10 @@ func TestAlkiraByoipPrefix_apiClientCRUD(t *testing.T) {
 		client := serveByoipPrefixMockServer(t, updatedByoipPrefix, http.StatusOK)
 
 		api := alkira.NewByoip(client)
-		provState, err, provErr := api.Update("123", updatedByoipPrefix)
+		provState, err, valErr, provErr := api.Update("123", updatedByoipPrefix)
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -321,9 +323,10 @@ func TestAlkiraByoipPrefix_apiClientCRUD(t *testing.T) {
 		client := serveByoipPrefixMockServer(t, nil, http.StatusNoContent)
 
 		api := alkira.NewByoip(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -346,7 +349,7 @@ func TestAlkiraByoipPrefix_apiErrorHandling(t *testing.T) {
 		client := serveByoipPrefixMockServer(t, nil, http.StatusInternalServerError)
 
 		api := alkira.NewByoip(client)
-		_, _, _, _ = api.Create(&alkira.Byoip{
+		_, _, _, _, _ = api.Create(&alkira.Byoip{
 			Description:   "test",
 			Prefix:        "203.0.113.0/24",
 			Cxp:           "US-WEST",

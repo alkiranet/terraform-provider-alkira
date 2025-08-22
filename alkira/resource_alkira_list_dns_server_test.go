@@ -175,13 +175,14 @@ func TestAlkiraListDnsServer_apiClientCRUD(t *testing.T) {
 		client := serveListDnsServerMockServer(t, mockDnsServerList, http.StatusCreated)
 
 		api := alkira.NewDnsServerList(client)
-		response, provState, err, provErr := api.Create(mockDnsServerList)
+		response, provState, err, valErr, provErr := api.Create(mockDnsServerList)
 
 		assert.NoError(t, err)
 		assert.Equal(t, dnsListName, response.Name)
 		assert.Equal(t, dnsListDescription, response.Description)
 		assert.Equal(t, segmentId, response.Segment)
 		assert.Equal(t, dnsServerIps, response.DnsServerIps)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -216,9 +217,10 @@ func TestAlkiraListDnsServer_apiClientCRUD(t *testing.T) {
 		client := serveListDnsServerMockServer(t, updatedDnsList, http.StatusOK)
 
 		api := alkira.NewDnsServerList(client)
-		provState, err, provErr := api.Update("123", updatedDnsList)
+		provState, err, valErr, provErr := api.Update("123", updatedDnsList)
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -229,9 +231,10 @@ func TestAlkiraListDnsServer_apiClientCRUD(t *testing.T) {
 		client := serveListDnsServerMockServer(t, nil, http.StatusNoContent)
 
 		api := alkira.NewDnsServerList(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -254,7 +257,7 @@ func TestAlkiraListDnsServer_apiErrorHandling(t *testing.T) {
 		client := serveListDnsServerMockServer(t, nil, http.StatusInternalServerError)
 
 		api := alkira.NewDnsServerList(client)
-		_, _, _, _ = api.Create(&alkira.DnsServerList{
+		_, _, _, _, _ = api.Create(&alkira.DnsServerList{
 			Name:         "test-dns-list",
 			Segment:      "seg-123",
 			DnsServerIps: []string{"8.8.8.8"},

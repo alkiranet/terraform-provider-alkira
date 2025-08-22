@@ -297,7 +297,7 @@ func resourcePolicyRouting(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -314,6 +314,25 @@ func resourcePolicyRouting(ctx context.Context, d *schema.ResourceData, m interf
 				Detail:   fmt.Sprintf("%s", provErr),
 			}}
 		}
+	}
+
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve any successfully created state
+		readDiags := resourcePolicyRoutingRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	d.SetId(string(response.Id))
@@ -396,7 +415,7 @@ func resourcePolicyRoutingUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -415,6 +434,25 @@ func resourcePolicyRoutingUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve current state
+		readDiags := resourcePolicyRoutingRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	return resourcePolicyRoutingRead(ctx, d, m)
 }
 
@@ -423,10 +461,19 @@ func resourcePolicyRoutingDelete(ctx context.Context, d *schema.ResourceData, m 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewRoutePolicy(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
 	}
 
 	if client.Provision == true && provState != "SUCCESS" {
