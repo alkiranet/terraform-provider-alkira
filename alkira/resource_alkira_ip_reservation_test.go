@@ -250,13 +250,14 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 		client := createMockAlkiraClient(t, createIpReservationMockHandler(mockIpReservation, http.StatusCreated))
 
 		api := alkira.NewIPReservation(client)
-		response, provState, err, provErr := api.Create(mockIpReservation)
+		response, provState, err, valErr, provErr := api.Create(mockIpReservation)
 
 		assert.NoError(t, err)
 		assert.Equal(t, ipReservationName, response.Name)
 		assert.Equal(t, ipReservationType, response.Type)
 		assert.Equal(t, ipCidr, response.Prefix)
 		assert.Equal(t, segmentId, response.Segment)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -291,9 +292,10 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 		client := createMockAlkiraClient(t, createIpReservationMockHandler(updatedIpReservation, http.StatusOK))
 
 		api := alkira.NewIPReservation(client)
-		provState, err, provErr := api.Update("123", updatedIpReservation)
+		provState, err, valErr, provErr := api.Update("123", updatedIpReservation)
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -304,9 +306,10 @@ func TestAlkiraIpReservation_apiClientCRUD(t *testing.T) {
 		client := createMockAlkiraClient(t, createIpReservationMockHandler(nil, http.StatusNoContent))
 
 		api := alkira.NewIPReservation(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -329,7 +332,7 @@ func TestAlkiraIpReservation_apiErrorHandling(t *testing.T) {
 		client := createMockAlkiraClient(t, createIpReservationMockHandler(nil, http.StatusInternalServerError))
 
 		api := alkira.NewIPReservation(client)
-		_, _, _, _ = api.Create(&alkira.IPReservation{
+		_, _, _, _, _ = api.Create(&alkira.IPReservation{
 			Name:    "test-ip-reservation",
 			Type:    "OVERLAY",
 			Prefix:  "10.1.0.0/24",

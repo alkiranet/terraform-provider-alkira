@@ -211,7 +211,7 @@ func resourceConnectorVersaSdwanCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// CREATE
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -219,6 +219,24 @@ func resourceConnectorVersaSdwanCreate(ctx context.Context, d *schema.ResourceDa
 
 	// Set states
 	d.SetId(string(response.Id))
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorVersaSdwanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	if client.Provision == true {
 		d.Set("provision_state", provState)
@@ -306,10 +324,28 @@ func resourceConnectorVersaSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorVersaSdwanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
 	}
 
 	// Set provision state
@@ -335,10 +371,19 @@ func resourceConnectorVersaSdwanDelete(ctx context.Context, d *schema.ResourceDa
 	api := alkira.NewConnectorVersaSdwan(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
 	}
 
 	if client.Provision == true && provState != "SUCCESS" {

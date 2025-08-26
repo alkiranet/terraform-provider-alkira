@@ -37,6 +37,8 @@ const (
 	CredentialTypeVmwareSdwanInstance      CredentialType = "vmware-sdwan-connector-instance"
 	CredentialTypeF5Instance               CredentialType = "f5-lb-instance"
 	CredentialTypeF5InstanceRegistration   CredentialType = "f5-lb-registration"
+	CredentialTypeUserNamePassword         CredentialType = "username-password"
+	CredentialTypeApiKey                   CredentialType = "api-key"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -209,6 +211,15 @@ type CredentialResponseDetail struct {
 	SubType string `json:"subType"`
 }
 
+type CredentialUserNamePassword struct {
+	Password string `json:"password"`
+	Username string `json:"userName"`
+}
+
+type CredentialApiKey struct {
+	ApiKey string `json:"apiKey"`
+}
+
 // CreateCredential create new credential
 func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, credential interface{}, expires int64) (string, error) {
 	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
@@ -224,7 +235,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
-	data, _, err, _ := ac.create(uri, body, false)
+	data, _, err, _, _ := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -239,7 +250,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 // DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
-	_, err, _ := ac.delete(uri, false)
+	_, err, _, _ := ac.delete(uri, false)
 	return err
 }
 
@@ -262,7 +273,7 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
-	_, err, _ = ac.update(uri, body, false)
+	_, err, _, _ = ac.update(uri, body, false)
 
 	return err
 }
