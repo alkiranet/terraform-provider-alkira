@@ -65,7 +65,7 @@ func resourceBillingTag(ctx context.Context, d *schema.ResourceData, m interface
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (CREATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})
@@ -125,7 +125,7 @@ func resourceBillingTagUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (UPDATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})

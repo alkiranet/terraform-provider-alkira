@@ -98,7 +98,7 @@ func resourcePolicyRuleList(ctx context.Context, d *schema.ResourceData, m inter
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (CREATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})
@@ -178,7 +178,7 @@ func resourcePolicyRuleListUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (UPDATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})
@@ -216,7 +216,7 @@ func resourcePolicyRuleListDelete(ctx context.Context, d *schema.ResourceData, m
 	// Handle validation error
 	if client.Validate && valErr != nil {
 		return diag.Diagnostics{{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (DELETE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		}}

@@ -211,7 +211,7 @@ func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.Resour
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (CREATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})
@@ -322,7 +322,7 @@ func resourceConnectorAkamaiProlexicUpdate(ctx context.Context, d *schema.Resour
 
 		// Add the validation error
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (UPDATE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		})
@@ -362,7 +362,7 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	// Handle validation error
 	if client.Validate && valErr != nil {
 		return diag.Diagnostics{{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "VALIDATION (DELETE) FAILED",
 			Detail:   fmt.Sprintf("%s", valErr),
 		}}
