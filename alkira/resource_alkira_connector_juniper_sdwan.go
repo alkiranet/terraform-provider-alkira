@@ -56,7 +56,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"version": {
+			"juniper_ssr_version": {
 				Description: "The Juniper SSR Version.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -258,7 +258,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("cxp", connector.Cxp)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
-	d.Set("version", connector.Version)
+	d.Set("juniper_ssr_version", connector.Version)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
@@ -367,7 +367,7 @@ func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m any) (*alkir
 		BillingTags:           convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Instances:             instances,
 		JuniperSsrVrfMappings: expandJuniperSdwanVrfMappings(d.Get("juniper_ssr_vrf_mapping").(*schema.Set)),
-		Version:               d.Get("version").(string),
+		Version:               d.Get("juniper_ssr_version").(string),
 		Cxp:                   d.Get("cxp").(string),
 		Group:                 d.Get("group").(string),
 		Name:                  d.Get("name").(string),

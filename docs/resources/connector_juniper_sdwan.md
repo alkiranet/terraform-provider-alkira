@@ -17,7 +17,7 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
   name    = "test"
   cxp     = "US-EAST"
   size    = "SMALL"
-  version = "6.3.4"
+  juniper_ssr_version = "6.3.4"
   group   = alkira_group.test.name
   availability_zone = 0
 
@@ -40,10 +40,10 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 - `availability_zone` (Number) Availability zone of the Juniper instance(s)
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `instance` (Block List, Min: 1) Juniper SSR Connector Instances (see [below for nested schema](#nestedblock--instance))
+- `juniper_ssr_version` (String) The Juniper SSR Version.
 - `juniper_ssr_vrf_mapping` (Block Set, Min: 1, Max: 1) Juniper SSR Vrf Mapping. (see [below for nested schema](#nestedblock--juniper_ssr_vrf_mapping))
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.
-- `version` (String) The Juniper SSR Version.
 
 ### Optional
 
