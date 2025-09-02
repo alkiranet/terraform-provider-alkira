@@ -3,12 +3,12 @@
 page_title: "alkira_connector_juniper_sdwan Data Source - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Use this data source to get an existing Juniper Sdwan connector.
+  Use this data source to get an existing Juniper SD-WAN connector.
 ---
 
 # alkira_connector_juniper_sdwan (Data Source)
 
-Use this data source to get an existing Juniper Sdwan connector.
+Use this data source to get an existing Juniper SD-WAN connector.
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ data "alkira_connector_juniper_sdwan" "test" {
 
 ### Required
 
-- `name` (String) The name of the Juniper Sdwan connector.
+- `name` (String) The name of the Juniper SD-WAN connector.
 
 ### Read-Only
 

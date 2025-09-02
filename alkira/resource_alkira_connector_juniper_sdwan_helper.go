@@ -8,7 +8,7 @@ import (
 )
 
 func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuniperSdwan) {
-	var instances []map[string]interface{}
+	var instances []map[string]any
 
 	//
 	// Go through all blocks from the config firstly to find a match,
@@ -17,12 +17,12 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 	// On the first read call at the end of the create call, Terraform
 	// didn't track any block IDs yet.
 	//
-	for _, instance := range d.Get("instance").([]interface{}) {
-		config := instance.(map[string]interface{})
+	for _, instance := range d.Get("instance").([]any) {
+		config := instance.(map[string]any)
 
 		for _, info := range connector.Instances {
 			if config["id"].(int) == info.Id || config["hostname"].(string) == info.HostName {
-				instance := map[string]interface{}{
+				instance := map[string]any{
 					"hostname":                       info.HostName,
 					"id":                             info.Id,
 					"registration_key":               config["registration_key"].(string),
@@ -43,8 +43,8 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 		new := true
 
 		// Check if the instance already exists in the Terraform config
-		for _, instance := range d.Get("instance").([]interface{}) {
-			config := instance.(map[string]interface{})
+		for _, instance := range d.Get("instance").([]any) {
+			config := instance.(map[string]any)
 
 			if config["id"].(int) == info.Id || config["hostname"].(string) == info.HostName {
 				new = false
@@ -55,7 +55,7 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 		// If the instance is new, add it to the tail of the list,
 		// this will generate a diff
 		if new {
-			instance := map[string]interface{}{
+			instance := map[string]any{
 				"hostname":                       info.HostName,
 				"id":                             info.Id,
 				"registration_key_credential_id": info.RegistrationKeyCredentialId,
@@ -72,7 +72,7 @@ func setJuniperInstances(d *schema.ResourceData, connector *alkira.ConnectorJuni
 // expandJuniperSdwanVrfMappings expand Juniper SD-WAN VRF Mapping
 func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrVrfMapping {
 
-	if in == nil || in.Len() == 0 {
+	if in.Len() == 0 {
 		log.Printf("[DEBUG] Empty SSR Vrf Mapping")
 		return []alkira.ConnectorJuniperSsrVrfMapping{}
 	}
@@ -80,7 +80,7 @@ func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrV
 	mappings := make([]alkira.ConnectorJuniperSsrVrfMapping, in.Len())
 	for i, mapping := range in.List() {
 		r := alkira.ConnectorJuniperSsrVrfMapping{}
-		t := mapping.(map[string]interface{})
+		t := mapping.(map[string]any)
 
 		if v, ok := t["advertise_on_prem_routes"].(bool); ok {
 			r.AdvertiseOnPremRoutes = v
@@ -91,8 +91,12 @@ func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrV
 		if v, ok := t["segment_id"].(int); ok {
 			r.SegmentId = v
 		}
-		r.JuniperSsrBgpAsn = 65000
-		r.JuniperSsrVrfName = "default"
+		if v, ok := t["juniper_ssr_bgp_asn"].(int); ok {
+			r.JuniperSsrBgpAsn = v
+		}
+		if v, ok := t["juniper_ssr_vrf_name"].(string); ok {
+			r.JuniperSsrVrfName = v
+		}
 		mappings[i] = r
 	}
 
@@ -100,9 +104,9 @@ func expandJuniperSdwanVrfMappings(in *schema.Set) []alkira.ConnectorJuniperSsrV
 }
 
 // expandJuniperSdwanWanInstances expand Juniper SD-WAN Instances
-func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.ConnectorJuniperSdwanInstance, error) {
+func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []any) ([]alkira.ConnectorJuniperSdwanInstance, error) {
 
-	if in == nil || len(in) == 0 {
+	if len(in) == 0 {
 		log.Printf("[DEBUG] Empty instance")
 		return []alkira.ConnectorJuniperSdwanInstance{}, nil
 	}
@@ -111,7 +115,7 @@ func expandJuniperSdwanInstances(ac *alkira.AlkiraClient, in []interface{}) ([]a
 
 	for i, mapping := range in {
 		r := alkira.ConnectorJuniperSdwanInstance{}
-		t := mapping.(map[string]interface{})
+		t := mapping.(map[string]any)
 
 		var registrationKey string
 

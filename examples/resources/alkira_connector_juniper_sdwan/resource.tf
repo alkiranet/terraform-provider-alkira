@@ -4,11 +4,10 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
   size    = "SMALL"
   version = "6.3.4"
   group   = alkira_group.test.name
+  availability_zone = 0
 
   instance {
     hostname          = "host"
-    username          = "user"
-    password          = "password"
     registration_key  = "registrationKey"
   }
   

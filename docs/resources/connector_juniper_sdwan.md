@@ -19,11 +19,10 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
   size    = "SMALL"
   version = "6.3.4"
   group   = alkira_group.test.name
+  availability_zone = 0
 
   instance {
     hostname          = "host"
-    username          = "user"
-    password          = "password"
     registration_key  = "registrationKey"
   }
   
@@ -38,9 +37,10 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 
 ### Required
 
+- `availability_zone` (Number) Availability zone of the Juniper instance(s)
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `instance` (Block List, Min: 1) Juniper SSR Connector Instances (see [below for nested schema](#nestedblock--instance))
-- `juniper_ssr_vrf_mapping` (Block Set, Min: 1) Juniper SSR Vrf Mapping. (see [below for nested schema](#nestedblock--juniper_ssr_vrf_mapping))
+- `juniper_ssr_vrf_mapping` (Block Set, Min: 1, Max: 1) Juniper SSR Vrf Mapping. (see [below for nested schema](#nestedblock--juniper_ssr_vrf_mapping))
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.
 - `version` (String) The Juniper SSR Version.
@@ -51,6 +51,7 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `tunnel_protocol` (String) The tunnel protocol used by the connector.  Only accepted protocol is 'GRE'
 
 ### Read-Only
 
@@ -64,13 +65,10 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 Required:
 
 - `hostname` (String) The hostname of the Juniper Instance.
-- `password` (String) The password of the Juniper instance.
 - `registration_key` (String) The registration key of the Juniper instance.
-- `username` (String) The username of the Juniper instance.
 
 Read-Only:
 
-- `credential_id` (String) The generated username password credential ID.
 - `id` (Number) The ID of the Juniper instance.
 - `registration_key_credential_id` (String) The generated registration key credential ID.
 
@@ -86,6 +84,8 @@ Optional:
 
 - `advertise_on_prem_routes` (Boolean) Whether advertising On Prem Routes. Default value is `false`.
 - `disable_internet_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default value is `false`
+- `juniper_ssr_bgp_asn` (Number) Gateway BGP ASN. Only accepts '65000'
+- `juniper_ssr_vrf_name` (String) Juniper VRF Name. Only accepts 'default'
 
 ## Import
 

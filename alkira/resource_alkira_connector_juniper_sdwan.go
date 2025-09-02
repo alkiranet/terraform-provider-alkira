@@ -17,7 +17,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 		ReadContext:   resourceConnectorJuniperSdwanRead,
 		UpdateContext: resourceConnectorJuniperSdwanUpdate,
 		DeleteContext: resourceConnectorJuniperSdwanDelete,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
 			client := m.(*alkira.AlkiraClient)
 
 			old, _ := d.GetChange("provision_state")
@@ -78,16 +78,28 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				Computed: true,
 			},
 			"availability_zone": {
-				Description: "The ID of implicit group automaticaly created " +
-					"with the connector.",
-				Type:     schema.TypeInt,
-				Required: true,
+				Description: "Availability zone of the Juniper instance(s)",
+				Type:        schema.TypeInt,
+				Required:    true,
 			},
 			"size": &schema.Schema{
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"tunnel_protocol": {
+				Description: "The tunnel protocol used by the connector.  Only accepted protocol is 'GRE'",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "GRE",
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "GRE" {
+						errs = append(errs, fmt.Errorf("%q must be GRE, got: %s", key, v))
+					}
+					return
+				},
 			},
 			"instance": &schema.Schema{
 				Description: "Juniper SSR Connector Instances",
@@ -146,6 +158,32 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
+						"juniper_ssr_bgp_asn": {
+							Description: "Gateway BGP ASN. Only accepts '65000'",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     65000,
+							ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+								v := val.(int)
+								if v != 65000 {
+									errs = append(errs, fmt.Errorf("%q must be 65000, got: %d", key, v))
+								}
+								return
+							},
+						},
+						"juniper_ssr_vrf_name": {
+							Description: "Juniper VRF Name. Only accepts 'default'",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "default",
+							ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+								v := val.(string)
+								if v != "default" {
+									errs = append(errs, fmt.Errorf("%q must be default, got: %s", key, v))
+								}
+								return
+							},
+						},
 					},
 				},
 				Required: true,
@@ -160,7 +198,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 	}
 }
 
-func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorJuniperSdwan(m.(*alkira.AlkiraClient))
@@ -200,7 +238,7 @@ func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.Resource
 	return resourceConnectorJuniperSdwanRead(ctx, d, m)
 }
 
-func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	// INIT
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorJuniperSdwan(m.(*alkira.AlkiraClient))
@@ -232,10 +270,10 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	setJuniperInstances(d, connector)
 
 	// Set VRF mapping
-	var mappings []map[string]interface{}
+	var mappings []map[string]any
 
 	for _, m := range connector.JuniperSsrVrfMappings {
-		mapping := map[string]interface{}{
+		mapping := map[string]any{
 			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
 			"disable_internet_exit":    m.DisableInternetExit,
 			"juniper_ssr_bgp_asn":      m.JuniperSsrBgpAsn,
@@ -255,7 +293,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceConnectorJuniperSdwanUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorJuniperSdwanUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)
@@ -289,7 +327,7 @@ func resourceConnectorJuniperSdwanUpdate(ctx context.Context, d *schema.Resource
 	return resourceConnectorJuniperSdwanRead(ctx, d, m)
 }
 
-func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 
 	// INIT
 	client := m.(*alkira.AlkiraClient)
@@ -315,10 +353,10 @@ func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.Resource
 }
 
 // generateConnectorJuniperSdwanRequest generate request for Juniper SD-WAN connector
-func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorJuniperSdwan, error) {
+func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m any) (*alkira.ConnectorJuniperSdwan, error) {
 
 	// Expand juniper instances
-	instances, err := expandJuniperSdwanInstances(m.(*alkira.AlkiraClient), d.Get("instance").([]interface{}))
+	instances, err := expandJuniperSdwanInstances(m.(*alkira.AlkiraClient), d.Get("instance").([]any))
 
 	if err != nil {
 		return nil, err
@@ -334,7 +372,7 @@ func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m interface{})
 		Group:                 d.Get("group").(string),
 		Name:                  d.Get("name").(string),
 		Size:                  d.Get("size").(string),
-		TunnelProtocol:        "GRE",
+		TunnelProtocol:        d.Get("tunnel_protocol").(string),
 		Enabled:               d.Get("enabled").(bool),
 		Description:           d.Get("description").(string),
 		AvailabilityZone:      d.Get("availability_zone").(int),
