@@ -1,0 +1,1 @@
+terraform import alkira_connector_juniper_sdwan.example CONNECTOR_ID
