@@ -207,7 +207,7 @@ func TestAlkiraFlowCollector_apiClientCRUD(t *testing.T) {
 		client := serveFlowCollectorMockServer(t, mockFlowCollector, http.StatusCreated)
 
 		api := alkira.NewFlowCollector(client)
-		response, provState, err, provErr := api.Create(mockFlowCollector)
+		response, provState, err, valErr, provErr := api.Create(mockFlowCollector)
 
 		assert.NoError(t, err)
 		assert.Equal(t, flowCollectorName, response.Name)
@@ -217,6 +217,7 @@ func TestAlkiraFlowCollector_apiClientCRUD(t *testing.T) {
 		assert.Equal(t, segment, response.Segment)
 		assert.Equal(t, destinationIp, response.DestinationIp)
 		assert.Equal(t, destinationPort, response.DestinationPort)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -257,9 +258,10 @@ func TestAlkiraFlowCollector_apiClientCRUD(t *testing.T) {
 		client := serveFlowCollectorMockServer(t, updatedFlowCollector, http.StatusOK)
 
 		api := alkira.NewFlowCollector(client)
-		provState, err, provErr := api.Update("123", updatedFlowCollector)
+		provState, err, valErr, provErr := api.Update("123", updatedFlowCollector)
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -270,9 +272,10 @@ func TestAlkiraFlowCollector_apiClientCRUD(t *testing.T) {
 		client := serveFlowCollectorMockServer(t, nil, http.StatusNoContent)
 
 		api := alkira.NewFlowCollector(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -295,7 +298,7 @@ func TestAlkiraFlowCollector_apiErrorHandling(t *testing.T) {
 		client := serveFlowCollectorMockServer(t, nil, http.StatusInternalServerError)
 
 		api := alkira.NewFlowCollector(client)
-		_, _, _, _ = api.Create(&alkira.FlowCollector{
+		_, _, _, _, _ = api.Create(&alkira.FlowCollector{
 			Name:            "test-flow-collector",
 			Description:     "test",
 			Enabled:         true,
