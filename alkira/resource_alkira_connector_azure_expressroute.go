@@ -80,6 +80,11 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"implicit_group_id": {
+				Description: "The implicit group ID associated with the connector.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -358,6 +363,7 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
 	d.Set("group", connector.Group)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	d.Set("enabled", connector.Enabled)
 	d.Set("name", connector.Name)
 	d.Set("description", connector.Description)

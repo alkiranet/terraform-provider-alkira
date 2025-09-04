@@ -198,6 +198,7 @@ type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
 	Expires     int64       `json:"expires,omitempty"`
+	SingleUse   bool        `json:"singleUse,omitempty"`
 }
 
 type CredentialResponse struct {
@@ -229,6 +230,34 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 		Name:        name,
 		Credentials: credential,
 		Expires:     expires,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
+	}
+
+	data, _, err, _, _ := ac.create(uri, body, false)
+
+	if err != nil {
+		return "", err
+	}
+
+	var result CredentialResponse
+	json.Unmarshal([]byte(data), &result)
+
+	return result.Id, nil
+}
+
+// CreateSingleUseCredential create new single use credential
+func (ac *AlkiraClient) CreateSingleUseCredential(name string, ctype CredentialType, credential interface{}, expires int64) (string, error) {
+	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
+
+	// This body is not the normal JSON format...
+	body, err := json.Marshal(Credentials{
+		Name:        name,
+		Credentials: credential,
+		Expires:     expires,
+		SingleUse:   true,
 	})
 
 	if err != nil {

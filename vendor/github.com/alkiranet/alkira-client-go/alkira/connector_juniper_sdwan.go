@@ -1,5 +1,4 @@
 // Copyright (C) 2023-2025 Alkira Inc. All Rights Reserved.
-
 package alkira
 
 import (
@@ -16,10 +15,8 @@ type ConnectorJuniperSsrVrfMapping struct {
 }
 
 type ConnectorJuniperSdwanInstance struct {
-	CredentialId                string `json:"credentialId"`
 	RegistrationKeyCredentialId string `json:"registrationKeyCredentialId"`
 	HostName                    string `json:"hostName"`
-	UserName                    string `json:"userName"`
 	Id                          int    `json:"id,omitempty"`
 }
 
@@ -36,6 +33,7 @@ type ConnectorJuniperSdwan struct {
 	Size                  string                          `json:"size"`
 	TunnelProtocol        string                          `json:"tunnelProtocol"`
 	Version               string                          `json:"version"`
+	AvailabilityZone      int                             `json:"availabilityZone"`
 	Description           string                          `json:"description,omitempty"`
 }
 
