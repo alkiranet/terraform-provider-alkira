@@ -223,7 +223,7 @@ func resourceConnectorFortinetSdwanCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -232,10 +232,27 @@ func resourceConnectorFortinetSdwanCreate(ctx context.Context, d *schema.Resourc
 	// Set states
 	d.SetId(string(response.Id))
 
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorFortinetSdwanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	if client.Provision == true {
 		d.Set("provision_state", provState)
 
-		if provErr != nil {
+		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
 				Summary:  "PROVISION (CREATE) FAILED",
@@ -315,16 +332,33 @@ func resourceConnectorFortinetSdwanUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorFortinetSdwanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
 	if client.Provision == true {
 		d.Set("provision_state", provState)
-		if provErr != nil {
+		if provState == "FAILED" {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
 				Summary:  "PROVISION (UPDATE) FAILED",
@@ -343,7 +377,7 @@ func resourceConnectorFortinetSdwanDelete(ctx context.Context, d *schema.Resourc
 	api := alkira.NewConnectorFortinetSdwan(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -351,6 +385,15 @@ func resourceConnectorFortinetSdwanDelete(ctx context.Context, d *schema.Resourc
 
 	d.SetId("")
 
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	// Check provision state
 	if client.Provision == true && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,

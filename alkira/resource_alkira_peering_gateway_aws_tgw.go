@@ -73,7 +73,7 @@ func resourcePeeringGatewayAwsTgwCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// CREATE
-	response, _, err, _ := api.Create(request)
+	response, _, err, _, _ := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -140,7 +140,7 @@ func resourcePeeringGatewayAwsTgwUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// UPDATE
-	_, err, _ = api.Update(d.Id(), request)
+	_, err, _, _ = api.Update(d.Id(), request)
 
 	return nil
 }
@@ -151,7 +151,7 @@ func resourcePeeringGatewayAwsTgwDelete(ctx context.Context, d *schema.ResourceD
 	api := alkira.NewPeeringGatewayAwsTgw(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	_, err, _ := api.Delete(d.Id())
+	_, err, _, _ := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)

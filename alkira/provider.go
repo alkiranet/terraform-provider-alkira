@@ -46,6 +46,13 @@ func Provider() *schema.Provider {
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
 			},
+			"validation": {
+				Description: "Asynchronous validations.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -177,6 +184,7 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 		d.Get("password").(string),
 		d.Get("api_key").(string),
 		d.Get("provision").(bool),
+		d.Get("validation").(bool),
 		"header",
 	)
 	if err != nil {

@@ -228,11 +228,12 @@ func TestConnectorAPI_MockServerCRUD(t *testing.T) {
 		// Test Create
 		client := serveMockServer(t, mockAwsVpcConnector, http.StatusCreated)
 		api := alkira.NewConnectorAwsVpc(client)
-		response, provState, err, provErr := api.Create(mockAwsVpcConnector)
+		response, provState, err, valErr, provErr := api.Create(mockAwsVpcConnector)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "test-aws-vpc-connector", response.Name)
 		_ = provState
+		_ = valErr
 		_ = provErr
 
 		// Test Read
@@ -248,10 +249,11 @@ func TestConnectorAPI_MockServerCRUD(t *testing.T) {
 		// Test Delete
 		client = serveMockServer(t, nil, http.StatusNoContent)
 		api = alkira.NewConnectorAwsVpc(client)
-		provState, err, provErr = api.Delete("123")
+		provState, err, valErr, provErr = api.Delete("123")
 
 		assert.NoError(t, err)
 		_ = provState
+		_ = valErr
 		_ = provErr
 	})
 

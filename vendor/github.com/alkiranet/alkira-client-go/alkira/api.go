@@ -15,42 +15,43 @@ type AlkiraAPI[T any] struct {
 }
 
 // Create create a resource
-func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error, error) {
+func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error, error, error) {
 
 	// Construct the request
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("api-create: failed to marshal: %v", err), nil
+		return nil, "", fmt.Errorf("api-create: failed to marshal: %v", err), nil, nil
 	}
 
-	data, state, err, errProv := a.Client.create(a.Uri, body, a.Provision)
+	data, state, err, errVal, errProv := a.Client.create(a.Uri, body, a.Provision)
 
 	if err != nil {
-		return nil, state, err, errProv
+		return nil, state, err, errVal, errProv
 	}
 
 	var result T
 	err = json.Unmarshal([]byte(data), &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("api-create: failed to unmarshal: %v", err), errProv
+		return nil, state, fmt.Errorf("api-create: failed to unmarshal: %v", err), errVal, errProv
 	}
 
-	return &result, state, nil, errProv
+	return &result, state, nil, errVal, errProv
 }
 
 // Delete delete a resource by its ID
-func (a *AlkiraAPI[T]) Delete(id string) (string, error, error) {
+func (a *AlkiraAPI[T]) Delete(id string) (string, error, error, error) {
 
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
 
-	return a.Client.delete(uri, a.Provision)
+	state, err, errVal, errProv := a.Client.delete(uri, a.Provision)
+	return state, err, errVal, errProv
 }
 
 // Update update a resource by its ID
-func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error, error) {
+func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error, error, error) {
 
 	// Construct single resource URI
 	uri := fmt.Sprintf("%s/%s", a.Uri, id)
@@ -59,10 +60,11 @@ func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error, error) {
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return "", fmt.Errorf("api-update: failed to marshal: %v", err), nil
+		return "", fmt.Errorf("api-update: failed to marshal: %v", err), nil, nil
 	}
 
-	return a.Client.update(uri, body, a.Provision)
+	state, err, errVal, errProv := a.Client.update(uri, body, a.Provision)
+	return state, err, errVal, errProv
 }
 
 // GetAll get all resources

@@ -116,12 +116,13 @@ func TestAlkiraPolicy_apiClientCRUD(t *testing.T) {
 		client := servePolicyMockServer(t, mockPolicy, http.StatusCreated)
 
 		api := alkira.NewTrafficPolicy(client)
-		response, provState, err, provErr := api.Create(mockPolicy)
+		response, provState, err, valErr, provErr := api.Create(mockPolicy)
 
 		assert.NoError(t, err)
 		assert.Equal(t, policyName, response.Name)
 		assert.Equal(t, policyDescription, response.Description)
 		assert.Equal(t, policyEnabled, response.Enabled)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -158,9 +159,10 @@ func TestAlkiraPolicy_apiClientCRUD(t *testing.T) {
 		client := servePolicyMockServer(t, updatedPolicy, http.StatusOK)
 
 		api := alkira.NewTrafficPolicy(client)
-		provState, err, provErr := api.Update("123", updatedPolicy)
+		provState, err, valErr, provErr := api.Update("123", updatedPolicy)
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -171,9 +173,10 @@ func TestAlkiraPolicy_apiClientCRUD(t *testing.T) {
 		client := servePolicyMockServer(t, nil, http.StatusNoContent)
 
 		api := alkira.NewTrafficPolicy(client)
-		provState, err, provErr := api.Delete("123")
+		provState, err, valErr, provErr := api.Delete("123")
 
 		assert.NoError(t, err)
+		_ = valErr
 		_ = provErr
 
 		t.Logf("Provision state: %s", provState)
@@ -196,7 +199,7 @@ func TestAlkiraPolicy_apiErrorHandling(t *testing.T) {
 		client := servePolicyMockServer(t, nil, http.StatusInternalServerError)
 
 		api := alkira.NewTrafficPolicy(client)
-		_, _, _, _ = api.Create(&alkira.TrafficPolicy{
+		_, _, _, _, _ = api.Create(&alkira.TrafficPolicy{
 			Name:        "test-policy",
 			Description: "test",
 			Enabled:     true,

@@ -149,7 +149,7 @@ func (ac *AlkiraClient) GetTenantNetworkProvisionRequest(id string) (*TenantNetw
 func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/provision", ac.URI, ac.TenantNetworkId)
 
-	data, _, err, _ := ac.create(uri, nil, false)
+	data, _, err, _, _ := ac.create(uri, nil, false)
 
 	if err != nil {
 		return "", err
