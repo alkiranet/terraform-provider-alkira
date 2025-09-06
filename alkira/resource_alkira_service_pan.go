@@ -325,7 +325,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Registration PIN Expiry. The date " +
 					"should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"name": {
 				Description: "Name of the PAN service.",
