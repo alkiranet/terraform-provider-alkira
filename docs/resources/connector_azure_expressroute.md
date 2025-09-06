@@ -310,6 +310,7 @@ Segment options define routing parameters for each network segment, including:
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The implicit group ID associated with the connector.
 - `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--instances"></a>
@@ -331,7 +332,7 @@ Optional:
 
 Read-Only:
 
-- `id` (Number) The ID of this resource.
+- `id` (Number)
 
 <a id="nestedblock--instances--ipsec_customer_gateway"></a>
 ### Nested Schema for `instances.ipsec_customer_gateway`

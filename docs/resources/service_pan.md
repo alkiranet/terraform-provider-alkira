@@ -95,7 +95,6 @@ resource "alkira_service_pan" "test1" {
 - `name` (String) Name of the PAN service.
 - `pan_password` (String) PAN Panorama password.
 - `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
-- `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `registration_pin_id` (String) PAN Registration PIN ID.
 - `registration_pin_value` (String) PAN Registration PIN Value.
 - `segment_ids` (Set of Number) IDs of segments associated with the service.
@@ -119,6 +118,7 @@ resource "alkira_service_pan" "test1" {
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
 - `panorama_template` (String) Panorama Template.
+- `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 - `type` (String) The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'

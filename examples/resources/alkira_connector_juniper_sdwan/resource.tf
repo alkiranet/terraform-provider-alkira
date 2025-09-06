@@ -2,7 +2,7 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
   name    = "test"
   cxp     = "US-EAST"
   size    = "SMALL"
-  version = "6.3.4"
+  juniper_ssr_version = "6.3.4"
   group   = alkira_group.test.name
   availability_zone = 0
 

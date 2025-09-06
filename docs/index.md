@@ -94,4 +94,5 @@ may take a much longer time to apply when provisioning is enabled.
 - `password` (String) Your Tenant Password. If this is not provided then `api_key` must have a value.
 - `provision` (Boolean) With provision or not.
 - `username` (String) Your username. If this is not provided then `api_key` must have a value.
+- `validation` (Boolean) Asynchronous validations.
 

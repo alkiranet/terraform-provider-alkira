@@ -63,18 +63,27 @@ func deletePanCredential(id string, c *alkira.AlkiraClient) error {
 
 // Helper functions for PAN Registration Credentials
 func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
-	log.Printf("[INFO] Creating PAN Registration Credential %v", d.Get("registration_pin_expiry").(string))
+	var credentialExpiry int64
+	var expiryValue string
+
+	if v, ok := d.GetOk("registration_pin_expiry"); ok {
+		expiryValue = v.(string)
+		log.Printf("[INFO] Creating PAN Registration Credential with expiry %v", expiryValue)
+		var err error
+		credentialExpiry, err = convertInputTimeToEpoch(expiryValue)
+		if err != nil {
+			log.Printf("[ERROR] failed to parse 'registration_pin_expiry', %v", err)
+			return "", err
+		}
+	} else {
+		log.Printf("[INFO] Creating PAN Registration Credential with no expiry")
+		credentialExpiry = 0
+	}
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPanRegistration{
 		RegistrationPinId:    d.Get("registration_pin_id").(string),
 		RegistrationPinValue: d.Get("registration_pin_value").(string),
-	}
-	credentialExpiry, err := convertInputTimeToEpoch(d.Get("registration_pin_expiry").(string))
-
-	if err != nil {
-		log.Printf("[ERROR] failed to parse 'registration_pin_exiry', %v", err)
-		return "", err
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
