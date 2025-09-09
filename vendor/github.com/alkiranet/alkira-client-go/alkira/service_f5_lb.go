@@ -29,13 +29,19 @@ type F5Instance struct {
 	HostNameFqdn             string               `json:"hostNameFqdn"`
 	LicenseType              string               `json:"licenseType"`
 	Version                  string               `json:"version"`
+	AvailabilityZone         json.Number          `json:"availabilityZone,omitempty"`
 	Id                       int                  `json:"id,omitempty"` // RESPONSE ONLY
 }
 
 type F5SegmentOption map[string]F5SegmentSubOption
 type F5SegmentSubOption struct {
-	NatPoolPrefixLength int `json:"natPoolPrefixLength,omitempty"`
-	ElbNicCount         int `json:"elbNicCount"`
+	NatPoolPrefixLength int       `json:"natPoolPrefixLength,omitempty"`
+	ElbNicCount         int       `json:"elbNicCount"`
+	BgpOptions          BgpOption `json:"bgpOptions,omitempty"`
+}
+
+type BgpOption struct {
+	AdvertiseToCXPPrefixListId int `json:"advertiseToCXPPrefixListId"`
 }
 
 type F5InstanceDeployment struct {
