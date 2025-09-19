@@ -62,3 +62,66 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          
+      - name: Post status of build failures on Slack channels
+        if: failure()
+        id: slack-build-failure
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.AK_BUILDBOT_SLACK_BOT_TOKEN }}
+          BRANCH: ${{ steps.get-branch.outputs.branch }}
+          AK_SERVICE_NAME: ${{ steps.build.outputs.ak_service_name }}
+          AK_SERVICE_VERSION: ${{ steps.build.outputs.ak_service_version }}
+        with:
+          channel-id: "C072N7RDAKZ"
+          payload: |
+            {
+              "text": "Build: ${{ env.AK_SERVICE_NAME }}[${{ env.BRANCH }}]: ${{ job.status }}",
+               "blocks": [
+                   {
+                       "type": "header",
+                       "text": {
+                           "type": "plain_text",
+                           "text": "${{ env.AK_SERVICE_NAME }} [${{ env.BRANCH }}]",
+                           "emoji": true
+                       }
+                   },
+                   {
+                       "type": "divider"
+                   },
+                   {
+                       "type": "section",
+                       "fields": [
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Status:*\n${{ job.status }}"
+                           },
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Committed By:*\n${{ github.triggering_actor }}"
+                           }
+                       ]
+                   },
+                   {
+                       "type": "section",
+                       "fields": [
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Vesion:*\n${{ env.AK_SERVICE_VERSION }}"
+                           },
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Commit:*\n<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|${{ github.sha }}>"
+                           }
+                       ]
+                   },
+                   {
+                       "type": "section",
+                       "text": {
+                           "type": "mrkdwn",
+                           "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Build Action>"
+                       }
+                   }
+               ]
+            }
+
