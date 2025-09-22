@@ -46,6 +46,13 @@ func Provider() *schema.Provider {
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_PROVISION"),
 			},
+			"validation": {
+				Description: "Asynchronous validations.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -61,6 +68,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_azure_expressroute":       resourceAlkiraConnectorAzureExpressRoute(),
 			"alkira_connector_cisco_sdwan":              resourceAlkiraConnectorCiscoSdwan(),
 			"alkira_connector_fortinet_sdwan":           resourceAlkiraConnectorFortinetSdwan(),
+			"alkira_connector_juniper_sdwan":            resourceAlkiraConnectorJuniperSdwan(),
 			"alkira_connector_gcp_vpc":                  resourceAlkiraConnectorGcpVpc(),
 			"alkira_connector_gcp_interconnect":         resourceAlkiraConnectorGcpInterconnect(),
 			"alkira_connector_oci_vcn":                  resourceAlkiraConnectorOciVcn(),
@@ -126,6 +134,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_azure_expressroute":       dataSourceAlkiraConnectorAzureExpressRoute(),
 			"alkira_connector_azure_vnet":               dataSourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_cisco_sdwan":              dataSourceAlkiraConnectorCiscoSdwan(),
+			"alkira_connector_juniper_sdwan":            dataSourceAlkiraConnectorJuniperSdwan(),
 			"alkira_connector_gcp_vpc":                  dataSourceAlkiraConnectorGcpVpc(),
 			"alkira_connector_gcp_interconnect":         dataSourceAlkiraConnectorGcpInterconnect(),
 			"alkira_connector_internet_exit":            dataSourceAlkiraConnectorInternetExit(),
@@ -175,6 +184,7 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 		d.Get("password").(string),
 		d.Get("api_key").(string),
 		d.Get("provision").(bool),
+		d.Get("validation").(bool),
 		"header",
 	)
 	if err != nil {
