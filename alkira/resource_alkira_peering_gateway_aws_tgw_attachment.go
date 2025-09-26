@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
@@ -40,17 +41,37 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 			"peer_aws_region": {
 				Description: "The AWS region of the peer TGW.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"peer_aws_tgw_id": {
 				Description: "The ID of AWS TGW.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"peer_aws_account_id": {
 				Description: "The AWS account ID of TGW.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"peer_allowed_prefixes": {
+				Description: "The AWS account ID of TGW.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsNotWhiteSpace,
+				},
+				Optional: true,
+			},
+			"peer_direct_connect_gateway_id": {
+				Description: "The AWS account ID of TGW.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"type": {
+				Description:  "The AWS account ID of TGW.",
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"AWS_TRANSIT_GATEWAY", "AWS_DIRECT_CONNECT_GATEWAY"}, false),
+				Optional:     true,
 			},
 			"peering_gateway_aws_tgw_id": {
 				Description: "The ID of Peering Gateway AWS-TGW.",
@@ -59,6 +80,16 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 			},
 			"state": {
 				Description: "The state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"direct_connect_gateway_association_proposal_state": {
+				Description: "State of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"direct_connect_gateway_association_proposal_id": {
+				Description: "id of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -71,7 +102,7 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 	// INIT
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
-	request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
+	request, err := generateAwsTgwAttachmentRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -130,6 +161,10 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peer_aws_account_id", attachment.PeerAwsAccountId)
 	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
 	d.Set("state", attachment.State)
+	if attachment.ProposalDetils != nil {
+		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetils.ProposalState)
+		d.Set("direct_connect_gateway_association_proposal_id", attachment.ProposalDetils.ProposalId)
+	}
 
 	return nil
 }
@@ -139,7 +174,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 	// INIT
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
-	request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
+	request, err := generateAwsTgwAttachmentRequest(d, m)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -168,6 +203,26 @@ func resourcePeeringGatewayAwsTgwAttachmentDelete(ctx context.Context, d *schema
 	return nil
 }
 
+func generateAwsTgwAttachmentRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
+	if attachmentType, ok := d.Get("type").(string); ok && attachmentType == "AWS_DIRECT_CONNECT_GATEWAY" {
+		request, err := generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d, m)
+		if err != nil {
+			return nil, err
+		}
+		request.Type = attachmentType
+		return request, nil
+	} else {
+		request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			request.Type = attachmentType
+		}
+		return request, nil
+	}
+}
+
 // generatePeeringGatewayAwsTgwAttachmentRequest generate request
 func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
 
@@ -179,6 +234,20 @@ func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData, m int
 		PeerAwsTgwId:     d.Get("peer_aws_tgw_id").(string),
 		PeerAwsAccountId: d.Get("peer_aws_account_id").(string),
 		AwsTgwId:         d.Get("peering_gateway_aws_tgw_id").(int),
+	}
+	return request, nil
+}
+
+func generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
+
+	request := &alkira.PeeringGatewayAwsTgwAttachment{
+		Name:                       d.Get("name").(string),
+		Description:                d.Get("description").(string),
+		Requestor:                  d.Get("requestor").(string),
+		PeerDirectConnectGatewayId: d.Get("peer_direct_connect_gateway_id").(string),
+		PeerAllowedPrefixes:        convertTypeListToStringList(d.Get("peer_allowed_prefixes").([]any)),
+		PeerAwsAccountId:           d.Get("peer_aws_account_id").(string),
+		AwsTgwId:                   d.Get("peering_gateway_aws_tgw_id").(int),
 	}
 
 	return request, nil
