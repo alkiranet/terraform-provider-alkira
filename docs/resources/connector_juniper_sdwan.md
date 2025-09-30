@@ -82,14 +82,16 @@ Required:
 
 Optional:
 
+- `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
 - `advertise_on_prem_routes` (Boolean) Whether advertising On Prem Routes. Default value is `false`.
-- `disable_internet_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector. Default value is `false`
 - `juniper_ssr_bgp_asn` (Number) Gateway BGP ASN. Only accepts '65000'
 - `juniper_ssr_vrf_name` (String) Juniper VRF Name. Only accepts 'default'
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import alkira_connector_juniper_sdwan.example CONNECTOR_ID
