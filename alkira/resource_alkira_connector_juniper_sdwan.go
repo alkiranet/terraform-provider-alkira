@@ -145,10 +145,10 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"disable_internet_exit": {
-							Description: "Enable or disable access to the " +
-								"internet when traffic arrives via this " +
-								"connector. Default value is `false`",
+						"advertise_default_route": {
+							Description: "Enables or disables access to the internet " +
+								"when traffic arrives via this connector. The default " +
+								"value is `false`.",
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -293,7 +293,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	for _, m := range connector.JuniperSsrVrfMappings {
 		mapping := map[string]any{
 			"advertise_on_prem_routes": m.AdvertiseOnPremRoutes,
-			"disable_internet_exit":    m.DisableInternetExit,
+			"advertise_default_route":  !m.DisableInternetExit,
 			"juniper_ssr_bgp_asn":      m.JuniperSsrBgpAsn,
 			"segment_id":               m.SegmentId,
 			"juniper_ssr_vrf_name":     m.JuniperSsrVrfName,
