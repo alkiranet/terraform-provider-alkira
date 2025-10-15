@@ -12,7 +12,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,15 +33,18 @@ const defaultRetryInterval time.Duration = 5 * time.Second
 const defaultRetryTimeout time.Duration = 10 * time.Second
 
 type AlkiraClient struct {
-	Client          *retryablehttp.Client
-	URI             string
-	Username        string
-	Password        string
-	Secret          string
-	Authorization   string
-	Provision       bool
-	Validate        bool
-	TenantNetworkId string
+	Client                *retryablehttp.Client
+	URI                   string
+	Username              string
+	Password              string
+	Secret                string
+	Authorization         string
+	Provision             bool
+	Validate              bool
+	TenantNetworkId       string
+	SerializationEnabled  bool
+	serializationTimeout  time.Duration
+	apiMutex              sync.Mutex
 }
 
 type Session struct {
@@ -55,7 +60,7 @@ func (s *Session) Cookies(u *url.URL) []*http.Cookie {
 }
 
 // NewAlkiraClient creates a new API client
-func NewAlkiraClient(hostname string, username string, password string, secret string, provision bool, validate bool, auth string) (*AlkiraClient, error) {
+func NewAlkiraClient(hostname string, username string, password string, secret string, provision bool, validate bool, serializationEnabled bool, serializationTimeout int, auth string) (*AlkiraClient, error) {
 
 	// Construct the portal URI
 	url := "https://" + hostname
@@ -64,17 +69,38 @@ func NewAlkiraClient(hostname string, username string, password string, secret s
 
 	if auth == "header" {
 		logf("DEBUG", "ALKIRA-AUTH-METHOD: %v", auth)
-		return NewAlkiraClientWithAuthHeader(url, username, password, secret, provision, validate)
+		return NewAlkiraClientWithAuthHeader(url, username, password, secret, provision, validate, serializationEnabled, serializationTimeout)
 	}
 
-	return NewAlkiraClientInternal(url, username, password, secret, provision, validate)
+	return NewAlkiraClientInternal(url, username, password, secret, provision, validate, serializationEnabled, serializationTimeout)
 }
 
 // NewAlkiraClientWithAuthHeader creates a new internal Alkira client with authentication in header
-func NewAlkiraClientWithAuthHeader(url string, username string, password string, secret string, provision bool, validate bool) (*AlkiraClient, error) {
+func NewAlkiraClientWithAuthHeader(url string, username string, password string, secret string, provision bool, validate bool, serializationEnabled bool, serializationTimeout int) (*AlkiraClient, error) {
 
 	// Firstly, construct the portal API based URI
 	apiUrl := url + "/api"
+
+	// Parse serialization configuration
+	// Use parameters if provided, otherwise fall back to environment variables
+	enableSerialization := serializationEnabled
+	timeoutSeconds := serializationTimeout
+
+	if !serializationEnabled && os.Getenv("ALKIRA_API_SERIALIZATION_ENABLED") == "true" {
+		enableSerialization = true
+	}
+
+	if serializationTimeout == 0 {
+		if envTimeout := os.Getenv("ALKIRA_API_SERIALIZATION_TIMEOUT"); envTimeout != "" {
+			if parsed, err := strconv.Atoi(envTimeout); err == nil && parsed > 0 {
+				timeoutSeconds = parsed
+			} else {
+				timeoutSeconds = 120 // default
+			}
+		} else {
+			timeoutSeconds = 120 // default
+		}
+	}
 
 	// Generate Authorization header string
 	auth := ""
@@ -164,25 +190,51 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 
 	// Construct our client with all information
 	client := &AlkiraClient{
-		Client:          retryClient,
-		URI:             apiUrl,
-		Username:        username,
-		Password:        password,
-		Secret:          secret,
-		Authorization:   auth,
-		Provision:       provision,
-		Validate:        validate,
-		TenantNetworkId: strconv.Itoa(tenantNetworkId),
+		Client:               retryClient,
+		URI:                  apiUrl,
+		Username:             username,
+		Password:             password,
+		Secret:               secret,
+		Authorization:        auth,
+		Provision:            provision,
+		Validate:             validate,
+		TenantNetworkId:      strconv.Itoa(tenantNetworkId),
+		SerializationEnabled: enableSerialization,
+		serializationTimeout: time.Duration(timeoutSeconds) * time.Second,
 	}
+
+	logf("DEBUG", "ALKIRA-API-SERIALIZATION-ENABLED: %v", client.SerializationEnabled)
+	logf("DEBUG", "ALKIRA-API-SERIALIZATION-TIMEOUT: %v", client.serializationTimeout)
 
 	return client, nil
 }
 
 // NewAlkiraClientInternal creates a new internal Alkira client
-func NewAlkiraClientInternal(url string, username string, password string, secret string, provision bool, validate bool) (*AlkiraClient, error) {
+func NewAlkiraClientInternal(url string, username string, password string, secret string, provision bool, validate bool, serializationEnabled bool, serializationTimeout int) (*AlkiraClient, error) {
 
 	// Construct the portal URI based on the given endpoint
 	apiUrl := url + "/api"
+
+	// Parse serialization configuration
+	// Use parameters if provided, otherwise fall back to environment variables
+	enableSerialization := serializationEnabled
+	timeoutSeconds := serializationTimeout
+
+	if !serializationEnabled && os.Getenv("ALKIRA_API_SERIALIZATION_ENABLED") == "true" {
+		enableSerialization = true
+	}
+
+	if serializationTimeout == 0 {
+		if envTimeout := os.Getenv("ALKIRA_API_SERIALIZATION_TIMEOUT"); envTimeout != "" {
+			if parsed, err := strconv.Atoi(envTimeout); err == nil && parsed > 0 {
+				timeoutSeconds = parsed
+			} else {
+				timeoutSeconds = 120 // default
+			}
+		} else {
+			timeoutSeconds = 120 // default
+		}
+	}
 
 	loginRequestBody, err := json.Marshal(map[string]string{
 		"userName": username,
@@ -325,14 +377,19 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 
 	// Construct our client with all information
 	client := &AlkiraClient{
-		URI:             apiUrl,
-		Username:        username,
-		Password:        password,
-		TenantNetworkId: strconv.Itoa(tenantNetworkId),
-		Client:          retryClient,
-		Provision:       provision,
-		Validate:        validate,
+		URI:                  apiUrl,
+		Username:             username,
+		Password:             password,
+		TenantNetworkId:      strconv.Itoa(tenantNetworkId),
+		Client:               retryClient,
+		Provision:            provision,
+		Validate:             validate,
+		SerializationEnabled: enableSerialization,
+		serializationTimeout: time.Duration(timeoutSeconds) * time.Second,
 	}
+
+	logf("DEBUG", "ALKIRA-API-SERIALIZATION-ENABLED: %v", client.SerializationEnabled)
+	logf("DEBUG", "ALKIRA-API-SERIALIZATION-TIMEOUT: %v", client.serializationTimeout)
 
 	return client, nil
 }
@@ -420,6 +477,36 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	return data, provisionState, nil
 }
 
+// executeWithMutex executes a function while holding the API mutex if serialization is enabled
+// Returns an error if the mutex cannot be acquired within the configured timeout
+func (ac *AlkiraClient) executeWithMutex(fn func() error) error {
+	// If serialization is disabled, execute immediately
+	if !ac.SerializationEnabled {
+		return fn()
+	}
+
+	// Channel to signal mutex acquisition
+	mutexAcquired := make(chan struct{})
+
+	// Try to acquire the mutex in a goroutine
+	go func() {
+		ac.apiMutex.Lock()
+		close(mutexAcquired)
+	}()
+
+	// Wait for either mutex acquisition or timeout
+	select {
+	case <-mutexAcquired:
+		// Mutex acquired successfully
+		defer ac.apiMutex.Unlock()
+		logf("DEBUG", "API mutex acquired, executing request")
+		return fn()
+	case <-time.After(ac.serializationTimeout):
+		// Timeout occurred
+		return fmt.Errorf("failed to acquire API mutex within timeout (%v)", ac.serializationTimeout)
+	}
+}
+
 // create send a POST request to create resource
 func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error, error, error) {
 	logf("DEBUG", "client-create REQ: %s", string(body))
@@ -445,7 +532,17 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	response, err := ac.Client.Do(request)
+	// Execute the HTTP request with serialization if enabled
+	var response *http.Response
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request)
+		return err
+	})
+
+	if mutexErr != nil {
+		return nil, "", fmt.Errorf("client-create(%s): %v", requestId, mutexErr), nil, nil
+	}
 
 	if err != nil {
 		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err), nil, nil
@@ -545,7 +642,17 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	response, err := ac.Client.Do(request)
+	// Execute the HTTP request with serialization if enabled
+	var response *http.Response
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request)
+		return err
+	})
+
+	if mutexErr != nil {
+		return "", fmt.Errorf("client-delete(%s): %v", requestId, mutexErr), nil, nil
+	}
 
 	if err != nil {
 		return "", fmt.Errorf("client-delete(%s): failed to send request, %v", requestId, err), nil, nil
@@ -648,7 +755,17 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	response, err := ac.Client.Do(request)
+	// Execute the HTTP request with serialization if enabled
+	var response *http.Response
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request)
+		return err
+	})
+
+	if mutexErr != nil {
+		return "", fmt.Errorf("client-update(%s): %v", requestId, mutexErr), nil, nil
+	}
 
 	if err != nil {
 		return "", fmt.Errorf("client-update(%s): failed to send request, %v", requestId, err), nil, nil
