@@ -53,6 +53,20 @@ func Provider() *schema.Provider {
 				Default:     false,
 				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
 			},
+			"serialization_enabled": {
+				Description: "Enable API serialization.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: envDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED"),
+			},
+			"serialization_timeout": {
+				Description: "API serialization timeout in seconds.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     120,
+				DefaultFunc: envDefaultFunc("ALKIRA_API_SERIALIZATION_TIMEOUT"),
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -185,6 +199,8 @@ func alkiraConfigure(d *schema.ResourceData) (interface{}, error) {
 		d.Get("api_key").(string),
 		d.Get("provision").(bool),
 		d.Get("validation").(bool),
+		d.Get("serialization_enabled").(bool),
+		d.Get("serialization_timeout").(int),
 		"header",
 	)
 	if err != nil {
