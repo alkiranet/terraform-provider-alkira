@@ -18,6 +18,11 @@ type ValidationState struct {
 }
 
 type ErrorDetails struct {
+	Code   string            `json:"code,omitempty"`
+	Errors []ValidationError `json:"errors,omitempty"`
+}
+
+type ValidationError struct {
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 }
@@ -80,8 +85,9 @@ func (ac *AlkiraClient) handleValidation(response *http.Response) error {
 				return true, nil
 			case "FAILED":
 				logf("DEBUG", "handleValidation: validation failed for ID: %s", validationStateID)
-				if len(validationState.ErrorDetails.Message) > 0 && validationState.ErrorDetails.Message != "" {
-					return false, fmt.Errorf("validation failed: %s", validationState.ErrorDetails.Message)
+				if len(validationState.ErrorDetails.Errors) > 0 && validationState.ErrorDetails.Errors[0].Message != "" {
+					// Use the first error's message from the array
+					return false, fmt.Errorf("validation failed: %s", validationState.ErrorDetails.Errors[0].Message)
 				} else if validationState.ErrorDetails.Code != "" {
 					return false, fmt.Errorf("validation failed: %s", validationState.ErrorDetails.Code)
 				}
