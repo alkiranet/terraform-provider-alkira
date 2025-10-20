@@ -35,13 +35,13 @@ type F5Instance struct {
 
 type F5SegmentOption map[string]F5SegmentSubOption
 type F5SegmentSubOption struct {
-	NatPoolPrefixLength int       `json:"natPoolPrefixLength,omitempty"`
-	ElbNicCount         int       `json:"elbNicCount"`
-	BgpOptions          BgpOption `json:"bgpOptions,omitempty"`
+	NatPoolPrefixLength int            `json:"natPoolPrefixLength,omitempty"`
+	ElbNicCount         int            `json:"elbNicCount"`
+	ElbBgpOptions       *ElbBgpOptions `json:"elbBgpOptions,omitempty"`
 }
 
-type BgpOption struct {
-	AdvertiseToCXPPrefixListId int `json:"advertiseToCXPPrefixListId"`
+type ElbBgpOptions struct {
+	AdvertiseToCXPPrefixListId int `json:"advertiseToCXPPrefixListId,omitempty"`
 }
 
 type F5InstanceDeployment struct {
@@ -53,5 +53,4 @@ func NewServiceF5Lb(ac *AlkiraClient) *AlkiraAPI[ServiceF5Lb] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/f5-lb-services", ac.URI, ac.TenantNetworkId)
 	api := &AlkiraAPI[ServiceF5Lb]{ac, uri, true}
 	return api
-
 }

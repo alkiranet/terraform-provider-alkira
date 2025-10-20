@@ -19,7 +19,7 @@ resource "alkira_service_f5_lb" "example-lb" {
   segment_options {
     elb_nic_count = 2
     segment_id    = alkira_segment.example-segment.id
-    bgp_options_advertise_to_cxp_prefix_list_id = alkira_policy_prefix_list.example.id
+    elb_bgp_options_advertise_to_cxp_prefix_list_id = alkira_policy_prefix_list.example.id
   }
   service_group_name = "example-service-group"
   size               = "LARGE"

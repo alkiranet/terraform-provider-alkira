@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -109,7 +108,7 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 			}
 		}
 		if availabilityZone, ok := tfInstance["availability_zone"]; ok {
-			instanceStruct.AvailabilityZone = json.Number(strconv.Itoa(availabilityZone.(int)))
+			instanceStruct.AvailabilityZone = json.Number(availabilityZone.(string))
 		}
 		instances[i] = instanceStruct
 	}
@@ -137,9 +136,12 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 			subOption.NatPoolPrefixLength = natPoolPrefixLength.(int)
 		}
 
-		if advertiseToCxpPrefixListId, ok := cfg["bgp_options_advertise_to_cxp_prefix_list_id"]; ok {
-			subOption.BgpOptions.AdvertiseToCXPPrefixListId = advertiseToCxpPrefixListId.(int)
+		if advertiseToCxpPrefixListId, ok := cfg["elb_bgp_options_advertise_to_cxp_prefix_list_id"]; ok && advertiseToCxpPrefixListId != 0 {
+			bgpOptions := &alkira.ElbBgpOptions{}
+			bgpOptions.AdvertiseToCXPPrefixListId = advertiseToCxpPrefixListId.(int)
+			subOption.ElbBgpOptions = bgpOptions
 		}
+
 		segmentOptions[segmentName] = subOption
 	}
 
@@ -162,11 +164,14 @@ func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string
 		option := map[string]interface{}{
 			"segment_id":    segmentId,
 			"elb_nic_count": subOption.ElbNicCount,
-			"bgp_options_advertise_to_cxp_prefix_list_id": subOption.BgpOptions.AdvertiseToCXPPrefixListId,
 		}
 
 		if subOption.NatPoolPrefixLength != 0 {
 			option["nat_pool_prefix_length"] = subOption.NatPoolPrefixLength
+		}
+
+		if subOption.ElbBgpOptions != nil {
+			option["bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
 		}
 
 		segmentOptions = append(segmentOptions, option)

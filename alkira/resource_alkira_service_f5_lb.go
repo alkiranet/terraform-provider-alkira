@@ -110,7 +110,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"bgp_options_advertise_to_cxp_prefix_list_id": {
+						"elb_bgp_options_advertise_to_cxp_prefix_list_id": {
 							Description: "ID of prefix list used to advertise prefixes from F5 Load Balancer",
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -223,10 +223,12 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Required:    true,
 						},
 						"availability_zone": {
-							Description:  "Availability Zone of F5 Instance. Only used when bgp_options_advertise_to_cxp_prefix_list_id is provided",
-							Type:         schema.TypeInt,
-							ValidateFunc: validation.IntBetween(0, 1),
-							Optional:     true,
+							Description: "Availability Zone of F5 Instance. Only used when elb_bgp_options_advertise_to_cxp_prefix_list_id is provided",
+							Type:        schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"0", "1"},
+								false),
+							Optional: true,
 						},
 					},
 				},
