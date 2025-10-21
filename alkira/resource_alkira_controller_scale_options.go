@@ -72,6 +72,11 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
+						"additional_nodes": {
+							Description: "Additional nodes.",
+							Type:        schema.TypeInt,
+							Required:    true,
+						},
 						"segment_id": {
 							Description: "Segment ID.",
 							Type:        schema.TypeInt,
@@ -188,6 +193,7 @@ func resourceControllerScaleOptionsRead(ctx context.Context, d *schema.ResourceD
 	for _, sso := range controllerScaleOptions.SegmentScaleOptions {
 		ssoMap := map[string]any{
 			"additional_tunnels_per_node": sso.AdditionalTunnelsPerNode,
+			"additional_nodes":            sso.AdditionalNodes,
 			"segment_id":                  sso.SegmentId,
 			"zone_name":                   sso.ZoneName,
 		}
@@ -289,6 +295,7 @@ func generateControllerScaleOptionsRequest(d *schema.ResourceData) (*alkira.Cont
 			ssoMap := item.(map[string]any)
 			segmentScaleOptions = append(segmentScaleOptions, alkira.SegmentScaleOptions{
 				AdditionalTunnelsPerNode: int32(ssoMap["additional_tunnels_per_node"].(int)),
+				AdditionalNodes:          int32(ssoMap["additional_nodes"].(int)),
 				SegmentId:                int64(ssoMap["segment_id"].(int)),
 				ZoneName:                 ssoMap["zone_name"].(string),
 			})

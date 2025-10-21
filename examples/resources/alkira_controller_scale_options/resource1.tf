@@ -5,6 +5,7 @@ resource "alkira_controller_scale_options" "another_example" {
   entity_type = "CONNECTOR"
   segment_scale_options {
     additional_tunnels_per_node = 10
+    additional_nodes            = 3
     segment_id                  = alkira_segment.example.id
   }
 }

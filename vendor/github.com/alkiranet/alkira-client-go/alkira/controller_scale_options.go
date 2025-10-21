@@ -9,6 +9,7 @@ import (
 
 type SegmentScaleOptions struct {
 	AdditionalTunnelsPerNode int32  `json:"additionalTunnelsPerNode"`
+	AdditionalNodes          int32  `json:"additionalNodes"`
 	SegmentId                int64  `json:"segmentId"`
 	ZoneName                 string `json:"zoneName"`
 }

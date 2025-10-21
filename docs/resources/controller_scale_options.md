@@ -20,6 +20,7 @@ resource "alkira_controller_scale_options" "example" {
   entity_type = "SERVICE"
   segment_scale_options {
     additional_tunnels_per_node = 5
+    additional_nodes            = 2
     segment_id                  = alkira_segment.id
     zone_name                   = "ZoneA"
   }
@@ -34,6 +35,7 @@ resource "alkira_controller_scale_options" "another_example" {
   entity_type = "CONNECTOR"
   segment_scale_options {
     additional_tunnels_per_node = 10
+    additional_nodes            = 3
     segment_id                  = alkira_segment.example.id
   }
 }
@@ -67,6 +69,7 @@ resource "alkira_controller_scale_options" "another_example" {
 
 Required:
 
+- `additional_nodes` (Number) Additional nodes.
 - `additional_tunnels_per_node` (Number) Additional tunnels per node.
 - `segment_id` (Number) Segment ID.
 - `zone_name` (String) Zone name.
