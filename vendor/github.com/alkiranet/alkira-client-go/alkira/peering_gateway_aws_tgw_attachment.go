@@ -18,14 +18,18 @@ type PeeringGatewayAwsTgwAttachment struct {
 	PeerAllowedPrefixes        []string         `json:"peerAllowedPrefixes,omitempty"`
 	AwsTgwId                   int              `json:"awsTgwId"`
 	Type                       string           `json:"type,omitempty"`
-	Id                         json.Number      `json:"id,omitempty"`              // response only
-	State                      string           `json:"state,omitempty"`           // response only
-	ProposalDetils             *ProposalDetails `json:"proposalDetails,omitempty"` //response only
+	Id                         json.Number      `json:"id,omitempty"`               // response only
+	State                      string           `json:"state,omitempty"`            // response only
+	TriggerProposal            bool             `json:"trigger_proposal,omitempty"` // response only
+	FailureReason              string           `json:"failureReason,omitempty"`    // response only
+	ProposalDetails            *ProposalDetails `json:"proposalDetails,omitempty"`  //response only
 }
 
 type ProposalDetails struct {
 	ProposalId    string `json:"proposalId,omitempty"`
 	ProposalState string `json:"proposalState,omitempty"`
+	CreatedAt     int    `json:"createdAt,omitempty"`
+	UpdatedAt     int    `json:"updatedAt,omitempty"`
 }
 
 // NewConnectorPeeringGatewayAwsTgwAttachment new peering gateway aws tgw attachment

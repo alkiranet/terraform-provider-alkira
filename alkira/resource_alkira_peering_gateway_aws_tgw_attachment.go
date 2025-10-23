@@ -54,7 +54,7 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 				Required:    true,
 			},
 			"peer_allowed_prefixes": {
-				Description: "The AWS account ID of TGW.",
+				Description: "List of allowed CIDR prefixes for the peer.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -63,12 +63,13 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 				Optional: true,
 			},
 			"peer_direct_connect_gateway_id": {
-				Description: "The AWS account ID of TGW.",
+				Description: "The AWS Direct Connect Gateway ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"type": {
-				Description:  "The AWS account ID of TGW.",
+				Description: "The type of attachment. " +
+					"Can be one of `AWS_TRANSIT_GATEWAY` and `AWS_DIRECT_CONNECT_GATEWAY`.",
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{"AWS_TRANSIT_GATEWAY", "AWS_DIRECT_CONNECT_GATEWAY"}, false),
 				Optional:     true,
@@ -83,6 +84,16 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"trigger_proposal": {
+				Description: "Indicates if a direct connect gateway association proposal should be triggered",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+			"failure_reason": {
+				Description: "Failure reason if there is any failure in creation/deletion",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"direct_connect_gateway_association_proposal_state": {
 				Description: "State of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update",
 				Type:        schema.TypeString,
@@ -91,6 +102,16 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 			"direct_connect_gateway_association_proposal_id": {
 				Description: "id of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update",
 				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"direct_connect_gateway_association_proposal_created_at": {
+				Description: "Timestamp indicating when direct connect gateway association proposal was created",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
+			"direct_connect_gateway_association_proposal_updated_at": {
+				Description: "Timestamp indicating when direct connect gateway association proposal was last updated",
+				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 		},
@@ -161,9 +182,13 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peer_aws_account_id", attachment.PeerAwsAccountId)
 	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
 	d.Set("state", attachment.State)
-	if attachment.ProposalDetils != nil {
-		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetils.ProposalState)
-		d.Set("direct_connect_gateway_association_proposal_id", attachment.ProposalDetils.ProposalId)
+	d.Set("trigger_proposal", attachment.TriggerProposal)
+	d.Set("failure_reason", attachment.FailureReason)
+	if attachment.ProposalDetails != nil {
+		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetails.ProposalState)
+		d.Set("direct_connect_gateway_association_proposal_id", attachment.ProposalDetails.ProposalId)
+		d.Set("direct_connect_gateway_association_proposal_created_at", attachment.ProposalDetails.CreatedAt)
+		d.Set("direct_connect_gateway_association_proposal_updated_at", attachment.ProposalDetails.UpdatedAt)
 	}
 
 	return nil
@@ -182,8 +207,86 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 
 	// UPDATE
 	_, err, _, _ = api.Update(d.Id(), request)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	return nil
+	// Store initial ProposalId before Update
+	initialResource, _, err := api.GetById(d.Id())
+	if err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "Failed to get initial resource state",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
+	}
+	initialProposalId := ""
+	if initialResource.ProposalDetails != nil {
+		initialProposalId = initialResource.ProposalDetails.ProposalId
+	}
+
+	// Check if trigger_proposal requires polling
+	updatedResource, _, err := api.GetById(d.Id())
+	if err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "Failed to get updated resource state",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
+	}
+
+	if !updatedResource.TriggerProposal {
+		return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
+	}
+
+	// Implement polling loop with timeout
+	maxRetries := 120 // 10 minutes with 5-second intervals
+	retryCount := 0
+
+	for retryCount < maxRetries {
+		resource, _, err := api.GetById(d.Id())
+		if err != nil {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "FAILED TO GET RESOURCE",
+				Detail:   fmt.Sprintf("%s", err),
+			}}
+		}
+
+		// Check for failure
+		if resource.State == "FAILED" || resource.FailureReason != "" {
+			return diag.Diagnostics{{
+				Severity: diag.Error,
+				Summary:  "Update failed with failure reason",
+				Detail:   fmt.Sprintf("State: %s, FailureReason: %s", resource.State, resource.FailureReason),
+			}}
+		}
+
+		// Check if ProposalId changed (success condition)
+		currentProposalId := ""
+		if resource.ProposalDetails != nil {
+			currentProposalId = resource.ProposalDetails.ProposalId
+		}
+
+		if currentProposalId != "" && currentProposalId != initialProposalId {
+			// ProposalId changed - update successful
+			break
+		}
+
+		time.Sleep(5 * time.Second)
+		retryCount++
+	}
+
+	if retryCount >= maxRetries {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "Timeout waiting for proposal details to update",
+			Detail:   fmt.Sprintf("Timed out after %d retries (%d minutes)", maxRetries, maxRetries*5/60),
+		}}
+	}
+
+	// Call Read function after successful polling
+	return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
 }
 
 func resourcePeeringGatewayAwsTgwAttachmentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

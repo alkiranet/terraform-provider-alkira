@@ -31,19 +31,28 @@ resource "alkira_peering_gateway_aws_tgw_attachment" "test" {
 
 - `name` (String) The name of the attachment.
 - `peer_aws_account_id` (String) The AWS account ID of TGW.
-- `peer_aws_region` (String) The AWS region of the peer TGW.
-- `peer_aws_tgw_id` (String) The ID of AWS TGW.
 - `peering_gateway_aws_tgw_id` (Number) The ID of Peering Gateway AWS-TGW.
 - `requestor` (String) Initiator of transit gateway attachment.
 
 ### Optional
 
 - `description` (String) Description of the attachment.
+- `peer_allowed_prefixes` (List of String) List of allowed CIDR prefixes for the peer.
+- `peer_aws_region` (String) The AWS region of the peer TGW.
+- `peer_aws_tgw_id` (String) The ID of AWS TGW.
+- `peer_direct_connect_gateway_id` (String) The AWS Direct Connect Gateway ID.
+- `type` (String) The type of attachment. Can be one of `AWS_TRANSIT_GATEWAY` and `AWS_DIRECT_CONNECT_GATEWAY`.
 
 ### Read-Only
 
+- `direct_connect_gateway_association_proposal_created_at` (Number) Timestamp indicating when direct connect gateway association proposal was created
+- `direct_connect_gateway_association_proposal_id` (String) id of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update
+- `direct_connect_gateway_association_proposal_state` (String) State of latest direct connect gateway association proposal created by AWS_DIRECT_CONNECT_GATEWAY create/update
+- `direct_connect_gateway_association_proposal_updated_at` (Number) Timestamp indicating when direct connect gateway association proposal was last updated
+- `failure_reason` (String) Failure reason if there is any failure in creation/deletion
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the resource.
+- `trigger_proposal` (Boolean) Indicates if a direct connect gateway association proposal should be triggered
 
 ## Import
 
