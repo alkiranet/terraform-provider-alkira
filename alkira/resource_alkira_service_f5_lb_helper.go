@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,7 +108,7 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 				instanceStruct.CredentialId = credId
 			}
 		}
-		if availabilityZone, ok := tfInstance["availability_zone"]; ok {
+		if availabilityZone, ok := tfInstance["availability_zone"]; ok && strings.TrimSpace(availabilityZone.(string)) != "" {
 			instanceStruct.AvailabilityZone = json.Number(availabilityZone.(string))
 		}
 		instances[i] = instanceStruct
@@ -171,7 +172,7 @@ func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string
 		}
 
 		if subOption.ElbBgpOptions != nil {
-			option["bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
+			option["elb_bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
 		}
 
 		segmentOptions = append(segmentOptions, option)
