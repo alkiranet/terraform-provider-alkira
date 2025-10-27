@@ -49,17 +49,12 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 			"network_entity_id": {
 				Description: "The network entity ID.",
 				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"network_entity_sub_type": {
-				Description: "The network entity sub type.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
 			"network_entity_type": {
 				Description: "The network entity type.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
 			"segment_scale_options": {
 				Description: "Segment Scale Options.",
@@ -70,12 +65,12 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 						"additional_tunnels_per_node": {
 							Description: "Additional tunnels per node.",
 							Type:        schema.TypeInt,
-							Required:    true,
+							Optional:    true,
 						},
 						"additional_nodes": {
 							Description: "Additional nodes.",
 							Type:        schema.TypeInt,
-							Required:    true,
+							Optional:    true,
 						},
 						"segment_id": {
 							Description: "Segment ID.",
@@ -85,7 +80,7 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 						"zone_name": {
 							Description: "Zone name.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 						},
 					},
 				},
@@ -93,9 +88,7 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 			"doc_state": {
 				Description: "The document state.",
 				Type:        schema.TypeString,
-				Required:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"ADDED", "MARKED_FOR_DELETION", "DELETED"}, false),
+				Computed:    true,
 			},
 			"last_config_updated_at": {
 				Description: "The last config updated at timestamp.",
@@ -105,11 +98,7 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 			"state": {
 				Description: "The state of the controller scale options.",
 				Type:        schema.TypeString,
-				Required:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"PENDING", "IN_PROGRESS",
-					"SUCCESS", "FAILED", "SCHEDULED",
-					"PARTIAL_SUCCESS", "INITIALIZING"}, false),
+				Computed:    true,
 			},
 		},
 	}
@@ -294,25 +283,21 @@ func generateControllerScaleOptionsRequest(d *schema.ResourceData) (*alkira.Cont
 		for _, item := range v {
 			ssoMap := item.(map[string]any)
 			segmentScaleOptions = append(segmentScaleOptions, alkira.SegmentScaleOptions{
-				AdditionalTunnelsPerNode: int32(ssoMap["additional_tunnels_per_node"].(int)),
-				AdditionalNodes:          int32(ssoMap["additional_nodes"].(int)),
-				SegmentId:                int64(ssoMap["segment_id"].(int)),
+				AdditionalTunnelsPerNode: ssoMap["additional_tunnels_per_node"].(int),
+				AdditionalNodes:          ssoMap["additional_nodes"].(int),
+				SegmentId:                ssoMap["segment_id"].(int),
 				ZoneName:                 ssoMap["zone_name"].(string),
 			})
 		}
 	}
 
 	controllerScaleOptions := &alkira.ControllerScaleOptions{
-		Name:                 d.Get("name").(string),
-		Description:          d.Get("description").(string),
-		EntityId:             int64(d.Get("entity_id").(int)),
-		EntityType:           d.Get("entity_type").(string),
-		NetworkEntityId:      d.Get("network_entity_id").(string),
-		NetworkEntitySubType: d.Get("network_entity_sub_type").(string),
-		NetworkEntityType:    d.Get("network_entity_type").(string),
-		State:                d.Get("state").(string),
-		DocState:             d.Get("doc_state").(string),
-		SegmentScaleOptions:  segmentScaleOptions,
+		Name:                d.Get("name").(string),
+		Description:         d.Get("description").(string),
+		EntityId:            d.Get("entity_id").(int),
+		EntityType:          d.Get("entity_type").(string),
+		NetworkEntityType:   d.Get("network_entity_type").(string),
+		SegmentScaleOptions: segmentScaleOptions,
 	}
 
 	return controllerScaleOptions, nil

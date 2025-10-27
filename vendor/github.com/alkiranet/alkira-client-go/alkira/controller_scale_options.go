@@ -8,19 +8,19 @@ import (
 )
 
 type SegmentScaleOptions struct {
-	AdditionalTunnelsPerNode int32  `json:"additionalTunnelsPerNode"`
-	AdditionalNodes          int32  `json:"additionalNodes"`
-	SegmentId                int64  `json:"segmentId"`
+	AdditionalTunnelsPerNode int    `json:"additionalTunnelsPerNode"`
+	AdditionalNodes          int    `json:"additionalNodes"`
+	SegmentId                int    `json:"segmentId"`
 	ZoneName                 string `json:"zoneName"`
 }
 
 type ControllerScaleOptions struct {
 	Description          string                `json:"description"`
 	DocState             string                `json:"docState,omitempty"`
-	EntityId             int64                 `json:"entityId"`
+	EntityId             int                   `json:"entityId"`
 	EntityType           string                `json:"entityType"`
 	Id                   json.Number           `json:"id,omitempty"`                  // response only
-	LastConfigUpdatedAt  int64                 `json:"lastConfigUpdatedAt,omitempty"` // response only
+	LastConfigUpdatedAt  int                   `json:"lastConfigUpdatedAt,omitempty"` // response only
 	Name                 string                `json:"name"`
 	NetworkEntityId      string                `json:"networkEntityId"`
 	NetworkEntitySubType string                `json:"networkEntitySubType"`
