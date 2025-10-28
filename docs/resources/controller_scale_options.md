@@ -2,12 +2,16 @@
 page_title: "alkira_controller_scale_options Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Controller Scale Options.
+  Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector.
+  Scale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs.
+  Understanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.
 ---
 
 # alkira_controller_scale_options (Resource)
 
-Manage Controller Scale Options.
+Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector. 
+Scale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs. 
+Understanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.
 
 
 ## Example Usage
@@ -19,8 +23,7 @@ resource "alkira_controller_scale_options" "example" {
   entity_id   = alkira_service_fortinet.id
   entity_type = "SERVICE"
   segment_scale_options {
-    additional_tunnels_per_node = 5
-    additional_nodes            = 2
+    additional_tunnels_per_node = 2
     segment_id                  = alkira_segment.id
     zone_name                   = "ZoneA"
   }
@@ -34,8 +37,7 @@ resource "alkira_controller_scale_options" "another_example" {
   entity_id   = alkira_connector_aws_vpc.id
   entity_type = "CONNECTOR"
   segment_scale_options {
-    additional_tunnels_per_node = 10
-    additional_nodes            = 3
+    additional_nodes            = 2
     segment_id                  = alkira_segment.example.id
   }
 }
@@ -45,15 +47,10 @@ resource "alkira_controller_scale_options" "another_example" {
 
 ### Required
 
-- `doc_state` (String) The document state.
 - `entity_id` (Number) The entity ID.
 - `entity_type` (String) The entity type.
 - `name` (String) The name of the controller scale options.
-- `network_entity_id` (String) The network entity ID.
-- `network_entity_sub_type` (String) The network entity sub type.
-- `network_entity_type` (String) The network entity type.
 - `segment_scale_options` (Block List, Min: 1) Segment Scale Options. (see [below for nested schema](#nestedblock--segment_scale_options))
-- `state` (String) The state of the controller scale options.
 
 ### Optional
 
@@ -61,15 +58,22 @@ resource "alkira_controller_scale_options" "another_example" {
 
 ### Read-Only
 
+- `doc_state` (String) The document state.
 - `id` (String) The ID of this resource.
 - `last_config_updated_at` (Number) The last config updated at timestamp.
+- `network_entity_id` (String) The network entity ID.
+- `network_entity_type` (String) The network entity type.
+- `state` (String) The state of the controller scale options.
 
 <a id="nestedblock--segment_scale_options"></a>
 ### Nested Schema for `segment_scale_options`
 
 Required:
 
-- `additional_nodes` (Number) Additional nodes.
-- `additional_tunnels_per_node` (Number) Additional tunnels per node.
-- `segment_id` (Number) Segment ID.
-- `zone_name` (String) Zone name.
+- `segment_id` (Number) Id of the segment for which custom scale is required. Segment Id is mandatory, a segment can occur only ones in connector segment scale options. For Service Scale the segment can repeat for unique segment and zone combination.
+
+Optional:
+
+- `additional_nodes` (Number) Number of additional nodes to be added. By default there are 2 nodes per connector or service on an average. Maximum nodes are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.
+- `additional_tunnels_per_node` (Number) Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.
+- `zone_name` (String) optional field, if provided only tunnels associated with given zone would be scaled. Not applicable if scale options are defined for a connector.
