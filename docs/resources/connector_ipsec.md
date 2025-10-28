@@ -9,157 +9,447 @@ description: |-
 
 Manage IPSec Connector.
 
-
 ## VPN Mode
 
-`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's
-defined as `ROUTE_BASED`, `routing_options` block is required. When
-it's defined as `POLICY_BASED`, `policy_options` block is required.
+`vpn_mode` can be either `ROUTE_BASED` or `POLICY_BASED`:
 
-An internet exit is an exit from the CXP to the internet and allows
-the traffic from the various Users & Sites or Cloud Connectors to flow
-towards the Internet.
+- **`ROUTE_BASED`**: Uses routing protocols to determine traffic flow. Requires `routing_options` block with one of the following routing types:
+  - `STATIC`: Static routes defined via prefix lists
+  - `DYNAMIC`: BGP routing with customer gateway ASN
+  - `BOTH`: Combination of static and dynamic routing
+
+- **`POLICY_BASED`**: Uses traffic selectors (prefix lists) to determine which traffic should be encrypted. Requires `policy_options` block with both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids`.
+
+## Routing Options
+
+The `routing_options` block supports the following availability check methods:
+- `IKE_STATUS`: Uses IKE tunnel status to determine route availability
+- `IPSEC_INTERFACE_PING`: Pings the IPSec interface to verify connectivity (default)
+- `PING`: Simple ping-based availability check
+
+For dynamic routing, you can optionally specify `bgp_auth_key` for BGP MD5 authentication.
+
+## High Availability
+
+Multiple endpoints can be configured for redundancy:
+- `ha_mode = "ACTIVE"`: Endpoint actively carries traffic
+- `ha_mode = "STANDBY"`: Endpoint only used when all active endpoints are down
+- `enable_tunnel_redundancy`: When `true`, all tunnels must be UP for the connector to be considered healthy
 
 ## Example Usage
 
-```terraform
-# Basic IPSec Connector Example
-resource "alkira_connector_ipsec" "basic" {
-  name           = "ipsec-connector-basic"
-  description    = "Basic IPSec connector example"
-  cxp            = "US-WEST"
-  group          = alkira_group.group1.name
-  segment_id     = alkira_segment.segment1.id
-  size           = "SMALL"
-  enabled        = true
-  billing_tag_ids = [alkira_billing_tag.tag1.id]
+### Basic Route-Based with Dynamic Routing (BGP)
 
-  vpn_mode       = "ROUTE_BASED"
+```terraform
+resource "alkira_connector_ipsec" "basic_dynamic" {
+  name        = "ipsec-connector-basic"
+  description = "Basic route-based IPSec connector with BGP"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
 
   routing_options {
-    type = "DYNAMIC"
+    type                 = "DYNAMIC"
     customer_gateway_asn = "65310"
+    availability         = "IPSEC_INTERFACE_PING"
   }
 
   endpoint {
     name                = "remote-site"
     customer_gateway_ip = "203.0.113.1"
-    preshared_keys      = ["your-preshared-key"]
+    preshared_keys      = ["your-preshared-key-here"]
     billing_tag_ids     = [alkira_billing_tag.tag1.id]
   }
 }
+```
 
-# Advanced IPSec Connector with High Availability
-resource "alkira_connector_ipsec" "advanced" {
-  name           = "ipsec-connector-advanced"
-  description    = "Advanced IPSec connector with high availability"
-  cxp            = "US-WEST"
-  failover_cxps  = ["US-EAST"]
-  group          = alkira_group.group1.name
-  segment_id     = alkira_segment.segment1.id
-  size           = "MEDIUM"
-  enabled        = true
-  billing_tag_ids = [alkira_billing_tag.tag1.id]
-  scale_group_id = alkira_scale_group.ipsec_scale.id
+### Route-Based with Static Routing
 
-  vpn_mode       = "ROUTE_BASED"
-  health_check_type = "IPSEC"
+```terraform
+resource "alkira_connector_ipsec" "route_based_static" {
+  name        = "ipsec-connector-static"
+  description = "Route-based IPSec connector with static routes"
+  cxp         = "US-EAST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
 
-  routing_options {
-    type = "DYNAMIC"
-    customer_gateway_asn = "65310"
-  }
-
-  # Primary site with redundancy
-  endpoint {
-    name                     = "primary-site"
-    customer_gateway_ip      = "203.0.113.1"
-    preshared_keys           = ["primary-key-1", "primary-key-2"]
-    billing_tag_ids          = [alkira_billing_tag.tag1.id]
-    enable_tunnel_redundancy = true
-
-    # Advanced IPSec options
-    advanced_options {
-      esp_dh_group_numbers      = ["MODP3072"]
-      esp_encryption_algorithms = ["AES256CBC"]
-      esp_integrity_algorithms  = ["SHA256"]
-
-      ike_dh_group_numbers      = ["MODP3072"]
-      ike_encryption_algorithms = ["AES256CBC"]
-      ike_integrity_algorithms  = ["SHA256"]
-      ike_version               = "IKEv2"
-
-      initiator          = true
-
-      remote_auth_type   = "IP_ADDR"
-      remote_auth_value  = "203.0.113.1"
-    }
-  }
-
-  # Secondary site for redundancy
-  endpoint {
-    name                = "secondary-site"
-    customer_gateway_ip = "203.0.113.2"
-    preshared_keys      = ["secondary-key-1", "secondary-key-2"]
-    billing_tag_ids     = [alkira_billing_tag.tag1.id]
-    enable_tunnel_redundancy = true
-  }
-}
-
-# Policy-based IPSec Connector
-resource "alkira_connector_ipsec" "policy_based" {
-  name           = "ipsec-connector-policy"
-  description    = "Policy-based IPSec connector"
-  cxp            = "US-WEST"
-  group          = alkira_group.group1.name
-  segment_id     = alkira_segment.segment1.id
-  size           = "SMALL"
-  enabled        = true
-  billing_tag_ids = [alkira_billing_tag.tag1.id]
-
-  vpn_mode       = "POLICY_BASED"
+  vpn_mode = "ROUTE_BASED"
 
   routing_options {
-    type = "STATIC"
+    type           = "STATIC"
     prefix_list_id = alkira_list_global_cidr.remote_subnets.id
+    availability   = "IKE_STATUS"
   }
 
   endpoint {
     name                = "branch-office"
     customer_gateway_ip = "203.0.113.10"
-    preshared_keys      = ["branch-office-key"]
+    preshared_keys      = ["branch-key-1", "branch-key-2"]
     billing_tag_ids     = [alkira_billing_tag.tag1.id]
   }
 }
+```
 
-# Supporting resources
-resource "alkira_billing_tag" "tag1" {
-  name = "ipsec-connector-tag"
-  description = "Billing tag for IPSec connectors"
+### Hybrid Routing (Both Static and Dynamic)
+
+```terraform
+resource "alkira_connector_ipsec" "hybrid_routing" {
+  name        = "ipsec-connector-hybrid"
+  description = "IPSec connector with both static and dynamic routing"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "MEDIUM"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "BOTH"
+    prefix_list_id       = alkira_list_global_cidr.remote_subnets.id
+    customer_gateway_asn = "65320"
+    availability         = "IPSEC_INTERFACE_PING"
+  }
+
+  endpoint {
+    name                = "hybrid-site"
+    customer_gateway_ip = "203.0.113.20"
+    preshared_keys      = ["hybrid-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+  }
 }
+```
 
-resource "alkira_scale_group" "ipsec_scale" {
-  name = "ipsec-scale-group"
-  description = "Scale group for IPSec connectors"
-  min_instance_count = 2
-  max_instance_count = 4
+### BGP with MD5 Authentication
+
+```terraform
+resource "alkira_connector_ipsec" "bgp_auth" {
+  name        = "ipsec-connector-bgp-auth"
+  description = "IPSec connector with BGP MD5 authentication"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "DYNAMIC"
+    customer_gateway_asn = "65330"
+    bgp_auth_key         = "my-bgp-secret-key"
+    availability         = "PING"
+  }
+
+  endpoint {
+    name                = "secured-site"
+    customer_gateway_ip = "203.0.113.30"
+    preshared_keys      = ["secured-psk"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+  }
 }
+```
 
-resource "alkira_list_global_cidr" "remote_subnets" {
-  name = "remote-subnets"
-  description = "Remote subnets for static routing"
-  values = ["192.168.1.0/24", "192.168.2.0/24"]
+### Policy-Based IPSec
+
+When using `vpn_mode = "POLICY_BASED"`, you must specify traffic selectors for both on-premises and CXP networks:
+
+```terraform
+resource "alkira_connector_ipsec" "policy_based" {
+  name        = "ipsec-connector-policy-based"
+  description = "Policy-based IPSec connector with traffic selectors"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "POLICY_BASED"
+
+  policy_options {
+    on_prem_prefix_list_ids = [alkira_list_global_cidr.on_prem_subnets.id]
+    cxp_prefix_list_ids     = [alkira_list_global_cidr.cxp_subnets.id]
+  }
+
+  endpoint {
+    name                = "policy-site"
+    customer_gateway_ip = "203.0.113.40"
+    preshared_keys      = ["policy-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+  }
 }
+```
 
-resource "alkira_group" "group1" {
-  name = "ipsec-group"
-  description = "Group for IPSec connectors"
+### High Availability with Active and Standby Endpoints
+
+```terraform
+resource "alkira_connector_ipsec" "ha_active_standby" {
+  name        = "ipsec-connector-ha"
+  description = "High availability IPSec with active and standby endpoints"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "MEDIUM"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "DYNAMIC"
+    customer_gateway_asn = "65340"
+  }
+
+  endpoint {
+    name                     = "primary-active"
+    customer_gateway_ip      = "203.0.113.50"
+    preshared_keys           = ["primary-key-1", "primary-key-2"]
+    billing_tag_ids          = [alkira_billing_tag.tag1.id]
+    ha_mode                  = "ACTIVE"
+    enable_tunnel_redundancy = true
+  }
+
+  endpoint {
+    name                     = "secondary-active"
+    customer_gateway_ip      = "203.0.113.51"
+    preshared_keys           = ["secondary-key-1", "secondary-key-2"]
+    billing_tag_ids          = [alkira_billing_tag.tag1.id]
+    ha_mode                  = "ACTIVE"
+    enable_tunnel_redundancy = true
+  }
+
+  endpoint {
+    name                = "standby"
+    customer_gateway_ip = "203.0.113.52"
+    preshared_keys      = ["standby-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+    ha_mode             = "STANDBY"
+  }
 }
+```
 
-resource "alkira_segment" "segment1" {
-  name = "production-segment"
-  asn  = "65001"
-  cidrs = ["10.0.0.0/8"]
+### Dynamic Customer Gateway IP
+
+For sites with dynamic public IP addresses, set `customer_ip_type = "DYNAMIC"` and `customer_gateway_ip = "0.0.0.0"`. The `advanced_options` block with `remote_auth_type` is required, and `initiator` must be `true`:
+
+```terraform
+resource "alkira_connector_ipsec" "dynamic_gateway" {
+  name        = "ipsec-connector-dynamic-gw"
+  description = "IPSec connector with dynamic customer gateway IP"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "DYNAMIC"
+    customer_gateway_asn = "65350"
+  }
+
+  endpoint {
+    name                = "dynamic-site"
+    customer_gateway_ip = "0.0.0.0"
+    customer_ip_type    = "DYNAMIC"
+    preshared_keys      = ["dynamic-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+
+    advanced_options {
+      esp_dh_group_numbers      = ["MODP2048"]
+      esp_encryption_algorithms = ["AES256CBC"]
+      esp_integrity_algorithms  = ["SHA256"]
+
+      ike_dh_group_numbers      = ["MODP2048"]
+      ike_encryption_algorithms = ["AES256CBC"]
+      ike_integrity_algorithms  = ["SHA256"]
+      ike_version               = "IKEv2"
+
+      initiator = true
+
+      remote_auth_type  = "FQDN"
+      remote_auth_value = "remote-site.example.com"
+    }
+  }
+}
+```
+
+### Advanced Cryptographic Options
+
+Customize ESP and IKE encryption, integrity, and Diffie-Hellman algorithms:
+
+```terraform
+resource "alkira_connector_ipsec" "advanced_crypto" {
+  name        = "ipsec-connector-advanced-crypto"
+  description = "IPSec connector with custom cryptographic algorithms"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "DYNAMIC"
+    customer_gateway_asn = "65360"
+  }
+
+  endpoint {
+    name                = "crypto-site"
+    customer_gateway_ip = "203.0.113.60"
+    preshared_keys      = ["crypto-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+
+    advanced_options {
+      esp_dh_group_numbers      = ["MODP4096", "ECP384"]
+      esp_encryption_algorithms = ["AES256GCM16", "AES256CBC"]
+      esp_integrity_algorithms  = ["SHA512", "SHA384"]
+
+      ike_dh_group_numbers      = ["MODP4096", "ECP384"]
+      ike_encryption_algorithms = ["AES256CBC", "AES192CBC"]
+      ike_integrity_algorithms  = ["SHA512", "SHA384"]
+      ike_version               = "IKEv1"
+
+      initiator = false
+
+      remote_auth_type  = "IP_ADDR"
+      remote_auth_value = "203.0.113.60"
+    }
+  }
+}
+```
+
+### Segment Options
+
+Control internet access and route advertisement per segment:
+
+```terraform
+resource "alkira_connector_ipsec" "segment_options" {
+  name        = "ipsec-connector-segment-opts"
+  description = "IPSec connector with segment-specific options"
+  cxp         = "US-WEST"
+  group       = alkira_group.group1.name
+  segment_id  = alkira_segment.segment1.id
+  size        = "SMALL"
+  enabled     = true
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "DYNAMIC"
+    customer_gateway_asn = "65370"
+  }
+
+  segment_options {
+    name                     = alkira_segment.segment1.name
+    advertise_default_route  = true
+    advertise_on_prem_routes = true
+  }
+
+  endpoint {
+    name                = "segment-site"
+    customer_gateway_ip = "203.0.113.70"
+    preshared_keys      = ["segment-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+  }
+}
+```
+
+### Multi-Site with All Features
+
+Complex deployment with scale group, multiple sites, and mixed configurations:
+
+```terraform
+resource "alkira_connector_ipsec" "multi_site_advanced" {
+  name           = "ipsec-connector-multi-site"
+  description    = "Multi-site IPSec connector with scale group"
+  cxp            = "US-WEST"
+  group          = alkira_group.group1.name
+  segment_id     = alkira_segment.segment1.id
+  size           = "LARGE"
+  enabled        = true
+  scale_group_id = alkira_scale_group.ipsec_scale.id
+
+  vpn_mode = "ROUTE_BASED"
+
+  routing_options {
+    type                 = "BOTH"
+    prefix_list_id       = alkira_list_global_cidr.remote_subnets.id
+    customer_gateway_asn = "65380"
+    bgp_auth_key         = "multi-site-bgp-key"
+    availability         = "IPSEC_INTERFACE_PING"
+  }
+
+  segment_options {
+    name                     = alkira_segment.segment1.name
+    advertise_default_route  = false
+    advertise_on_prem_routes = true
+  }
+
+  endpoint {
+    name                     = "site1-primary"
+    customer_gateway_ip      = "203.0.113.80"
+    preshared_keys           = ["site1-key-1", "site1-key-2"]
+    billing_tag_ids          = [alkira_billing_tag.tag1.id]
+    ha_mode                  = "ACTIVE"
+    enable_tunnel_redundancy = true
+
+    advanced_options {
+      esp_dh_group_numbers      = ["MODP3072", "ECP256"]
+      esp_encryption_algorithms = ["AES256CBC", "AES256GCM16"]
+      esp_integrity_algorithms  = ["SHA256", "SHA384"]
+
+      ike_dh_group_numbers      = ["MODP3072", "ECP256"]
+      ike_encryption_algorithms = ["AES256CBC"]
+      ike_integrity_algorithms  = ["SHA256"]
+      ike_version               = "IKEv2"
+
+      initiator = true
+
+      remote_auth_type  = "FQDN"
+      remote_auth_value = "site1.example.com"
+    }
+  }
+
+  endpoint {
+    name                     = "site2-secondary"
+    customer_gateway_ip      = "203.0.113.81"
+    preshared_keys           = ["site2-key-1", "site2-key-2"]
+    billing_tag_ids          = [alkira_billing_tag.tag2.id]
+    ha_mode                  = "ACTIVE"
+    enable_tunnel_redundancy = false
+
+    advanced_options {
+      esp_dh_group_numbers      = ["MODP2048"]
+      esp_encryption_algorithms = ["AES128CBC"]
+      esp_integrity_algorithms  = ["SHA1"]
+
+      ike_dh_group_numbers      = ["MODP2048"]
+      ike_encryption_algorithms = ["AES128CBC"]
+      ike_integrity_algorithms  = ["SHA1"]
+      ike_version               = "IKEv1"
+
+      initiator = true
+
+      remote_auth_type  = "KEYID"
+      remote_auth_value = "site2-identifier"
+    }
+  }
+
+  endpoint {
+    name                = "site3-backup"
+    customer_gateway_ip = "203.0.113.82"
+    preshared_keys      = ["site3-key"]
+    billing_tag_ids     = [alkira_billing_tag.tag1.id]
+    ha_mode             = "STANDBY"
+  }
 }
 ```
 
