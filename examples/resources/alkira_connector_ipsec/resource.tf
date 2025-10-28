@@ -96,7 +96,7 @@ resource "alkira_connector_ipsec" "policy_based" {
 
   routing_options {
     type = "STATIC"
-    prefix_list_ids = [alkira_list_global_cidr.remote_subnets.id]
+    prefix_list_id = alkira_list_global_cidr.remote_subnets.id
   }
 
   endpoint {
