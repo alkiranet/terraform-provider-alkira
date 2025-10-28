@@ -14,7 +14,7 @@ import (
 
 func resourceAlkiraControllerScaleOptions() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage Controller Scale Options.",
+		Description:   "Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector. \nScale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs. \nUnderstanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.",
 		CreateContext: resourceControllerScaleOptionsCreate,
 		ReadContext:   resourceControllerScaleOptionsRead,
 		UpdateContext: resourceControllerScaleOptionsUpdate,
@@ -63,22 +63,22 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"additional_tunnels_per_node": {
-							Description: "Additional tunnels per node.",
+							Description: "Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
 						"additional_nodes": {
-							Description: "Additional nodes.",
+							Description: "Number of additional nodes to be added. By default there are 2 nodes per connector or service on an average. Maximum nodes are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
 						"segment_id": {
-							Description: "Segment ID.",
+							Description: "Id of the segment for which custom scale is required. Segment Id is mandatory, a segment can occur only ones in connector segment scale options. For Service Scale the segment can repeat for unique segment and zone combination.",
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
 						"zone_name": {
-							Description: "Zone name.",
+							Description: "optional field, if provided only tunnels associated with given zone would be scaled. Not applicable if scale options are defined for a connector.",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
