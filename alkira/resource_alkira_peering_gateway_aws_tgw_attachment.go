@@ -211,20 +211,6 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	// Store initial ProposalId before Update
-	initialResource, _, err := api.GetById(d.Id())
-	if err != nil {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "Failed to get initial resource state",
-			Detail:   fmt.Sprintf("%s", err),
-		}}
-	}
-	initialProposalId := ""
-	if initialResource.ProposalDetails != nil {
-		initialProposalId = initialResource.ProposalDetails.ProposalId
-	}
-
 	// Check if trigger_proposal requires polling
 	updatedResource, _, err := api.GetById(d.Id())
 	if err != nil {
@@ -239,8 +225,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 		return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
 	}
 
-	// Implement polling loop with timeout
-	maxRetries := 120 // 10 minutes with 5-second intervals
+	maxRetries := 12 
 	retryCount := 0
 
 	for retryCount < maxRetries {
@@ -253,23 +238,25 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 			}}
 		}
 
-		// Check for failure
-		if resource.State == "FAILED" || resource.FailureReason != "" {
-			return diag.Diagnostics{{
-				Severity: diag.Error,
-				Summary:  "Update failed with failure reason",
-				Detail:   fmt.Sprintf("State: %s, FailureReason: %s", resource.State, resource.FailureReason),
-			}}
-		}
-
-		// Check if ProposalId changed (success condition)
-		currentProposalId := ""
-		if resource.ProposalDetails != nil {
-			currentProposalId = resource.ProposalDetails.ProposalId
-		}
-
-		if currentProposalId != "" && currentProposalId != initialProposalId {
-			// ProposalId changed - update successful
+		if resource.ProposalDetails != nil && resource.ProposalDetails.ProposalState != "" {
+			switch resource.ProposalDetails.ProposalState {
+			case "SUCCESS":
+				break
+			case "FAILED":
+				return diag.Diagnostics{{
+					Severity: diag.Error,
+					Summary:  "Proposal failed",
+					Detail:   fmt.Sprintf("ProposalState: FAILED, FailureReason: %s", resource.FailureReason),
+				}}
+			case "PENDING":
+				time.Sleep(5 * time.Second)
+				retryCount++
+				continue
+			default:
+				time.Sleep(5 * time.Second)
+				retryCount++
+				continue
+			}
 			break
 		}
 
@@ -285,7 +272,6 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 		}}
 	}
 
-	// Call Read function after successful polling
 	return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
 }
 
