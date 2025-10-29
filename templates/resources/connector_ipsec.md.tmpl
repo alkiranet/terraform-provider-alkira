@@ -9,20 +9,84 @@ description: |-
 
 {{ .Description | trimspace }}
 
-
 ## VPN Mode
 
-`vpn_mode` could be either `ROUTE_BASED` or `POLICY_BASED`. When it's
-defined as `ROUTE_BASED`, `routing_options` block is required. When
-it's defined as `POLICY_BASED`, `policy_options` block is required.
+`vpn_mode` can be either `ROUTE_BASED` or `POLICY_BASED`:
 
-An internet exit is an exit from the CXP to the internet and allows
-the traffic from the various Users & Sites or Cloud Connectors to flow
-towards the Internet.
+- **`ROUTE_BASED`**: Uses routing protocols to determine traffic flow. Requires `routing_options` block with one of the following routing types:
+  - `STATIC`: Static routes defined via prefix lists
+  - `DYNAMIC`: BGP routing with customer gateway ASN
+  - `BOTH`: Combination of static and dynamic routing
+
+- **`POLICY_BASED`**: Uses traffic selectors (prefix lists) to determine which traffic should be encrypted. Requires `policy_options` block with both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids`.
+
+## Routing Options
+
+The `routing_options` block supports the following availability check methods:
+- `IKE_STATUS`: Uses IKE tunnel status to determine route availability
+- `IPSEC_INTERFACE_PING`: Pings the IPSec interface to verify connectivity (default)
+- `PING`: Simple ping-based availability check
+
+For dynamic routing, you can optionally specify `bgp_auth_key` for BGP MD5 authentication.
+
+## High Availability
+
+Multiple endpoints can be configured for redundancy:
+- `ha_mode = "ACTIVE"`: Endpoint actively carries traffic
+- `ha_mode = "STANDBY"`: Endpoint only used when all active endpoints are down
+- `enable_tunnel_redundancy`: When `true`, all tunnels must be UP for the connector to be considered healthy
 
 ## Example Usage
 
+### Basic Route-Based with Dynamic Routing (BGP)
+
 {{ tffile "examples/resources/alkira_connector_ipsec/resource.tf" }}
+
+### Route-Based with Static Routing
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_static.tf" }}
+
+### Hybrid Routing (Both Static and Dynamic)
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_hybrid.tf" }}
+
+### BGP with MD5 Authentication
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_bgp_auth.tf" }}
+
+### Policy-Based IPSec
+
+When using `vpn_mode = "POLICY_BASED"`, you must specify traffic selectors for both on-premises and CXP networks:
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_policy_based.tf" }}
+
+### High Availability with Active and Standby Endpoints
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_ha.tf" }}
+
+### Dynamic Customer Gateway IP
+
+For sites with dynamic public IP addresses, set `customer_ip_type = "DYNAMIC"` and `customer_gateway_ip = "0.0.0.0"`. The `advanced_options` block with `remote_auth_type` is required, and `initiator` must be `true`:
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_dynamic_gw.tf" }}
+
+### Advanced Cryptographic Options
+
+Customize ESP and IKE encryption, integrity, and Diffie-Hellman algorithms:
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_advanced_crypto.tf" }}
+
+### Segment Options
+
+Control internet access and route advertisement per segment:
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_segment_options.tf" }}
+
+### Multi-Site with All Features
+
+Complex deployment with scale group, multiple sites, and mixed configurations:
+
+{{ tffile "examples/resources/alkira_connector_ipsec/resource_multi_site.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
 
