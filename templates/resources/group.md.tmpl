@@ -9,16 +9,56 @@ description: |-
 
 {{ .Description | trimspace }}
 
-This resource could be used for both `Connector Group` and `Service
-Group` on Alkira Portal. A group of resources is usually used with
-`policy` resources to enforce certain network policies.
+This resource can be used to create both `Connector Group` and `Service Group` on the Alkira Portal. 
 
+## Use Cases
+
+- **Connector Groups**: Organize multiple connectors (AWS VPC, Azure VNet, GCP VPC, etc.) for policy-based routing
+- **Service Groups**: Group security services (firewalls, IPS/IDS) for centralized policy enforcement
+- **Environment Segmentation**: Separate resources by environment (dev, staging, production)
+- **Policy Enforcement**: Reference groups in policies to control traffic between specific resource sets
 
 ## Example Usage
 
+### Basic Connector Group
+
 {{ tffile "examples/resources/alkira_group/resource.tf" }}
 
+### Service Group
+
+{{ tffile "examples/resources/alkira_group/resource_service_group.tf" }}
+
+### Using Groups with Policies
+
+{{ tffile "examples/resources/alkira_group/resource_with_policy.tf" }}
+
+### Multiple Groups with Outputs
+
+{{ tffile "examples/resources/alkira_group/resource_multiple_groups.tf" }}
+
 {{ .SchemaMarkdown | trimspace }}
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `id` - The ID of the group resource. This ID can be referenced in other resources such as `alkira_policy` to specify source or destination groups for traffic policies.
+
+### Usage Example
+
+```terraform
+# Reference the group ID in a policy
+resource "alkira_policy" "example" {
+  from_groups = [alkira_group.source_group.id]
+  to_groups   = [alkira_group.destination_group.id]
+  # ... other policy configuration
+}
+
+# Use in outputs for cross-module references
+output "group_id" {
+  value = alkira_group.connector_group.id
+}
+```
 
 ## Import
 
