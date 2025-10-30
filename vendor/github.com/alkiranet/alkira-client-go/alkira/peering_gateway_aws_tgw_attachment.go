@@ -23,6 +23,7 @@ type PeeringGatewayAwsTgwAttachment struct {
 	TriggerProposal            bool             `json:"trigger_proposal,omitempty"` // response only
 	FailureReason              string           `json:"failureReason,omitempty"`    // response only
 	ProposalDetails            *ProposalDetails `json:"proposalDetails,omitempty"`  //response only
+	ProposalStatus             string           `json:"proposalStatus,omitempty"`   // response only
 }
 
 type ProposalDetails struct {

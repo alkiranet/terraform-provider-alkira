@@ -84,11 +84,6 @@ func resourceAlkiraPeeringGatewayAwsTgwAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"trigger_proposal": {
-				Description: "Indicates if a direct connect gateway association proposal should be triggered",
-				Type:        schema.TypeBool,
-				Computed:    true,
-			},
 			"failure_reason": {
 				Description: "Failure reason if there is any failure in creation/deletion",
 				Type:        schema.TypeString,
@@ -182,7 +177,6 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peer_aws_account_id", attachment.PeerAwsAccountId)
 	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
 	d.Set("state", attachment.State)
-	d.Set("trigger_proposal", attachment.TriggerProposal)
 	d.Set("failure_reason", attachment.FailureReason)
 	if attachment.ProposalDetails != nil {
 		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetails.ProposalState)
@@ -211,21 +205,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	// Check if trigger_proposal requires polling
-	updatedResource, _, err := api.GetById(d.Id())
-	if err != nil {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "Failed to get updated resource state",
-			Detail:   fmt.Sprintf("%s", err),
-		}}
-	}
-
-	if !updatedResource.TriggerProposal {
-		return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
-	}
-
-	maxRetries := 12 
+	maxRetries := 60 // 5 minutes with 5-second intervals
 	retryCount := 0
 
 	for retryCount < maxRetries {
@@ -238,15 +218,15 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 			}}
 		}
 
-		if resource.ProposalDetails != nil && resource.ProposalDetails.ProposalState != "" {
-			switch resource.ProposalDetails.ProposalState {
+		if resource.ProposalStatus != "" {
+			switch resource.ProposalStatus {
 			case "SUCCESS":
 				break
 			case "FAILED":
 				return diag.Diagnostics{{
 					Severity: diag.Error,
 					Summary:  "Proposal failed",
-					Detail:   fmt.Sprintf("ProposalState: FAILED, FailureReason: %s", resource.FailureReason),
+					Detail:   fmt.Sprintf("ProposalStatus: FAILED, FailureReason: %s", resource.FailureReason),
 				}}
 			case "PENDING":
 				time.Sleep(5 * time.Second)
@@ -267,7 +247,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 	if retryCount >= maxRetries {
 		return diag.Diagnostics{{
 			Severity: diag.Error,
-			Summary:  "Timeout waiting for proposal details to update",
+			Summary:  "Timeout waiting for proposal to complete",
 			Detail:   fmt.Sprintf("Timed out after %d retries (%d minutes)", maxRetries, maxRetries*5/60),
 		}}
 	}
