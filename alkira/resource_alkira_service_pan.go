@@ -74,7 +74,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required: true,
 			},
 			"pan_license_key": {
-				Description: "PAN Panorama license Key.",
+				Description: "PAN Licensing API Key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
