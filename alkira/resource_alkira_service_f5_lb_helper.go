@@ -143,6 +143,10 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 			subOption.ElbBgpOptions = bgpOptions
 		}
 
+		if lbType, ok := cfg["lb_type"]; ok {
+			subOption.LbType = convertTypeSetToStringList(lbType.(*schema.Set))
+		}
+
 		segmentOptions[segmentName] = subOption
 	}
 
@@ -173,6 +177,10 @@ func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string
 
 		if subOption.ElbBgpOptions != nil {
 			option["elb_bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
+		}
+
+		if subOption.LbType != nil {
+			option["lb_type"] = subOption.LbType
 		}
 
 		segmentOptions = append(segmentOptions, option)
@@ -241,17 +249,18 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	}
 
 	service := &alkira.ServiceF5Lb{
-		Name:             d.Get("name").(string),
-		Description:      d.Get("description").(string),
-		Cxp:              d.Get("cxp").(string),
-		Size:             d.Get("size").(string),
-		ServiceGroupName: d.Get("service_group_name").(string),
-		Segments:         segmentNames,
-		BillingTags:      billingTagIds,
-		Instances:        instances,
-		SegmentOptions:   segmentOptions,
-		PrefixListId:     d.Get("prefix_list_id").(int),
-		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
+		Name:                d.Get("name").(string),
+		Description:         d.Get("description").(string),
+		Cxp:                 d.Get("cxp").(string),
+		Size:                d.Get("size").(string),
+		ServiceGroupName:    d.Get("service_group_name").(string),
+		IlbServiceGroupName: d.Get("ilb_service_group_name").(string),
+		Segments:            segmentNames,
+		BillingTags:         billingTagIds,
+		Instances:           instances,
+		SegmentOptions:      segmentOptions,
+		PrefixListId:        d.Get("prefix_list_id").(int),
+		GlobalCidrListId:    d.Get("global_cidr_list_id").(int),
 	}
 	return service, nil
 }

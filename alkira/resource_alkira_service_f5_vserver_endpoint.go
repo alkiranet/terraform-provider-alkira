@@ -55,7 +55,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 					" Only `ELB` is supported for now.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ELB"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ELB", "ILB"}, false),
 			},
 			"segment_id": {
 				Description: "ID of the segment associated with" +
@@ -66,7 +66,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			"fqdn_prefix": {
 				Description: "The FQDN prefix of the endpoint.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"protocol": {
 				Description: "The portocol used for the endpoint." +
@@ -80,7 +80,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 					" Values can be mixed i.e. ['20', '100-200']." +
 					" An array with only the value '-1' means any port.",
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snat": {
@@ -89,6 +89,18 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP", "NONE"}, false),
+			},
+			"destination_endpoint_port_ranges": {
+				Description: "TODO",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"destination_endpoint_ip_addresses": {
+				Description: "TODO",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -280,6 +292,19 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Protocol:             d.Get("protocol").(string),
 		PortRanges:           convertTypeSetToStringList(d.Get("port_ranges").(*schema.Set)),
 		Snat:                 d.Get("snat").(string),
+	}
+
+	destinationEndpointPortRanges, ok1 := d.Get("destination_endpoint_port_ranges").(*schema.Set)
+	destinationEndpointIpAddresses, ok2 := d.Get("destination_endpoint_ip_addresses").(*schema.Set)
+
+	if ok1 || ok2 {
+		request.DestinationEndpoints = &alkira.F5VServerDestinationEndpoints{}
+	}
+	if ok1 {
+		request.DestinationEndpoints.PortRanges = convertTypeSetToStringList(destinationEndpointPortRanges)
+	}
+	if ok2 {
+		request.DestinationEndpoints.IpAddresses = convertTypeSetToStringList(destinationEndpointIpAddresses)
 	}
 
 	return request, nil
