@@ -52,7 +52,6 @@ resource "alkira_peering_gateway_aws_tgw_attachment" "test" {
 - `failure_reason` (String) Failure reason if there is any failure in creation/deletion
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the resource.
-- `trigger_proposal` (Boolean) Indicates if a direct connect gateway association proposal should be triggered
 
 ## Import
 

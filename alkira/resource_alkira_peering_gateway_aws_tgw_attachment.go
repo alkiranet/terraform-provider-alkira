@@ -205,51 +205,55 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	maxRetries := 60 // 5 minutes with 5-second intervals
-	retryCount := 0
+	// Only poll for proposal status when type is AWS_DIRECT_CONNECT_GATEWAY
+	attachmentType := d.Get("type").(string)
+	if attachmentType == "AWS_DIRECT_CONNECT_GATEWAY" {
+		maxRetries := 60 // 5 minutes with 5-second intervals
+		retryCount := 0
 
-	for retryCount < maxRetries {
-		resource, _, err := api.GetById(d.Id())
-		if err != nil {
+		for retryCount < maxRetries {
+			resource, _, err := api.GetById(d.Id())
+			if err != nil {
+				return diag.Diagnostics{{
+					Severity: diag.Warning,
+					Summary:  "FAILED TO GET RESOURCE",
+					Detail:   fmt.Sprintf("%s", err),
+				}}
+			}
+
+			if resource.ProposalStatus != "" {
+				switch resource.ProposalStatus {
+				case "SUCCESS":
+					break
+				case "FAILED":
+					return diag.Diagnostics{{
+						Severity: diag.Error,
+						Summary:  "Proposal failed",
+						Detail:   fmt.Sprintf("ProposalStatus: FAILED, FailureReason: %s", resource.FailureReason),
+					}}
+				case "PENDING":
+					time.Sleep(5 * time.Second)
+					retryCount++
+					continue
+				default:
+					time.Sleep(5 * time.Second)
+					retryCount++
+					continue
+				}
+				break
+			}
+
+			time.Sleep(5 * time.Second)
+			retryCount++
+		}
+
+		if retryCount >= maxRetries {
 			return diag.Diagnostics{{
-				Severity: diag.Warning,
-				Summary:  "FAILED TO GET RESOURCE",
-				Detail:   fmt.Sprintf("%s", err),
+				Severity: diag.Error,
+				Summary:  "Timeout waiting for proposal to complete",
+				Detail:   fmt.Sprintf("Timed out after %d retries (%d minutes)", maxRetries, maxRetries*5/60),
 			}}
 		}
-
-		if resource.ProposalStatus != "" {
-			switch resource.ProposalStatus {
-			case "SUCCESS":
-				break
-			case "FAILED":
-				return diag.Diagnostics{{
-					Severity: diag.Error,
-					Summary:  "Proposal failed",
-					Detail:   fmt.Sprintf("ProposalStatus: FAILED, FailureReason: %s", resource.FailureReason),
-				}}
-			case "PENDING":
-				time.Sleep(5 * time.Second)
-				retryCount++
-				continue
-			default:
-				time.Sleep(5 * time.Second)
-				retryCount++
-				continue
-			}
-			break
-		}
-
-		time.Sleep(5 * time.Second)
-		retryCount++
-	}
-
-	if retryCount >= maxRetries {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "Timeout waiting for proposal to complete",
-			Detail:   fmt.Sprintf("Timed out after %d retries (%d minutes)", maxRetries, maxRetries*5/60),
-		}}
 	}
 
 	return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
