@@ -93,6 +93,8 @@ may take a much longer time to apply when provisioning is enabled.
 - `api_key` (String) Your Alkira API key. If thie is not provided then `username` and `password` must have a value.
 - `password` (String) Your Tenant Password. If this is not provided then `api_key` must have a value.
 - `provision` (Boolean) With provision or not.
+- `serialization_enabled` (Boolean) Enable API serialization.
+- `serialization_timeout` (Number) API serialization timeout in seconds.
 - `username` (String) Your username. If this is not provided then `api_key` must have a value.
 - `validation` (Boolean) Asynchronous validations.
 
