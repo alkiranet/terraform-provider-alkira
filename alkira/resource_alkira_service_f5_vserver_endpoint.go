@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -303,7 +302,6 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 	hasDEPortRanges := ok1 && destinationEndpointPortRanges.Len() > 0
 	destinationEndpointIpAddresses, ok2 := d.Get("destination_endpoint_ip_addresses").(*schema.Set)
 	hasDEIpAddresses := ok2 && destinationEndpointIpAddresses.Len() > 0
-	log.Printf("[DEBUG] ok1: %s, ok2: %s, pr, %#v, ip, %#v", ok1, ok2, destinationEndpointPortRanges, destinationEndpointIpAddresses)
 
 	if hasDEPortRanges || hasDEIpAddresses {
 		request.DestinationEndpoints = &alkira.F5VServerDestinationEndpoints{}
