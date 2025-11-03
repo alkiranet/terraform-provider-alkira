@@ -1,6 +1,6 @@
-resource "alkira_service_f5_lb" "example-lb" {
-  name                = "example-lb"
-  description         = "example-lb description."
+resource "alkira_service_f5_lb" "example-ilb" {
+  name                = "example-ilb"
+  description         = "example-ilb description."
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.example-global-cidr.id
   instance {
@@ -12,13 +12,13 @@ resource "alkira_service_f5_lb" "example-lb" {
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"
-    availability_zone   = 0
+
   }
   segment_ids = [alkira_segment.example-segment.id]
   segment_options {
     elb_nic_count = 2
     segment_id    = alkira_segment.example-segment.id
-    elb_bgp_options_advertise_to_cxp_prefix_list_id = alkira_policy_prefix_list.example.id
+    lb_type = ["ELB", "ILB"]
   }
   service_group_name = "example-service-group"
   size               = "LARGE"

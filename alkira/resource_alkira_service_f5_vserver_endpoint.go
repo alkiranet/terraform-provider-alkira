@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -64,7 +65,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"fqdn_prefix": {
-				Description: "The FQDN prefix of the endpoint.",
+				Description: "The FQDN prefix of the endpoint. Required when type is `ELB`",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -78,7 +79,8 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			"port_ranges": {
 				Description: "An array of ports or port ranges." +
 					" Values can be mixed i.e. ['20', '100-200']." +
-					" An array with only the value '-1' means any port.",
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ELB`",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -91,13 +93,16 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP", "NONE"}, false),
 			},
 			"destination_endpoint_port_ranges": {
-				Description: "TODO",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "An array of ports or port ranges." +
+					" Values can be mixed i.e. ['20', '100-200']." +
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ILB` and snat is `NONE`",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"destination_endpoint_ip_addresses": {
-				Description: "TODO",
+				Description: "An array of ip addresses. Required when type is `ILB` and snat is `NONE`",
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -295,15 +300,18 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 	}
 
 	destinationEndpointPortRanges, ok1 := d.Get("destination_endpoint_port_ranges").(*schema.Set)
+	hasDEPortRanges := ok1 && destinationEndpointPortRanges.Len() > 0
 	destinationEndpointIpAddresses, ok2 := d.Get("destination_endpoint_ip_addresses").(*schema.Set)
+	hasDEIpAddresses := ok2 && destinationEndpointIpAddresses.Len() > 0
+	log.Printf("[DEBUG] ok1: %s, ok2: %s, pr, %#v, ip, %#v", ok1, ok2, destinationEndpointPortRanges, destinationEndpointIpAddresses)
 
-	if ok1 || ok2 {
+	if hasDEPortRanges || hasDEIpAddresses {
 		request.DestinationEndpoints = &alkira.F5VServerDestinationEndpoints{}
 	}
-	if ok1 {
+	if hasDEPortRanges {
 		request.DestinationEndpoints.PortRanges = convertTypeSetToStringList(destinationEndpointPortRanges)
 	}
-	if ok2 {
+	if hasDEIpAddresses {
 		request.DestinationEndpoints.IpAddresses = convertTypeSetToStringList(destinationEndpointIpAddresses)
 	}
 

@@ -122,7 +122,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Optional:    true,
 						},
 						"lb_type": {
-							Description: "help",
+							Description: "Determines what type of load balancing to provide on the segment. Valid types are `ELB` and `ILB`.  If not provided will be ELB.",
 							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Optional:    true,
@@ -138,7 +138,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 			},
 			"ilb_service_group_name": {
 				Description: "Name of the ilb service group to be associated " +
-					"with the service.",
+					"with the service. Required when `ILB` is enabled on a segment",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
