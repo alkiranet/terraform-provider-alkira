@@ -11,11 +11,11 @@ type F5vServerEndpoint struct {
 	Id                   json.Number                    `json:"id,omitempty"` // RESPONSE ONLY
 	Type                 string                         `json:"type"`
 	Segment              string                         `json:"segment"`
-	FqdnPrefix           string                         `json:"fqdnPrefix"`
+	FqdnPrefix           string                         `json:"fqdnPrefix,omitempty"`
 	Protocol             string                         `json:"protocol"`
 	Snat                 string                         `json:"snat"`
 	F5ServiceInstanceIds []int                          `json:"f5ServiceInstanceIds,omitempty"`
-	PortRanges           []string                       `json:"portRanges"`
+	PortRanges           []string                       `json:"portRanges,omitempty"`
 	DestinationEndpoints *F5VServerDestinationEndpoints `json:"destinationEndpoints,omitempty"`
 }
 

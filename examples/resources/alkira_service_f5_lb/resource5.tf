@@ -21,5 +21,6 @@ resource "alkira_service_f5_lb" "example-ilb" {
     lb_type = ["ELB", "ILB"]
   }
   service_group_name = "example-service-group"
+  ilb_service_group_name = "example-ilb-service-group"
   size               = "LARGE"
 }
