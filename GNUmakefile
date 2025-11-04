@@ -27,6 +27,18 @@ release:
 fmt:
 	go fmt alkira/*
 
+lint:
+	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run --timeout=5m
+
+lint-fix:
+	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run --fix --timeout=5m
+
+lint-new:
+	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run --new-from-rev=main --timeout=5m
+
 doc:
 	tfplugindocs generate
 

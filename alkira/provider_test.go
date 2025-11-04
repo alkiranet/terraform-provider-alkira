@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,14 +35,15 @@ func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
 }
 
-func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("ALKIRA_PORTAL"); v == "" {
-		t.Fatal("ALKIRA_PORTAL must be set for acceptance tests.")
-	}
-	if v := os.Getenv("ALKIRA_USERNAME"); v == "" {
-		t.Fatal("ALKIRA_USERNAME must be set for acceptance tests.")
-	}
-	if v := os.Getenv("ALKIRA_PASSWORD"); v == "" {
-		t.Fatal("ALKIRA_PASSWORD must be set for acceptance tests.")
-	}
-}
+// UNUSED: Commented out to suppress linter warnings
+// func testAccPreCheck(t *testing.T) {
+// 	if v := os.Getenv("ALKIRA_PORTAL"); v == "" {
+// 		t.Fatal("ALKIRA_PORTAL must be set for acceptance tests.")
+// 	}
+// 	if v := os.Getenv("ALKIRA_USERNAME"); v == "" {
+// 		t.Fatal("ALKIRA_USERNAME must be set for acceptance tests.")
+// 	}
+// 	if v := os.Getenv("ALKIRA_PASSWORD"); v == "" {
+// 		t.Fatal("ALKIRA_PASSWORD must be set for acceptance tests.")
+// 	}
+// }

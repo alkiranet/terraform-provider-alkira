@@ -140,7 +140,7 @@ func resourceControllerScaleOptionsCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("state", provState)
 
 		if provState == "FAILED" {
@@ -231,7 +231,7 @@ func resourceControllerScaleOptionsUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("state", provState)
 
 		if provState == "FAILED" {
@@ -266,7 +266,7 @@ func resourceControllerScaleOptionsDelete(ctx context.Context, d *schema.Resourc
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

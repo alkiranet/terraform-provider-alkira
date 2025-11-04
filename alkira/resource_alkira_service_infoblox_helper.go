@@ -14,7 +14,7 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) == 0 {
-		return nil, fmt.Errorf("infoblox instances cannot be nil or empty")
+		return nil, fmt.Errorf("ERROR: Infoblox instances cannot be nil or empty")
 	}
 
 	instances := make([]alkira.InfobloxInstance, len(in))
@@ -105,7 +105,7 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) > 1 || len(in) < 1 {
-		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in grid master options.")
+		return nil, fmt.Errorf("ERROR: Exactly one object allowed in grid master options")
 	}
 
 	im := &alkira.InfobloxGridMaster{}
@@ -172,7 +172,7 @@ func deflateInfobloxGridMaster(im alkira.InfobloxGridMaster) []map[string]interf
 
 func expandInfobloxAnycast(in *schema.Set) (*alkira.InfobloxAnycast, error) {
 	if in == nil || in.Len() > 1 || in.Len() < 1 {
-		return nil, fmt.Errorf("[DEBUG] Exactly one object allowed in anycast options.")
+		return nil, fmt.Errorf("ERROR: Exactly one object allowed in anycast options")
 	}
 
 	ia := &alkira.InfobloxAnycast{}

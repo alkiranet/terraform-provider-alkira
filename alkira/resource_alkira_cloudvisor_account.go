@@ -58,7 +58,7 @@ func resourceCloudVisorAccount(ctx context.Context, d *schema.ResourceData, m in
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateCloudVisorAccountRequest(d, m)
+	request := generateCloudVisorAccountRequest(d)
 
 	// Send create request
 	resource, _, err, valErr, _ := api.Create(request)
@@ -67,7 +67,7 @@ func resourceCloudVisorAccount(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
-	d.SetId(string(resource.Id))
+	d.SetId(resource.Id)
 
 	// Handle validation error
 	client := m.(*alkira.AlkiraClient)
@@ -120,7 +120,7 @@ func resourceCloudVisorAccountUpdate(ctx context.Context, d *schema.ResourceData
 	api := alkira.NewCloudProviderAccounts(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateCloudVisorAccountRequest(d, m)
+	request := generateCloudVisorAccountRequest(d)
 
 	// Send update request
 	_, err, valErr, _ := api.Update(d.Id(), request)
@@ -176,7 +176,7 @@ func resourceCloudVisorAccountDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func generateCloudVisorAccountRequest(d *schema.ResourceData, m interface{}) *alkira.CloudProviderAccount {
+func generateCloudVisorAccountRequest(d *schema.ResourceData) *alkira.CloudProviderAccount {
 	return &alkira.CloudProviderAccount{
 		Name:          d.Get("name").(string),
 		CredentialId:  d.Get("credential_id").(string),

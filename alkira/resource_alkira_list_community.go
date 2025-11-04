@@ -24,7 +24,7 @@ func resourceAlkiraListCommunity() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -69,7 +69,7 @@ func resourceListCommunity(ctx context.Context, d *schema.ResourceData, m interf
 	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListCommunityRequest(d, m)
+	request := generateListCommunityRequest(d)
 
 	// Send request
 	response, provState, err, valErr, provErr := api.Create(request)
@@ -97,7 +97,7 @@ func resourceListCommunity(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -133,7 +133,7 @@ func resourceListCommunityRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("values", list.Values)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -146,7 +146,7 @@ func resourceListCommunityUpdate(ctx context.Context, d *schema.ResourceData, m 
 	api := alkira.NewListCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListCommunityRequest(d, m)
+	request := generateListCommunityRequest(d)
 
 	// Send update request
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
@@ -174,7 +174,7 @@ func resourceListCommunityUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -211,7 +211,7 @@ func resourceListCommunityDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -222,7 +222,7 @@ func resourceListCommunityDelete(ctx context.Context, d *schema.ResourceData, m 
 	return nil
 }
 
-func generateListCommunityRequest(d *schema.ResourceData, m interface{}) *alkira.List {
+func generateListCommunityRequest(d *schema.ResourceData) *alkira.List {
 
 	request := &alkira.List{
 		Name:        d.Get("name").(string),

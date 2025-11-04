@@ -28,7 +28,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -59,7 +59,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"byoip_options": &schema.Schema{
+			"byoip_options": {
 				Description: "BYOIP options.",
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -119,7 +119,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
@@ -131,7 +131,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tunnel_configuration": &schema.Schema{
+			"tunnel_configuration": {
 				Description: "Tunnel Configurations.",
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -219,7 +219,7 @@ func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.Resour
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -284,9 +284,9 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 		}
 		options = append(options, i)
 	}
-
+	d.Set("byoip_options", options)
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -331,7 +331,7 @@ func resourceConnectorAkamaiProlexicUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provisionErr != nil {
@@ -368,7 +368,7 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -392,7 +392,7 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		return nil, err
 	}
 
-	// Create implict akamai-prolexic credential
+	// Create implicit akamai-prolexic credential
 	log.Printf("[INFO] Creating credential-akamai-prolexic")
 	c := alkira.CredentialAkamaiProlexic{
 		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),

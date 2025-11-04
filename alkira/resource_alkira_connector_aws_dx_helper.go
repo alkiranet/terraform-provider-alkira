@@ -12,7 +12,7 @@ import (
 func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alkira.ConnectorAwsDirectConnectSegmentOption, error) {
 
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("[ERROR] invalid connector_aws_directconnect segment_options.")
+		return nil, errors.New("ERROR: Invalid connector_aws_directconnect segment_options")
 	}
 
 	segmentOptions := make([]alkira.ConnectorAwsDirectConnectSegmentOption, in.Len())

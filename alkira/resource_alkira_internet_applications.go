@@ -23,7 +23,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -245,7 +245,7 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -328,7 +328,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("targets", targets)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -373,7 +373,7 @@ func resourceInternetApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -411,7 +411,7 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

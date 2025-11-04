@@ -22,7 +22,7 @@ func resourceAlkiraListPolicyFqdn() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -69,7 +69,7 @@ func resourceListPolicyFqdn(ctx context.Context, d *schema.ResourceData, m inter
 	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
 
 	// Construct requst
-	request := generateListPolicyFqdnRequest(d, m)
+	request := generateListPolicyFqdnRequest(d)
 
 	// Send request
 	resource, provState, err, valErr, provErr := api.Create(request)
@@ -99,7 +99,7 @@ func resourceListPolicyFqdn(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -135,7 +135,7 @@ func resourceListPolicyFqdnRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("list_dns_server_id", list.DnsServerListId)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -148,7 +148,7 @@ func resourceListPolicyFqdnUpdate(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewPolicyFqdnList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListPolicyFqdnRequest(d, m)
+	request := generateListPolicyFqdnRequest(d)
 
 	// Send request
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
@@ -176,7 +176,7 @@ func resourceListPolicyFqdnUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -213,7 +213,7 @@ func resourceListPolicyFqdnDelete(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -224,7 +224,7 @@ func resourceListPolicyFqdnDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func generateListPolicyFqdnRequest(d *schema.ResourceData, m interface{}) *alkira.PolicyFqdnList {
+func generateListPolicyFqdnRequest(d *schema.ResourceData) *alkira.PolicyFqdnList {
 
 	request := &alkira.PolicyFqdnList{
 		Name:            d.Get("name").(string),

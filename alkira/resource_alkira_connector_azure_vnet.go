@@ -22,7 +22,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -127,7 +127,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"segment_id": {
-				Description: "The ID of the segment assoicated with the connector.",
+				Description: "The ID of the segment associated with the connector.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -329,7 +329,7 @@ func resourceConnectorAzureVnetCreate(ctx context.Context, d *schema.ResourceDat
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -398,7 +398,7 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -443,7 +443,7 @@ func resourceConnectorAzureVnetUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -482,7 +482,7 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
