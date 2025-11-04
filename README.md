@@ -204,7 +204,7 @@ This runs `go fmt` on all files in the `alkira/` package.
 
 The project uses [golangci-lint](https://golangci-lint.run/) for comprehensive code quality checks. The configuration in `.golangci.yml` is tailored for Terraform providers with 13 enabled linters.
 
-**Run linting on all code:**
+**Run linting (checks only new/changed code):**
 
 ```bash
 make lint
@@ -216,10 +216,10 @@ make lint
 make lint-fix
 ```
 
-**Lint only new/changed code (recommended for incremental adoption):**
+**Lint all code including legacy code:**
 
 ```bash
-make lint-new
+make lint-all
 ```
 
 **What gets checked:**

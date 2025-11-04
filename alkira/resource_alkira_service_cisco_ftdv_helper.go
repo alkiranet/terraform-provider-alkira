@@ -23,7 +23,7 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 
 	instances := make([]alkira.CiscoFTDvInstance, 0, len(in))
 
-	for i, instance := range in {
+	for _, instance := range in {
 
 		r := alkira.CiscoFTDvInstance{}
 		instanceCfg := instance.(map[string]interface{})
@@ -76,7 +76,7 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 			r.TrafficEnabled = v
 		}
 
-		instances[i] = r
+		instances = append(instances, r)
 	}
 
 	return instances, nil
