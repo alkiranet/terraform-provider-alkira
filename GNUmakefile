@@ -29,15 +29,19 @@ fmt:
 
 lint:
 	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
-	golangci-lint run --timeout=5m
+	golangci-lint run --timeout=5m --new-from-rev=origin/dev
 
 lint-fix:
 	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
-	golangci-lint run --fix --timeout=5m
+	golangci-lint run --fix --timeout=5m --new-from-rev=origin/dev
 
 lint-new:
 	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
-	golangci-lint run --new-from-rev=main --timeout=5m
+	golangci-lint run --new-from-rev=origin/dev --timeout=5m
+
+lint-all:
+	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run --timeout=5m
 
 doc:
 	tfplugindocs generate
