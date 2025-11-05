@@ -61,7 +61,7 @@ resource "alkira_service_f5_vserver_endpoint" "example-vserver-2" {
 - `protocol` (String) The portocol used for the endpoint. Can be one of `TCP` or `UDP`.
 - `segment_id` (String) ID of the segment associated with the endpoint.
 - `snat` (String) SNAT for the endpoint. Only `AUTOMAP` or `NONE` is supported for now.
-- `type` (String) The type of endpoint. Only `ELB` is supported for now.
+- `type` (String) The type of endpoint. Can be `ELB` of `ILB`.
 
 ### Optional
 

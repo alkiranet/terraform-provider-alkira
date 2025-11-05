@@ -52,7 +52,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"type": {
 				Description: "The type of endpoint." +
-					" Only `ELB` is supported for now.",
+					" Can be `ELB` of `ILB`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ELB", "ILB"}, false),
