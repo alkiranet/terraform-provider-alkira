@@ -60,7 +60,7 @@ resource "alkira_service_f5_vserver_endpoint" "example-vserver-2" {
 - `name` (String) Name of the F5 vServer Endpoint.
 - `protocol` (String) The portocol used for the endpoint. Can be one of `TCP` or `UDP`.
 - `segment_id` (String) ID of the segment associated with the endpoint.
-- `snat` (String) SNAT for the endpoint. Only `AUTOMAP` or `NONE` is supported for now.
+- `snat` (String) SNAT for the endpoint. Can be `AUTOMAP` or `NONE`. If type is `ILB` snat must be `NONE`
 - `type` (String) The type of endpoint. Can be `ELB` or `ILB`.
 
 ### Optional

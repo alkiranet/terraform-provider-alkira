@@ -55,13 +55,13 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created " +
-					"with the connector.",
+					"with the service.",
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"ilb_implicit_group_id": {
 				Description: "The ID of ilb implicit group automaticaly created " +
-					"with the connector.",
+					"with the service when `ilb_service_group_name` is present.",
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
