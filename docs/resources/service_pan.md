@@ -117,7 +117,7 @@ resource "alkira_service_pan" "test1" {
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
-- `panorama_template` (String) Panorama Template.
+- `panorama_template` (String) Panorama Template or Panorama Template Stack.
 - `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
