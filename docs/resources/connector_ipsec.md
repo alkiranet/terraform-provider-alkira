@@ -488,7 +488,7 @@ Required:
 
 - `customer_gateway_ip` (String) The IP address of the customer gateway.
 - `name` (String) The name of the endpoint.
-- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explictly.
+- `preshared_keys` (List of String) An array of preshared keys, one per tunnel. The value needs to be provided explicitly.
 
 Optional:
 

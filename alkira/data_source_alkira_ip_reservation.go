@@ -30,7 +30,7 @@ func dataSourceAlkiraIpReservationRead(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
-	d.SetId(string(reservation.Id))
+	d.SetId(reservation.Id)
 
 	return nil
 }

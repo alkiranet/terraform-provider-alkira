@@ -23,7 +23,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -175,7 +175,7 @@ func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -237,7 +237,7 @@ func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -259,6 +259,10 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 	// UPDATE
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Handle validation error
 	if client.Validate && valErr != nil {
 		var diags diag.Diagnostics
@@ -278,7 +282,7 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -317,7 +321,7 @@ func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.Resource
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -347,10 +351,6 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	trafficDistribution := alkira.TrafficDistribution{
 		Algorithm:           d.Get("traffic_distribution_algorithm").(string),
 		AlgorithmAttributes: algorithmAttributes,
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	request := &alkira.ConnectorInternet{

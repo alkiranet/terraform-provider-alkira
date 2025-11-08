@@ -21,12 +21,12 @@ func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"public_key": &schema.Schema{
+			"public_key": {
 				Description: "Public key.",
 				Type:        schema.TypeString,
 				Optional:    true,

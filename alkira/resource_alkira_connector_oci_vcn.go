@@ -23,7 +23,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -215,7 +215,7 @@ func resourceConnectorOciVcnCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Set the state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -275,7 +275,7 @@ func resourceConnectorOciVcnRead(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -298,6 +298,10 @@ func resourceConnectorOciVcnUpdate(ctx context.Context, d *schema.ResourceData, 
 	// UPDATE
 	provState, err, valErr, provErr := api.Update(d.Id(), connector)
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Handle validation error
 	if client.Validate && valErr != nil {
 		var diags diag.Diagnostics
@@ -317,7 +321,7 @@ func resourceConnectorOciVcnUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -356,7 +360,7 @@ func resourceConnectorOciVcnDelete(ctx context.Context, d *schema.ResourceData, 
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

@@ -24,7 +24,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -326,7 +326,7 @@ func resourceConnectorAzureExpressRouteCreate(ctx context.Context, d *schema.Res
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -403,7 +403,7 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 	d.Set("segment_options", segments)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -449,7 +449,7 @@ func resourceConnectorAzureExpressRouteUpdate(ctx context.Context, d *schema.Res
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -488,7 +488,7 @@ func resourceConnectorAzureExpressRouteDelete(ctx context.Context, d *schema.Res
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

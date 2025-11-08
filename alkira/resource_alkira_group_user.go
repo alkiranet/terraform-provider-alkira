@@ -48,7 +48,7 @@ func resourceGroupUser(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
-	d.SetId(string(resource.Id))
+	d.SetId(resource.Id)
 
 	// Handle validation error
 	client := m.(*alkira.AlkiraClient)

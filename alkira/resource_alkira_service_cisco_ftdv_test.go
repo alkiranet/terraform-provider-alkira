@@ -1,11 +1,8 @@
 package alkira
 
 import (
-	"encoding/json"
-	"net/http"
 	"testing"
 
-	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -72,10 +69,11 @@ func TestAlkiraServiceCiscoFTDv_validateName(t *testing.T) {
 	}
 }
 
-// TEST HELPER
-func serveServiceCiscoFTDv(t *testing.T, serviceCiscoFTDv *alkira.ServiceCiscoFTDv) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(serviceCiscoFTDv)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+// func serveServiceCiscoFTDv(t *testing.T, serviceCiscoFTDv *alkira.ServiceCiscoFTDv) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(serviceCiscoFTDv)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }

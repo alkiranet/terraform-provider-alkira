@@ -25,7 +25,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -409,7 +409,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
-	// Create credentails
+	// Create credentials
 	err := createCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
@@ -449,7 +449,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -511,7 +511,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -524,7 +524,7 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
-	// Update all credentails
+	// Update all credentials
 	err := updateCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
@@ -561,7 +561,7 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -599,7 +599,7 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 		}}
 	}
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

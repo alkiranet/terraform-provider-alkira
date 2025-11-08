@@ -9,7 +9,7 @@ func dataSourceAlkiraPolicy() *schema.Resource {
 	return &schema.Resource{
 		Description: "Use this data source to get an existing policy.",
 
-		Read: dataSourceAlkiraPolicyRuleRead,
+		Read: dataSourceAlkiraPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {

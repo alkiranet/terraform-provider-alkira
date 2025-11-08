@@ -23,7 +23,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -147,7 +147,7 @@ func resourceIpReservation(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
-	d.SetId(string(response.Id))
+	d.SetId(response.Id)
 
 	// Handle validation error
 	if client.Validate && valErr != nil {
@@ -168,7 +168,7 @@ func resourceIpReservation(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -219,7 +219,7 @@ func resourceIpReservationRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("segment_id", segmentId)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -279,7 +279,7 @@ func resourceIpReservationUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -316,7 +316,7 @@ func resourceIpReservationDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

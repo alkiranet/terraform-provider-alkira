@@ -24,7 +24,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -284,7 +284,7 @@ func resourceServiceCiscoFTDvCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -331,7 +331,7 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("description", service.Description)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -348,7 +348,7 @@ func resourceServiceCiscoFTDvUpdate(ctx context.Context, d *schema.ResourceData,
 	request, err := generateServiceCiscoFTDvRequest(d, m)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("UpdateServiceCiscoFTDv: failed to marshal: %v", err))
+		return diag.FromErr(fmt.Errorf("ERROR : UpdateServiceCiscoFTDv: failed to marshal: %w", err))
 	}
 
 	// Send update request
@@ -378,7 +378,7 @@ func resourceServiceCiscoFTDvUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -416,7 +416,7 @@ func resourceServiceCiscoFTDvDelete(ctx context.Context, d *schema.ResourceData,
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

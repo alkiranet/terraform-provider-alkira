@@ -1,11 +1,7 @@
 package alkira
 
 import (
-	"encoding/json"
-	"net/http"
 	"testing"
-
-	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
 func TestCheckpointRead(t *testing.T) {
@@ -28,10 +24,11 @@ func TestCheckpointRead(t *testing.T) {
 	// require.Equal(t, expectedCxp, getStringFromResourceData(d, "cxp"))
 }
 
-// TEST HELPER
-func serveCheckpoint(t *testing.T, c *alkira.ServiceCheckpoint) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(c)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+// func serveCheckpoint(t *testing.T, c *alkira.ServiceCheckpoint) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(c)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }

@@ -26,7 +26,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -156,7 +156,7 @@ func resourcePolicyRule(ctx context.Context, d *schema.ResourceData, m interface
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRuleRequest(d, m)
+	request := generatePolicyRuleRequest(d)
 
 	// Send create request
 	response, provState, err, valErr, provErr := api.Create(request)
@@ -186,7 +186,7 @@ func resourcePolicyRule(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -241,7 +241,7 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("rule_action_flow_collector_ids", rule.RuleAction.FlowCollectors)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -254,7 +254,7 @@ func resourcePolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, m int
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRuleRequest(d, m)
+	request := generatePolicyRuleRequest(d)
 
 	// Send update request
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
@@ -282,7 +282,7 @@ func resourcePolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -319,7 +319,7 @@ func resourcePolicyRuleDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -330,7 +330,7 @@ func resourcePolicyRuleDelete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicyRule {
+func generatePolicyRuleRequest(d *schema.ResourceData) *alkira.TrafficPolicyRule {
 
 	request := &alkira.TrafficPolicyRule{
 		Description: d.Get("description").(string),

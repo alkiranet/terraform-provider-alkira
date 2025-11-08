@@ -21,7 +21,7 @@ func resourceAlkiraConnectorIpsecTunnelProfile() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -134,7 +134,7 @@ func resourceConnectorIpsecTunnelProfile(ctx context.Context, d *schema.Resource
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -176,7 +176,7 @@ func resourceConnectorIpsecTunnelProfileRead(ctx context.Context, d *schema.Reso
 	d.Set("ike_dh_group", profile.IkeConfiguration.DhGroup)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -221,7 +221,7 @@ func resourceConnectorIpsecTunnelProfileUpdate(ctx context.Context, d *schema.Re
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -261,7 +261,7 @@ func resourceConnectorIpsecTunnelProfileDelete(ctx context.Context, d *schema.Re
 	}
 
 	// Check provisions state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

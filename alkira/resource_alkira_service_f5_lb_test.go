@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -272,7 +273,7 @@ func TestAlkiraServiceF5LoadBalancer_CreateError(t *testing.T) {
 	d.Set("credential_id", "test-credential")
 	d.Set("segment_ids", []int{1})
 
-	diags := resourceF5LoadBalancerCreate(nil, d, client)
+	diags := resourceF5LoadBalancerCreate(context.TODO(), d, client)
 	require.NotEmpty(t, diags, "Create should return error")
 	assert.True(t, diags.HasError(), "Diagnostics should contain error")
 }
@@ -399,14 +400,6 @@ func TestAlkiraServiceF5LoadBalancer_validateName(t *testing.T) {
 	}
 }
 
-// TEST HELPER
-func serveServiceF5LoadBalancer(t *testing.T, serviceF5LoadBalancer *alkira.ServiceF5Lb) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(serviceF5LoadBalancer)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
-
 // Mock helper function for testing
 func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5Lb {
 	service := &alkira.ServiceF5Lb{
@@ -415,8 +408,8 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 		Cxp:         getStringFromResourceData(d, "cxp"),
 		Size:        getStringFromResourceData(d, "size"),
 	}
-
 	// Extract instances if they exist
+
 	if instancesRaw := d.Get("instances"); instancesRaw != nil {
 		if instancesList, ok := instancesRaw.([]interface{}); ok {
 			instances := make([]alkira.F5Instance, len(instancesList))
@@ -435,3 +428,14 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 
 	return service
 }
+
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+//
+//	func serveServiceF5LoadBalancer(t *testing.T, serviceF5LoadBalancer *alkira.ServiceF5Lb) *alkira.AlkiraClient {
+//		return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+//			json.NewEncoder(w).Encode(serviceF5LoadBalancer)
+//			w.Header().Set("Content-Type", "application/json")
+//		})
+//	}
+//

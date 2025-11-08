@@ -14,16 +14,16 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] invalid Cisco FTDv instance input")
-		return nil, errors.New("Invalid Cisco FTDv instance input")
+		return nil, errors.New("ERROR: Invalid Cisco FTDv instance input")
 	}
 
 	var adminPassword string
 	var fmcRegistrationKey string
 	var ftdvNatId string
 
-	instances := make([]alkira.CiscoFTDvInstance, len(in))
+	instances := make([]alkira.CiscoFTDvInstance, 0, len(in))
 
-	for i, instance := range in {
+	for _, instance := range in {
 
 		r := alkira.CiscoFTDvInstance{}
 		instanceCfg := instance.(map[string]interface{})
@@ -76,7 +76,7 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 			r.TrafficEnabled = v
 		}
 
-		instances[i] = r
+		instances = append(instances, r)
 	}
 
 	return instances, nil
@@ -86,12 +86,12 @@ func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []s
 	client := m.(*alkira.AlkiraClient)
 
 	var credentialId string
-	var ipAllowList []string = []string{}
-	var managementServer alkira.CiscoFTDvManagementServer = alkira.CiscoFTDvManagementServer{}
+	var ipAllowList = []string{}
+	var managementServer = alkira.CiscoFTDvManagementServer{}
 
 	if in == nil || in.Len() != 1 {
 		log.Printf("[DEBUG] Invalid Cisco FTDv Management Server input.")
-		return credentialId, ipAllowList, managementServer, errors.New("Invalid Cisco FTDv Management Server input.")
+		return credentialId, ipAllowList, managementServer, errors.New("ERROR: Invalid Cisco FTDv Management Server input")
 	}
 
 	for _, option := range in.List() {

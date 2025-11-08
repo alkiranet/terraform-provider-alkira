@@ -88,7 +88,7 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySubnets []interface{}) ([]alkira.InputPrefixes, error) {
 
 	if len(cidr) == 0 && subnets == nil {
-		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified.")
+		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified")
 	}
 
 	// Processing overlay_subnets
@@ -120,7 +120,7 @@ func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySub
 	log.Printf("[DEBUG] Processing vpc_subnet")
 	if subnets == nil || subnets.Len() == 0 {
 		log.Printf("[DEBUG] Empty vpc_subnet")
-		return nil, fmt.Errorf("ERROR: Invalid vpc_subnet.")
+		return nil, fmt.Errorf("ERROR: Invalid vpc_subnet")
 	}
 
 	prefixes := make([]alkira.InputPrefixes, subnets.Len())

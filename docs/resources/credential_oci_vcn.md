@@ -4,7 +4,7 @@ page_title: "alkira_credential_oci_vcn Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Credential for accessing Oracle Cloud.
-  You can provide your credentials via the following enviromental variables:
+  You can provide your credentials via the following environmental variables:
   AK_OCI_USER_OCIDAK_OCI_FINGERPRINTAK_OCI_KEYAK_OCI_TENANT_OCID
 ---
 
@@ -12,7 +12,7 @@ description: |-
 
 Credential for accessing Oracle Cloud.
 
-You can provide your credentials via the following enviromental variables:
+You can provide your credentials via the following environmental variables:
 
  * AK_OCI_USER_OCID
  * AK_OCI_FINGERPRINT

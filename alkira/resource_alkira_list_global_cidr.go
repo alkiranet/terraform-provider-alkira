@@ -22,7 +22,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -78,7 +78,7 @@ func resourceListGlobalCidr(ctx context.Context, d *schema.ResourceData, m inter
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
 	// Construct requst
-	request := generateListGlobalCidrRequest(d, m)
+	request := generateListGlobalCidrRequest(d)
 
 	// Send request
 	resource, provState, err, valErr, provErr := api.Create(request)
@@ -108,7 +108,7 @@ func resourceListGlobalCidr(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -145,7 +145,7 @@ func resourceListGlobalCidrRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("tags", list.Tags)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -158,7 +158,7 @@ func resourceListGlobalCidrUpdate(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListGlobalCidrRequest(d, m)
+	request := generateListGlobalCidrRequest(d)
 
 	// Send request
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
@@ -186,7 +186,7 @@ func resourceListGlobalCidrUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -223,7 +223,7 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -234,7 +234,7 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func generateListGlobalCidrRequest(d *schema.ResourceData, m interface{}) *alkira.GlobalCidrList {
+func generateListGlobalCidrRequest(d *schema.ResourceData) *alkira.GlobalCidrList {
 
 	request := &alkira.GlobalCidrList{
 		Name:        d.Get("name").(string),

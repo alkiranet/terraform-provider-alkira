@@ -8,11 +8,10 @@ import (
 )
 
 // generateConnectorVersaSdwanRequest generate request for Versa SD-WAN connector
-func generateConnectorVersaSdwanRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorVersaSdwan, error) {
+func generateConnectorVersaSdwanRequest(d *schema.ResourceData) (*alkira.ConnectorVersaSdwan, error) {
 
 	// Expand Versa SDWAN VOS devices block
-	instances, err := expandVersaSdwanVosDevices(m.(*alkira.AlkiraClient),
-		d.Get("versa_vos_device").([]interface{}))
+	instances, err := expandVersaSdwanVosDevices(d.Get("versa_vos_device").([]interface{}))
 
 	if err != nil {
 		return nil, err
@@ -77,7 +76,7 @@ func expandVersaSdwanVrfMappings(in *schema.Set) []alkira.VersaSdwanVrfMapping {
 }
 
 // expandVersaSdwanVosDevices expand Versa SD-WAN VOS devices
-func expandVersaSdwanVosDevices(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.VersaSdwanInstance, error) {
+func expandVersaSdwanVosDevices(in []interface{}) ([]alkira.VersaSdwanInstance, error) {
 
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] Empty VOS Devices")

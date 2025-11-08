@@ -106,7 +106,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 - `credential_id` (String) ID of resource `credential_azure_vnet`.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
-- `segment_id` (String) The ID of the segment assoicated with the connector.
+- `segment_id` (String) The ID of the segment associated with the connector.
 - `size` (String) The size of the connector, one of `5XSMALL`, `XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 
 ### Optional

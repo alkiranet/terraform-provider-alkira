@@ -21,7 +21,7 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -96,7 +96,7 @@ func resourceByoipPrefix(ctx context.Context, d *schema.ResourceData, m interfac
 	api := alkira.NewByoip(client)
 
 	// Construct request
-	request, err := generateByoipRequest(d, m)
+	request, err := generateByoipRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -129,7 +129,7 @@ func resourceByoipPrefix(ctx context.Context, d *schema.ResourceData, m interfac
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -171,7 +171,7 @@ func resourceByoipPrefixRead(ctx context.Context, d *schema.ResourceData, m inte
 	d.Set("cloud_provider", byoip.CloudProvider)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -179,7 +179,7 @@ func resourceByoipPrefixRead(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceByoipPrefixUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.FromErr(fmt.Errorf("`alkira_byoip_prefix` doesn't support upgrade. Please delete and create new one."))
+	return diag.FromErr(fmt.Errorf("`alkira_byoip_prefix` doesn't support upgrade. Please delete and create new one"))
 }
 
 func resourceByoipPrefixDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -207,7 +207,7 @@ func resourceByoipPrefixDelete(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -218,7 +218,7 @@ func resourceByoipPrefixDelete(ctx context.Context, d *schema.ResourceData, m in
 	return nil
 }
 
-func generateByoipRequest(d *schema.ResourceData, m interface{}) (*alkira.Byoip, error) {
+func generateByoipRequest(d *schema.ResourceData) (*alkira.Byoip, error) {
 
 	attributes := alkira.ByoipExtraAttributes{
 		Message:   d.Get("message").(string),

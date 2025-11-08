@@ -24,7 +24,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -260,7 +260,7 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyNatRuleRequest(d, m)
+	request, err := generatePolicyNatRuleRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -294,7 +294,7 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -333,7 +333,7 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	setNatRuleMatch(rule.Match, d)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -346,7 +346,7 @@ func resourcePolicyNatRuleUpdate(ctx context.Context, d *schema.ResourceData, m 
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyNatRuleRequest(d, m)
+	request, err := generatePolicyNatRuleRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -378,7 +378,7 @@ func resourcePolicyNatRuleUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -415,7 +415,7 @@ func resourcePolicyNatRuleDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

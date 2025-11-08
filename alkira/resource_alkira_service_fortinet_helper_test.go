@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,57 +76,58 @@ func makeMapFortinetInstance(name string, serialNumber string, credentialId stri
 	return m
 }
 
-func makeMapFortinetZone(name string, groups []interface{}) map[string]interface{} {
-	m := make(map[string]interface{})
-	m["name"] = name
-	m["groups"] = groups
-	return m
-}
-
-// makeNumMapFortinetZone could be adjusted for variability in the number of groups included
-// in each map. For now it is fixed at one.
-func makeNumMapFortinetZone(num int, baseName string, baseGroupsName string) []interface{} {
-	var ifc []interface{}
-
-	for i := 0; i < num; i++ {
-		postfixedName := baseName + getStringFromResourceData(nil, "")
-		if postfixedName == baseName {
-			postfixedName = baseName
-		}
-		postFixedGroupsName := []interface{}{baseGroupsName}
-		if len(postFixedGroupsName) > 0 {
-			m := makeMapFortinetZone(postfixedName, postFixedGroupsName)
-			ifc = append(ifc, m)
-		}
-	}
-
-	return ifc
-}
-
-func getNamesAndGroups(i []interface{}) ([]string, [][]string) {
-	var nameVals []string
-	var groupVals [][]string
-
-	for _, v := range i {
-		name := v.(map[string]interface{})["name"]
-		groups := v.(map[string]interface{})["groups"]
-
-		nameVals = append(nameVals, name.(string))
-
-		var s []string
-		for _, p := range groups.([]interface{}) {
-			s = append(s, p.(string))
-		}
-		groupVals = append(groupVals, s)
-	}
-
-	return nameVals, groupVals
-}
-
-// if tests break because of zoneResourceFromFortinet function it means the schema for our
-// fortinet resource has changed. In that instance we would need to adjust tests and make
-// sure that we haven't broken backward compatability.
-func zoneResourceFromFortinet() *schema.Resource {
-	r := resourceAlkiraServiceFortinet()
-	return r.Schema["segment_options"].Elem.(*schema.Resource).Schema["zone"].Elem.(*schema.Resource)
-}
+// UNUSED: Commented out to suppress linter warnings
+// func makeMapFortinetZone(name string, groups []interface{}) map[string]interface{} {
+// 	m := make(map[string]interface{})
+// 	m["name"] = name
+// 	m["groups"] = groups
+// 	return m
+// }
+//
+// // makeNumMapFortinetZone could be adjusted for variability in the number of groups included
+// // in each map. For now it is fixed at one.
+// func makeNumMapFortinetZone(num int, baseName string, baseGroupsName string) []interface{} {
+// 	var ifc []interface{}
+//
+// 	for i := 0; i < num; i++ {
+// 		postfixedName := baseName + getStringFromResourceData(nil, "")
+// 		if postfixedName == baseName {
+// 			postfixedName = baseName
+// 		}
+// 		postFixedGroupsName := []interface{}{baseGroupsName}
+// 		if len(postFixedGroupsName) > 0 {
+// 			m := makeMapFortinetZone(postfixedName, postFixedGroupsName)
+// 			ifc = append(ifc, m)
+// 		}
+// 	}
+//
+// 	return ifc
+// }
+//
+// func getNamesAndGroups(i []interface{}) ([]string, [][]string) {
+// 	var nameVals []string
+// 	var groupVals [][]string
+//
+// 	for _, v := range i {
+// 		name := v.(map[string]interface{})["name"]
+// 		groups := v.(map[string]interface{})["groups"]
+//
+// 		nameVals = append(nameVals, name.(string))
+//
+// 		var s []string
+// 		for _, p := range groups.([]interface{}) {
+// 			s = append(s, p.(string))
+// 		}
+// 		groupVals = append(groupVals, s)
+// 	}
+//
+// 	return nameVals, groupVals
+// }
+//
+// // if tests break because of zoneResourceFromFortinet function it means the schema for our
+// // fortinet resource has changed. In that instance we would need to adjust tests and make
+// // sure that we haven't broken backward compatibility.
+// func zoneResourceFromFortinet() *schema.Resource {
+// 	r := resourceAlkiraServiceFortinet()
+// 	return r.Schema["segment_options"].Elem.(*schema.Resource).Schema["zone"].Elem.(*schema.Resource)
+// }

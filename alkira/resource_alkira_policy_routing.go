@@ -25,7 +25,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -304,7 +304,7 @@ func resourcePolicyRouting(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -395,7 +395,7 @@ func resourcePolicyRoutingRead(ctx context.Context, d *schema.ResourceData, m in
 	//
 	// Set provision state
 	//
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -422,7 +422,7 @@ func resourcePolicyRoutingUpdate(ctx context.Context, d *schema.ResourceData, m 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -476,7 +476,7 @@ func resourcePolicyRoutingDelete(ctx context.Context, d *schema.ResourceData, m 
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

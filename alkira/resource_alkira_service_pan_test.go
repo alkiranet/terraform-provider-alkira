@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -204,10 +203,11 @@ func TestAlkiraServicePan_createPanCredential(t *testing.T) {
 	assert.NotEmpty(t, credentialId, "Credential ID should not be empty")
 }
 
-// TEST HELPER
-func serveServicePan(t *testing.T, servicePan *alkira.ServicePan) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(servicePan)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+// func serveServicePan(t *testing.T, servicePan *alkira.ServicePan) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(servicePan)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }

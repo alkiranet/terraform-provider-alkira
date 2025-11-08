@@ -118,7 +118,7 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 	// INIT
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
-	request, err := generateAwsTgwAttachmentRequest(d, m)
+	request, err := generateAwsTgwAttachmentRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -193,7 +193,7 @@ func resourcePeeringGatewayAwsTgwAttachmentUpdate(ctx context.Context, d *schema
 	// INIT
 	api := alkira.NewPeeringGatewayAwsTgwAttachment(m.(*alkira.AlkiraClient))
 
-	request, err := generateAwsTgwAttachmentRequest(d, m)
+	request, err := generateAwsTgwAttachmentRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -276,16 +276,16 @@ func resourcePeeringGatewayAwsTgwAttachmentDelete(ctx context.Context, d *schema
 	return nil
 }
 
-func generateAwsTgwAttachmentRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
+func generateAwsTgwAttachmentRequest(d *schema.ResourceData) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
 	if attachmentType, ok := d.Get("type").(string); ok && attachmentType == "AWS_DIRECT_CONNECT_GATEWAY" {
-		request, err := generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d, m)
+		request, err := generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d)
 		if err != nil {
 			return nil, err
 		}
 		request.Type = attachmentType
 		return request, nil
 	} else {
-		request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d, m)
+		request, err := generatePeeringGatewayAwsTgwAttachmentRequest(d)
 		if err != nil {
 			return nil, err
 		}
@@ -297,7 +297,7 @@ func generateAwsTgwAttachmentRequest(d *schema.ResourceData, m interface{}) (*al
 }
 
 // generatePeeringGatewayAwsTgwAttachmentRequest generate request
-func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
+func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
 
 	request := &alkira.PeeringGatewayAwsTgwAttachment{
 		Name:             d.Get("name").(string),
@@ -311,7 +311,7 @@ func generatePeeringGatewayAwsTgwAttachmentRequest(d *schema.ResourceData, m int
 	return request, nil
 }
 
-func generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d *schema.ResourceData, m interface{}) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
+func generateDirectConnectAssociationTransitGatewayAwsAttachmentd(d *schema.ResourceData) (*alkira.PeeringGatewayAwsTgwAttachment, error) {
 
 	request := &alkira.PeeringGatewayAwsTgwAttachment{
 		Name:                       d.Get("name").(string),

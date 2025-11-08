@@ -78,7 +78,7 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 	return instances, nil
 }
 
-func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMappings, m interface{}) ([]map[string]interface{}, error) {
+func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMappings) ([]map[string]interface{}, error) {
 
 	var mappings []map[string]interface{}
 	for _, vrfmapping := range vrf {
@@ -96,10 +96,10 @@ func deflateArubaEdgeVrfMapping(vrf []alkira.ArubaEdgeVRFMappings, m interface{}
 	return mappings, nil
 }
 
-func expandArubaEdgeVrfMappings(in *schema.Set, m interface{}) ([]alkira.ArubaEdgeVRFMappings, error) {
+func expandArubaEdgeVrfMappings(in *schema.Set) ([]alkira.ArubaEdgeVRFMappings, error) {
 	var mappings []alkira.ArubaEdgeVRFMappings
 	if in == nil || in.Len() == 0 {
-		return nil, errors.New("Invalid aruba edge mapping input: Cannot be nil or empty.")
+		return nil, errors.New("ERROR: Invalid aruba edge mapping input: Cannot be nil or empty")
 	}
 
 	for _, v := range in.List() {

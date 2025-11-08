@@ -24,7 +24,7 @@ func resourceAlkiraListAsPath() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -68,7 +68,7 @@ func resourceListAsPath(ctx context.Context, d *schema.ResourceData, m interface
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generateListAsPathRequest(d, m)
+	request, err := generateListAsPathRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -100,7 +100,7 @@ func resourceListAsPath(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -136,7 +136,7 @@ func resourceListAsPathRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("values", list.Values)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -149,7 +149,7 @@ func resourceListAsPathUpdate(ctx context.Context, d *schema.ResourceData, m int
 	api := alkira.NewListAsPath(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generateListAsPathRequest(d, m)
+	request, err := generateListAsPathRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -181,7 +181,7 @@ func resourceListAsPathUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -218,7 +218,7 @@ func resourceListAsPathDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -229,7 +229,7 @@ func resourceListAsPathDelete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func generateListAsPathRequest(d *schema.ResourceData, m interface{}) (*alkira.List, error) {
+func generateListAsPathRequest(d *schema.ResourceData) (*alkira.List, error) {
 
 	values := convertTypeListToStringList(d.Get("values").([]interface{}))
 

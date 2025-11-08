@@ -83,11 +83,9 @@ func TestAlkiraGroup_provisionStateHandling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Simulate provision state handling logic
 			var warnings []string
-			var errors []error
 
 			if tt.provisionFlag && tt.provErr != nil {
 				warnings = append(warnings, "PROVISION FAILED")
-				errors = append(errors, tt.provErr)
 			}
 
 			if tt.expectWarning {

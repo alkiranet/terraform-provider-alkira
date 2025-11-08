@@ -24,7 +24,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -259,7 +259,7 @@ func resourceConnectorGcpInterconnectCreate(ctx context.Context, d *schema.Resou
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -302,11 +302,11 @@ func resourceConnectorGcpInterconnectRead(ctx context.Context, d *schema.Resourc
 	d.Set("loopback_prefixes", connector.LoopbackPrefixes)
 	d.Set("enabled", connector.Enabled)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
-	instances := setGcpInterconnectInstance(d, connector.Instances, m)
+	instances := setGcpInterconnectInstance(connector.Instances, m)
 	d.Set("instances", instances)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -351,7 +351,7 @@ func resourceConnectorGcpInterconnectUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -390,7 +390,7 @@ func resourceConnectorGcpInterconnectDelete(ctx context.Context, d *schema.Resou
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

@@ -130,7 +130,7 @@ Optional:
 
 Read-Only:
 
-- `credential_id` (String) ID of Checkpoint Firewall Managment server credential.
+- `credential_id` (String) ID of Checkpoint Firewall Management server credential.
 
 
 <a id="nestedblock--segment_options"></a>

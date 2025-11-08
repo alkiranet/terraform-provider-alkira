@@ -22,7 +22,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -108,7 +108,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 				Optional: true,
 				Default:  "1234",
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`. ",
 				Type:     schema.TypeString,
@@ -125,7 +125,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"versa_vos_device": &schema.Schema{
+			"versa_vos_device": {
 				Description: "Versa VOS Device.",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -140,12 +140,12 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
-						"local_device_serial_number": &schema.Schema{
+						"local_device_serial_number": {
 							Description: "Local device serial number.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
-						"version": &schema.Schema{
+						"version": {
 							Description: "Versa version.",
 							Type:        schema.TypeString,
 							Required:    true,
@@ -204,7 +204,7 @@ func resourceConnectorVersaSdwanCreate(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVersaSdwan(m.(*alkira.AlkiraClient))
 
-	request, err := generateConnectorVersaSdwanRequest(d, m)
+	request, err := generateConnectorVersaSdwanRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -238,7 +238,7 @@ func resourceConnectorVersaSdwanCreate(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -304,7 +304,7 @@ func resourceConnectorVersaSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("vrf_segment_mapping", mappings)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -317,7 +317,7 @@ func resourceConnectorVersaSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorVersaSdwan(m.(*alkira.AlkiraClient))
 
-	request, err := generateConnectorVersaSdwanRequest(d, m)
+	request, err := generateConnectorVersaSdwanRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -349,7 +349,7 @@ func resourceConnectorVersaSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -386,7 +386,7 @@ func resourceConnectorVersaSdwanDelete(ctx context.Context, d *schema.ResourceDa
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

@@ -88,7 +88,7 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] invalid Fortinet instance input")
-		return nil, errors.New("Invalid Fortinet instance input")
+		return nil, errors.New("ERROR: Invalid fortinet instance input")
 	}
 
 	var licenseKeyPath string
@@ -133,27 +133,28 @@ func expandFortinetInstances(licenseType string, in []interface{}, m interface{}
 	return instances, nil
 }
 
-func expandFortinetZone(in *schema.Set) map[string][]string {
-	zonesToGroups := make(map[string][]string)
-
-	for _, zone := range in.List() {
-		zoneCfg := zone.(map[string]interface{})
-		var name *string
-		var groups []string
-
-		if v, ok := zoneCfg["name"].(string); ok {
-			name = &v
-		}
-
-		if v, ok := zoneCfg["groups"].([]interface{}); ok {
-			groups = convertTypeListToStringList(v)
-		}
-
-		zonesToGroups[*name] = groups
-	}
-
-	return zonesToGroups
-}
+// UNUSED: Commented out to suppress linter warnings
+// func expandFortinetZone(in *schema.Set) map[string][]string {
+// 	zonesToGroups := make(map[string][]string)
+//
+// 	for _, zone := range in.List() {
+// 		zoneCfg := zone.(map[string]interface{})
+// 		var name *string
+// 		var groups []string
+//
+// 		if v, ok := zoneCfg["name"].(string); ok {
+// 			name = &v
+// 		}
+//
+// 		if v, ok := zoneCfg["groups"].([]interface{}); ok {
+// 			groups = convertTypeListToStringList(v)
+// 		}
+//
+// 		zonesToGroups[*name] = groups
+// 	}
+//
+// 	return zonesToGroups
+// }
 
 // createFortinetCredential
 func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
@@ -197,12 +198,13 @@ func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) er
 	return nil
 }
 
-// deleteFortinetCredential
-func deleteFortinetCredential(id string, c *alkira.AlkiraClient) error {
-
-	log.Printf("[INFO] Deleting Fortinet Credential")
-	return c.DeleteCredential(id, alkira.CredentialTypeFortinet)
-}
+// UNUSED: Commented out to suppress linter warnings
+// // deleteFortinetCredential
+// func deleteFortinetCredential(id string, c *alkira.AlkiraClient) error {
+//
+// 	log.Printf("[INFO] Deleting Fortinet Credential")
+// 	return c.DeleteCredential(id, alkira.CredentialTypeFortinet)
+// }
 
 // createFortinetInstanceCredential
 func createFortinetInstanceCredential(c *alkira.AlkiraClient, name string, licenseType string, licenseKey string, licenseKeyPath string) (string, error) {

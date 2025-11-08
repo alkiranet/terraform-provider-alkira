@@ -23,7 +23,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -252,7 +252,7 @@ func resourceZscaler(ctx context.Context, d *schema.ResourceData, m interface{})
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -308,7 +308,7 @@ func resourceZscalerRead(ctx context.Context, d *schema.ResourceData, m interfac
 	d.Set("tunnel_protocol", z.TunnelType)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -354,7 +354,7 @@ func resourceZscalerUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -391,7 +391,7 @@ func resourceZscalerDelete(ctx context.Context, d *schema.ResourceData, m interf
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

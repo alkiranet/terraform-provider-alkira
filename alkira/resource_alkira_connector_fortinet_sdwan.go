@@ -23,7 +23,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -82,7 +82,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`.",
 				Type:     schema.TypeString,
@@ -95,7 +95,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 				Optional: true,
 				Default:  "IPSEC",
 			},
-			"wan_edge": &schema.Schema{
+			"wan_edge": {
 				Description: "WAN Edge",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -135,7 +135,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								"PAY_AS_YOU_GO", "BRING_YOUR_OWN"}, false),
 						},
-						"serial_number": &schema.Schema{
+						"serial_number": {
 							Description: "Serial Number of the WAN Edge. It's " +
 								"only required when `license_type` is " +
 								"`BRING_YOUR_OWN`. It could be set by ENV " +
@@ -249,7 +249,7 @@ func resourceConnectorFortinetSdwanCreate(ctx context.Context, d *schema.Resourc
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -312,7 +312,7 @@ func resourceConnectorFortinetSdwanRead(ctx context.Context, d *schema.ResourceD
 	d.Set("target_segment", mappings)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -356,7 +356,7 @@ func resourceConnectorFortinetSdwanUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provState == "FAILED" {
 			return diag.Diagnostics{{
@@ -394,7 +394,7 @@ func resourceConnectorFortinetSdwanDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

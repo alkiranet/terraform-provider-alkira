@@ -24,7 +24,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -81,14 +81,14 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VEDGE", "CSR", "CAT8000V"}, false),
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, " +
 					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vedge": &schema.Schema{
+			"vedge": {
 				Description: "Cisco vEdge",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -118,7 +118,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
-						"username": &schema.Schema{
+						"username": {
 							Description: "Cisco SD-WAN username. It could be also " +
 								"set by environment variable `AK_CISCO_SDWAN_USERNAME`.",
 							Type:     schema.TypeString,
@@ -127,7 +127,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 								"AK_CISCO_SDWAN_USERNAME",
 								nil),
 						},
-						"password": &schema.Schema{
+						"password": {
 							Description: "Cisco SD-WAN password. It could be also " +
 								"set by environment variable `AK_CISCO_SDWAN_PASSWORD`.",
 							Type:     schema.TypeString,
@@ -244,7 +244,7 @@ func resourceConnectorCiscoSdwanCreate(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -308,7 +308,7 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("version", connector.Version)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -352,7 +352,7 @@ func resourceConnectorCiscoSdwanUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -389,7 +389,7 @@ func resourceConnectorCiscoSdwanDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

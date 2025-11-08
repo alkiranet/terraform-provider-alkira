@@ -8,11 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type panZone struct {
-	Segment string
-	Zone    string
-	Groups  interface{}
-}
+// UNUSED: Commented out to suppress linter warnings
+// type panZone struct {
+// 	Segment string
+// 	Zone    string
+// 	Groups  interface{}
+// }
 
 // Helper functions for PAN credentials
 func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
@@ -56,10 +57,11 @@ func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	return nil
 }
 
-func deletePanCredential(id string, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Deleting PAN Credential")
-	return c.DeleteCredential(id, alkira.CredentialTypePan)
-}
+// UNUSED: Commented out to suppress linter warnings
+// func deletePanCredential(id string, c *alkira.AlkiraClient) error {
+// 	log.Printf("[INFO] Deleting PAN Credential")
+// 	return c.DeleteCredential(id, alkira.CredentialTypePan)
+// }
 
 // Helper functions for PAN Registration Credentials
 func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
@@ -89,10 +91,11 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
 }
 
-func deletePanRegistrationCredential(id string, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Deleting PAN Registration Credential")
-	return c.DeleteCredential(id, alkira.CredentialTypePanRegistration)
-}
+// UNUSED: Commented out to suppress linter warnings
+// func deletePanRegistrationCredential(id string, c *alkira.AlkiraClient) error {
+// 	log.Printf("[INFO] Deleting PAN Registration Credential")
+// 	return c.DeleteCredential(id, alkira.CredentialTypePanRegistration)
+// }
 
 // Helper function for PAN Master Key Credential
 func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
@@ -123,12 +126,13 @@ func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanMasterKey, credential, credentialExpiry)
 }
 
-func deletePanMasterKeyCredential(id string, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Deleting PAN Master Key Credential")
-	return c.DeleteCredential(id, alkira.CredentialTypePanMasterKey)
-}
+// UNUSED: Commented out to suppress linter warnings
+// func deletePanMasterKeyCredential(id string, c *alkira.AlkiraClient) error {
+// 	log.Printf("[INFO] Deleting PAN Master Key Credential")
+// 	return c.DeleteCredential(id, alkira.CredentialTypePanMasterKey)
+// }
 
-// Create all credentails of PAN service
+// Create all credentials of PAN service
 //
 // - PAN Credential
 // - PAN Registration Credential
@@ -234,61 +238,62 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 	return sgmtOptions, nil
 }
 
-func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
-
-	if in == nil {
-		return nil, errors.New("invalid SegmentOptions input")
-	}
-
-	zoneMap := make([]panZone, in.Len())
-
-	for i, option := range in.List() {
-		r := panZone{}
-		cfg := option.(map[string]interface{})
-		if v, ok := cfg["segment_id"].(string); ok {
-			segmentName, err := getSegmentNameById(v, m)
-
-			if err != nil {
-				return nil, err
-			}
-			r.Segment = segmentName
-		}
-		if v, ok := cfg["zone_name"].(string); ok {
-			r.Zone = v
-		}
-
-		r.Groups = cfg["groups"]
-
-		zoneMap[i] = r
-	}
-
-	segmentOptions := make(map[string]interface{})
-
-	for _, x := range zoneMap {
-		zone := make(map[string]interface{})
-		zone[x.Zone] = x.Groups
-
-		for _, y := range zoneMap {
-			if x.Segment == y.Segment {
-				zone[y.Zone] = y.Groups
-			}
-		}
-
-		zonesToGroups := make(map[string]interface{})
-		zonesToGroups["zonesToGroups"] = zone
-
-		segmentOptions[x.Segment] = zonesToGroups
-	}
-
-	return segmentOptions, nil
-}
+// UNUSED: Commented out to suppress linter warnings
+// func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
+//
+// 	if in == nil {
+// 		return nil, errors.New("invalid SegmentOptions input")
+// 	}
+//
+// 	zoneMap := make([]panZone, in.Len())
+//
+// 	for i, option := range in.List() {
+// 		r := panZone{}
+// 		cfg := option.(map[string]interface{})
+// 		if v, ok := cfg["segment_id"].(string); ok {
+// 			segmentName, err := getSegmentNameById(v, m)
+//
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			r.Segment = segmentName
+// 		}
+// 		if v, ok := cfg["zone_name"].(string); ok {
+// 			r.Zone = v
+// 		}
+//
+// 		r.Groups = cfg["groups"]
+//
+// 		zoneMap[i] = r
+// 	}
+//
+// 	segmentOptions := make(map[string]interface{})
+//
+// 	for _, x := range zoneMap {
+// 		zone := make(map[string]interface{})
+// 		zone[x.Zone] = x.Groups
+//
+// 		for _, y := range zoneMap {
+// 			if x.Segment == y.Segment {
+// 				zone[y.Zone] = y.Groups
+// 			}
+// 		}
+//
+// 		zonesToGroups := make(map[string]interface{})
+// 		zonesToGroups["zonesToGroups"] = zone
+//
+// 		segmentOptions[x.Segment] = zonesToGroups
+// 	}
+//
+// 	return segmentOptions, nil
+// }
 
 // expand "instance" block from config to generate request payload
 func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || len(in) == 0 {
-		return nil, errors.New("Invalid PAN instance input")
+	if len(in) == 0 {
+		return nil, errors.New("invalid PAN instance input")
 	}
 
 	instances := make([]alkira.ServicePanInstance, len(in))

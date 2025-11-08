@@ -23,7 +23,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -56,7 +56,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
-			"endpoint": &schema.Schema{
+			"endpoint": {
 				Description: "The endpoint.",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -90,7 +90,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 						"preshared_keys": {
 							Description: "An array of preshared keys, one per " +
-								"tunnel. The value needs to be provided explictly.",
+								"tunnel. The value needs to be provided explicitly.",
 							Type: schema.TypeList,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -362,14 +362,14 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, " +
 					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpn_mode": &schema.Schema{
+			"vpn_mode": {
 				Description: "The mode can be configured either as `ROUTE_BASED` " +
 					"or `POLICY_BASED`.",
 				Type:     schema.TypeString,
@@ -421,7 +421,7 @@ func resourceConnectorIPSecCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Set state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -526,7 +526,7 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -572,7 +572,7 @@ func resourceConnectorIPSecUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -610,7 +610,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

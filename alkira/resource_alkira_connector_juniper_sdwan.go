@@ -22,7 +22,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -82,7 +82,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
@@ -101,7 +101,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 					return
 				},
 			},
-			"instance": &schema.Schema{
+			"instance": {
 				Description: "Juniper SSR Connector Instances",
 				Type:        schema.TypeList,
 				MinItems:    1,
@@ -241,7 +241,7 @@ func resourceConnectorJuniperSdwanCreate(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -304,7 +304,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("juniper_ssr_vrf_mapping", mappings)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -349,7 +349,7 @@ func resourceConnectorJuniperSdwanUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -386,7 +386,7 @@ func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.Resource
 			Detail:   fmt.Sprintf("%s", valErr),
 		}}
 	}
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

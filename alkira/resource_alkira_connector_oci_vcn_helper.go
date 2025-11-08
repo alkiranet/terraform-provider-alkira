@@ -37,7 +37,7 @@ func expandConnectorOciVcnRouteTables(in *schema.Set) []alkira.ConnectorOciVcnRo
 func generateConnectorOciVcnUserInputPrefixes(cidr []interface{}, subnets *schema.Set) ([]alkira.ConnectorOciVcnInputPrefixes, error) {
 
 	if len(cidr) == 0 && subnets == nil {
-		return nil, fmt.Errorf("ERROR: either \"vcn_subnet\" or \"vcn_cidr\" must be specified.")
+		return nil, fmt.Errorf("ERROR: either `vcn_subnet` or `vcn_cidr` must be specified")
 	}
 
 	// Processing "vcn_cidr"
@@ -57,7 +57,7 @@ func generateConnectorOciVcnUserInputPrefixes(cidr []interface{}, subnets *schem
 	log.Printf("[DEBUG] Processing vcn_subnet")
 	if subnets == nil || subnets.Len() == 0 {
 		log.Printf("[DEBUG] Empty vcn_subnet")
-		return nil, fmt.Errorf("ERROR: Invalid vcn_subnet.")
+		return nil, fmt.Errorf("ERROR: Invalid vcn_subnet")
 	}
 
 	prefixes := make([]alkira.ConnectorOciVcnInputPrefixes, subnets.Len())

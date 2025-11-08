@@ -21,7 +21,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"Static credentials can be provided by adding an `aws_access_key`" +
 			"and `aws_secret_key` in-line in the AWS provider block.\n\n" +
 			"### Environment Variables:\n\n" +
-			"You can provide your credentials via enviromental variables:\n\n " +
+			"You can provide your credentials via environmental variables:\n\n " +
 			"* AK_AWS_ACCESS_KEY_ID\n * AK_AWS_SECRET_ACCESS_KEY\n * AK_AWS_ROLE_ARN\n " +
 			"* AK_AWS_ROLE_EXTERNAL_ID\n\n",
 		CreateContext: resourceCredentialAwsVpc,
@@ -33,12 +33,12 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"aws_access_key": &schema.Schema{
+			"aws_access_key": {
 				Description: "AWS access key.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -46,7 +46,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					"AK_AWS_ACCESS_KEY_ID",
 					nil),
 			},
-			"aws_secret_key": &schema.Schema{
+			"aws_secret_key": {
 				Description: "AWS secret key.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -54,7 +54,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					"AK_AWS_SECRET_ACCESS_KEY",
 					nil),
 			},
-			"aws_role_arn": &schema.Schema{
+			"aws_role_arn": {
 				Description: "AWS Role ARN.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -62,7 +62,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					"AK_AWS_ROLE_ARN",
 					nil),
 			},
-			"aws_external_id": &schema.Schema{
+			"aws_external_id": {
 				Description: "AWS Role External ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -70,7 +70,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 					"AK_AWS_ROLE_EXTERNAL_ID",
 					nil),
 			},
-			"type": &schema.Schema{
+			"type": {
 				Description: "Type of AWS-VPC credential.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -140,20 +140,21 @@ func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {
 	credentialType := d.Get("type").(string)
 	var c interface{}
 
-	if credentialType == "ACCESS_KEY" {
+	switch credentialType {
+	case "ACCESS_KEY":
 		c = alkira.CredentialAwsVpcKey{
 			Ec2AccessKey: d.Get("aws_access_key").(string),
 			Ec2SecretKey: d.Get("aws_secret_key").(string),
 			Type:         d.Get("type").(string),
 		}
-	} else if credentialType == "ROLE" {
+	case "ROLE":
 		c = alkira.CredentialAwsVpcRole{
 			Ec2RoleArn:    d.Get("aws_role_arn").(string),
 			Ec2ExternalId: d.Get("aws_external_id").(string),
 			Type:          d.Get("type").(string),
 		}
-	} else {
-		return nil, errors.New("Invalid AWS-VPC Credential Type")
+	default:
+		return nil, errors.New("ERROR: Invalid AWS-VPC credential type")
 	}
 
 	log.Printf("[INFO] Creating credential (AWS-VPC) with type %s", credentialType)

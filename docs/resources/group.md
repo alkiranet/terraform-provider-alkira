@@ -126,7 +126,6 @@ output "prod_group_id" {
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - The ID of the group resource. This ID can be referenced in other resources such as `alkira_policy` to specify source or destination groups for traffic policies.
-- `provision_state` - The provisioning state of the resource (e.g., `SUCCESS`, `FAILED`, `IN_PROGRESS`). This attribute is only populated when provisioning is enabled in the provider configuration (`provision = true`).
 
 ### Usage Example
 

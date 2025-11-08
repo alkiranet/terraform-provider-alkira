@@ -119,10 +119,11 @@ func flattenValidatorsHTTP(validators []alkira.ProbeValidator) []interface{} {
 	return result
 }
 
-func convertMapToStringMapHTTP(input map[string]interface{}) map[string]any {
-	result := make(map[string]any)
-	for k, v := range input {
-		result[k] = v.(string)
-	}
-	return result
-}
+// UNUSED: Commented out to suppress linter warnings
+// func convertMapToStringMapHTTP(input map[string]interface{}) map[string]any {
+// 	result := make(map[string]any)
+// 	for k, v := range input {
+// 		result[k] = v.(string)
+// 	}
+// 	return result
+// }

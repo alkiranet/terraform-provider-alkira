@@ -22,7 +22,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -174,7 +174,7 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("segment_id", segmentId)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -216,7 +216,7 @@ func resourceF5vServerEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provState == "FAILED" {
 			return diag.Diagnostics{
@@ -252,7 +252,7 @@ func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
