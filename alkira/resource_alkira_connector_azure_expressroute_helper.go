@@ -9,7 +9,7 @@ import (
 
 func expandAzureExpressRouteInstances(in []interface{}, m interface{}) ([]alkira.ConnectorAzureExpressRouteInstance, error) {
 	if in == nil || len(in) == 0 {
-		return nil, errors.New("Invalid Azure ExpressRoute Instance input")
+		return nil, errors.New("ERROR: Invalid Azure ExpressRoute instance input")
 	}
 	instances := make([]alkira.ConnectorAzureExpressRouteInstance, len(in))
 	for i, instance := range in {
@@ -158,7 +158,7 @@ func expandCustomerGatewayTunnels(in []interface{}) ([]alkira.CustomerGatewayTun
 
 func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira.ConnectorAzureExpressRouteSegment, error) {
 	if seg == nil || len(seg) == 0 {
-		return nil, errors.New("Invalid Azure ExpresRoute Segment Options input")
+		return nil, errors.New("ERROR: Invalid Azure ExpressRoute segment options input")
 	}
 
 	segments := make([]alkira.ConnectorAzureExpressRouteSegment, len(seg))

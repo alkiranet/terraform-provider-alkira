@@ -22,7 +22,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -77,7 +77,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`.",
 				Type:     schema.TypeString,
@@ -89,7 +89,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 				Optional:    true,
 				Default:     "IPSEC",
 			},
-			"virtual_edge": &schema.Schema{
+			"virtual_edge": {
 				Description: "Virtual Edge",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -109,7 +109,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},
-						"activation_code": &schema.Schema{
+						"activation_code": {
 							Description: "Activation code generated in " +
 								"VMWare orchestrator account.",
 							Type:     schema.TypeString,
@@ -220,7 +220,7 @@ func resourceConnectorVmwareSdwanCreate(ctx context.Context, d *schema.ResourceD
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -284,7 +284,7 @@ func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("version", connector.Version)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -329,7 +329,7 @@ func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -367,7 +367,7 @@ func resourceConnectorVmwareSdwanDelete(ctx context.Context, d *schema.ResourceD
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

@@ -22,7 +22,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -124,7 +124,7 @@ func resourceSegmentResource(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -186,7 +186,7 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("group_prefix", prefixes)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -232,7 +232,7 @@ func resourceSegmentResourceUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -269,7 +269,7 @@ func resourceSegmentResourceDelete(ctx context.Context, d *schema.ResourceData, 
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

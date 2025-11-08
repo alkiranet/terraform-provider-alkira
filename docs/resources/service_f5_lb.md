@@ -212,7 +212,7 @@ Required:
 
 Optional:
 
-- `availability_zone` (Number) Availability Zone of F5 Instance. Only used when elb_bgp_options_advertise_to_cxp_prefix_list_id is provided
+- `availability_zone` (String) Availability Zone of F5 Instance. Only used when elb_bgp_options_advertise_to_cxp_prefix_list_id is provided
 - `credential_id` (String) ID of the F5 load balancer credential. If the `credential_id` is not passed, `f5_username` and `f5_password` is required to create new credentials.
 - `f5_password` (String, Sensitive) Password for the F5 load balancer. This can also be set by `ALKIRA_F5_PASSWORD` environment variable.
 - `f5_registration_key` (String, Sensitive) Registration key for the F5 load balancer. Only required if `license_type` is `BRING_YOUR_OWN`. This can also be set by `ALKIRA_F5_REGISTRATION_KEY` environment variable.

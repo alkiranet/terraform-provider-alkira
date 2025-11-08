@@ -23,7 +23,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -144,7 +144,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							Optional:    true,
 						},
 						"credential_id": {
-							Description: "ID of Checkpoint Firewall Managment server credential.",
+							Description: "ID of Checkpoint Firewall Management server credential.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -328,7 +328,7 @@ func resourceCheckpoint(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -390,7 +390,7 @@ func resourceCheckpointRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("version", checkpoint.Version)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -418,6 +418,10 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	// Send update request
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	if client.Validate && valErr != nil {
 		var diags diag.Diagnostics
 		readDiags := resourceCheckpointRead(ctx, d, m)
@@ -436,7 +440,7 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -473,7 +477,7 @@ func resourceCheckpointDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

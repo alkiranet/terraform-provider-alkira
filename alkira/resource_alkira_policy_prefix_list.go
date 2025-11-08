@@ -21,7 +21,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -116,7 +116,7 @@ func resourcePolicyPrefixList(ctx context.Context, d *schema.ResourceData, m int
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyPrefixListRequest(d, m)
+	request, err := generatePolicyPrefixListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -148,7 +148,7 @@ func resourcePolicyPrefixList(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -189,7 +189,7 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 	setPrefixRanges(d, list.PrefixRanges)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -202,7 +202,7 @@ func resourcePolicyPrefixListUpdate(ctx context.Context, d *schema.ResourceData,
 	api := alkira.NewPolicyPrefixList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyPrefixListRequest(d, m)
+	request, err := generatePolicyPrefixListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -234,7 +234,7 @@ func resourcePolicyPrefixListUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -271,7 +271,7 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

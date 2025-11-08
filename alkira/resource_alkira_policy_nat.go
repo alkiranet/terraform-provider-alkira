@@ -131,7 +131,7 @@ func resourcePolicyNat(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -180,7 +180,7 @@ func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interf
 	d.Set("segment_id", segmentId)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -225,7 +225,7 @@ func resourcePolicyNatUpdate(ctx context.Context, d *schema.ResourceData, m inte
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -263,7 +263,7 @@ func resourcePolicyNatDelete(ctx context.Context, d *schema.ResourceData, m inte
 	d.SetId("")
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {

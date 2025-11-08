@@ -28,6 +28,6 @@ func dataSourceZtaProfileRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(ztaProfile.Id))
+	d.SetId(ztaProfile.Id)
 	return nil
 }

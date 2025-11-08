@@ -12,7 +12,7 @@ import (
 func resourceAlkiraCredentialOciVcn() *schema.Resource {
 	return &schema.Resource{
 		Description: "Credential for accessing Oracle Cloud.\n\n" +
-			"You can provide your credentials via the following enviromental " +
+			"You can provide your credentials via the following environmental " +
 			"variables:\n\n * AK_OCI_USER_OCID\n " +
 			"* AK_OCI_FINGERPRINT\n * AK_OCI_KEY\n " +
 			"* AK_OCI_TENANT_OCID\n",
@@ -25,12 +25,12 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Description: "Name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"user_ocid": &schema.Schema{
+			"user_ocid": {
 				Description: "OCID of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -38,7 +38,7 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 					"AK_OCI_USER_OCID",
 					nil),
 			},
-			"fingerprint": &schema.Schema{
+			"fingerprint": {
 				Description: "Fingerprint of the API key of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -46,7 +46,7 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 					"AK_OCI_FINGERPRINT",
 					nil),
 			},
-			"key": &schema.Schema{
+			"key": {
 				Description: "API key of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -54,7 +54,7 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 					"AK_OCI_KEY",
 					nil),
 			},
-			"tenant_ocid": &schema.Schema{
+			"tenant_ocid": {
 				Description: "OCID of the tenant.",
 				Type:        schema.TypeString,
 				Required:    true,

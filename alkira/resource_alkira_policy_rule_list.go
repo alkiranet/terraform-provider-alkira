@@ -21,7 +21,7 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -73,7 +73,7 @@ func resourcePolicyRuleList(ctx context.Context, d *schema.ResourceData, m inter
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleListRequest(d, m)
+	request, err := generatePolicyRuleListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -107,7 +107,7 @@ func resourcePolicyRuleList(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -142,7 +142,7 @@ func resourcePolicyRuleListRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("rules", ruleList.Rules)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -155,7 +155,7 @@ func resourcePolicyRuleListUpdate(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleListRequest(d, m)
+	request, err := generatePolicyRuleListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -187,7 +187,7 @@ func resourcePolicyRuleListUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -222,7 +222,7 @@ func resourcePolicyRuleListDelete(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -234,7 +234,7 @@ func resourcePolicyRuleListDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func generatePolicyRuleListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRuleList, error) {
+func generatePolicyRuleListRequest(d *schema.ResourceData) (*alkira.PolicyRuleList, error) {
 
 	rules := expandPolicyRuleListRules(d.Get("rules").(*schema.Set))
 
