@@ -30,6 +30,6 @@ func dataSourceAlkiraGroupUserRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.SetId(string(group.Id))
+	d.SetId(group.Id)
 	return nil
 }

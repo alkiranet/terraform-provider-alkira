@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -86,13 +85,13 @@ func TestCheckpointInstancesDeflate(t *testing.T) {
 	numInstances := 9
 	testName := "testName"
 	testCredId := "testCredId"
-	c := []alkira.CheckpointInstance{}
+	c := make([]alkira.CheckpointInstance, numInstances)
 
-	for i := 0; i < numInstances; i++ {
-		c = append(c, alkira.CheckpointInstance{
+	for i := range numInstances {
+		c[i] = alkira.CheckpointInstance{
 			Name:         testName + fmt.Sprintf("%d", i),
 			CredentialId: testCredId + fmt.Sprintf("%d", i),
-		})
+		}
 	}
 
 	// m := deflateCheckpointInstances(c) // Function not available
@@ -108,26 +107,27 @@ func TestCheckpointInstancesDeflate(t *testing.T) {
 // HELPER
 //
 
-func requireAllKeyValuesCheckpointInstances(
-	t *testing.T,
-	ci []alkira.CheckpointInstance,
-	mArr []interface{}) {
-
-	var isFound bool
-	for _, v := range ci {
-
-		isFound = false
-		for _, instanceMap := range mArr {
-
-			m := instanceMap.(map[string]interface{})
-			if m["name"] == v.Name && m["credential_id"] == v.CredentialId {
-				isFound = true
-			}
-		}
-
-		require.True(t, isFound)
-	}
-}
+// UNUSED: Commented out to suppress linter warnings
+// func requireAllKeyValuesCheckpointInstances(
+// 	t *testing.T,
+// 	ci []alkira.CheckpointInstance,
+// 	mArr []interface{}) {
+//
+// 	var isFound bool
+// 	for _, v := range ci {
+//
+// 		isFound = false
+// 		for _, instanceMap := range mArr {
+//
+// 			m := instanceMap.(map[string]interface{})
+// 			if m["name"] == v.Name && m["credential_id"] == v.CredentialId {
+// 				isFound = true
+// 			}
+// 		}
+//
+// 		require.True(t, isFound)
+// 	}
+// }
 
 func newSetFromCheckpointResource(it []interface{}) *schema.Set {
 	r := resourceAlkiraCheckpoint()
@@ -135,69 +135,70 @@ func newSetFromCheckpointResource(it []interface{}) *schema.Set {
 	return schema.NewSet(f, it)
 }
 
-func makeMapCheckpointSegmentOptions(segId int, zoneName string, groups []interface{}) map[string]interface{} {
-	m := make(map[string]interface{})
-	m["segment_id"] = segId
-	m["zone_name"] = zoneName
-	m["groups"] = groups
-
-	return m
-}
-
-func makeMapCheckpointInstance(name string, credentialId string) map[string]interface{} {
-	m := make(map[string]interface{})
-	m["name"] = name
-	m["credential_id"] = credentialId
-
-	return m
-}
-
-func makeNumCheckpointSegmentOptions(num int, id int, zoneName string, groups []string) []interface{} {
-	mArr := []interface{}{}
-
-	groupsInterfaceArr := make([]interface{}, len(groups))
-	for i, v := range groups {
-		groupsInterfaceArr[i] = v
-	}
-
-	for i := 0; i < num; i++ {
-		mArr = append(mArr, makeMapCheckpointSegmentOptions(id, zoneName, groupsInterfaceArr))
-	}
-
-	return mArr
-}
-
-func convertCheckpointInstanceToArrayInterface(c []alkira.CheckpointInstance) []interface{} {
-	mArr := []interface{}{}
-	for _, v := range c {
-		mArr = append(mArr, makeMapCheckpointInstance(v.Name, v.CredentialId))
-	}
-
-	return mArr
-}
-
-func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkira.CheckpointInstance {
-	var instances []alkira.CheckpointInstance
-
-	for i := 0; i < num; i++ {
-		c := alkira.CheckpointInstance{
-			Name:         seed.Name + fmt.Sprintf("%d", i),
-			CredentialId: seed.CredentialId + fmt.Sprintf("%d", i),
-		}
-
-		instances = append(instances, c)
-	}
-
-	return instances
-}
-
-func getCheckpointSegmentInTest(id string) (alkira.Segment, error) {
-	return initCheckpointSegment(), nil
-}
-
-func getCheckpointSegmentError(id string) (alkira.Segment, error) {
-	return alkira.Segment{}, errors.New("Get Segment Failed")
-}
+// UNUSED: Commented out to suppress linter warnings
+// func makeMapCheckpointSegmentOptions(segId int, zoneName string, groups []interface{}) map[string]interface{} {
+// 	m := make(map[string]interface{})
+// 	m["segment_id"] = segId
+// 	m["zone_name"] = zoneName
+// 	m["groups"] = groups
+//
+// 	return m
+// }
+//
+// func makeMapCheckpointInstance(name string, credentialId string) map[string]interface{} {
+// 	m := make(map[string]interface{})
+// 	m["name"] = name
+// 	m["credential_id"] = credentialId
+//
+// 	return m
+// }
+//
+// func makeNumCheckpointSegmentOptions(num int, id int, zoneName string, groups []string) []interface{} {
+// 	mArr := []interface{}{}
+//
+// 	groupsInterfaceArr := make([]interface{}, len(groups))
+// 	for i, v := range groups {
+// 		groupsInterfaceArr[i] = v
+// 	}
+//
+// 	for i := 0; i < num; i++ {
+// 		mArr = append(mArr, makeMapCheckpointSegmentOptions(id, zoneName, groupsInterfaceArr))
+// 	}
+//
+// 	return mArr
+// }
+//
+// func convertCheckpointInstanceToArrayInterface(c []alkira.CheckpointInstance) []interface{} {
+// 	mArr := []interface{}{}
+// 	for _, v := range c {
+// 		mArr = append(mArr, makeMapCheckpointInstance(v.Name, v.CredentialId))
+// 	}
+//
+// 	return mArr
+// }
+//
+// func makeNumCheckpointInstances(num int, seed alkira.CheckpointInstance) []alkira.CheckpointInstance {
+// 	var instances []alkira.CheckpointInstance
+//
+// 	for i := 0; i < num; i++ {
+// 		c := alkira.CheckpointInstance{
+// 			Name:         seed.Name + fmt.Sprintf("%d", i),
+// 			CredentialId: seed.CredentialId + fmt.Sprintf("%d", i),
+// 		}
+//
+// 		instances = append(instances, c)
+// 	}
+//
+// 	return instances
+// }
+//
+// func getCheckpointSegmentInTest(id string) (alkira.Segment, error) {
+// 	return initCheckpointSegment(), nil
+// }
+//
+// func getCheckpointSegmentError(id string) (alkira.Segment, error) {
+// 	return alkira.Segment{}, errors.New("Get Segment Failed")
+// }
 
 func initCheckpointTestManagementServer() alkira.CheckpointManagementServer {
 	return alkira.CheckpointManagementServer{

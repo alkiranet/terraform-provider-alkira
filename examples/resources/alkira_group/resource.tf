@@ -1,4 +1,5 @@
-resource "alkira_group" "test" {
-  name        = "test-group"
-  description = "test group"
+# Basic connector group
+resource "alkira_group" "connector_group" {
+  name        = "production-connectors"
+  description = "Group of production connectors"
 }

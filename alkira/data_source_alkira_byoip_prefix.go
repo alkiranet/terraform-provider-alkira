@@ -9,7 +9,7 @@ func dataSourceAlkiraByoipPrefix() *schema.Resource {
 	return &schema.Resource{
 		Description: "Use this data source to get an existing BYOIP Prefix.",
 
-		Read: dataSourceAlkiraByoipRead,
+		Read: dataSourceAlkiraByoipPrefixRead,
 
 		Schema: map[string]*schema.Schema{
 			"prefix": {

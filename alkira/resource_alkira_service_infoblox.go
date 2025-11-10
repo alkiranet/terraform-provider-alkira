@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -24,7 +23,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -299,7 +298,7 @@ func resourceInfoblox(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -332,7 +331,7 @@ func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interfa
 	setAllInfobloxResourceFields(d, infoblox)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -379,7 +378,7 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -416,7 +415,7 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -436,10 +435,9 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	shared_secret := d.Get("shared_secret").(string)
 
 	var infobloxCredentialId string
+	var err error
 
 	if shared_secret != "" {
-		err := errors.New("")
-
 		infobloxCredentialId, err = client.CreateCredential(
 			nameWithSuffix,
 			alkira.CredentialTypeInfoblox,

@@ -26,12 +26,12 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Description: "The name of the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"application_id": &schema.Schema{
+			"application_id": {
 				Description: "Azure Application ID.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -39,7 +39,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"AK_AZURE_APPLICATION_ID",
 					nil),
 			},
-			"subscription_id": &schema.Schema{
+			"subscription_id": {
 				Description: "Azure subscription ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -47,7 +47,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"AK_AZURE_SUBSCRIPTION_ID",
 					nil),
 			},
-			"secret_key": &schema.Schema{
+			"secret_key": {
 				Description: "Azure Secret Key.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -55,7 +55,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"AK_AZURE_SECRET_KEY",
 					nil),
 			},
-			"tenant_id": &schema.Schema{
+			"tenant_id": {
 				Description: "Azure Tenant ID.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -63,7 +63,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"AK_AZURE_TENANT_ID",
 					nil),
 			},
-			"environment": &schema.Schema{
+			"environment": {
 				Description: "Azure environment can be `AZURE`, " +
 					"`AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The " +
 					"default value is `AZURE`.",

@@ -147,7 +147,7 @@ func setGcpInterconnectSegmentOptions(instance alkira.ConnectorGcpInterconnectIn
 	return segmentOptions, nil
 }
 
-func setGcpInterconnectInstance(d *schema.ResourceData, ins []alkira.ConnectorGcpInterconnectInstance, m interface{}) []map[string]interface{} {
+func setGcpInterconnectInstance(ins []alkira.ConnectorGcpInterconnectInstance, m interface{}) []map[string]interface{} {
 	var instances []map[string]interface{}
 	for _, in := range ins {
 		instanceSegmentOptions, err := setGcpInterconnectSegmentOptions(in, m)

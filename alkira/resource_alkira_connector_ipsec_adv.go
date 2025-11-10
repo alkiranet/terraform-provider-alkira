@@ -23,7 +23,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -110,7 +110,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of " +
 					"`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `4LARGE`, " +
 					"`5LARGE`, `10LARGE` and `20LARGE`.",
@@ -124,7 +124,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				Optional: true,
 				Default:  1,
 			},
-			"vpn_mode": &schema.Schema{
+			"vpn_mode": {
 				Description: "The VPN mode could be only set to " +
 					"`ROUTE_BASED` for now.",
 				Type:     schema.TypeString,
@@ -133,7 +133,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"ROUTE_BASED"}, false),
 			},
-			"gateway": &schema.Schema{
+			"gateway": {
 				Description: "The gateway.",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -395,7 +395,7 @@ func resourceConnectorIPSecAdvCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Set state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -434,7 +434,7 @@ func resourceConnectorIPSecAdvRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -478,7 +478,7 @@ func resourceConnectorIPSecAdvUpdate(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -516,7 +516,7 @@ func resourceConnectorIPSecAdvDelete(ctx context.Context, d *schema.ResourceData
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

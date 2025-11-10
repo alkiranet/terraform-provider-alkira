@@ -29,23 +29,24 @@ func createMockAlkiraClient(t *testing.T, handler http.HandlerFunc) *alkira.Alki
 	}
 }
 
-// Common HTTP handler for mock responses
-func createMockHandler(responseData interface{}, statusCode int) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-
-		if responseData != nil && statusCode != http.StatusNoContent {
-			// This will work for any JSON-serializable type
-			if jsonData, ok := responseData.([]byte); ok {
-				w.Write(jsonData)
-			} else {
-				// For struct types, they will be JSON-encoded by the specific mock servers
-				// This is a generic placeholder
-			}
-		}
-	}
-}
+// UNUSED: Commented out to suppress linter warnings
+// // Common HTTP handler for mock responses
+// func createMockHandler(responseData interface{}, statusCode int) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, req *http.Request) {
+// 		w.Header().Set("Content-Type", "application/json")
+// 		w.WriteHeader(statusCode)
+//
+// 		if responseData != nil && statusCode != http.StatusNoContent {
+// 			// This will work for any JSON-serializable type
+// 			if jsonData, ok := responseData.([]byte); ok {
+// 				w.Write(jsonData)
+// 			} else {
+// 				// For struct types, they will be JSON-encoded by the specific mock servers
+// 				// This is a generic placeholder
+// 			}
+// 		}
+// 	}
+// }
 
 // Common validation function for names
 func validateResourceName(v interface{}, k string) (warnings []string, errors []error) {

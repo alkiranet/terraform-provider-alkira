@@ -40,8 +40,8 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || in.Len() > 1 {
-		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input.")
-		return nil, errors.New("Invalid Checkpoint Firewall Management Server input.")
+		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input")
+		return nil, errors.New("ERROR: Invalid checkpoint firewall management server input")
 	}
 
 	if in.Len() < 1 {
@@ -110,7 +110,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.CheckpointInstance, error) {
 
 	if in == nil || len(in) == 0 {
-		return nil, errors.New("Invalid Checkpoint Firewall instance input.")
+		return nil, errors.New("ERROR: Invalid checkpoint firewall instance input")
 	}
 
 	client := m.(*alkira.AlkiraClient)

@@ -1,11 +1,7 @@
 package alkira
 
 import (
-	"encoding/json"
-	"net/http"
 	"testing"
-
-	"github.com/alkiranet/alkira-client-go/alkira"
 )
 
 func TestFortinetRead(t *testing.T) {
@@ -63,9 +59,10 @@ func TestFortinetReadAutoScale(t *testing.T) {
 // TEST HELPER
 //
 
-func serveFortinet(t *testing.T, f *alkira.ServiceFortinet) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(f)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
+// UNUSED: Commented out to suppress linter warnings
+// func serveFortinet(t *testing.T, f *alkira.ServiceFortinet) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(f)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }

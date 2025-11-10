@@ -9,7 +9,7 @@ description: |-
   Static Credentials:
   Static credentials can be provided by adding an aws_access_keyand aws_secret_key in-line in the AWS provider block.
   Environment Variables:
-  You can provide your credentials via enviromental variables:
+  You can provide your credentials via environmental variables:
   AK_AWS_ACCESS_KEY_IDAK_AWS_SECRET_ACCESS_KEYAK_AWS_ROLE_ARNAK_AWS_ROLE_EXTERNAL_ID
 ---
 
@@ -28,7 +28,7 @@ Static credentials can be provided by adding an `aws_access_key`and `aws_secret_
 
 ### Environment Variables:
 
-You can provide your credentials via enviromental variables:
+You can provide your credentials via environmental variables:
 
  * AK_AWS_ACCESS_KEY_ID
  * AK_AWS_SECRET_ACCESS_KEY

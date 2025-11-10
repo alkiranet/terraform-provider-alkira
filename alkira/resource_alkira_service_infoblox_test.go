@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -214,7 +215,7 @@ func TestAlkiraServiceInfoblox_CreateError(t *testing.T) {
 	d.Set("grid_master", gridMasterData)
 	d.Set("instance", instancesData)
 
-	diags := resourceInfoblox(nil, d, client)
+	diags := resourceInfoblox(context.TODO(), d, client)
 	require.NotEmpty(t, diags, "Create should return error")
 	assert.True(t, diags.HasError(), "Diagnostics should contain error")
 }
@@ -355,13 +356,14 @@ func TestAlkiraServiceInfoblox_validateName(t *testing.T) {
 	}
 }
 
-// TEST HELPER
-func serveServiceInfoblox(t *testing.T, serviceInfoblox *alkira.ServiceInfoblox) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(serviceInfoblox)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+// func serveServiceInfoblox(t *testing.T, serviceInfoblox *alkira.ServiceInfoblox) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(serviceInfoblox)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }
 
 // Mock helper function for testing
 func buildServiceInfobloxRequest(d *schema.ResourceData) *alkira.ServiceInfoblox {
