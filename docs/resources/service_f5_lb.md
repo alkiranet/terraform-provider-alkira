@@ -24,7 +24,6 @@ resource "alkira_service_f5_lb" "example-lb" {
     license_type        = "BRING_YOUR_OWN"
     name                = "example-lb-instance-1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"
@@ -157,7 +156,6 @@ resource "alkira_service_f5_lb" "example-lb" {
     license_type        = "BRING_YOUR_OWN"
     name                = "example-lb-instance-1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"
@@ -170,6 +168,35 @@ resource "alkira_service_f5_lb" "example-lb" {
     elb_bgp_options_advertise_to_cxp_prefix_list_id = alkira_policy_prefix_list.example.id
   }
   service_group_name = "example-service-group"
+  size               = "LARGE"
+}
+```
+ User can also configure ILB with `lb_type`
+ ```terraform
+resource "alkira_service_f5_lb" "example-ilb" {
+  name                = "example-ilb"
+  description         = "example-ilb description."
+  cxp                 = "US-WEST"
+  global_cidr_list_id = alkira_list_global_cidr.example-global-cidr.id
+  instance {
+    deployment_type     = "LTM_DNS"
+    hostname_fqdn       = "examplelb.hostname"
+    license_type        = "BRING_YOUR_OWN"
+    name                = "example-lb-instance-1"
+    version             = "17.1.1.1-0.0.2"
+    f5_registration_key = "key"
+    f5_username         = "admin"
+    f5_password         = "verysecretpassword"
+
+  }
+  segment_ids = [alkira_segment.example-segment.id]
+  segment_options {
+    elb_nic_count = 2
+    segment_id    = alkira_segment.example-segment.id
+    lb_type = ["ELB", "ILB"]
+  }
+  service_group_name = "example-service-group"
+  ilb_service_group_name = "example-ilb-service-group"
   size               = "LARGE"
 }
 ```
@@ -191,12 +218,14 @@ resource "alkira_service_f5_lb" "example-lb" {
 
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
 - `description` (String) Description of the service.
+- `ilb_service_group_name` (String) Name of the ilb service group to be associated with the service. Required when `ILB` is enabled on a segment
 - `prefix_list_id` (Number) ID of prefix list to use for IP allowlist
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the connector.
+- `ilb_implicit_group_id` (Number) The ID of ilb implicit group automaticaly created with the service when `ilb_service_group_name` is present.
+- `implicit_group_id` (Number) The ID of implicit group automaticaly created with the service.
 - `provision_state` (String) The provisioning state of the resource.
 
 <a id="nestedblock--instance"></a>
@@ -235,6 +264,7 @@ Required:
 Optional:
 
 - `elb_bgp_options_advertise_to_cxp_prefix_list_id` (Number) ID of prefix list used to advertise prefixes from F5 Load Balancer
+- `lb_type` (Set of String) Determines what type of load balancing to provide on the segment. Valid types are `ELB` and `ILB`.  If not provided will be ELB.
 
 ## Import
 
