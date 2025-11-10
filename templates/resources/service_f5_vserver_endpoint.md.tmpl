@@ -12,6 +12,8 @@ Each vServer can be mapped to an instance of a F5 Load Balancer Service.
 {{ tffile "examples/resources/alkira_service_f5_vserver_endpoint/resource.tf" }}
 The vServer can also be mapped to multiple instances of a F5 Load Balancer Service.
 {{ tffile "examples/resources/alkira_service_f5_vserver_endpoint/resource1.tf" }} 
+An ILB vServer will have different fields than an ELB vServer
+{{ tffile "examples/resources/alkira_service_f5_vserver_endpoint/resource2.tf" }} 
 {{ .SchemaMarkdown | trimspace }}
 
 
