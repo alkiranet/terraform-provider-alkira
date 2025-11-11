@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -27,6 +28,24 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			cxpName := d.Get("cxp").(string)
+			minCount := d.Get("min_instance_count").(int)
+			maxCount := d.Get("max_instance_count").(int)
+
+			cxpAPI := alkira.NewInventoryCXP(client)
+			cxp, _, err := cxpAPI.GetByName(cxpName)
+
+			if err != nil {
+				log.Printf("[WARNING] Unable to get CXP information for validation: %v", err)
+				return nil
+			}
+
+			if cxp.Provider == "AZURE" && minCount != maxCount {
+				return fmt.Errorf("[ERROR] Azure does not support AutoScale for PAN firewalls. "+
+					"min_instance_count and max_instance_count must be equal. "+
+					"Current values: min_instance_count=%d, max_instance_count=%d", minCount, maxCount)
 			}
 
 			return nil
@@ -303,13 +322,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional: true,
 			},
 			"max_instance_count": {
-				Description: "Max number of Panorama instances for auto scale.",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "Max number of Panorama instances for auto scale. " +
+					"Note: For Azure CXPs, this must equal `min_instance_count` " +
+					"as Azure does not support AutoScale.",
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"min_instance_count": {
 				Description: "Minimal number of Panorama instances for auto " +
-					"scale. Default value is `0`.",
+					"scale. Default value is `0`. Note: For Azure CXPs, " +
+					"this must equal `max_instance_count` as Azure does " +
+					"not support AutoScale.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,

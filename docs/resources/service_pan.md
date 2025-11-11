@@ -91,7 +91,7 @@ resource "alkira_service_pan" "test1" {
 - `instance` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_segment_id` (Number) Management Segment ID.
-- `max_instance_count` (Number) Max number of Panorama instances for auto scale.
+- `max_instance_count` (Number) Max number of Panorama instances for auto scale. Note: For Azure CXPs, this must equal `min_instance_count` as Azure does not support AutoScale.
 - `name` (String) Name of the PAN service.
 - `pan_password` (String) PAN Panorama password.
 - `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
@@ -112,7 +112,7 @@ resource "alkira_service_pan" "test1" {
 - `master_key` (String) Master Key for PAN instances.
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
-- `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
+- `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`. Note: For Azure CXPs, this must equal `max_instance_count` as Azure does not support AutoScale.
 - `pan_license_key` (String) PAN Licensing API Key.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
