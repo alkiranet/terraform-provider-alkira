@@ -272,7 +272,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"panorama_template": {
-				Description: "Panorama Template.",
+				Description: "Panorama Template or Panorama Template Stack.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
