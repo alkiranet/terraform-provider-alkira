@@ -139,7 +139,7 @@ Optional:
 
 - `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
 - `auth_expiry` (String) PAN Auth Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
-- `auth_key` (String) PAN instance auth key. This is only required when `panorama_enabled` is set to `true`.
+- `auth_key` (String) PAN instance auth key (VM-series bootstrap auth key). This is only required when `panorama_enabled` is set to `true`. **IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. Auth keys generated using the Panorama web interface are NOT supported by Alkira and may cause provisioning to fail.
 - `enable_traffic` (Boolean) Enable traffic on the PAN instance. Default value is `true`.
 - `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
 - `name` (String) The name of the PAN instance.
