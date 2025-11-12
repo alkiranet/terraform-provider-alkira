@@ -55,13 +55,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automaticaly created " +
-					"with the service.",
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"ilb_implicit_group_id": {
-				Description: "The ID of ilb implicit group automaticaly created " +
-					"with the service when `ilb_service_group_name` is present.",
+					"with the connector.",
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -121,12 +115,6 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
-						"lb_type": {
-							Description: "Determines what type of load balancing to provide on the segment. Valid types are `ELB` and `ILB`.  If not provided will be ELB.",
-							Type:        schema.TypeSet,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Optional:    true,
-						},
 					},
 				},
 			},
@@ -135,12 +123,6 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 					"with the service.",
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"ilb_service_group_name": {
-				Description: "Name of the ilb service group to be associated " +
-					"with the service. Required when `ILB` is enabled on a segment",
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"instance": {
 				Description: "An array containing the properties for each F5 load" +
@@ -327,9 +309,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
 	d.Set("service_group_name", lb.ServiceGroupName)
-	d.Set("ilb_service_group_name", lb.IlbServiceGroupName)
 	d.Set("implicit_group_id", lb.ImplicitGroupId)
-	d.Set("ilb_implicit_group_id", lb.IlbImplicitGroupId)
 
 	segmentOptions, err := setF5SegmentOptions(lb.SegmentOptions, m)
 	if err != nil {
