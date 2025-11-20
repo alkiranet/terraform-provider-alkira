@@ -22,12 +22,12 @@ resource "alkira_service_bluecat" "test" {
   segment_ids          = [alkira_segment.test.id]
   service_group_name   = "bluecat-group"
 
-  bddsAnycast {
+  bdds_anycast {
     ips = ["10.0.1.100"]
     backup_cxps = ["US-EAST"]
   }
 
-  edgeAnycast {
+  edge_anycast {
     ips = ["10.0.1.101"]
     backup_cxps = ["US-EAST"]
   }
@@ -36,9 +36,9 @@ resource "alkira_service_bluecat" "test" {
     name = "bdds-instance"
     type = "BDDS"
     
-    bddsOptions {
+    bdds_options {
       hostname = "bdds.example.com"
-      model    = "BDDS-50"
+      model    = "cBDDS50"
       version  = "9.4.0"
     }
   }
@@ -47,7 +47,7 @@ resource "alkira_service_bluecat" "test" {
     name = "edge-instance"
     type = "EDGE"
     
-    edgeOptions {
+    edge_options {
       hostname = "edge.example.com"
       version  = "4.0.0"
     }
@@ -66,8 +66,8 @@ resource "alkira_service_bluecat" "test" {
 - `name` (String) Name of the Bluecat service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
-- `bddsAnycast` (Block Set, Max: 1) Defines the BDDS AnyCast policy. (see [below for nested schema](#nestedblock--bddsanycast))
-- `edgeAnycast` (Block Set, Max: 1) Defines the Edge AnyCast policy. (see [below for nested schema](#nestedblock--edgeanycast))
+- `bdds_anycast` (Block Set, Max: 1) Defines the BDDS AnyCast policy. (see [below for nested schema](#nestedblock--bddsanycast))
+- `edge_anycast` (Block Set, Max: 1) Defines the Edge AnyCast policy. (see [below for nested schema](#nestedblock--edgeanycast))
 
 ### Optional
 
@@ -82,20 +82,20 @@ resource "alkira_service_bluecat" "test" {
 - `service_group_implicit_group_id` (Number) The ID of the implicit group to be associated with the service.
 
 <a id="nestedblock--bddsanycast"></a>
-### Nested Schema for `bddsAnycast`
+### Nested Schema for `bdds_anycast`
 
 #### Optional
 
 - `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 <a id="nestedblock--edgeanycast"></a>
-### Nested Schema for `edgeAnycast`
+### Nested Schema for `edge_anycast`
 
 #### Optional
 
 - `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`
@@ -107,8 +107,8 @@ resource "alkira_service_bluecat" "test" {
 
 #### Optional
 
-- `bddsOptions` (Block Set, Max: 1) Defines the BDDS options. (see [below for nested schema](#nestedblock--instance--bddsoptions))
-- `edgeOptions` (Block Set, Max: 1) Defines the Edge options. (see [below for nested schema](#nestedblock--instance--edgeoptions))
+- `bdds_options` (Block Set, Max: 1) Defines the BDDS options. (see [below for nested schema](#nestedblock--instance--bddsoptions))
+- `edge_options` (Block Set, Max: 1) Defines the Edge options. (see [below for nested schema](#nestedblock--instance--edgeoptions))
 
 #### Read-Only
 
@@ -122,11 +122,12 @@ resource "alkira_service_bluecat" "test" {
 - `hostname` (String) The host name of the instance.
 - `model` (String) The model of the Bluecat BDDS instance.
 - `version` (String) The version of the Bluecat BBDS instance to be used. Please check Alkira Portal for all supported versions
+- `activation_key` (String) The license activationKey of the Bluecat BDDS instance.
+- `client_id` (String) The license clientId of the Bluecat BDDS instance.
 
 #### Read-Only
 
-- `activationKey` (String) The license activationKey of the Bluecat BDDS instance.
-- `clientId` (String) The license clientId of the Bluecat BDDS instance.
+- `license_credential_id` (String) The license credential ID of the BDDS instance.
 
 <a id="nestedblock--instance--edgeoptions"></a>
 ### Nested Schema for `instance.edgeOptions`
@@ -135,7 +136,8 @@ resource "alkira_service_bluecat" "test" {
 
 - `hostname` (String) The host name of the Edge instance. This should match what was configured on the bluecat edge portal.
 - `version` (String) The version of the Bluecat Edge instance to be used. Please check Alkira Portal for all supported versions
+- `config_data` (String) Base64 encoded configuration data for Bluecat Edge instance. This is generated on bluecat edge portal on creation of an edge instance.
 
 #### Read-Only
 
-- `configData` (String) The confid data of the Bluecat Edge instance.
+- `credential_id` (String) The credential ID of the Edge instance.

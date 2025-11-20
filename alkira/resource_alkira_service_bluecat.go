@@ -35,13 +35,12 @@ func resourceAlkiraBluecat() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
 				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "Defines the AnyCast policy.",
+				Optional:    true,
+				Description: "Defines the AnyCast configuration for BDDS type instances",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
-							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
-								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
+							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
 							Type:     schema.TypeList,
@@ -63,13 +62,12 @@ func resourceAlkiraBluecat() *schema.Resource {
 			},
 			"edge_anycast": {
 				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "Defines the AnyCast policy.",
+				Optional:    true,
+				Description: "Defines the AnyCast configuration for EDGE type instances.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
-							Description: "The IPs to be used when AnyCast is enabled. When AnyCast " +
-								"is enabled this list cannot be empty. The IPs used for AnyCast MUST " +
+							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
 							Type:     schema.TypeList,
@@ -125,7 +123,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "The name of the bluecat Bluecat instance.",
+							Description: "The name of the Bluecat instance.",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -136,19 +134,20 @@ func resourceAlkiraBluecat() *schema.Resource {
 						},
 						"bdds_options": {
 							Type:        schema.TypeSet,
-							Required:    true,
-							Description: "Defines the AnyCast policy.",
+							Optional:    true,
+							Description: "Defines the options required when instance type is BDDS.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_id": {
 										Description: "The license clientId of the Bluecat BDDS instance.",
 										Type:        schema.TypeString,
-										Computed:    true,
+										Required:    true,
 									},
 									"activation_key": {
 										Description: "The license activationKey of the Bluecat BDDS instance.",
 										Type:        schema.TypeString,
-										Computed:    true,
+										Required:    true,
+										Sensitive: 	 true,
 									},
 									"license_credential_id": {
 										Description: "The license credential ID of the BDDS instance.",
@@ -166,7 +165,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 										Required:    true,
 									},
 									"version": {
-										Description: "The version of the Bluecat BBDS instance to be " +
+										Description: "The version of the Bluecat BDDS instance to be " +
 											"used. Please check Alkira Portal for all " +
 											"supported versions",
 										Type:     schema.TypeString,
@@ -177,14 +176,14 @@ func resourceAlkiraBluecat() *schema.Resource {
 						},
 						"edge_options": {
 							Type:        schema.TypeSet,
-							Required:    true,
-							Description: "Defines the AnyCast policy.",
+							Optional:    true,
+							Description: "Defines the options required when instance type is EDGE.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"config_data": {
-										Description: "The confid data of the Bluecat Edge instance.",
+										Description: "The Base64 encoded configuration data generated on Bluecat Edge portal.",
 										Type:        schema.TypeString,
-										Computed:    true,
+										Required:    true,
 									},
 									"credential_id": {
 										Description: "The credential ID of the Edge instance.",
@@ -442,13 +441,13 @@ func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.Serv
 	}
 
 	// Parse BDDS Anycast
-	bddsAnycast, err := expandBluecatAnycast(d.Get("bddsAnycast").(*schema.Set))
+	bddsAnycast, err := expandBluecatAnycast(d.Get("bdds_anycast").(*schema.Set))
 	if err != nil {
 		return nil, err
 	}
 
 	// Parse Edge Anycast
-	edgeAnycast, err := expandBluecatAnycast(d.Get("edgeAnycast").(*schema.Set))
+	edgeAnycast, err := expandBluecatAnycast(d.Get("edge_anycast").(*schema.Set))
 	if err != nil {
 		return nil, err
 	}

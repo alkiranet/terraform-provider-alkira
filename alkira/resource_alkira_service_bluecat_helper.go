@@ -11,7 +11,7 @@ import (
 
 func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
 	if in == nil || len(in) == 0 {
-		return nil, fmt.Errorf("ERROR: Bluecat instances cannot be nil or empty")
+		return nil, fmt.Errorf("[ERROR]: Bluecat instances cannot be nil or empty")
 	}
 
 	instances := make([]alkira.BluecatInstance, len(in))
@@ -33,7 +33,7 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 
 		// Handle BDDS options
 		if bddsOptions, ok := instanceCfg["bdds_options"].(*schema.Set); ok && bddsOptions.Len() > 0 {
-			bddsOpt, err := expandBDDSOptions(bddsOptions.List())
+			bddsOpt, err := expandBDDSOptions(bddsOptions.List(), m)
 			if err != nil {
 				return nil, err
 			}
@@ -42,7 +42,7 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 
 		// Handle Edge options
 		if edgeOptions, ok := instanceCfg["edge_options"].(*schema.Set); ok && edgeOptions.Len() > 0 {
-			edgeOpt, err := expandEdgeOptions(edgeOptions.List())
+			edgeOpt, err := expandEdgeOptions(edgeOptions.List(), m)
 			if err != nil {
 				return nil, err
 			}
@@ -55,7 +55,9 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 	return instances, nil
 }
 
-func expandBDDSOptions(in []interface{}) (*alkira.BDDSOptions, error) {
+func expandBDDSOptions(in []interface{}, m interface{}) (*alkira.BDDSOptions, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if len(in) == 0 {
 		return nil, nil
 	}
@@ -66,7 +68,7 @@ func expandBDDSOptions(in []interface{}) (*alkira.BDDSOptions, error) {
 	var clientId string
 	var activationKey string
 	if v, ok := cfg["hostname"].(string); ok {
-		options.Hostname = v
+		options.HostName = v
 	}
 	if v, ok := cfg["model"].(string); ok {
 		options.Model = v
@@ -83,7 +85,7 @@ func expandBDDSOptions(in []interface{}) (*alkira.BDDSOptions, error) {
 	if v, ok := cfg["license_credential_id"].(string); ok {
 		if v == "" {
 			licenseCredentialId, err := client.CreateCredential(
-				options.Hostname+randomNameSuffix(),
+				options.HostName+randomNameSuffix(),
 				alkira.CredentialTypeBluecatBDDSInstanceLicense,
 				&alkira.CredentialBluecatBDDSInstanceLicense{
 					ClientId:      clientId,
@@ -107,7 +109,9 @@ func expandBDDSOptions(in []interface{}) (*alkira.BDDSOptions, error) {
 	return options, nil
 }
 
-func expandEdgeOptions(in []interface{}) (*alkira.EdgeOptions, error) {
+func expandEdgeOptions(in []interface{}, m interface{}) (*alkira.EdgeOptions, error) {
+	client := m.(*alkira.AlkiraClient)
+
 	if len(in) == 0 {
 		return nil, nil
 	}
@@ -117,7 +121,7 @@ func expandEdgeOptions(in []interface{}) (*alkira.EdgeOptions, error) {
 
 	var configData string
 	if v, ok := cfg["hostname"].(string); ok {
-		options.Hostname = v
+		options.HostName = v
 	}
 	if v, ok := cfg["version"].(string); ok {
 		options.Version = v
@@ -128,7 +132,7 @@ func expandEdgeOptions(in []interface{}) (*alkira.EdgeOptions, error) {
 	if v, ok := cfg["credential_id"].(string); ok {
 		if v == "" {
 			credentialId, err := client.CreateCredential(
-				options.Hostname+randomNameSuffix(),
+				options.HostName+randomNameSuffix(),
 				alkira.CredentialTypeBluecatEdgeInstance,
 				&alkira.CredentialBluecatEdgeInstance{
 					ConfigData: configData,
@@ -181,21 +185,21 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 
 		if v.BddsOptions != nil {
 			bddsMap := map[string]interface{}{
-				"hostname":              v.BddsOptions.Hostname,
+				"hostname":              v.BddsOptions.HostName,
 				"model":                 v.BddsOptions.Model,
 				"version":               v.BddsOptions.Version,
 				"license_credential_id": v.BddsOptions.LicenseCredentialId,
 			}
-			j["bddsOptions"] = []interface{}{bddsMap}
+			j["bdds_options"] = []interface{}{bddsMap}
 		}
 
 		if v.EdgeOptions != nil {
 			edgeMap := map[string]interface{}{
-				"hostname":      v.EdgeOptions.Hostname,
+				"hostname":      v.EdgeOptions.HostName,
 				"version":       v.EdgeOptions.Version,
 				"credential_id": v.EdgeOptions.CredentialId,
 			}
-			j["edgeOptions"] = []interface{}{edgeMap}
+			j["edge_options"] = []interface{}{edgeMap}
 		}
 
 		m = append(m, j)
