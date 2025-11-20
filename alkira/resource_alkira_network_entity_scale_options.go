@@ -4,6 +4,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -12,31 +13,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAlkiraControllerScaleOptions() *schema.Resource {
+func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector. \nScale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs. \nUnderstanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.",
-		CreateContext: resourceControllerScaleOptionsCreate,
-		ReadContext:   resourceControllerScaleOptionsRead,
-		UpdateContext: resourceControllerScaleOptionsUpdate,
-		DeleteContext: resourceControllerScaleOptionsDelete,
+		CreateContext: resourceNetworkEntityScaleOptionsCreate,
+		ReadContext:   resourceNetworkEntityScaleOptionsRead,
+		UpdateContext: resourceNetworkEntityScaleOptionsUpdate,
+		DeleteContext: resourceNetworkEntityScaleOptionsDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Description: "The name of the controller scale options.",
+				Description: "The name of the network entity scale options.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"description": {
-				Description: "The description of the controller scale options.",
+				Description: "The description of the network entity scale options.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			"entity_id": {
-				Description: "The entity ID.",
-				Type:        schema.TypeInt,
+				Description: "The entity ID of the connector or service.",
+				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"entity_type": {
@@ -96,7 +97,7 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 				Computed:    true,
 			},
 			"state": {
-				Description: "The state of the controller scale options.",
+				Description: "The state of the network entity scale options.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -104,11 +105,21 @@ func resourceAlkiraControllerScaleOptions() *schema.Resource {
 	}
 }
 
-func resourceControllerScaleOptionsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+// convertEntityIdToInt converts entity_id string to int
+// Returns 0 if conversion fails (will be caught by API validation)
+func convertEntityIdToInt(entityId string) int {
+	id, err := strconv.Atoi(entityId)
+	if err != nil {
+		return 0
+	}
+	return id
+}
+
+func resourceNetworkEntityScaleOptionsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewControllerScaleOptions(client)
 
-	request, err := generateControllerScaleOptionsRequest(d)
+	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -124,7 +135,7 @@ func resourceControllerScaleOptionsCreate(ctx context.Context, d *schema.Resourc
 	if client.Validate && valErr != nil {
 		var diags diag.Diagnostics
 		// Try to read the resource to preserve any successfully created state
-		readDiags := resourceControllerScaleOptionsRead(ctx, d, m)
+		readDiags := resourceNetworkEntityScaleOptionsRead(ctx, d, m)
 		if readDiags.HasError() {
 			diags = append(diags, readDiags...)
 		}
@@ -152,14 +163,14 @@ func resourceControllerScaleOptionsCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return resourceControllerScaleOptionsRead(ctx, d, m)
+	return resourceNetworkEntityScaleOptionsRead(ctx, d, m)
 }
 
-func resourceControllerScaleOptionsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewControllerScaleOptions(client)
 
-	controllerScaleOptions, provState, err := api.GetById(d.Id())
+	networkEntityScaleOptions, provState, err := api.GetById(d.Id())
 	if err != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -168,18 +179,18 @@ func resourceControllerScaleOptionsRead(ctx context.Context, d *schema.ResourceD
 		}}
 	}
 
-	d.Set("name", controllerScaleOptions.Name)
-	d.Set("description", controllerScaleOptions.Description)
-	d.Set("entity_id", controllerScaleOptions.EntityId)
-	d.Set("entity_type", controllerScaleOptions.EntityType)
-	d.Set("network_entity_id", controllerScaleOptions.NetworkEntityId)
-	d.Set("network_entity_sub_type", controllerScaleOptions.NetworkEntitySubType)
-	d.Set("network_entity_type", controllerScaleOptions.NetworkEntityType)
-	d.Set("doc_state", controllerScaleOptions.DocState)
-	d.Set("last_config_updated_at", controllerScaleOptions.LastConfigUpdatedAt)
+	d.Set("name", networkEntityScaleOptions.Name)
+	d.Set("description", networkEntityScaleOptions.Description)
+	d.Set("entity_id", strconv.Itoa(networkEntityScaleOptions.EntityId))
+	d.Set("entity_type", networkEntityScaleOptions.EntityType)
+	d.Set("network_entity_id", networkEntityScaleOptions.NetworkEntityId)
+	d.Set("network_entity_sub_type", networkEntityScaleOptions.NetworkEntitySubType)
+	d.Set("network_entity_type", networkEntityScaleOptions.NetworkEntityType)
+	d.Set("doc_state", networkEntityScaleOptions.DocState)
+	d.Set("last_config_updated_at", networkEntityScaleOptions.LastConfigUpdatedAt)
 
 	var segmentScaleOptions []map[string]any
-	for _, sso := range controllerScaleOptions.SegmentScaleOptions {
+	for _, sso := range networkEntityScaleOptions.SegmentScaleOptions {
 		ssoMap := map[string]any{
 			"additional_tunnels_per_node": sso.AdditionalTunnelsPerNode,
 			"additional_nodes":            sso.AdditionalNodes,
@@ -197,11 +208,11 @@ func resourceControllerScaleOptionsRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceControllerScaleOptionsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func resourceNetworkEntityScaleOptionsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewControllerScaleOptions(client)
 
-	request, err := generateControllerScaleOptionsRequest(d)
+	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -215,7 +226,7 @@ func resourceControllerScaleOptionsUpdate(ctx context.Context, d *schema.Resourc
 	if client.Validate && valErr != nil {
 		var diags diag.Diagnostics
 		// Try to read the resource to preserve current state
-		readDiags := resourceControllerScaleOptionsRead(ctx, d, m)
+		readDiags := resourceNetworkEntityScaleOptionsRead(ctx, d, m)
 		if readDiags.HasError() {
 			diags = append(diags, readDiags...)
 		}
@@ -243,10 +254,10 @@ func resourceControllerScaleOptionsUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return resourceControllerScaleOptionsRead(ctx, d, m)
+	return resourceNetworkEntityScaleOptionsRead(ctx, d, m)
 }
 
-func resourceControllerScaleOptionsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func resourceNetworkEntityScaleOptionsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewControllerScaleOptions(client)
 
@@ -277,7 +288,7 @@ func resourceControllerScaleOptionsDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func generateControllerScaleOptionsRequest(d *schema.ResourceData) (*alkira.ControllerScaleOptions, error) {
+func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.ControllerScaleOptions, error) {
 	var segmentScaleOptions []alkira.SegmentScaleOptions
 	if v, ok := d.Get("segment_scale_options").([]any); ok {
 		for _, item := range v {
@@ -291,14 +302,14 @@ func generateControllerScaleOptionsRequest(d *schema.ResourceData) (*alkira.Cont
 		}
 	}
 
-	controllerScaleOptions := &alkira.ControllerScaleOptions{
+	networkEntityScaleOptions := &alkira.ControllerScaleOptions{
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
-		EntityId:            d.Get("entity_id").(int),
+		EntityId:            convertEntityIdToInt(d.Get("entity_id").(string)),
 		EntityType:          d.Get("entity_type").(string),
 		NetworkEntityType:   d.Get("network_entity_type").(string),
 		SegmentScaleOptions: segmentScaleOptions,
 	}
 
-	return controllerScaleOptions, nil
+	return networkEntityScaleOptions, nil
 }
