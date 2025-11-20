@@ -1,5 +1,5 @@
 ---
-page_title: "alkira_controller_scale_options Resource - terraform-provider-alkira"
+page_title: "alkira_network_entity_scale_options Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector.
@@ -7,7 +7,7 @@ description: |-
   Understanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.
 ---
 
-# alkira_controller_scale_options (Resource)
+# alkira_network_entity_scale_options (Resource)
 
 Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector. 
 Scale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs. 
@@ -17,28 +17,28 @@ Understanding scale options is crucial for planning and optimizing your network 
 ## Example Usage
 
 ```terraform
-resource "alkira_controller_scale_options" "example" {
+resource "alkira_network_entity_scale_options" "example" {
   name        = "example-scale-options"
-  description = "Example description for controller scale options"
-  entity_id   = alkira_service_fortinet.id
+  description = "Example description for network entity scale options"
+  entity_id   = alkira_service_fortinet.example.id
   entity_type = "SERVICE"
   segment_scale_options {
     additional_tunnels_per_node = 2
-    segment_id                  = alkira_segment.id
+    segment_id                  = alkira_segment.example.id
     zone_name                   = "ZoneA"
   }
 }
 ```
 
 ```terraform
-resource "alkira_controller_scale_options" "another_example" {
+resource "alkira_network_entity_scale_options" "another_example" {
   name        = "another-scale-options"
   description = "Another example description"
-  entity_id   = alkira_connector_aws_vpc.id
+  entity_id   = alkira_connector_aws_vpc.example.id
   entity_type = "CONNECTOR"
   segment_scale_options {
-    additional_nodes            = 2
-    segment_id                  = alkira_segment.example.id
+    additional_nodes = 2
+    segment_id       = alkira_segment.example.id
   }
 }
 ```
@@ -47,14 +47,14 @@ resource "alkira_controller_scale_options" "another_example" {
 
 ### Required
 
-- `entity_id` (Number) The entity ID.
+- `entity_id` (String) The entity ID of the connector or service.
 - `entity_type` (String) The entity type.
-- `name` (String) The name of the controller scale options.
+- `name` (String) The name of the network entity scale options.
 - `segment_scale_options` (Block List, Min: 1) Segment Scale Options. (see [below for nested schema](#nestedblock--segment_scale_options))
 
 ### Optional
 
-- `description` (String) The description of the controller scale options.
+- `description` (String) The description of the network entity scale options.
 
 ### Read-Only
 
@@ -63,7 +63,7 @@ resource "alkira_controller_scale_options" "another_example" {
 - `last_config_updated_at` (Number) The last config updated at timestamp.
 - `network_entity_id` (String) The network entity ID.
 - `network_entity_type` (String) The network entity type.
-- `state` (String) The state of the controller scale options.
+- `state` (String) The state of the network entity scale options.
 
 <a id="nestedblock--segment_scale_options"></a>
 ### Nested Schema for `segment_scale_options`
