@@ -136,6 +136,8 @@ func Provider() *schema.Provider {
 			"alkira_service_zscaler":                    resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                        resourceAlkiraServicePan(),
 			"alkira_network_entity_scale_options":       resourceAlkiraNetworkEntityScaleOptions(),
+			"alkira_service_bluecat":                    resourceAlkiraBluecat(),
+			"alkira_controller_scale_options":           resourceAlkiraControllerScaleOptions(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":                        dataSourceAlkiraBillingTag(),
@@ -176,6 +178,7 @@ func Provider() *schema.Provider {
 			"alkira_policy_rule":                        dataSourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":                   dataSourceAlkiraPolicyRuleList(),
 			"alkira_segment":                            dataSourceAlkiraSegment(),
+			"alkira_service_bluecat":                    dataSourceAlkiraServiceBluecat(),
 			"alkira_zta_profile":                        dataSourceZtaProfile(),
 		},
 		ConfigureFunc: alkiraConfigure,
