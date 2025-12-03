@@ -47,10 +47,12 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 
 		if v, ok := optionsCfg["groups"].([]interface{}); ok {
 			groups = convertTypeListToStringList(v)
+		} else {
+			groups = []string{}
 		}
 
-		if zoneName == nil || segment == nil || groups == nil {
-			return nil, errors.New("segment_option cannot be nil")
+		if zoneName == nil || segment == nil {
+			return nil, errors.New("segment_option zone_name and segment_id cannot be nil")
 		}
 
 		if v, ok := segmentOptions[segment.Name]; ok {

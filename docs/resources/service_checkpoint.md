@@ -138,9 +138,9 @@ Read-Only:
 
 Required:
 
-- `groups` (List of String) The list of Groups associated with the zone.
 - `segment_id` (String) The ID of the segment.
 
 Optional:
 
+- `groups` (List of String) The list of Groups associated with the zone.
 - `zone_name` (String) The name of the associated zone. Default value is `DEFAULT`.
