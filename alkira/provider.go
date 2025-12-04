@@ -136,6 +136,7 @@ func Provider() *schema.Provider {
 			"alkira_service_zscaler":                    resourceAlkiraServiceZscaler(),
 			"alkira_service_pan":                        resourceAlkiraServicePan(),
 			"alkira_network_entity_scale_options":       resourceAlkiraNetworkEntityScaleOptions(),
+			"alkira_service_bluecat":                    resourceAlkiraBluecat(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"alkira_billing_tag":                        dataSourceAlkiraBillingTag(),
