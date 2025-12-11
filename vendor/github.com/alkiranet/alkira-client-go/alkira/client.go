@@ -516,14 +516,24 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	// globally through ENV var and to support APIs that doesn't need
 	// to provision.
 	//
-	if ac.Provision == true && provision == true {
-		logf("DEBUG", "client-create: enable provision")
-		uri = fmt.Sprintf("%s?provision=true", uri)
-	}
-	if ac.Validate {
-		logf("DEBUG", "client-create: enable async validation")
-		uri = fmt.Sprintf("%s?async=true", uri)
-	}
+	parsedURL, urlErr := url.Parse(uri)
+    if urlErr != nil {
+        return nil, "", fmt.Errorf("client-create: failed to parse URI: %w", urlErr), nil, nil
+    }
+
+    query := parsedURL.Query()
+
+    if ac.Provision && provision {
+        logf("DEBUG", "client-create: enable provision")
+       	query.Set("provision", "true")
+    }
+    if ac.Validate {
+       	logf("DEBUG", "client-create: enable async validation")
+       	query.Set("async", "true")
+    }
+
+    parsedURL.RawQuery = query.Encode()
+    uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("POST", uri, bytes.NewBuffer(body))
@@ -626,14 +636,24 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	// globally through ENV var and to support APIs that doesn't need
 	// to provision.
 	//
-	if ac.Provision == true && provision == true {
-		logf("DEBUG", "client-delete: enable provision")
-		uri = fmt.Sprintf("%s?provision=true", uri)
-	}
-	if ac.Validate {
-		logf("DEBUG", "client-delete: enable async validation")
-		uri = fmt.Sprintf("%s?async=true", uri)
-	}
+	parsedURL, urlErr := url.Parse(uri)
+    if urlErr != nil {
+        return "", fmt.Errorf("client-delete: failed to parse URI: %w", urlErr), nil, nil
+    }
+
+    query := parsedURL.Query()
+
+    if ac.Provision && provision {
+        logf("DEBUG", "client-delete: enable provision")
+       	query.Set("provision", "true")
+    }
+    if ac.Validate {
+       	logf("DEBUG", "client-delete: enable async validation")
+       	query.Set("async", "true")
+    }
+
+    parsedURL.RawQuery = query.Encode()
+    uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("DELETE", uri, nil)
@@ -739,14 +759,24 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	// globally through the flag and to support APIs that doesn't need
 	// to provision.
 	//
-	if ac.Provision == true && provision == true {
-		logf("DEBUG", "client-update: enable provision")
-		uri = fmt.Sprintf("%s?provision=true", uri)
-	}
-	if ac.Validate {
-		logf("DEBUG", "client-update: enable async validation")
-		uri = fmt.Sprintf("%s?async=true", uri)
-	}
+	parsedURL, urlErr := url.Parse(uri)
+    if urlErr != nil {
+        return "", fmt.Errorf("client-update: failed to parse URI: %w", urlErr), nil, nil
+    }
+
+    query := parsedURL.Query()
+
+    if ac.Provision && provision {
+        logf("DEBUG", "client-update: enable provision")
+       	query.Set("provision", "true")
+    }
+    if ac.Validate {
+       	logf("DEBUG", "client-update: enable async validation")
+       	query.Set("async", "true")
+    }
+
+    parsedURL.RawQuery = query.Encode()
+    uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("PUT", uri, bytes.NewBuffer(body))
