@@ -156,6 +156,7 @@ Optional:
 
 Required:
 
+- `subnet_cidr` (String) VNET subnet CIDR.
 - `subnet_id` (String) VNET subnet ID.
 
 Optional:
@@ -164,7 +165,6 @@ Optional:
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
-- `subnet_cidr` (String) VNET subnet CIDR.
 - `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 
 ## Import
