@@ -46,7 +46,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			"from_groups": {
 				Description: "IDs of groups that will define source in the " +
 					"policy scope",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -74,7 +74,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			"to_groups": {
 				Description: "IDs of groups that will define destination in " +
 					"the policy scope.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -258,11 +258,11 @@ func generatePolicyRequest(d *schema.ResourceData) *alkira.TrafficPolicy {
 	policy := &alkira.TrafficPolicy{
 		Description:   d.Get("description").(string),
 		Enabled:       d.Get("enabled").(bool),
-		FromGroups:    convertTypeListToIntList(d.Get("from_groups").([]interface{})),
+		FromGroups:    convertTypeSetToIntList(d.Get("from_groups").(*schema.Set)),
 		Name:          d.Get("name").(string),
 		RuleListId:    d.Get("rule_list_id").(int),
 		SegmentIds:    convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
-		ToGroups:      convertTypeListToIntList(d.Get("to_groups").([]interface{})),
+		ToGroups:      convertTypeSetToIntList(d.Get("to_groups").(*schema.Set)),
 		ZTAProfileIds: convertTypeListToStringList(d.Get("zta_profile_ids").([]interface{})),
 	}
 
