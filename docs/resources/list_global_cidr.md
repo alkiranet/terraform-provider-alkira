@@ -18,7 +18,7 @@ resource "alkira_list_global_cidr" "test" {
   description = "test global cidr list"
   values      = ["172.16.1.0/24", "10.1.0.0/24"]
   cxp         = "US-WEST"
-  tags        = ["BLUECAT", "INFOBLOX", "CHKPFW", "CISCO_FTDV_FW"]
+  tags        = ["INFOBLOX", "CHKPFW", "CISCO_FTDV_FW"]
 }
 ```
 
@@ -34,7 +34,7 @@ resource "alkira_list_global_cidr" "test" {
 ### Optional
 
 - `description` (String) Description for the list.
-- `tags` (Set of String) Tag of associated service types.Can be one of `INFOBLOX`, `BLUECAT`,`CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.
+- `tags` (Set of String) Tag of associated service types.Can be one of `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.
 
 ### Read-Only
 

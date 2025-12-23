@@ -10,36 +10,34 @@ import (
 type CredentialType string
 
 const (
-	CredentialTypeAkamaiProlexic             CredentialType = "akamai-prolexic"
-	CredentialTypeArubaEdgeConnectInstance   CredentialType = "aruba-edge-connector-instances"
-	CredentialTypeAwsVpc                     CredentialType = "awsvpc"
-	CredentialTypeAzureVnet                  CredentialType = "azurevnet"
-	CredentialTypeChkpFw                     CredentialType = "chkp-fw"
-	CredentialTypeChkpFwInstance             CredentialType = "chkp-fw-instance"
-	CredentialTypeChkpFwManagement           CredentialType = "chkp-fw-management-server"
-	CredentialTypeCiscoFtdv                  CredentialType = "cisco-ftdv-fw"
-	CredentialTypeCiscoFtdvInstance          CredentialType = "cisco-ftdv-fw-instance"
-	CredentialTypeCiscoSdwan                 CredentialType = "ciscosdwan"
-	CredentialTypeFortinet                   CredentialType = "ftntfw"
-	CredentialTypeFortinetInstance           CredentialType = "ftntfw-instance"
-	CredentialTypeFortinetSdwanInstance      CredentialType = "ftnt-sdwan-connector-instance"
-	CredentialTypeGcpVpc                     CredentialType = "gcpvpc"
-	CredentialTypeInfoblox                   CredentialType = "infoblox"
-	CredentialTypeInfobloxGridMaster         CredentialType = "infoblox-grid-master"
-	CredentialTypeInfobloxInstance           CredentialType = "infoblox-instance"
-	CredentialTypeKeyPair                    CredentialType = "keypair"
-	CredentialTypeLdap                       CredentialType = "ldap"
-	CredentialTypeOciVcn                     CredentialType = "ocivcn"
-	CredentialTypePan                        CredentialType = "pan"
-	CredentialTypePanInstance                CredentialType = "paninstance"
-	CredentialTypePanMasterKey               CredentialType = "pan-masterkey"
-	CredentialTypePanRegistration            CredentialType = "pan-registration"
-	CredentialTypeVmwareSdwanInstance        CredentialType = "vmware-sdwan-connector-instance"
-	CredentialTypeF5Instance                 CredentialType = "f5-lb-instance"
-	CredentialTypeF5InstanceRegistration     CredentialType = "f5-lb-registration"
-	CredentialTypeApiKey                     CredentialType = "api-key"
-	CredentialTypeBluecatBDDSInstanceLicense CredentialType = "bluecat-bdds-instance-license"
-	CredentialTypeBluecatEdgeInstance        CredentialType = "bluecat-edge-instance"
+	CredentialTypeAkamaiProlexic           CredentialType = "akamai-prolexic"
+	CredentialTypeArubaEdgeConnectInstance CredentialType = "aruba-edge-connector-instances"
+	CredentialTypeAwsVpc                   CredentialType = "awsvpc"
+	CredentialTypeAzureVnet                CredentialType = "azurevnet"
+	CredentialTypeChkpFw                   CredentialType = "chkp-fw"
+	CredentialTypeChkpFwInstance           CredentialType = "chkp-fw-instance"
+	CredentialTypeChkpFwManagement         CredentialType = "chkp-fw-management-server"
+	CredentialTypeCiscoFtdv                CredentialType = "cisco-ftdv-fw"
+	CredentialTypeCiscoFtdvInstance        CredentialType = "cisco-ftdv-fw-instance"
+	CredentialTypeCiscoSdwan               CredentialType = "ciscosdwan"
+	CredentialTypeFortinet                 CredentialType = "ftntfw"
+	CredentialTypeFortinetInstance         CredentialType = "ftntfw-instance"
+	CredentialTypeFortinetSdwanInstance    CredentialType = "ftnt-sdwan-connector-instance"
+	CredentialTypeGcpVpc                   CredentialType = "gcpvpc"
+	CredentialTypeInfoblox                 CredentialType = "infoblox"
+	CredentialTypeInfobloxGridMaster       CredentialType = "infoblox-grid-master"
+	CredentialTypeInfobloxInstance         CredentialType = "infoblox-instance"
+	CredentialTypeKeyPair                  CredentialType = "keypair"
+	CredentialTypeLdap                     CredentialType = "ldap"
+	CredentialTypeOciVcn                   CredentialType = "ocivcn"
+	CredentialTypePan                      CredentialType = "pan"
+	CredentialTypePanInstance              CredentialType = "paninstance"
+	CredentialTypePanMasterKey             CredentialType = "pan-masterkey"
+	CredentialTypePanRegistration          CredentialType = "pan-registration"
+	CredentialTypeVmwareSdwanInstance      CredentialType = "vmware-sdwan-connector-instance"
+	CredentialTypeF5Instance               CredentialType = "f5-lb-instance"
+	CredentialTypeF5InstanceRegistration   CredentialType = "f5-lb-registration"
+	CredentialTypeApiKey                   CredentialType = "api-key"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -141,15 +139,6 @@ type CredentialInfobloxGridMaster struct {
 	Password string `json:"password"`
 }
 
-type CredentialBluecatBDDSInstanceLicense struct {
-	ClientId      string `json:"clientId"`
-	ActivationKey string `json:"activationKey"`
-}
-
-type CredentialBluecatEdgeInstance struct {
-	ConfigData string `json:"configData"`
-}
-
 type CredentialKeyPair struct {
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
@@ -238,7 +227,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("CreateCredential: failed to marshal: %w", err)
+		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
 	data, _, err, _, _ := ac.create(uri, body, false)
@@ -248,9 +237,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 	}
 
 	var result CredentialResponse
-	if err := json.Unmarshal(data, &result); err != nil {
-		return "", fmt.Errorf("failed to unmarshal credential response: %w", err)
-	}
+	json.Unmarshal([]byte(data), &result)
 
 	return result.Id, nil
 }
@@ -268,18 +255,17 @@ func (ac *AlkiraClient) CreateSingleUseCredential(name string, ctype CredentialT
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("CreateCredential: failed to marshal: %w", err)
+		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
 	data, _, err, _, _ := ac.create(uri, body, false)
+
 	if err != nil {
 		return "", err
 	}
 
 	var result CredentialResponse
-	if err := json.Unmarshal(data, &result); err != nil {
-		return "", fmt.Errorf("failed to unmarshal credential response: %w", err)
-	}
+	json.Unmarshal([]byte(data), &result)
 
 	return result.Id, nil
 }
@@ -307,7 +293,7 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 	})
 
 	if err != nil {
-		return fmt.Errorf("UpdateCredential: failed to marshal: %w", err)
+		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
 	_, err, _, _ = ac.update(uri, body, false)
@@ -335,10 +321,10 @@ func (ac *AlkiraClient) GetCredentialById(id string) (CredentialResponseDetail, 
 		return credential, err
 	}
 
-	err = json.Unmarshal(data, &credential)
+	err = json.Unmarshal([]byte(data), &credential)
 
 	if err != nil {
-		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal: %w", err)
+		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal: %v", err)
 	}
 
 	return credential, nil
@@ -349,7 +335,7 @@ func (ac *AlkiraClient) GetCredentialByName(name string) (CredentialResponseDeta
 	var credential CredentialResponseDetail
 
 	if len(name) == 0 {
-		return credential, fmt.Errorf("invalid credential name input")
+		return credential, fmt.Errorf("Invalid credential name input")
 	}
 
 	credentials, err := ac.GetCredentials()
@@ -359,9 +345,7 @@ func (ac *AlkiraClient) GetCredentialByName(name string) (CredentialResponseDeta
 	}
 
 	var result []CredentialResponseDetail
-	if err := json.Unmarshal([]byte(credentials), &result); err != nil {
-		return credential, fmt.Errorf("failed to unmarshal credentials: %w", err)
-	}
+	json.Unmarshal([]byte(credentials), &result)
 
 	for _, g := range result {
 		if g.Name == name {
@@ -369,5 +353,5 @@ func (ac *AlkiraClient) GetCredentialByName(name string) (CredentialResponseDeta
 		}
 	}
 
-	return credential, fmt.Errorf("failed to find the credential by %s", name)
+	return credential, fmt.Errorf("Failed to find the credential by %s", name)
 }
