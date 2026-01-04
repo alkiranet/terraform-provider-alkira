@@ -491,7 +491,12 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 
 		for _, site := range connector.Sites {
 			if endpointConfig["id"].(int) == site.Id || endpointConfig["name"].(string) == site.Name {
-				endpoint := setConnectorIPSecEndpoint(site)
+				// Get the configured preshared_keys count from user's config
+				configuredKeyCount := 0
+				if keys, ok := endpointConfig["preshared_keys"].([]interface{}); ok {
+					configuredKeyCount = len(keys)
+				}
+				endpoint := setConnectorIPSecEndpoint(site, configuredKeyCount)
 				endpoints = append(endpoints, endpoint)
 				break
 			}
@@ -519,7 +524,8 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 		// If the endpoint is new, add it to the tail of the list,
 		// this will generate a diff
 		if new {
-			endpoint := setConnectorIPSecEndpoint(site)
+			// New endpoint not in config, pass 0 to disable deduplication
+			endpoint := setConnectorIPSecEndpoint(site, 0)
 			endpoints = append(endpoints, endpoint)
 			break
 		}
