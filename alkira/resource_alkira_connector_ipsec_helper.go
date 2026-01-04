@@ -270,7 +270,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 }
 
 // setConnectorIPSecEndpoint
-func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]interface{} {
+func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite, configuredKeyCount int) map[string]interface{} {
 	if site == nil {
 		log.Printf("[ERROR] invalid IPSec site")
 		return nil
@@ -294,6 +294,24 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 		advanced = append(advanced, advancedConfig)
 	}
 
+	// Deduplicate preshared_keys only when API returns more keys than
+	// the user configured. This handles the case where tunnel redundancy
+	// is enabled and user provides a single key, but API returns duplicates
+	// (e.g., ["key", "key"] instead of ["key"]).
+	// If user explicitly configured duplicates, we preserve them.
+	presharedKeys := site.PresharedKeys
+	if len(site.PresharedKeys) > configuredKeyCount && configuredKeyCount > 0 {
+		seen := make(map[string]bool)
+		var uniqueKeys []string
+		for _, key := range site.PresharedKeys {
+			if !seen[key] {
+				seen[key] = true
+				uniqueKeys = append(uniqueKeys, key)
+			}
+		}
+		presharedKeys = uniqueKeys
+	}
+
 	endpoint := map[string]interface{}{
 		"name":                     site.Name,
 		"billing_tag_ids":          site.BillingTags,
@@ -301,7 +319,7 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 		"customer_ip_type":         site.GatewayIpType,
 		"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
 		"ha_mode":                  site.HaMode,
-		"preshared_keys":           site.PresharedKeys,
+		"preshared_keys":           presharedKeys,
 		"id":                       site.Id,
 		"advanced_options":         advanced,
 	}
