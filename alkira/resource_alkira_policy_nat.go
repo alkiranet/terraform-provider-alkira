@@ -61,7 +61,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Description: "Defines the scope for the policy. Connectors " +
 					"associated with groups defined here is where this policy " +
 					"would be applied.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -70,7 +70,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 					"`included_groups`. Implicit group of a branch or on-premise " +
 					"connector for which a user defined group is used in " +
 					"`included_groups` can be used here.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -301,8 +301,8 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		Description:                        d.Get("description").(string),
 		Type:                               d.Get("type").(string),
 		Segment:                            segmentName,
-		IncludedGroups:                     convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
-		ExcludedGroups:                     convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
+		IncludedGroups:                     convertTypeSetToIntList(d.Get("included_group_ids").(*schema.Set)),
+		ExcludedGroups:                     convertTypeSetToIntList(d.Get("excluded_group_ids").(*schema.Set)),
 		NatRuleIds:                         convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{})),
 		Category:                           d.Get("category").(string),
 		AllowOverlappingTranslatedPrefixes: allowOverlappingTranslatedPrefixes,

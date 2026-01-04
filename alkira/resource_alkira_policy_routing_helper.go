@@ -14,21 +14,21 @@ func expandPolicyRoutingRuleMatch(in map[string]interface{}) (*alkira.RoutePolic
 	if v, ok := in["match_all"].(bool); ok {
 		match.All = v
 	}
-	if v, ok := in["match_as_path_list_ids"].([]interface{}); ok {
-		match.AsPathListIds = convertTypeListToIntList(v)
+	if v, ok := in["match_as_path_list_ids"].(*schema.Set); ok {
+		match.AsPathListIds = convertTypeSetToIntList(v)
 	}
-	if v, ok := in["match_community_list_ids"].([]interface{}); ok {
-		match.CommunityListIds = convertTypeListToIntList(v)
+	if v, ok := in["match_community_list_ids"].(*schema.Set); ok {
+		match.CommunityListIds = convertTypeSetToIntList(v)
 	}
-	if v, ok := in["match_extended_community_list_ids"].([]interface{}); ok {
-		match.ExtendedCommunityListIds = convertTypeListToIntList(v)
+	if v, ok := in["match_extended_community_list_ids"].(*schema.Set); ok {
+		match.ExtendedCommunityListIds = convertTypeSetToIntList(v)
 
 		if len(match.ExtendedCommunityListIds) == 0 {
 			match.ExtendedCommunityListIds = nil
 		}
 	}
-	if v, ok := in["match_prefix_list_ids"].([]interface{}); ok {
-		match.PrefixListIds = convertTypeListToIntList(v)
+	if v, ok := in["match_prefix_list_ids"].(*schema.Set); ok {
+		match.PrefixListIds = convertTypeSetToIntList(v)
 
 		if len(match.PrefixListIds) == 0 {
 			match.PrefixListIds = nil
@@ -46,8 +46,8 @@ func expandPolicyRoutingRuleMatch(in map[string]interface{}) (*alkira.RoutePolic
 			match.SegmentResourceIds = nil
 		}
 	}
-	if v, ok := in["match_group_ids"].([]interface{}); ok {
-		match.ConnectorGroupIds = convertTypeListToIntList(v)
+	if v, ok := in["match_group_ids"].(*schema.Set); ok {
+		match.ConnectorGroupIds = convertTypeSetToIntList(v)
 		if len(match.ConnectorGroupIds) == 0 {
 			match.ConnectorGroupIds = nil
 		}

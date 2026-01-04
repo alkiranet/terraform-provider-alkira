@@ -38,7 +38,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -142,7 +142,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 			"rule_action_flow_collector_ids": {
 				Description: "Based on the flow collector IDs, flows observed would " +
 					"be collected and sent to configured destination.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -345,13 +345,13 @@ func generatePolicyRuleRequest(d *schema.ResourceData) *alkira.TrafficPolicyRule
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
 			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
 			InternetApplicationId: d.Get("internet_application_id").(int),
-			ApplicationList:       convertTypeListToIntList(d.Get("application_ids").([]interface{})),
+			ApplicationList:       convertTypeSetToIntList(d.Get("application_ids").(*schema.Set)),
 		},
 		RuleAction: alkira.PolicyRuleAction{
 			Action:          d.Get("rule_action").(string),
 			ServiceTypeList: convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{})),
 			ServiceList:     convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{})),
-			FlowCollectors:  convertTypeListToIntList(d.Get("rule_action_flow_collector_ids").([]interface{})),
+			FlowCollectors:  convertTypeSetToIntList(d.Get("rule_action_flow_collector_ids").(*schema.Set)),
 		},
 	}
 

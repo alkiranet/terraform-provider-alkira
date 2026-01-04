@@ -92,7 +92,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 					"policy would be applied. Group IDs that associated with " +
 					"branch/on-premise connectors can be used here. These " +
 					"group should not contain any cloud connector.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -102,7 +102,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 					"branch/on-premise connector for which a user " +
 					"defined group is used in `included_groups` can be used " +
 					"here.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -168,31 +168,31 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 						},
 						"match_as_path_list_ids": {
 							Description: "IDs of a AS Path Lists.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"match_community_list_ids": {
 							Description: "IDs of Community Lists.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"match_extended_community_list_ids": {
 							Description: "IDs of Extended Community Lists.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"match_prefix_list_ids": {
 							Description: "IDs of Prefix Lists.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
 						"match_group_ids": {
 							Description: "IDs of groups.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Optional:    true,
 						},
@@ -532,8 +532,8 @@ func generatePolicyRoutingRequest(d *schema.ResourceData, m interface{}) (*alkir
 		Direction:                     d.Get("direction").(string),
 		Enabled:                       d.Get("enabled").(bool),
 		Segment:                       segmentName,
-		IncludedGroups:                convertTypeListToIntList(d.Get("included_group_ids").([]interface{})),
-		ExcludedGroups:                convertTypeListToIntList(d.Get("excluded_group_ids").([]interface{})),
+		IncludedGroups:                convertTypeSetToIntList(d.Get("included_group_ids").(*schema.Set)),
+		ExcludedGroups:                convertTypeSetToIntList(d.Get("excluded_group_ids").(*schema.Set)),
 		AdvertiseInternetExit:         advertiseInternetExit,
 		AdvertiseOnPremRoutes:         d.Get("advertise_on_prem_routes").(bool),
 		EnableASOverride:              enableASOverride,

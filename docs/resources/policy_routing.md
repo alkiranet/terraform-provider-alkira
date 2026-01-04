@@ -42,7 +42,7 @@ resource "alkira_policy_routing" "test" {
 ### Required
 
 - `direction` (String) The direction of the route, `INBOUND` or `OUTBOUND`.
-- `included_group_ids` (List of Number) Defines the scope for the policy. Connector associated with group IDs metioned here is where this policy would be applied. Group IDs that associated with branch/on-premise connectors can be used here. These group should not contain any cloud connector.
+- `included_group_ids` (Set of Number) Defines the scope for the policy. Connector associated with group IDs metioned here is where this policy would be applied. Group IDs that associated with branch/on-premise connectors can be used here. These group should not contain any cloud connector.
 - `name` (String) The name of the routing policy.
 - `segment_id` (String) IDs of segments that will define the policy scope.
 
@@ -54,7 +54,7 @@ resource "alkira_policy_routing" "test" {
 - `description` (String) The description of the routing policy.
 - `enable_as_override` (Boolean) Whether enable AS-override on associated connectors. Default value is `true`.
 - `enabled` (Boolean) Whether the routing policy is enabled. By default, it is set to `false`.
-- `excluded_group_ids` (List of Number) Excludes given associated connector from `included_groups`. `implicit_group_id` of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
+- `excluded_group_ids` (Set of Number) Excludes given associated connector from `included_groups`. `implicit_group_id` of a branch/on-premise connector for which a user defined group is used in `included_groups` can be used here.
 - `rule` (Block List) (see [below for nested schema](#nestedblock--rule))
 - `source_routes_prefix_list_id` (Number) Prefix list ID to source routes from cloud connectors.
 - `target_connector_category` (String) The category of connectors this policy targets. Value could be `USERS_AND_SITES` or `CLOUD`.
@@ -75,12 +75,12 @@ Required:
 Optional:
 
 - `match_all` (Boolean) This acts as match all if enabledand should be used as exlusive match option.
-- `match_as_path_list_ids` (List of Number) IDs of a AS Path Lists.
-- `match_community_list_ids` (List of Number) IDs of Community Lists.
+- `match_as_path_list_ids` (Set of Number) IDs of a AS Path Lists.
+- `match_community_list_ids` (Set of Number) IDs of Community Lists.
 - `match_cxps` (List of String) List of CXPs.
-- `match_extended_community_list_ids` (List of Number) IDs of Extended Community Lists.
-- `match_group_ids` (List of Number) IDs of groups.
-- `match_prefix_list_ids` (List of Number) IDs of Prefix Lists.
+- `match_extended_community_list_ids` (Set of Number) IDs of Extended Community Lists.
+- `match_group_ids` (Set of Number) IDs of groups.
+- `match_prefix_list_ids` (Set of Number) IDs of Prefix Lists.
 - `match_segment_resource_ids` (Set of Number) IDs of segment resources.
 - `routes_distribution_as_secondary` (Boolean) This allows to redistribute routes with lower preference to the restrictedCxps. Hence, this option can only be used with `RESTRICTED_CXPS` distribution_type. Also only 1 CXP is allowed in restricted_cxps, when this is set to `true`.
 - `routes_distribution_restricted_cxps` (List of String) List of cxps to which routes distribution is restricted. Should be used only with distributionType `RESTRICTED_CXPS`.
