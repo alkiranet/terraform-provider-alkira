@@ -1,10 +1,10 @@
-# Alkira Terraform Provider v1.3.3 Release Notes
+# Alkira Terraform Provider v1.4.0 Release Notes
 
-Release Date: 2025-12-15
+Release Date: 2026-01-04
 
 ## Overview
 
-Version 1.3.3 introduces two new BETA resources, BETA enhancements for F5 BGP and AWS TGW Direct Connect Gateway support, performance enhancements, bug fixes, and documentation improvements.
+Version 1.4.0 introduces two new BETA resources, BETA enhancements for F5 BGP and AWS TGW Direct Connect Gateway support, performance enhancements, bug fixes, and documentation improvements.
 
 ---
 
@@ -206,7 +206,7 @@ resource "alkira_connector_azure_vnet" "example" {
 
 ## 📦 Upgrade Instructions
 
-### From v1.3.2 to v1.3.3
+### From v1.3.2 to v1.4.0
 
 1. **Review Azure VNet Connectors:**
    - Ensure all `alkira_connector_azure_vnet` resources have `subnet_cidr` specified
