@@ -4,7 +4,7 @@ Release Date: 2025-12-15
 
 ## Overview
 
-Version 1.3.3 introduces three new BETA resources, BETA enhancements for F5 BGP and AWS TGW Direct Connect Gateway support, performance enhancements, bug fixes, and documentation improvements.
+Version 1.3.3 introduces two new BETA resources, BETA enhancements for F5 BGP and AWS TGW Direct Connect Gateway support, performance enhancements, bug fixes, and documentation improvements.
 
 ---
 
@@ -12,47 +12,7 @@ Version 1.3.3 introduces three new BETA resources, BETA enhancements for F5 BGP 
 
 ### New Resources
 
-#### 1. BlueCat DNS Service (`alkira_service_bluecat`) - BETA
-
-Full-featured BlueCat DNS service integration with support for both BDDS and EDGE instances.
-
-**Key Features:**
-- BDDS (BlueCat DNS/DHCP Server) instance support
-- EDGE instance support for distributed deployments
-- Anycast configuration for high availability
-- Flexible deployment options: BDDS-only, EDGE-only, or hybrid
-- Comprehensive documentation with 5 deployment examples
-
-**Example:**
-```hcl
-resource "alkira_service_bluecat" "example" {
-  name                = "bluecat-service"
-  cxp                 = "US-WEST"
-  global_cidr_list_id = alkira_list_global_cidr.dns.id
-  license_type        = "BRING_YOUR_OWN"
-  segment_ids         = [alkira_segment.default.id]
-  service_group_name  = "dns-services"
-
-  instance {
-    name = "bdds-primary"
-    type = "BDDS"
-
-    bdds_options {
-      hostname       = "bdds.example.com"
-      model          = "cBDDS50"
-      version        = "9.4.0"
-      client_id      = "client-001"
-      activation_key = "YOUR_ACTIVATION_KEY"
-    }
-  }
-}
-```
-
-**Documentation:** `docs/resources/service_bluecat.md`
-
----
-
-#### 2. Juniper SD-WAN Connector (`alkira_connector_juniper_sdwan`) - BETA
+#### 1. Juniper SD-WAN Connector (`alkira_connector_juniper_sdwan`) - BETA
 
 Native support for Juniper SD-WAN (Session Smart Router) connectivity.
 
@@ -88,7 +48,7 @@ resource "alkira_connector_juniper_sdwan" "example" {
 
 ---
 
-#### 3. Network Entity Scale Options (`alkira_network_entity_scale_options`) - BETA
+#### 2. Network Entity Scale Options (`alkira_network_entity_scale_options`) - BETA
 
 Fine-grained control over connector and service scaling for enhanced performance.
 
