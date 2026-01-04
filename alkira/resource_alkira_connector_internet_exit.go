@@ -23,7 +23,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -148,7 +148,7 @@ func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.Resource
 	}
 
 	// CREATE
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -157,7 +157,25 @@ func resourceConnectorInternetExitCreate(ctx context.Context, d *schema.Resource
 	// Set the state
 	d.SetId(string(response.Id))
 
-	if client.Provision == true {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorInternetExitRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -219,7 +237,7 @@ func resourceConnectorInternetExitRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -239,10 +257,32 @@ func resourceConnectorInternetExitUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorInternetExitRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -264,7 +304,7 @@ func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.Resource
 	api := alkira.NewConnectorInternet(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -272,7 +312,16 @@ func resourceConnectorInternetExitDelete(ctx context.Context, d *schema.Resource
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -302,10 +351,6 @@ func generateConnectorInternetRequest(d *schema.ResourceData, m interface{}) (*a
 	trafficDistribution := alkira.TrafficDistribution{
 		Algorithm:           d.Get("traffic_distribution_algorithm").(string),
 		AlgorithmAttributes: algorithmAttributes,
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	request := &alkira.ConnectorInternet{

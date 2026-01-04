@@ -9,7 +9,7 @@ import (
 )
 
 // expandConnectorRemoteAccessLdapSettings
-func expandConnectorRemoteAccessLdapSettings(in *schema.Set, m interface{}) *alkira.ConnectorRemoteAccessLdapSettings {
+func expandConnectorRemoteAccessLdapSettings(in *schema.Set) *alkira.ConnectorRemoteAccessLdapSettings {
 
 	if in == nil || in.Len() == 0 {
 		return nil
@@ -41,10 +41,10 @@ func expandConnectorRemoteAccessLdapSettings(in *schema.Set, m interface{}) *alk
 }
 
 // expandConnectorRemoteAccessAuthorization
-func expandConnectorRemoteAccessAuhtorization(in *schema.Set, cxp string, m interface{}) ([]alkira.ConnectorRemoteAccessSegmentOptions, error) {
+func expandConnectorRemoteAccessAuhtorization(in *schema.Set, cxp string) ([]alkira.ConnectorRemoteAccessSegmentOptions, error) {
 
 	if in == nil || in.Len() == 0 {
-		return nil, fmt.Errorf("Invalid connector-remote-acceauthorization")
+		return nil, fmt.Errorf("ERROR: Invalid connector-remote-access authorization")
 	}
 
 	var segmentOptions []alkira.ConnectorRemoteAccessSegmentOptions
@@ -130,7 +130,7 @@ func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{})
 			LdapSettings:   nil,
 		}
 	} else {
-		ldapSettings := expandConnectorRemoteAccessLdapSettings(d.Get("ldap_settings").(*schema.Set), m)
+		ldapSettings := expandConnectorRemoteAccessLdapSettings(d.Get("ldap_settings").(*schema.Set))
 
 		authOptions = alkira.ConnectorRemoteAccessAuthOptions{
 			SupportedModes: []string{d.Get("authentication_mode").(string)},
@@ -139,7 +139,7 @@ func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{})
 	}
 
 	// Process authorization blocks
-	segOptions, err := expandConnectorRemoteAccessAuhtorization(d.Get("authorization").(*schema.Set), d.Get("cxp").(string), m)
+	segOptions, err := expandConnectorRemoteAccessAuhtorization(d.Get("authorization").(*schema.Set), d.Get("cxp").(string))
 
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{})
 			NameServer:                 d.Get("name_server").(string),
 			FallbackToTcp:              d.Get("fallback_to_tcp").(bool),
 		},
-		Arguments: []alkira.ConnectorRemoteAccessArguments{alkira.ConnectorRemoteAccessArguments{
+		Arguments: []alkira.ConnectorRemoteAccessArguments{{
 			BillingTags: convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 			Cxp:         d.Get("cxp").(string),
 			Size:        d.Get("size").(string),

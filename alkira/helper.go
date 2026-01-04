@@ -47,10 +47,12 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 
 		if v, ok := optionsCfg["groups"].([]interface{}); ok {
 			groups = convertTypeListToStringList(v)
+		} else {
+			groups = []string{}
 		}
 
-		if zoneName == nil || segment == nil || groups == nil {
-			return nil, errors.New("segment_option cannot be nil")
+		if zoneName == nil || segment == nil {
+			return nil, errors.New("segment_option zone_name and segment_id cannot be nil")
 		}
 
 		if v, ok := segmentOptions[segment.Name]; ok {
@@ -199,16 +201,15 @@ func stringInSlice(a string, list []string) bool {
 // that exists. This throws an error. To avoid that this function will be used to add a random suffix
 // of a-zA-z to the end of the credential name. That way each time an attempt and subsequent failure
 // occurs when creating the infoblox there will be no clash with existing credentials. This is only
-// neccesary because the infoblox credentials are not exposed in the UI. Otherwise the user could
+// necessary because the infoblox credentials are not exposed in the UI. Otherwise the user could
 // manage the credentials themselves.
 func randomNameSuffix() string {
 	possibleChars := []rune("abcdefghijklmnopqrstuvwxyzABXDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	rand.Seed(time.Now().UnixNano())
 	min := 0
 	max := len(possibleChars)
 	var sb strings.Builder
-	var lengthNewStr int = 20
+	var lengthNewStr = 20
 
 	for i := 0; i < lengthNewStr; i++ {
 		j := rand.Intn(max-min) + min

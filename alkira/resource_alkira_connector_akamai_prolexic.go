@@ -28,7 +28,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -59,7 +59,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"byoip_options": &schema.Schema{
+			"byoip_options": {
 				Description: "BYOIP options.",
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -119,7 +119,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, `MEDIUM`, " +
 					"`LARGE`, `2LARGE`, `5LARGE`.",
 				Type:     schema.TypeString,
@@ -131,7 +131,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tunnel_configuration": &schema.Schema{
+			"tunnel_configuration": {
 				Description: "Tunnel Configurations.",
 				Type:        schema.TypeSet,
 				Required:    true,
@@ -192,7 +192,7 @@ func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.Resour
 	}
 
 	// Send create request
-	resource, provState, err, provErr := api.Create(request)
+	resource, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,7 +201,25 @@ func resourceConnectorAkamaiProlexicCreate(ctx context.Context, d *schema.Resour
 	// Set the state
 	d.SetId(string(resource.Id))
 
-	if client.Provision == true {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorAkamaiProlexicRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -266,9 +284,9 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 		}
 		options = append(options, i)
 	}
-
+	d.Set("byoip_options", options)
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -288,14 +306,32 @@ func resourceConnectorAkamaiProlexicUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	// Send update request
-	provState, err, provisionErr := api.Update(d.Id(), connector)
+	provState, err, valErr, provisionErr := api.Update(d.Id(), connector)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorAkamaiProlexicRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provisionErr != nil {
@@ -315,7 +351,7 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -323,7 +359,16 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -347,7 +392,7 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		return nil, err
 	}
 
-	// Create implict akamai-prolexic credential
+	// Create implicit akamai-prolexic credential
 	log.Printf("[INFO] Creating credential-akamai-prolexic")
 	c := alkira.CredentialAkamaiProlexic{
 		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),

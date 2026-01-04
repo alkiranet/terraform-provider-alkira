@@ -1,8 +1,10 @@
 package alkira
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,7 +17,7 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 
 	if in == nil || len(in) == 0 {
 		log.Printf("[ERROR] Invalid F5 Load Balancer instance input.")
-		return nil, errors.New("Invalid F5 Load Balancer instance input.")
+		return nil, errors.New("ERROR: Invalid F5 load balancer instance input")
 	}
 
 	instances := make([]alkira.F5Instance, len(in))
@@ -106,6 +108,9 @@ func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, er
 				instanceStruct.CredentialId = credId
 			}
 		}
+		if availabilityZone, ok := tfInstance["availability_zone"]; ok && strings.TrimSpace(availabilityZone.(string)) != "" {
+			instanceStruct.AvailabilityZone = json.Number(availabilityZone.(string))
+		}
 		instances[i] = instanceStruct
 	}
 
@@ -132,6 +137,12 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 			subOption.NatPoolPrefixLength = natPoolPrefixLength.(int)
 		}
 
+		if advertiseToCxpPrefixListId, ok := cfg["elb_bgp_options_advertise_to_cxp_prefix_list_id"]; ok && advertiseToCxpPrefixListId != 0 {
+			bgpOptions := &alkira.ElbBgpOptions{}
+			bgpOptions.AdvertiseToCXPPrefixListId = advertiseToCxpPrefixListId.(int)
+			subOption.ElbBgpOptions = bgpOptions
+		}
+
 		segmentOptions[segmentName] = subOption
 	}
 
@@ -140,7 +151,7 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 
 func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string]interface{}, error) {
 	if in == nil {
-		return nil, errors.New("[ERROR] Segment options is nil.")
+		return nil, errors.New("ERROR: Segment options is nil")
 	}
 
 	var segmentOptions []map[string]interface{}
@@ -158,6 +169,10 @@ func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string
 
 		if subOption.NatPoolPrefixLength != 0 {
 			option["nat_pool_prefix_length"] = subOption.NatPoolPrefixLength
+		}
+
+		if subOption.ElbBgpOptions != nil {
+			option["elb_bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
 		}
 
 		segmentOptions = append(segmentOptions, option)
@@ -195,6 +210,7 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 			"f5_registration_key":        f5RegistrationKey,
 			"f5_username":                f5Username,
 			"f5_password":                f5Password,
+			"availability_zone":          in.AvailabilityZone,
 		}
 
 		instances = append(instances, instance)

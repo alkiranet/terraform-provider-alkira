@@ -16,7 +16,7 @@ func expandConnectorIPSecEndpointAdvanced(in []interface{}) (*alkira.ConnectorIP
 		return nil, nil
 	}
 
-	if in == nil || len(in) > 1 {
+	if len(in) > 1 {
 		log.Printf("[DEBUG] invalid IPSec endpoint advanced")
 		return nil, nil
 	}
@@ -117,7 +117,7 @@ func expandConnectorIPSecSegmentOptions(in *schema.Set) (interface{}, error) {
 
 	// Only one segment in IPSec connector is supported
 	if in.Len() > 1 {
-		return nil, fmt.Errorf("ERROR: only one segment_options could be specified.")
+		return nil, fmt.Errorf("ERROR: only one segment_options could be specified")
 	}
 
 	segmentOptions := make(map[string]alkira.ConnectorIPSecSegmentOptions)
@@ -151,7 +151,7 @@ func expandConnectorIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorIPSecPo
 	}
 
 	if in.Len() > 1 {
-		return nil, fmt.Errorf("ERROR: only one policy_options could be specified.")
+		return nil, fmt.Errorf("ERROR: only one policy_options could be specified")
 	}
 
 	policyOptions := alkira.ConnectorIPSecPolicyOptions{}
@@ -174,7 +174,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 	}
 
 	if in.Len() > 1 {
-		return nil, fmt.Errorf("ERROR: only one routing_options could be specified.")
+		return nil, fmt.Errorf("ERROR: only one routing_options could be specified")
 	}
 
 	staticOption := alkira.ConnectorIPSecStaticRouting{}
@@ -192,7 +192,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 				if ok {
 					staticOption.PrefixListId = v
 				} else {
-					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required.")
+					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required")
 				}
 
 				avail, availOk := routingOptionsInput["availability"].(string)
@@ -218,7 +218,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 				if ok {
 					dynamicOption.CustomerGwAsn = v
 				} else {
-					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required.")
+					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required")
 				}
 
 				bgp, ok := routingOptionsInput["bgp_auth_key"].(string)
@@ -238,7 +238,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 				if idOk {
 					staticOption.PrefixListId = id
 				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required.")
+					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required")
 				}
 
 				avail, availOk := routingOptionsInput["availability"].(string)
@@ -253,7 +253,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 				if asnOk {
 					dynamicOption.CustomerGwAsn = asn
 				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required.")
+					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required")
 				}
 
 				routingOptions = alkira.ConnectorIPSecRoutingOptions{
@@ -270,7 +270,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 }
 
 // setConnectorIPSecEndpoint
-func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]interface{} {
+func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite, configuredKeyCount int) map[string]interface{} {
 	if site == nil {
 		log.Printf("[ERROR] invalid IPSec site")
 		return nil
@@ -294,6 +294,24 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 		advanced = append(advanced, advancedConfig)
 	}
 
+	// Deduplicate preshared_keys only when API returns more keys than
+	// the user configured. This handles the case where tunnel redundancy
+	// is enabled and user provides a single key, but API returns duplicates
+	// (e.g., ["key", "key"] instead of ["key"]).
+	// If user explicitly configured duplicates, we preserve them.
+	presharedKeys := site.PresharedKeys
+	if len(site.PresharedKeys) > configuredKeyCount && configuredKeyCount > 0 {
+		seen := make(map[string]bool)
+		var uniqueKeys []string
+		for _, key := range site.PresharedKeys {
+			if !seen[key] {
+				seen[key] = true
+				uniqueKeys = append(uniqueKeys, key)
+			}
+		}
+		presharedKeys = uniqueKeys
+	}
+
 	endpoint := map[string]interface{}{
 		"name":                     site.Name,
 		"billing_tag_ids":          site.BillingTags,
@@ -301,7 +319,7 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite) map[string]inter
 		"customer_ip_type":         site.GatewayIpType,
 		"enable_tunnel_redundancy": site.EnableTunnelRedundancy,
 		"ha_mode":                  site.HaMode,
-		"preshared_keys":           site.PresharedKeys,
+		"preshared_keys":           presharedKeys,
 		"id":                       site.Id,
 		"advanced_options":         advanced,
 	}

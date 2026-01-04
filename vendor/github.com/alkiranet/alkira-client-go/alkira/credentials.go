@@ -37,6 +37,7 @@ const (
 	CredentialTypeVmwareSdwanInstance      CredentialType = "vmware-sdwan-connector-instance"
 	CredentialTypeF5Instance               CredentialType = "f5-lb-instance"
 	CredentialTypeF5InstanceRegistration   CredentialType = "f5-lb-registration"
+	CredentialTypeApiKey                   CredentialType = "api-key"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -196,6 +197,7 @@ type Credentials struct {
 	Name        string      `json:"name"`
 	Credentials interface{} `json:"credentials"`
 	Expires     int64       `json:"expires,omitempty"`
+	SingleUse   bool        `json:"singleUse,omitempty"`
 }
 
 type CredentialResponse struct {
@@ -207,6 +209,10 @@ type CredentialResponseDetail struct {
 	Type    string `json:"credentialType"`
 	Name    string `json:"name"`
 	SubType string `json:"subType"`
+}
+
+type CredentialApiKey struct {
+	ApiKey string `json:"apiKey"`
 }
 
 // CreateCredential create new credential
@@ -224,7 +230,35 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
 	}
 
-	data, _, err, _ := ac.create(uri, body, false)
+	data, _, err, _, _ := ac.create(uri, body, false)
+
+	if err != nil {
+		return "", err
+	}
+
+	var result CredentialResponse
+	json.Unmarshal([]byte(data), &result)
+
+	return result.Id, nil
+}
+
+// CreateSingleUseCredential create new single use credential
+func (ac *AlkiraClient) CreateSingleUseCredential(name string, ctype CredentialType, credential interface{}, expires int64) (string, error) {
+	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, ctype)
+
+	// This body is not the normal JSON format...
+	body, err := json.Marshal(Credentials{
+		Name:        name,
+		Credentials: credential,
+		Expires:     expires,
+		SingleUse:   true,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("CreateCredential: failed to marshal: %v", err)
+	}
+
+	data, _, err, _, _ := ac.create(uri, body, false)
 
 	if err != nil {
 		return "", err
@@ -239,7 +273,7 @@ func (ac *AlkiraClient) CreateCredential(name string, ctype CredentialType, cred
 // DeleteCredential delete credential by its Id
 func (ac *AlkiraClient) DeleteCredential(id string, ctype CredentialType) error {
 	uri := fmt.Sprintf("%s/api/credentials/%s/%s", ac.URI, ctype, id)
-	_, err, _ := ac.delete(uri, false)
+	_, err, _, _ := ac.delete(uri, false)
 	return err
 }
 
@@ -262,7 +296,7 @@ func (ac *AlkiraClient) UpdateCredential(id string, name string, ctype Credentia
 		return fmt.Errorf("UpdateCredential: failed to marshal: %v", err)
 	}
 
-	_, err, _ = ac.update(uri, body, false)
+	_, err, _, _ = ac.update(uri, body, false)
 
 	return err
 }

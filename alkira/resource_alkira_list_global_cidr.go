@@ -22,7 +22,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -63,7 +63,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 			},
 			"tags": {
 				Description: "Tag of associated service types." +
-					"Can be one of `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.",
+					"Can be one of `INFOBLOX`,`CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -78,10 +78,10 @@ func resourceListGlobalCidr(ctx context.Context, d *schema.ResourceData, m inter
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
 	// Construct requst
-	request := generateListGlobalCidrRequest(d, m)
+	request := generateListGlobalCidrRequest(d)
 
 	// Send request
-	resource, provState, err, provErr := api.Create(request)
+	resource, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -89,8 +89,26 @@ func resourceListGlobalCidr(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(string(resource.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListGlobalCidrRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -127,7 +145,7 @@ func resourceListGlobalCidrRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("tags", list.Tags)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -140,17 +158,35 @@ func resourceListGlobalCidrUpdate(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListGlobalCidrRequest(d, m)
+	request := generateListGlobalCidrRequest(d)
 
 	// Send request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListGlobalCidrRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -170,15 +206,24 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -189,7 +234,7 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func generateListGlobalCidrRequest(d *schema.ResourceData, m interface{}) *alkira.GlobalCidrList {
+func generateListGlobalCidrRequest(d *schema.ResourceData) *alkira.GlobalCidrList {
 
 	request := &alkira.GlobalCidrList{
 		Name:        d.Get("name").(string),

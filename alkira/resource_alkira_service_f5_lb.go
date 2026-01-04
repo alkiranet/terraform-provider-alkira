@@ -23,7 +23,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -109,6 +109,11 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 								"the segment.",
 							Type:     schema.TypeInt,
 							Required: true,
+						},
+						"elb_bgp_options_advertise_to_cxp_prefix_list_id": {
+							Description: "ID of prefix list used to advertise prefixes from F5 Load Balancer",
+							Type:        schema.TypeInt,
+							Optional:    true,
 						},
 					},
 				},
@@ -217,6 +222,14 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"availability_zone": {
+							Description: "Availability Zone of F5 Instance. Only used when elb_bgp_options_advertise_to_cxp_prefix_list_id is provided",
+							Type:        schema.TypeString,
+							ValidateFunc: validation.StringInSlice(
+								[]string{"0", "1"},
+								false),
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -234,13 +247,30 @@ func resourceF5LoadBalancerCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(string(response.Id))
+
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceF5LoadBalancerRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 
 	if client.Provision {
 		d.Set("provision_state", provState)
@@ -304,7 +334,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("segment_ids", segments)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -322,13 +352,30 @@ func resourceF5LoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if client.Provision == true {
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceF5LoadBalancerRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provState == "FAILED" {
 			return diag.Diagnostics{
@@ -347,7 +394,7 @@ func resourceF5LoadBalancerDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceF5Lb(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -355,7 +402,16 @@ func resourceF5LoadBalancerDelete(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	// Check provision state
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

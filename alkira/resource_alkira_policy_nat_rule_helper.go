@@ -132,23 +132,41 @@ func expandPolicyNatRuleAction(in *schema.Set) *alkira.NatRuleAction {
 			st.RoutingOptions.InvalidateRoutingTrackPrefixes = invalidateRoutingTrackPrefixes
 		}
 
+		if v, ok := actionValue["dst_addr_translation_routing_track_prefixes"].([]interface{}); ok {
+			list := convertTypeListToStringList(v)
+			if len(list) > 0 {
+				dt.RoutingOptions.TrackPrefixes = list
+			}
+		}
+		if v, ok := actionValue["dst_addr_translation_routing_track_prefix_list_ids"].([]interface{}); ok {
+			list := convertTypeListToIntList(v)
+			if len(list) > 0 {
+				dt.RoutingOptions.TrackPrefixListIds = list
+			}
+		}
+		if v, ok := actionValue["dst_addr_translation_routing_invalidate_prefixes"].(bool); ok {
+			invalidateRoutingTrackPrefixes := new(bool)
+			*invalidateRoutingTrackPrefixes = v
+			dt.RoutingOptions.InvalidateRoutingTrackPrefixes = invalidateRoutingTrackPrefixes
+		}
+
 		//
 		// This field has a fixed value based on the translation type.
 		//
-		if st.TranslationType == "STATIC_IP" {
+		switch st.TranslationType {
+		case "STATIC_IP":
 			st.Bidirectional = func() *bool { b := true; return &b }()
-		} else if st.TranslationType == "DYNAMIC_IP_AND_PORT" {
+		case "DYNAMIC_IP_AND_PORT":
 			st.Bidirectional = func() *bool { b := false; return &b }()
-		} else {
 		}
 
-		if dt.TranslationType == "STATIC_IP" {
+		switch dt.TranslationType {
+		case "STATIC_IP":
 			dt.Bidirectional = func() *bool { b := true; return &b }()
-		} else if dt.TranslationType == "STATIC_IP_AND_PORT" {
+		case "STATIC_IP_AND_PORT":
 			dt.Bidirectional = func() *bool { b := true; return &b }()
-		} else if dt.TranslationType == "STATIC_PORT" {
+		case "STATIC_PORT":
 			dt.Bidirectional = func() *bool { b := true; return &b }()
-		} else {
 		}
 	}
 
@@ -182,6 +200,8 @@ func setNatRuleMatch(m alkira.NatRuleMatch, d *schema.ResourceData) {
 		"protocol":            m.Protocol,
 	}
 	match = append(match, in)
+
+	d.Set("match", match)
 }
 
 // setNatRuleActionOptions set "action" block when reading
@@ -202,6 +222,9 @@ func setNatRuleActionOptions(a alkira.NatRuleAction, d *schema.ResourceData) {
 		"dst_addr_translation_ports":                             a.DestinationAddressTranslation.TranslatedPortList,
 		"dst_addr_translation_list_policy_fqdn_id":               a.DestinationAddressTranslation.TranslatedPolicyFqdnListId,
 		"dst_addr_translation_advertise_to_connector":            a.DestinationAddressTranslation.AdvertiseToConnector,
+		"dst_addr_translation_routing_track_prefixes":            a.DestinationAddressTranslation.RoutingOptions.TrackPrefixes,
+		"dst_addr_translation_routing_track_prefix_list_ids":     a.DestinationAddressTranslation.RoutingOptions.TrackPrefixListIds,
+		"dst_addr_translation_routing_invalidate_prefixes":       a.DestinationAddressTranslation.RoutingOptions.InvalidateRoutingTrackPrefixes,
 		"egress_type": a.Egress.IpType,
 	}
 
@@ -211,7 +234,7 @@ func setNatRuleActionOptions(a alkira.NatRuleAction, d *schema.ResourceData) {
 }
 
 // generatePolicyNatRuleRequest generate request
-func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkira.NatPolicyRule, error) {
+func generatePolicyNatRuleRequest(d *schema.ResourceData) (*alkira.NatPolicyRule, error) {
 
 	match := expandPolicyNatRuleMatch(d.Get("match").(*schema.Set))
 	action := expandPolicyNatRuleAction(d.Get("action").(*schema.Set))
@@ -221,6 +244,7 @@ func generatePolicyNatRuleRequest(d *schema.ResourceData, m interface{}) (*alkir
 		Description: d.Get("description").(string),
 		Enabled:     d.Get("enabled").(bool),
 		Category:    d.Get("category").(string),
+		Direction:   d.Get("direction").(string),
 		Match:       *match,
 		Action:      *action,
 	}

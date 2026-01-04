@@ -113,7 +113,7 @@ func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*al
 }
 
 // generatePolicyPrefixListRequest
-func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyPrefixList, error) {
+func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPrefixList, error) {
 
 	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
 
@@ -122,7 +122,7 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData, m interface{}) (*al
 	}
 
 	if d.Get("prefixes").(*schema.Set).Len() > 0 {
-		return nil, fmt.Errorf("Please use the new 'prefix' block to replace the old 'prefixes' field.")
+		return nil, fmt.Errorf("ERROR: Please use the new 'prefix' block to replace the old 'prefixes' field")
 	}
 
 	prefixes, prefixDetailsMap := expandPrefixListPrefixes(d)

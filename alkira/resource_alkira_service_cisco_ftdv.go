@@ -24,7 +24,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -256,7 +256,7 @@ func resourceServiceCiscoFTDvCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -264,8 +264,27 @@ func resourceServiceCiscoFTDvCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(string(response.Id))
 
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve any successfully created state
+		readDiags := resourceServiceCiscoFTDvRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -312,7 +331,7 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("description", service.Description)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -329,18 +348,37 @@ func resourceServiceCiscoFTDvUpdate(ctx context.Context, d *schema.ResourceData,
 	request, err := generateServiceCiscoFTDvRequest(d, m)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("UpdateServiceCiscoFTDv: failed to marshal: %v", err))
+		return diag.FromErr(fmt.Errorf("ERROR : UpdateServiceCiscoFTDv: failed to marshal: %w", err))
 	}
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve current state
+		readDiags := resourceServiceCiscoFTDvRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -361,7 +399,7 @@ func resourceServiceCiscoFTDvDelete(ctx context.Context, d *schema.ResourceData,
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete((d.Id()))
+	provState, err, valErr, provErr := api.Delete((d.Id()))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -369,7 +407,16 @@ func resourceServiceCiscoFTDvDelete(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

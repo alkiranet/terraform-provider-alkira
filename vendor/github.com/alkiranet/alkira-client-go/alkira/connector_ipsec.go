@@ -63,7 +63,7 @@ type ConnectorIPSecStaticRouting struct {
 
 type ConnectorIPSecDynamicRouting struct {
 	Availability     string `json:"availability,omitempty"`
-	BgpAuthKeyAlkira string `json:"bgpAuthKeyAlkira"`
+	BgpAuthKeyAlkira string `json:"bgpAuthKeyAlkira,omitempty"`
 	CustomerGwAsn    string `json:"customerGwAsn"`
 }
 

@@ -16,7 +16,7 @@ func expandConnectorAdvIPSecAdvancedOptions(in []interface{}) (*alkira.Connector
 		return nil, nil
 	}
 
-	if in == nil || len(in) > 1 {
+	if len(in) > 1 {
 		log.Printf("[DEBUG] invalid connector-ipsec-adv endpoint advanced")
 		return nil, nil
 	}
@@ -100,13 +100,8 @@ func expandConnectorAdvIPSecGateway(in []interface{}) []*alkira.ConnectorAdvIPSe
 
 		if v, ok := gwConfig["tunnel"].([]interface{}); ok {
 
-			var err error
 			r.Tunnels = expandConnectorAdvIPSecTunnel(v)
 
-			if err != nil {
-				log.Printf("[ERROR] failed to expand tunnels the of gateway.")
-				break
-			}
 		}
 
 		gws[i] = &r
@@ -122,7 +117,7 @@ func expandConnectorAdvIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorAdvI
 	}
 
 	if in.Len() > 1 {
-		return nil, fmt.Errorf("ERROR: only one policy_options could be specified.")
+		return nil, fmt.Errorf("ERROR: only one policy_options could be specified")
 	}
 
 	policyOptions := alkira.ConnectorAdvIPSecPolicyOptions{}
@@ -145,7 +140,7 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 	}
 
 	if in.Len() > 1 {
-		return nil, fmt.Errorf("ERROR: only one routing_options could be specified.")
+		return nil, fmt.Errorf("ERROR: only one routing_options could be specified")
 	}
 
 	staticOption := alkira.ConnectorAdvIPSecStaticRouting{}
@@ -163,7 +158,7 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 				if ok {
 					staticOption.PrefixListId = v
 				} else {
-					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required.")
+					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required")
 				}
 
 				avail, availOk := routingOptionsInput["availability"].(string)
@@ -189,7 +184,7 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 				if ok {
 					dynamicOption.CustomerGwAsn = v
 				} else {
-					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required.")
+					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required")
 				}
 
 				bgp, ok := routingOptionsInput["bgp_auth_key"].(string)
@@ -209,7 +204,7 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 				if idOk {
 					staticOption.PrefixListId = id
 				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required.")
+					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required")
 				}
 
 				avail, availOk := routingOptionsInput["availability"].(string)
@@ -224,7 +219,7 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 				if asnOk {
 					dynamicOption.CustomerGwAsn = asn
 				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required.")
+					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required")
 				}
 
 				routingOptions = alkira.ConnectorAdvIPSecRoutingOptions{
@@ -428,7 +423,7 @@ func deflateConnectorAdvIPSecGatewayInstance(gatewayConfig *alkira.ConnectorAdvI
 		return nil
 	}
 
-	tunnels := make([]interface{}, len(gatewayConfig.Tunnels), len(gatewayConfig.Tunnels))
+	tunnels := make([]interface{}, len(gatewayConfig.Tunnels))
 
 	for i, t := range gatewayConfig.Tunnels {
 		config := deflateConnectorAdvIPSecTunnel(t)
@@ -447,9 +442,9 @@ func deflateConnectorAdvIPSecGatewayInstance(gatewayConfig *alkira.ConnectorAdvI
 }
 
 // deflateConnectorAdvIPSecGateway
-func deflateConnectorAdvIPSecGateway(connector *alkira.ConnectorAdvIPSec, d *schema.ResourceData) []interface{} {
+func deflateConnectorAdvIPSecGateway(connector *alkira.ConnectorAdvIPSec) []interface{} {
 
-	gateways := make([]interface{}, len(connector.Gateways), len(connector.Gateways))
+	gateways := make([]interface{}, len(connector.Gateways))
 
 	for i, gw := range connector.Gateways {
 		gateway := deflateConnectorAdvIPSecGatewayInstance(gw)
@@ -477,7 +472,7 @@ func setConnectorAdvIPSec(connector *alkira.ConnectorAdvIPSec, d *schema.Resourc
 	d.Set("description", connector.Description)
 
 	// gateway block
-	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector, d))
+	d.Set("gateway", deflateConnectorAdvIPSecGateway(connector))
 
 	// policy_options block
 	setConnectorAdvIPSecPolicyOptions(connector.PolicyOptions, d)

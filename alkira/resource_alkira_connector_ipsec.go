@@ -23,7 +23,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -56,7 +56,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 			},
-			"endpoint": &schema.Schema{
+			"endpoint": {
 				Description: "The endpoint.",
 				Type:        schema.TypeList,
 				Elem: &schema.Resource{
@@ -90,7 +90,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						},
 						"preshared_keys": {
 							Description: "An array of preshared keys, one per " +
-								"tunnel. The value needs to be provided explictly.",
+								"tunnel. The value needs to be provided explicitly.",
 							Type: schema.TypeList,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -362,14 +362,14 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
 					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, " +
 					"`10LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpn_mode": &schema.Schema{
+			"vpn_mode": {
 				Description: "The mode can be configured either as `ROUTE_BASED` " +
 					"or `POLICY_BASED`.",
 				Type:     schema.TypeString,
@@ -394,7 +394,7 @@ func resourceConnectorIPSecCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// CREATE
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -402,8 +402,26 @@ func resourceConnectorIPSecCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorIPSecRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -473,7 +491,12 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 
 		for _, site := range connector.Sites {
 			if endpointConfig["id"].(int) == site.Id || endpointConfig["name"].(string) == site.Name {
-				endpoint := setConnectorIPSecEndpoint(site)
+				// Get the configured preshared_keys count from user's config
+				configuredKeyCount := 0
+				if keys, ok := endpointConfig["preshared_keys"].([]interface{}); ok {
+					configuredKeyCount = len(keys)
+				}
+				endpoint := setConnectorIPSecEndpoint(site, configuredKeyCount)
 				endpoints = append(endpoints, endpoint)
 				break
 			}
@@ -501,14 +524,15 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 		// If the endpoint is new, add it to the tail of the list,
 		// this will generate a diff
 		if new {
-			endpoint := setConnectorIPSecEndpoint(site)
+			// New endpoint not in config, pass 0 to disable deduplication
+			endpoint := setConnectorIPSecEndpoint(site, 0)
 			endpoints = append(endpoints, endpoint)
 			break
 		}
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -530,13 +554,31 @@ func resourceConnectorIPSecUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if client.Provision == true {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorIPSecRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
+	if client.Provision {
 		d.Set("provision_state", provState)
 		if provErr != nil {
 			return diag.Diagnostics{{
@@ -557,7 +599,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -565,7 +607,16 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

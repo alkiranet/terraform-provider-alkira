@@ -21,7 +21,7 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -73,14 +73,14 @@ func resourcePolicyRuleList(ctx context.Context, d *schema.ResourceData, m inter
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleListRequest(d, m)
+	request, err := generatePolicyRuleListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -88,8 +88,26 @@ func resourcePolicyRuleList(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRuleListRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -124,7 +142,7 @@ func resourcePolicyRuleListRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("rules", ruleList.Rules)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -137,21 +155,39 @@ func resourcePolicyRuleListUpdate(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyRuleListRequest(d, m)
+	request, err := generatePolicyRuleListRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRuleListRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -171,13 +207,22 @@ func resourcePolicyRuleListDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewPolicyRuleList(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -189,7 +234,7 @@ func resourcePolicyRuleListDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func generatePolicyRuleListRequest(d *schema.ResourceData, m interface{}) (*alkira.PolicyRuleList, error) {
+func generatePolicyRuleListRequest(d *schema.ResourceData) (*alkira.PolicyRuleList, error) {
 
 	rules := expandPolicyRuleListRules(d.Get("rules").(*schema.Set))
 

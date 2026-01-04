@@ -2,11 +2,9 @@ package alkira
 
 import (
 	"encoding/json"
-	"net/http"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,22 +66,23 @@ func TestAlkiraServiceF5vServerEndpoint_idValidation(t *testing.T) {
 	}
 }
 
-// TEST HELPER
-func serveServiceF5vServerEndpoint(t *testing.T, serviceF5vServerEndpoint *alkira.F5vServerEndpoint) *alkira.AlkiraClient {
-	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-		json.NewEncoder(w).Encode(serviceF5vServerEndpoint)
-		w.Header().Set("Content-Type", "application/json")
-	})
-}
-
-// Mock helper function for testing
-func buildServiceF5vServerEndpointRequest(d *schema.ResourceData) *alkira.F5vServerEndpoint {
-	return &alkira.F5vServerEndpoint{
-		Name:       getStringFromResourceData(d, "name"),
-		Type:       getStringFromResourceData(d, "type"),
-		Segment:    getStringFromResourceData(d, "segment"),
-		FqdnPrefix: getStringFromResourceData(d, "fqdn_prefix"),
-		Protocol:   getStringFromResourceData(d, "protocol"),
-		Snat:       getStringFromResourceData(d, "snat"),
-	}
-}
+// UNUSED: Commented out to suppress linter warnings
+// // TEST HELPER
+// func serveServiceF5vServerEndpoint(t *testing.T, serviceF5vServerEndpoint *alkira.F5vServerEndpoint) *alkira.AlkiraClient {
+// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+// 		json.NewEncoder(w).Encode(serviceF5vServerEndpoint)
+// 		w.Header().Set("Content-Type", "application/json")
+// 	})
+// }
+//
+// // Mock helper function for testing
+// func buildServiceF5vServerEndpointRequest(d *schema.ResourceData) *alkira.F5vServerEndpoint {
+// 	return &alkira.F5vServerEndpoint{
+// 		Name:       getStringFromResourceData(d, "name"),
+// 		Type:       getStringFromResourceData(d, "type"),
+// 		Segment:    getStringFromResourceData(d, "segment"),
+// 		FqdnPrefix: getStringFromResourceData(d, "fqdn_prefix"),
+// 		Protocol:   getStringFromResourceData(d, "protocol"),
+// 		Snat:       getStringFromResourceData(d, "snat"),
+// 	}
+// }

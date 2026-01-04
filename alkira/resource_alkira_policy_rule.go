@@ -26,7 +26,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -38,7 +38,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -142,7 +142,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 			"rule_action_flow_collector_ids": {
 				Description: "Based on the flow collector IDs, flows observed would " +
 					"be collected and sent to configured destination.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 			},
@@ -156,10 +156,10 @@ func resourcePolicyRule(ctx context.Context, d *schema.ResourceData, m interface
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRuleRequest(d, m)
+	request := generatePolicyRuleRequest(d)
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -167,8 +167,26 @@ func resourcePolicyRule(ctx context.Context, d *schema.ResourceData, m interface
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRuleRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -223,7 +241,7 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("rule_action_flow_collector_ids", rule.RuleAction.FlowCollectors)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -236,17 +254,35 @@ func resourcePolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, m int
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRuleRequest(d, m)
+	request := generatePolicyRuleRequest(d)
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRuleRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -266,15 +302,24 @@ func resourcePolicyRuleDelete(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicyRule(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -285,7 +330,7 @@ func resourcePolicyRuleDelete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicyRule {
+func generatePolicyRuleRequest(d *schema.ResourceData) *alkira.TrafficPolicyRule {
 
 	request := &alkira.TrafficPolicyRule{
 		Description: d.Get("description").(string),
@@ -300,13 +345,13 @@ func generatePolicyRuleRequest(d *schema.ResourceData, m interface{}) *alkira.Tr
 			SrcPrefixListId:       d.Get("src_prefix_list_id").(int),
 			DstPrefixListId:       d.Get("dst_prefix_list_id").(int),
 			InternetApplicationId: d.Get("internet_application_id").(int),
-			ApplicationList:       convertTypeListToIntList(d.Get("application_ids").([]interface{})),
+			ApplicationList:       convertTypeSetToIntList(d.Get("application_ids").(*schema.Set)),
 		},
 		RuleAction: alkira.PolicyRuleAction{
 			Action:          d.Get("rule_action").(string),
 			ServiceTypeList: convertTypeListToStringList(d.Get("rule_action_service_types").([]interface{})),
 			ServiceList:     convertTypeListToIntList(d.Get("rule_action_service_ids").([]interface{})),
-			FlowCollectors:  convertTypeListToIntList(d.Get("rule_action_flow_collector_ids").([]interface{})),
+			FlowCollectors:  convertTypeSetToIntList(d.Get("rule_action_flow_collector_ids").(*schema.Set)),
 		},
 	}
 

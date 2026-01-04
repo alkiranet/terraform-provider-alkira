@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -25,8 +26,26 @@ func resourceAlkiraServicePan() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			cxpName := d.Get("cxp").(string)
+			minCount := d.Get("min_instance_count").(int)
+			maxCount := d.Get("max_instance_count").(int)
+
+			cxpAPI := alkira.NewInventoryCXP(client)
+			cxp, _, err := cxpAPI.GetByName(cxpName)
+
+			if err != nil {
+				log.Printf("[WARNING] Unable to get CXP information for validation: %v", err)
+				return nil
+			}
+
+			if cxp.Provider == "AZURE" && minCount != maxCount {
+				return fmt.Errorf("[ERROR] Azure does not support AutoScale for PAN firewalls. "+
+					"min_instance_count and max_instance_count must be equal. "+
+					"Current values: min_instance_count=%d, max_instance_count=%d", minCount, maxCount)
 			}
 
 			return nil
@@ -74,7 +93,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required: true,
 			},
 			"pan_license_key": {
-				Description: "PAN Panorama license Key.",
+				Description: "PAN Licensing API Key.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -166,8 +185,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Computed:    true,
 						},
 						"auth_key": {
-							Description: "PAN instance auth key. This is only required " +
-								"when `panorama_enabled` is set to `true`.",
+							Description: "PAN instance auth key (VM-series bootstrap auth key). " +
+								"This is only required when `panorama_enabled` is set to `true`. " +
+								"**IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. " +
+								"Auth keys generated using the Panorama web interface are NOT supported " +
+								"by Alkira and may cause provisioning to fail.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -272,7 +294,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"panorama_template": {
-				Description: "Panorama Template.",
+				Description: "Panorama Template or Panorama Template Stack.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -300,13 +322,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Optional: true,
 			},
 			"max_instance_count": {
-				Description: "Max number of Panorama instances for auto scale.",
-				Type:        schema.TypeInt,
-				Required:    true,
+				Description: "Max number of Panorama instances for auto scale. " +
+					"Note: For Azure CXPs, this must equal `min_instance_count` " +
+					"as Azure does not support AutoScale.",
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"min_instance_count": {
 				Description: "Minimal number of Panorama instances for auto " +
-					"scale. Default value is `0`.",
+					"scale. Default value is `0`. Note: For Azure CXPs, " +
+					"this must equal `max_instance_count` as Azure does " +
+					"not support AutoScale.",
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -325,7 +351,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Registration PIN Expiry. The date " +
 					"should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.",
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"name": {
 				Description: "Name of the PAN service.",
@@ -393,7 +419,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 							Description: "The list of groups associated " +
 								"with the zone.",
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -409,7 +435,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
-	// Create credentails
+	// Create credentials
 	err := createCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
@@ -423,7 +449,7 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -431,7 +457,25 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	d.SetId(string(response.Id))
 
-	if client.Provision == true {
+	if client.Validate && valErr != nil {
+
+		var diags diag.Diagnostics
+		readDiags := resourceServicePanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -493,7 +537,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -506,7 +550,7 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
-	// Update all credentails
+	// Update all credentials
 	err := updateCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
@@ -520,14 +564,30 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	// UPDATE
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if client.Validate && valErr != nil {
 
+		var diags diag.Diagnostics
+		readDiags := resourceServicePanRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -549,16 +609,23 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 	api := alkira.NewServicePan(client)
 
 	// DELETE
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId("")
+	if client.Validate && valErr != nil {
 
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
 	// Check provision state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

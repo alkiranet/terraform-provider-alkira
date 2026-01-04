@@ -24,7 +24,7 @@ func resourceAlkiraListExtendedCommunity() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -72,10 +72,10 @@ func resourceListExtendedCommunity(ctx context.Context, d *schema.ResourceData, 
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListExtendedCommunityRequest(d, m)
+	request := generateListExtendedCommunityRequest(d)
 
 	// Send request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -83,8 +83,26 @@ func resourceListExtendedCommunity(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListExtendedCommunityRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -119,7 +137,7 @@ func resourceListExtendedCommunityRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("values", list.Values)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -132,17 +150,35 @@ func resourceListExtendedCommunityUpdate(ctx context.Context, d *schema.Resource
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generateListExtendedCommunityRequest(d, m)
+	request := generateListExtendedCommunityRequest(d)
 
 	// Send request to update
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceListExtendedCommunityRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -162,15 +198,24 @@ func resourceListExtendedCommunityDelete(ctx context.Context, d *schema.Resource
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewListExtendedCommunity(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -181,7 +226,7 @@ func resourceListExtendedCommunityDelete(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func generateListExtendedCommunityRequest(d *schema.ResourceData, m interface{}) *alkira.List {
+func generateListExtendedCommunityRequest(d *schema.ResourceData) *alkira.List {
 
 	request := &alkira.List{
 		Name:        d.Get("name").(string),

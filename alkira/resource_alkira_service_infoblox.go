@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -24,7 +23,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -271,7 +270,7 @@ func resourceInfoblox(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -279,8 +278,27 @@ func resourceInfoblox(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	d.SetId(string(response.Id))
 
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve any successfully created state
+		readDiags := resourceInfobloxRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -313,7 +331,7 @@ func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interfa
 	setAllInfobloxResourceFields(d, infoblox)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -334,14 +352,33 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		// Try to read the resource to preserve current state
+		readDiags := resourceInfobloxRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
@@ -361,7 +398,7 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -369,7 +406,16 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	// Handle validation errors
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -389,10 +435,9 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	shared_secret := d.Get("shared_secret").(string)
 
 	var infobloxCredentialId string
+	var err error
 
 	if shared_secret != "" {
-		err := errors.New("")
-
 		infobloxCredentialId, err = client.CreateCredential(
 			nameWithSuffix,
 			alkira.CredentialTypeInfoblox,

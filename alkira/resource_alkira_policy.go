@@ -22,7 +22,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -46,7 +46,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			"from_groups": {
 				Description: "IDs of groups that will define source in the " +
 					"policy scope",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -74,7 +74,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			"to_groups": {
 				Description: "IDs of groups that will define destination in " +
 					"the policy scope.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
@@ -95,17 +95,35 @@ func resourcePolicy(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRequest(d, m)
+	request := generatePolicyRequest(d)
 
 	// Send request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -146,7 +164,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("zta_profile_ids", policy.ZTAProfileIds)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -159,17 +177,35 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request := generatePolicyRequest(d, m)
+	request := generatePolicyRequest(d)
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -189,15 +225,24 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewTrafficPolicy(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -208,16 +253,16 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	return nil
 }
 
-func generatePolicyRequest(d *schema.ResourceData, m interface{}) *alkira.TrafficPolicy {
+func generatePolicyRequest(d *schema.ResourceData) *alkira.TrafficPolicy {
 
 	policy := &alkira.TrafficPolicy{
 		Description:   d.Get("description").(string),
 		Enabled:       d.Get("enabled").(bool),
-		FromGroups:    convertTypeListToIntList(d.Get("from_groups").([]interface{})),
+		FromGroups:    convertTypeSetToIntList(d.Get("from_groups").(*schema.Set)),
 		Name:          d.Get("name").(string),
 		RuleListId:    d.Get("rule_list_id").(int),
 		SegmentIds:    convertTypeListToIntList(d.Get("segment_ids").([]interface{})),
-		ToGroups:      convertTypeListToIntList(d.Get("to_groups").([]interface{})),
+		ToGroups:      convertTypeSetToIntList(d.Get("to_groups").(*schema.Set)),
 		ZTAProfileIds: convertTypeListToStringList(d.Get("zta_profile_ids").([]interface{})),
 	}
 

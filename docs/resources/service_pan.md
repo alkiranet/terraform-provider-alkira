@@ -91,11 +91,10 @@ resource "alkira_service_pan" "test1" {
 - `instance` (Block List, Min: 1) (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) PAN license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `management_segment_id` (Number) Management Segment ID.
-- `max_instance_count` (Number) Max number of Panorama instances for auto scale.
+- `max_instance_count` (Number) Max number of Panorama instances for auto scale. Note: For Azure CXPs, this must equal `min_instance_count` as Azure does not support AutoScale.
 - `name` (String) Name of the PAN service.
 - `pan_password` (String) PAN Panorama password.
 - `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
-- `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `registration_pin_id` (String) PAN Registration PIN ID.
 - `registration_pin_value` (String) PAN Registration PIN Value.
 - `segment_ids` (Set of Number) IDs of segments associated with the service.
@@ -113,12 +112,13 @@ resource "alkira_service_pan" "test1" {
 - `master_key` (String) Master Key for PAN instances.
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
-- `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`.
-- `pan_license_key` (String) PAN Panorama license Key.
+- `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`. Note: For Azure CXPs, this must equal `max_instance_count` as Azure does not support AutoScale.
+- `pan_license_key` (String) PAN Licensing API Key.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
-- `panorama_template` (String) Panorama Template.
+- `panorama_template` (String) Panorama Template or Panorama Template Stack.
+- `registration_pin_expiry` (String) PAN Registration PIN Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `segment_options` (Block Set) The segment options as used by your PAN firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol, default to `IPSEC`, could be either `IPSEC` or `GRE`.
 - `type` (String) The type of the PAN firewall. Either 'VM-300', 'VM-500' or 'VM-700'
@@ -139,7 +139,7 @@ Optional:
 
 - `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
 - `auth_expiry` (String) PAN Auth Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
-- `auth_key` (String) PAN instance auth key. This is only required when `panorama_enabled` is set to `true`.
+- `auth_key` (String) PAN instance auth key (VM-series bootstrap auth key). This is only required when `panorama_enabled` is set to `true`. **IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. Auth keys generated using the Panorama web interface are NOT supported by Alkira and may cause provisioning to fail.
 - `enable_traffic` (Boolean) Enable traffic on the PAN instance. Default value is `true`.
 - `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
 - `name` (String) The name of the PAN instance.
@@ -177,6 +177,9 @@ Required:
 
 Required:
 
-- `groups` (List of String) The list of groups associated with the zone.
 - `segment_id` (String) The ID of the segment.
 - `zone_name` (String) The name of the associated firewall zone.
+
+Optional:
+
+- `groups` (List of String) The list of groups associated with the zone.

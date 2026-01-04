@@ -106,7 +106,7 @@ resource "alkira_connector_azure_vnet" "subnet" {
 - `credential_id` (String) ID of resource `credential_azure_vnet`.
 - `cxp` (String) The CXP where the connector should be provisioned.
 - `name` (String) The name of the connector.
-- `segment_id` (String) The ID of the segment assoicated with the connector.
+- `segment_id` (String) The ID of the segment associated with the connector.
 - `size` (String) The size of the connector, one of `5XSMALL`, `XSMALL`,`SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`.
 
 ### Optional
@@ -156,6 +156,7 @@ Optional:
 
 Required:
 
+- `subnet_cidr` (String) VNET subnet CIDR.
 - `subnet_id` (String) VNET subnet ID.
 
 Optional:
@@ -164,7 +165,6 @@ Optional:
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
-- `subnet_cidr` (String) VNET subnet CIDR.
 - `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 
 ## Import

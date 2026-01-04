@@ -22,60 +22,60 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Description: "The name of the credential",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"auth_provider": &schema.Schema{
+			"auth_provider": {
 				Description: "GCP Authentication Provider",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "https://www.googleapis.com/oauth2/v1/certs",
 			},
-			"auth_uri": &schema.Schema{
+			"auth_uri": {
 				Description: "GCP Authentication URI",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "https://accounts.google.com/o/oauth2/auth",
 			},
-			"client_email": &schema.Schema{
+			"client_email": {
 				Description: "GCP Client email",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"client_id": &schema.Schema{
+			"client_id": {
 				Description: "GCP Client ID",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"client_x509_cert_url": &schema.Schema{
+			"client_x509_cert_url": {
 				Description: "GCP Client X509 Cert URL",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"private_key_id": &schema.Schema{
+			"private_key_id": {
 				Description: "GCP Private Key ID",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"private_key": &schema.Schema{
+			"private_key": {
 				Description: "GCP Private Key",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"project_id": &schema.Schema{
+			"project_id": {
 				Description: "GCP Project ID",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"token_uri": &schema.Schema{
+			"token_uri": {
 				Description: "Token URI",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "https://oauth2.googleapis.com/token",
 			},
-			"type": &schema.Schema{
+			"type": {
 				Description: "GCP Auth Type, default value is `service_account`.",
 				Type:        schema.TypeString,
 				Optional:    true,

@@ -48,7 +48,7 @@ resource "alkira_service_f5_vserver_endpoint" "example-vserver-1" {
 - `port_ranges` (Set of String) An array of ports or port ranges. Values can be mixed i.e. ['20', '100-200']. An array with only the value '-1' means any port.
 - `protocol` (String) The portocol used for the endpoint. Can be one of `TCP` or `UDP`.
 - `segment_id` (String) ID of the segment associated with the endpoint.
-- `snat` (String) SNAT for the endpoint. Only `AUTOMAP` is supported for now.
+- `snat` (String) SNAT for the endpoint. Only `AUTOMAP` or `NONE` is supported for now.
 - `type` (String) The type of endpoint. Only `ELB` is supported for now.
 
 ### Read-Only

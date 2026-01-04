@@ -21,7 +21,7 @@ func resourceAlkiraConnectorIpsecTunnelProfile() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -107,7 +107,7 @@ func resourceConnectorIpsecTunnelProfile(ctx context.Context, d *schema.Resource
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(req)
+	response, provState, err, valErr, provErr := api.Create(req)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -115,11 +115,29 @@ func resourceConnectorIpsecTunnelProfile(ctx context.Context, d *schema.Resource
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorIpsecTunnelProfileRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
-		if provState == "FAILED" {
+		if provErr != nil {
 			return diag.Diagnostics{{
 				Severity: diag.Warning,
 				Summary:  "PROVISION (CREATE) FAILED",
@@ -158,7 +176,7 @@ func resourceConnectorIpsecTunnelProfileRead(ctx context.Context, d *schema.Reso
 	d.Set("ike_dh_group", profile.IkeConfiguration.DhGroup)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -178,14 +196,32 @@ func resourceConnectorIpsecTunnelProfileUpdate(ctx context.Context, d *schema.Re
 	}
 
 	// Send update request
-	provState, err, provErr := api.Update(d.Id(), profile)
+	provState, err, valErr, provErr := api.Update(d.Id(), profile)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourceConnectorIpsecTunnelProfileRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -207,7 +243,7 @@ func resourceConnectorIpsecTunnelProfileDelete(ctx context.Context, d *schema.Re
 	api := alkira.NewConnectorIPSecTunnelProfile(client)
 
 	// Delete
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -215,8 +251,17 @@ func resourceConnectorIpsecTunnelProfileDelete(ctx context.Context, d *schema.Re
 
 	d.SetId("")
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	// Check provisions state
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

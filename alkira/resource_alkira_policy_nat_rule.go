@@ -24,7 +24,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 
 			old, _ := d.GetChange("provision_state")
 
-			if client.Provision == true && old == "FAILED" {
+			if client.Provision && old == "FAILED" {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
@@ -64,6 +64,13 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 				Default:  "DEFAULT",
 				ValidateFunc: validation.StringInSlice(
 					[]string{"DEFAULT", "INTERNET_CONNECTOR"}, false),
+			},
+			"direction": {
+				Description: "The direction of NAT rule. The value could be `INBOUND` or `OUTBOUND`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"INBOUND", "OUTBOUND"}, false),
 			},
 			"match": {
 				Description: "Match condition for the rule.",
@@ -165,9 +172,11 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional:    true,
 						},
 						"src_addr_translation_routing_track_invalidate_prefixes": {
-							Description: "Whether to invalidate the track prefixes.",
-							Type:        schema.TypeBool,
-							Optional:    true,
+							Description: "Whether to invalidate the track prefixes. " +
+								"Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"dst_addr_translation_type": {
 							Description: "The translation type are: `STATIC_IP`, " +
@@ -210,6 +219,25 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"dst_addr_translation_routing_track_prefixes": {
+							Description: "The list of prefixes to track.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Optional:    true,
+						},
+						"dst_addr_translation_routing_track_prefix_list_ids": {
+							Description: "The list of prefix list IDs to track.",
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
+						},
+						"dst_addr_translation_routing_invalidate_prefixes": {
+							Description: "Whether to invalidate the track prefixes. " +
+								"Default value is `false`.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"egress_type": {
 							Description: "The egress type to use with the " +
 								"match. Options are are `ALKIRA_PUBLIC_IP` " +
@@ -232,14 +260,14 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyNatRuleRequest(d, m)
+	request, err := generatePolicyNatRuleRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Send create request
-	response, provState, err, provErr := api.Create(request)
+	response, provState, err, valErr, provErr := api.Create(request)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -247,8 +275,26 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 
 	d.SetId(string(response.Id))
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyNatRuleRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (CREATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -287,7 +333,7 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	setNatRuleMatch(rule.Match, d)
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -300,21 +346,39 @@ func resourcePolicyNatRuleUpdate(ctx context.Context, d *schema.ResourceData, m 
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
 	// Construct request
-	request, err := generatePolicyNatRuleRequest(d, m)
+	request, err := generatePolicyNatRuleRequest(d)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Send requset
-	provState, err, provErr := api.Update(d.Id(), request)
+	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		var diags diag.Diagnostics
+		readDiags := resourcePolicyNatRuleRead(ctx, d, m)
+		if readDiags.HasError() {
+			diags = append(diags, readDiags...)
+		}
+
+		// Add the validation error
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (UPDATE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		})
+
+		return diags
+	}
+
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -334,15 +398,24 @@ func resourcePolicyNatRuleDelete(ctx context.Context, d *schema.ResourceData, m 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewNatRule(m.(*alkira.AlkiraClient))
 
-	provState, err, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Handle validation error
+	if client.Validate && valErr != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "VALIDATION (DELETE) FAILED",
+			Detail:   fmt.Sprintf("%s", valErr),
+		}}
+	}
+
 	d.SetId("")
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
