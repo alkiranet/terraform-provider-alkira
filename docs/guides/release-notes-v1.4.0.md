@@ -1,3 +1,10 @@
+---
+subcategory: "Release Notes"
+page_title: "v1.4.0"
+description: |-
+    Release notes for v1.4.0
+---
+
 # Alkira Terraform Provider v1.4.0 Release Notes
 
 Release Date: 2026-01-04
