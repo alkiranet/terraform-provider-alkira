@@ -45,7 +45,7 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 			segment = seg
 		}
 
-		if v, ok := optionsCfg["groups"].([]interface{}); ok {
+		if v, ok := optionsCfg["groups"].([]interface{}); ok && len(v) > 0 {
 			groups = convertTypeListToStringList(v)
 		} else {
 			groups = []string{}

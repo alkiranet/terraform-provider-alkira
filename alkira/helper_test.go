@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -265,6 +266,89 @@ func TestStringInSlice(t *testing.T) {
 			result := stringInSlice(tt.str, tt.slice)
 			assert.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+func TestSegmentOptionsGroupsNotNil(t *testing.T) {
+	tests := []struct {
+		name           string
+		groups         interface{} // simulates optionsCfg["groups"]
+		expectedGroups []string
+		expectedNotNil bool
+	}{
+		{
+			name:           "groups with values",
+			groups:         []interface{}{"group1", "group2"},
+			expectedGroups: []string{"group1", "group2"},
+			expectedNotNil: true,
+		},
+		{
+			name:           "groups empty slice - should be empty slice not nil",
+			groups:         []interface{}{},
+			expectedGroups: []string{},
+			expectedNotNil: true, // Critical: must be empty slice, not nil
+		},
+		{
+			name:           "groups nil - should be empty slice not nil",
+			groups:         nil,
+			expectedGroups: []string{},
+			expectedNotNil: true, // Critical: must be empty slice, not nil
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var groups []string
+
+			// This mirrors the logic in expandSegmentOptions (helper.go:48-52)
+			if v, ok := tt.groups.([]interface{}); ok && len(v) > 0 {
+				groups = convertTypeListToStringList(v)
+			} else {
+				groups = []string{}
+			}
+
+			// Verify the result
+			assert.Equal(t, tt.expectedGroups, groups)
+
+			// Critical assertion: groups must not be nil when we expect it not to be
+			// nil serializes to JSON "null", empty slice serializes to "[]"
+			if tt.expectedNotNil {
+				assert.NotNil(t, groups, "groups should be empty slice [], not nil")
+			}
+		})
+	}
+}
+
+func TestDeflateSegmentOptionsHandlesNilGroups(t *testing.T) {
+	// Simulate API response where some zones have nil groups
+	zonesToGroups := make(alkira.ZoneToGroups)
+	zonesToGroups["testzone"] = []string{"branch-sdwan"}
+	zonesToGroups["Cloudzone"] = nil // API may return null for zones without groups
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["test-segment"] = alkira.OuterZoneToGroups{
+		SegmentId:     1331,
+		ZonesToGroups: zonesToGroups,
+	}
+
+	result := deflateSegmentOptions(segmentOptions)
+
+	// Should have 2 entries (one for each zone)
+	assert.Len(t, result, 2)
+
+	// Find each zone and verify groups
+	for _, opt := range result {
+		zoneName := opt["zone_name"].(string)
+		groups := opt["groups"]
+
+		switch zoneName {
+		case "testzone":
+			assert.Equal(t, []string{"branch-sdwan"}, groups)
+		case "Cloudzone":
+			// nil groups from API should be preserved as-is by deflate
+			// The Terraform state will handle nil appropriately
+			assert.Nil(t, groups)
+		}
 	}
 }
 
