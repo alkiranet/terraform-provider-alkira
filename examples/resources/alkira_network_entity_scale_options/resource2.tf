@@ -6,12 +6,12 @@ resource "alkira_network_entity_scale_options" "another_example" {
   segment_scale_options {
     additional_tunnel_options_per_node {
       id      = 1
-      label   = 100
+      label   = "test-100"
       enabled = true
     }
     additional_tunnel_options_per_node {
       id      = 2
-      label   = 200
+      label   = "test-200"
       enabled = false
     }
     segment_id = alkira_segment.example.id
