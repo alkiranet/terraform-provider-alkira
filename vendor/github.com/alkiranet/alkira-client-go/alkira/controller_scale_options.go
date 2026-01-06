@@ -7,11 +7,18 @@ import (
 	"fmt"
 )
 
+type AdditionalTunnelOptionsPerNode struct {
+	Id      int    `json:"id"`
+	Label   string `json:"label"`
+	Enabled bool   `json:"enabled"`
+}
+
 type SegmentScaleOptions struct {
-	AdditionalTunnelsPerNode int    `json:"additionalTunnelsPerNode"`
-	AdditionalNodes          int    `json:"additionalNodes"`
-	SegmentId                int    `json:"segmentId"`
-	ZoneName                 string `json:"zoneName"`
+	AdditionalTunnelsPerNode       int                              `json:"additionalTunnelsPerNode"`
+	AdditionalNodes                int                              `json:"additionalNodes"`
+	SegmentId                      int                              `json:"segmentId"`
+	ZoneName                       string                           `json:"zoneName"`
+	AdditionalTunnelOptionsPerNode []AdditionalTunnelOptionsPerNode `json:"additionalTunnelOptionsPerNode"`
 }
 
 type ControllerScaleOptions struct {
