@@ -52,10 +52,10 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"type": {
 				Description: "The type of endpoint." +
-					" Only `ELB` is supported for now.",
+					" Can be `ELB` or `ILB`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ELB"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ELB", "ILB"}, false),
 			},
 			"segment_id": {
 				Description: "ID of the segment associated with" +
@@ -64,9 +64,9 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"fqdn_prefix": {
-				Description: "The FQDN prefix of the endpoint.",
+				Description: "The FQDN prefix of the endpoint. Required when type is `ELB`",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"protocol": {
 				Description: "The portocol used for the endpoint." +
@@ -78,17 +78,34 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			"port_ranges": {
 				Description: "An array of ports or port ranges." +
 					" Values can be mixed i.e. ['20', '100-200']." +
-					" An array with only the value '-1' means any port.",
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ELB`",
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snat": {
 				Description: "SNAT for the endpoint." +
-					" Only `AUTOMAP` or `NONE` is supported for now.",
+					" Can be `AUTOMAP` or `NONE`." +
+					" If type is `ILB` snat must be `NONE`",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP", "NONE"}, false),
+			},
+			"destination_endpoint_port_ranges": {
+				Description: "An array of ports or port ranges." +
+					" Values can be mixed i.e. ['20', '100-200']." +
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ILB` and snat is `NONE`",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"destination_endpoint_ip_addresses": {
+				Description: "An array of ip addresses. Required when type is `ILB` and snat is `NONE`",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -280,6 +297,21 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Protocol:             d.Get("protocol").(string),
 		PortRanges:           convertTypeSetToStringList(d.Get("port_ranges").(*schema.Set)),
 		Snat:                 d.Get("snat").(string),
+	}
+
+	destinationEndpointPortRanges, ok1 := d.Get("destination_endpoint_port_ranges").(*schema.Set)
+	hasDEPortRanges := ok1 && destinationEndpointPortRanges.Len() > 0
+	destinationEndpointIpAddresses, ok2 := d.Get("destination_endpoint_ip_addresses").(*schema.Set)
+	hasDEIpAddresses := ok2 && destinationEndpointIpAddresses.Len() > 0
+
+	if hasDEPortRanges || hasDEIpAddresses {
+		request.DestinationEndpoints = &alkira.F5VServerDestinationEndpoints{}
+	}
+	if hasDEPortRanges {
+		request.DestinationEndpoints.PortRanges = convertTypeSetToStringList(destinationEndpointPortRanges)
+	}
+	if hasDEIpAddresses {
+		request.DestinationEndpoints.IpAddresses = convertTypeSetToStringList(destinationEndpointIpAddresses)
 	}
 
 	return request, nil
