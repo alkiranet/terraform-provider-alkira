@@ -6,19 +6,21 @@ import (
 )
 
 type ServiceF5Lb struct {
-	SegmentOptions   F5SegmentOption `json:"segmentOptions"`
-	Description      string          `json:"description,omitempty"`
-	Cxp              string          `json:"cxp"`
-	Size             string          `json:"size"`
-	Id               json.Number     `json:"id,omitempty"`
-	Name             string          `json:"name"`
-	ServiceGroupName string          `json:"serviceGroupName"`
-	ImplicitGroupId  int             `json:"implicitGroupId,omitempty"` // response only
-	Instances        []F5Instance    `json:"instances"`
-	Segments         []string        `json:"segments"`
-	BillingTags      []int           `json:"billingTags,omitempty"`
-	PrefixListId     int             `json:"prefixListId,omitempty"`
-	GlobalCidrListId int             `json:"globalCidrListId"`
+	SegmentOptions      F5SegmentOption `json:"segmentOptions"`
+	Description         string          `json:"description,omitempty"`
+	Cxp                 string          `json:"cxp"`
+	Size                string          `json:"size"`
+	Id                  json.Number     `json:"id,omitempty"`
+	Name                string          `json:"name"`
+	ServiceGroupName    string          `json:"serviceGroupName"`
+	IlbServiceGroupName string          `json:"ilbServiceGroupName"`
+	ImplicitGroupId     int             `json:"implicitGroupId,omitempty"`    // response only
+	IlbImplicitGroupId  int             `json:"ilbImplicitGroupId,omitempty"` // response only
+	Instances           []F5Instance    `json:"instances"`
+	Segments            []string        `json:"segments"`
+	BillingTags         []int           `json:"billingTags,omitempty"`
+	PrefixListId        int             `json:"prefixListId,omitempty"`
+	GlobalCidrListId    int             `json:"globalCidrListId"`
 }
 
 type F5Instance struct {
@@ -38,6 +40,7 @@ type F5SegmentSubOption struct {
 	NatPoolPrefixLength int            `json:"natPoolPrefixLength,omitempty"`
 	ElbNicCount         int            `json:"elbNicCount"`
 	ElbBgpOptions       *ElbBgpOptions `json:"elbBgpOptions,omitempty"`
+	LbType              []string       `json:"lbType,omitempty"`
 }
 
 type ElbBgpOptions struct {
