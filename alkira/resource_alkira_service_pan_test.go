@@ -168,7 +168,12 @@ func TestAlkiraServicePan_setPanInstances(t *testing.T) {
 	r := resourceAlkiraServicePan()
 	d := r.TestResourceData()
 
-	result := setPanInstances(d, instances)
+	// Create a mock client since the function requires it
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	result := setPanInstances(d, instances, mockClient)
 	require.Len(t, result, 2, "Should return 2 instances")
 
 	// Check first instance
