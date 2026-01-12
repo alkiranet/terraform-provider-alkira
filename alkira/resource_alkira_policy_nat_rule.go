@@ -317,6 +317,11 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	rule, provState, err := api.GetById(d.Id())
 
 	if err != nil {
+		// Check if resource was deleted outside Terraform (404)
+		if handleResourceNotFound(err, d, "NAT Rule") {
+			return nil
+		}
+		// For other errors, return as warning
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "FAILED TO GET RESOURCE",

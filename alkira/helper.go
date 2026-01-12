@@ -230,3 +230,20 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 
 	return timeInput.Unix(), nil
 }
+
+// handleResourceNotFound checks if an API error is a 404 and removes the resource from state.
+// Returns true if the resource was not found and removed from state, false otherwise.
+func handleResourceNotFound(err error, d *schema.ResourceData, resourceType string) bool {
+	if err == nil {
+		return false
+	}
+
+	// Check if this is a 404 error
+	if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found") {
+		log.Printf("[WARN] %s %s not found (404), removing from state", resourceType, d.Id())
+		d.SetId("")
+		return true
+	}
+
+	return false
+}
