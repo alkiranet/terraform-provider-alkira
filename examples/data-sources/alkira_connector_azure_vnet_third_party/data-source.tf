@@ -1,3 +1,3 @@
-data "alkira_azure_vnet_third_party_connector" "example" {
+data "alkira_connector_azure_vnet_third_party" "example" {
   name = "azure-third-party-connector"
 }
