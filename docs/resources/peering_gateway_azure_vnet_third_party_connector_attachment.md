@@ -16,7 +16,11 @@ This resource represents an Azure VNET Third Party Connector Attachment, which c
 ### Basic Configuration
 
 ```terraform
+<<<<<<< HEAD
 resource "alkira_peering_gateway_azure_vnet_third_party_connector_attachment" "example" {
+=======
+resource "alkira_azure_vnet_third_party_connector_attachment" "example" {
+>>>>>>> 2c53cea4 (more changes)
   name                    = "azure-vnet-attachment"
   description             = "Azure VNET Third Party Attachment"
   cxp_peering_gateway_id  = alkira_peering_gateway_cxp.example.id
