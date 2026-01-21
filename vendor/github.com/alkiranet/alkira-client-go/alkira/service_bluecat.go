@@ -34,9 +34,9 @@ type BluecatAnycast struct {
 type BluecatInstance struct {
 	BddsOptions      *BDDSOptions `json:"bddsOptions,omitempty"`
 	EdgeOptions      *EdgeOptions `json:"edgeOptions,omitempty"`
-	Id               int          `json:"id,omitempty"`
+	Id               json.Number  `json:"id,omitempty"`
 	InternalName     string       `json:"internalName,omitempty"`
-	Name             string       `json:"name,omitempty"`
+	Name             string       `json:"name"`
 	Type             string       `json:"type"`                       // BDDS or EDGE
 	CxpBgpIp         string       `json:"cxpBgpIp,omitempty"`         // RESPONSE ONLY
 	CxpBgpAsn        string       `json:"cxpBgpAsn,omitempty"`        // RESPONSE ONLY

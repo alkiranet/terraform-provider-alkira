@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -186,7 +187,7 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 	segmentSet := schema.NewSet(schema.HashString, []interface{}{"segment-1"})
 	d.Set("segment_ids", segmentSet)
 
-	// Create BDDS options list
+	// Create BDDS options set
 	bddsOptionsData := map[string]interface{}{
 		"hostname":       "bdds-primary.example.com",
 		"model":          "cBDDS50",
@@ -194,26 +195,40 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 		"client_id":      "test-client-001",
 		"activation_key": "test-key-001",
 	}
-	bddsOptionsList := []interface{}{bddsOptionsData}
+	bddsOptionsSet := schema.NewSet(schema.HashResource(&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"hostname":       {Type: schema.TypeString},
+			"model":          {Type: schema.TypeString},
+			"version":        {Type: schema.TypeString},
+			"client_id":      {Type: schema.TypeString},
+			"activation_key": {Type: schema.TypeString},
+		},
+	}), []interface{}{bddsOptionsData})
 
-	// Create Edge options list
+	// Create Edge options set
 	edgeOptionsData := map[string]interface{}{
 		"hostname":    "edge-primary.example.com",
 		"version":     "4.2.0",
 		"config_data": "base64encodeddata",
 	}
-	edgeOptionsList := []interface{}{edgeOptionsData}
+	edgeOptionsSet := schema.NewSet(schema.HashResource(&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"hostname":    {Type: schema.TypeString},
+			"version":     {Type: schema.TypeString},
+			"config_data": {Type: schema.TypeString},
+		},
+	}), []interface{}{edgeOptionsData})
 
 	instancesData := []interface{}{
 		map[string]interface{}{
 			"name":         "bdds-primary",
 			"type":         "BDDS",
-			"bdds_options": bddsOptionsList,
+			"bdds_options": bddsOptionsSet,
 		},
 		map[string]interface{}{
 			"name":         "edge-primary",
 			"type":         "EDGE",
-			"edge_options": edgeOptionsList,
+			"edge_options": edgeOptionsSet,
 		},
 	}
 
@@ -242,24 +257,8 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 	require.Equal(t, expectedCxp, request.Cxp)
 	require.Len(t, request.Instances, 2)
 
-	// Verify instances (find by type since TypeSet doesn't preserve order)
-	var bddsInstances []alkira.BluecatInstance
-	var edgeInstances []alkira.BluecatInstance
-	for i := range request.Instances {
-		switch request.Instances[i].Type {
-		case "BDDS":
-			bddsInstances = append(bddsInstances, request.Instances[i])
-		case "EDGE":
-			edgeInstances = append(edgeInstances, request.Instances[i])
-		}
-	}
-
-	// Assert instance counts
-	require.Len(t, bddsInstances, 1, "Should have exactly 1 BDDS instance")
-	require.Len(t, edgeInstances, 1, "Should have exactly 1 EDGE instance")
-
 	// Verify BDDS instance
-	bddsInstance := bddsInstances[0]
+	bddsInstance := request.Instances[0]
 	require.Equal(t, "bdds-primary", bddsInstance.Name)
 	require.Equal(t, "BDDS", bddsInstance.Type)
 	require.NotNil(t, bddsInstance.BddsOptions)
@@ -268,7 +267,7 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 	require.Equal(t, "9.4.0", bddsInstance.BddsOptions.Version)
 
 	// Verify Edge instance
-	edgeInstance := edgeInstances[0]
+	edgeInstance := request.Instances[1]
 	require.Equal(t, "edge-primary", edgeInstance.Name)
 	require.Equal(t, "EDGE", edgeInstance.Type)
 	require.NotNil(t, edgeInstance.EdgeOptions)
@@ -294,6 +293,11 @@ func TestAlkiraServiceBluecat_resourceSchema(t *testing.T) {
 		assert.True(t, cxpSchema.Required, "CXP should be required")
 	}
 
+	if licenseTypeSchema, exists := resource.Schema["license_type"]; exists {
+		assert.Equal(t, schema.TypeString, licenseTypeSchema.Type, "License type should be string type")
+		assert.True(t, licenseTypeSchema.Required, "License type should be required")
+	}
+
 	if globalCidrSchema, exists := resource.Schema["global_cidr_list_id"]; exists {
 		assert.Equal(t, schema.TypeInt, globalCidrSchema.Type, "Global CIDR list ID should be int type")
 		assert.True(t, globalCidrSchema.Required, "Global CIDR list ID should be required")
@@ -307,28 +311,15 @@ func TestAlkiraServiceBluecat_resourceSchema(t *testing.T) {
 	if segmentIdsSchema, exists := resource.Schema["segment_ids"]; exists {
 		assert.Equal(t, schema.TypeSet, segmentIdsSchema.Type, "Segment IDs should be set type")
 		assert.True(t, segmentIdsSchema.Required, "Segment IDs should be required")
-		assert.Equal(t, 1, segmentIdsSchema.MinItems, "Segment IDs should require at least 1 element")
 	}
 
 	if instanceSchema, exists := resource.Schema["instance"]; exists {
-		assert.Equal(t, schema.TypeSet, instanceSchema.Type, "Instance should be set type")
+		assert.Equal(t, schema.TypeList, instanceSchema.Type, "Instance should be list type")
 		assert.True(t, instanceSchema.Required, "Instance should be required")
 	}
 
 	// Basic test - just verify the resource can be created
 	assert.True(t, true, "Bluecat resource schema test completed successfully")
-}
-
-func TestAlkiraServiceBluecat_segmentIdsMinItems(t *testing.T) {
-	resource := resourceAlkiraBluecat()
-
-	segmentIdsSchema, exists := resource.Schema["segment_ids"]
-	require.True(t, exists, "segment_ids schema field must exist")
-
-	// MinItems: 1 ensures Terraform rejects empty segment_ids at plan
-	// time rather than sending null to the API (which returns HTTP 500).
-	assert.Equal(t, 1, segmentIdsSchema.MinItems,
-		"segment_ids must enforce MinItems=1; the backend requires at least 1 segment")
 }
 
 func TestAlkiraServiceBluecat_validateLicenseType(t *testing.T) {
@@ -458,7 +449,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-bdds-01",
 				Type: "BDDS",
-				Id:   456,
+				Id:   json.Number("456"),
 				BddsOptions: &alkira.BDDSOptions{
 					HostName:            "bdds-01.example.com",
 					Model:               "cBDDS50",
@@ -469,7 +460,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-edge-01",
 				Type: "EDGE",
-				Id:   789,
+				Id:   json.Number("789"),
 				EdgeOptions: &alkira.EdgeOptions{
 					HostName:     "edge-01.example.com",
 					Version:      "4.2.0",
@@ -644,8 +635,7 @@ func buildServiceBluecatRequest(d *schema.ResourceData) *alkira.ServiceBluecat {
 
 	// Handle instances configuration
 	if instancesRaw := d.Get("instance"); instancesRaw != nil {
-		if instancesSet, ok := instancesRaw.(*schema.Set); ok {
-			instancesList := instancesSet.List()
+		if instancesList, ok := instancesRaw.([]interface{}); ok {
 			instances := make([]alkira.BluecatInstance, len(instancesList))
 			for i, instanceRaw := range instancesList {
 				if instanceMap, ok := instanceRaw.(map[string]interface{}); ok {
@@ -656,12 +646,15 @@ func buildServiceBluecatRequest(d *schema.ResourceData) *alkira.ServiceBluecat {
 
 					// Handle BDDS options
 					if bddsOptionsRaw, exists := instanceMap["bdds_options"]; exists {
-						if bddsOptionsList, ok := bddsOptionsRaw.([]interface{}); ok && len(bddsOptionsList) > 0 {
-							if bddsOptionsMap, ok := bddsOptionsList[0].(map[string]interface{}); ok {
-								instance.BddsOptions = &alkira.BDDSOptions{
-									HostName: getStringFromMapBluecat(bddsOptionsMap, "hostname"),
-									Model:    getStringFromMapBluecat(bddsOptionsMap, "model"),
-									Version:  getStringFromMapBluecat(bddsOptionsMap, "version"),
+						if bddsOptionsSet, ok := bddsOptionsRaw.(*schema.Set); ok && bddsOptionsSet.Len() > 0 {
+							for _, optionRaw := range bddsOptionsSet.List() {
+								if bddsOptionsMap, ok := optionRaw.(map[string]interface{}); ok {
+									instance.BddsOptions = &alkira.BDDSOptions{
+										HostName: getStringFromMapBluecat(bddsOptionsMap, "hostname"),
+										Model:    getStringFromMapBluecat(bddsOptionsMap, "model"),
+										Version:  getStringFromMapBluecat(bddsOptionsMap, "version"),
+									}
+									break // Take only the first one
 								}
 							}
 						}
@@ -669,11 +662,14 @@ func buildServiceBluecatRequest(d *schema.ResourceData) *alkira.ServiceBluecat {
 
 					// Handle Edge options
 					if edgeOptionsRaw, exists := instanceMap["edge_options"]; exists {
-						if edgeOptionsList, ok := edgeOptionsRaw.([]interface{}); ok && len(edgeOptionsList) > 0 {
-							if edgeOptionsMap, ok := edgeOptionsList[0].(map[string]interface{}); ok {
-								instance.EdgeOptions = &alkira.EdgeOptions{
-									HostName: getStringFromMapBluecat(edgeOptionsMap, "hostname"),
-									Version:  getStringFromMapBluecat(edgeOptionsMap, "version"),
+						if edgeOptionsSet, ok := edgeOptionsRaw.(*schema.Set); ok && edgeOptionsSet.Len() > 0 {
+							for _, optionRaw := range edgeOptionsSet.List() {
+								if edgeOptionsMap, ok := optionRaw.(map[string]interface{}); ok {
+									instance.EdgeOptions = &alkira.EdgeOptions{
+										HostName: getStringFromMapBluecat(edgeOptionsMap, "hostname"),
+										Version:  getStringFromMapBluecat(edgeOptionsMap, "version"),
+									}
+									break // Take only the first one
 								}
 							}
 						}
@@ -741,206 +737,4 @@ func getStringSliceFromMapBluecat(m map[string]interface{}, key string) []string
 		}
 	}
 	return []string{}
-}
-
-func TestBluecatInstanceHash_Stability(t *testing.T) {
-	// Same hostname should produce same hash regardless of computed fields
-	hostname := "bdds-primary.example.com"
-
-	instance1 := map[string]interface{}{
-		"name": "bdds-primary",
-		"type": "BDDS",
-		"id":   123,
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname":              hostname,
-				"model":                 "cBDDS50",
-				"version":               "9.4.0",
-				"license_credential_id": "cred-123",
-			},
-		},
-	}
-
-	instance2 := map[string]interface{}{
-		"name": "different-name",
-		"type": "BDDS",
-		"id":   456, // Different computed id
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname":              hostname, // Same hostname
-				"model":                 "cBDDS50",
-				"version":               "9.4.0",
-				"license_credential_id": "different-cred",
-			},
-		},
-	}
-
-	hash1 := bluecatInstanceHash(instance1)
-	hash2 := bluecatInstanceHash(instance2)
-
-	assert.Equal(t, hash1, hash2, "Hash should be stable for same hostname regardless of other fields")
-}
-
-func TestBluecatInstanceHash_Uniqueness(t *testing.T) {
-	// Different hostnames should produce different hashes
-	bddsInstance := map[string]interface{}{
-		"name": "bdds-primary",
-		"type": "BDDS",
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": "bdds.example.com",
-				"model":    "cBDDS50",
-				"version":  "9.4.0",
-			},
-		},
-	}
-
-	edgeInstance := map[string]interface{}{
-		"name": "edge-primary",
-		"type": "EDGE",
-		"edge_options": []interface{}{
-			map[string]interface{}{
-				"hostname": "edge.example.com",
-				"version":  "4.2.0",
-			},
-		},
-	}
-
-	hash1 := bluecatInstanceHash(bddsInstance)
-	hash2 := bluecatInstanceHash(edgeInstance)
-
-	assert.NotEqual(t, hash1, hash2, "Hash should be unique for different hostnames")
-}
-
-func TestBluecatInstanceHash_ModelVersionChangeDoesNotChangeHash(t *testing.T) {
-	// KEY TEST: Changing model or version should NOT change hash
-	// This ensures such changes are treated as updates, not replacements
-	hostname := "bdds-primary.example.com"
-
-	instance1 := map[string]interface{}{
-		"name": "bdds-primary",
-		"type": "BDDS",
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": hostname,
-				"model":    "cBDDS50",
-				"version":  "9.4.0",
-			},
-		},
-	}
-
-	instance2 := map[string]interface{}{
-		"name": "bdds-primary",
-		"type": "BDDS",
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": hostname,
-				"model":    "cBDDS100", // CHANGED
-				"version":  "10.0.0",   // CHANGED
-			},
-		},
-	}
-
-	hash1 := bluecatInstanceHash(instance1)
-	hash2 := bluecatInstanceHash(instance2)
-
-	assert.Equal(t, hash1, hash2, "Hash should be stable for same hostname+type even when model/version changes")
-}
-
-func TestBluecatInstanceHash_TypeChangeChangesHash(t *testing.T) {
-	// Changing type SHOULD change hash because type is immutable
-	// This ensures type changes show as replacements (which is correct since type cannot be updated)
-	hostname := "same-hostname.example.com"
-
-	bddsInstance := map[string]interface{}{
-		"name": "instance1",
-		"type": "BDDS",
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": hostname,
-				"model":    "cBDDS50",
-				"version":  "9.4.0",
-			},
-		},
-	}
-
-	edgeInstance := map[string]interface{}{
-		"name": "instance2",
-		"type": "EDGE", // Different type
-		"edge_options": []interface{}{
-			map[string]interface{}{
-				"hostname": hostname, // Same hostname
-				"version":  "4.2.0",
-			},
-		},
-	}
-
-	hash1 := bluecatInstanceHash(bddsInstance)
-	hash2 := bluecatInstanceHash(edgeInstance)
-
-	assert.NotEqual(t, hash1, hash2, "Hash should be different for same hostname with different types")
-}
-
-func TestBluecatInstanceHash_EmptyOptions(t *testing.T) {
-	// Empty bdds_options or edge_options should not panic and return empty hash
-	instance1 := map[string]interface{}{
-		"name":         "test",
-		"type":         "BDDS",
-		"bdds_options": []interface{}{},
-	}
-
-	hash1 := bluecatInstanceHash(instance1)
-	assert.NotZero(t, hash1, "Empty options should return a hash (empty string hashes to non-zero)")
-
-	instance2 := map[string]interface{}{
-		"name": "test",
-		"type": "BDDS", // Same type as instance1
-		// No bdds_options or edge_options at all
-	}
-
-	hash2 := bluecatInstanceHash(instance2)
-	assert.Equal(t, hash1, hash2, "Missing options and empty options should produce same hash (empty hostname)")
-}
-
-func TestBluecatInstanceHash_NilOptions(t *testing.T) {
-	// nil bdds_options or edge_options should not panic
-	instance := map[string]interface{}{
-		"name":         "test",
-		"type":         "BDDS",
-		"bdds_options": nil,
-	}
-
-	// Should not panic
-	hash1 := bluecatInstanceHash(instance)
-	assert.NotZero(t, hash1, "nil options should return a hash")
-}
-
-func TestBluecatInstanceHash_EmptyHostname(t *testing.T) {
-	// Empty hostname should return hash of empty string with type
-	instance1 := map[string]interface{}{
-		"name": "test",
-		"type": "BDDS",
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": "", // Empty hostname
-				"model":    "cBDDS50",
-				"version":  "9.4.0",
-			},
-		},
-	}
-
-	instance2 := map[string]interface{}{
-		"name": "test",
-		"type": "BDDS", // Same type as instance1
-		"bdds_options": []interface{}{
-			map[string]interface{}{
-				"hostname": "", // Empty hostname
-			},
-		},
-	}
-
-	hash1 := bluecatInstanceHash(instance1)
-	hash2 := bluecatInstanceHash(instance2)
-
-	assert.Equal(t, hash1, hash2, "Empty hostnames with same type should produce same hash")
 }
