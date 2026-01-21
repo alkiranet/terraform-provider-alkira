@@ -27,10 +27,10 @@ func resourceAlkiraBluecat() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return validateBluecatInstanceHostnames(d.Get("instance").(*schema.Set).List())
+			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: importWithReadValidation(resourceBluecatRead),
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
@@ -116,17 +116,16 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Computed:    true,
 			},
 			"instance": {
-				Type:     schema.TypeSet,
-				Set:      bluecatInstanceHash,
+				Type:     schema.TypeList,
 				Required: true,
 				Description: "The properties pertaining to each individual " +
 					"instance of the Bluecat service.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "The name of the Bluecat instance. This is set to hostname",
+							Description: "The name of the Bluecat instance.",
 							Type:        schema.TypeString,
-							Computed:    true,
+							Required:    true,
 						},
 						"id": {
 							Description: "The ID of the Bluecat instance.",
@@ -134,10 +133,9 @@ func resourceAlkiraBluecat() *schema.Resource {
 							Computed:    true,
 						},
 						"bdds_options": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
-							MaxItems:    1,
-							Description: "Defines the options required when instance type is BDDS. bdds_options must be populated if type of instance is BDDS",
+							Description: "Defines the options required when instance type is BDDS.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_id": {
@@ -149,7 +147,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 										Description: "The license activationKey of the Bluecat BDDS instance.",
 										Type:        schema.TypeString,
 										Required:    true,
-										Sensitive:   true,
+										Sensitive: 	 true,
 									},
 									"license_credential_id": {
 										Description: "The license credential ID of the BDDS instance.",
@@ -177,10 +175,9 @@ func resourceAlkiraBluecat() *schema.Resource {
 							},
 						},
 						"edge_options": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
-							MaxItems:    1,
-							Description: "Defines the options required when instance type is EDGE. edge_options must be populated if type of instance is EDGE",
+							Description: "Defines the options required when instance type is EDGE.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"config_data": {
@@ -225,7 +222,9 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Description: "Bluecat license type, only " +
 					"`BRING_YOUR_OWN` is supported right now.",
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"BRING_YOUR_OWN"}, false),
 			},
 			"name": {
 				Description: "Name of the Bluecat service.",
@@ -236,7 +235,6 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
 				Required:    true,
-				MinItems:    1,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"service_group_name": {
@@ -336,14 +334,7 @@ func resourceBluecatRead(ctx context.Context, d *schema.ResourceData, m interfac
 		}}
 	}
 
-	// Convert segment names to segment IDs
-	segmentIds, err := convertSegmentNamesToSegmentIds(bluecat.Segments, m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	setAllBluecatResourceFields(d, bluecat)
-	d.Set("segment_ids", segmentIds)
 
 	// Set provision state
 	if client.Provision && provState != "" {
@@ -442,14 +433,9 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceBluecat, error) {
-	// Parse Instances - use GetChange so we can pass old state for hostname-based
-	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
-	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
-	instances, err := expandBluecatInstances(
-		newInstanceListRaw.(*schema.Set).List(),
-		oldInstanceListRaw.(*schema.Set).List(),
-		m,
-	)
+	// Parse Instances
+	instanceList := d.Get("instance").([]interface{})
+	instances, err := expandBluecatInstances(instanceList, m)
 	if err != nil {
 		return nil, err
 	}

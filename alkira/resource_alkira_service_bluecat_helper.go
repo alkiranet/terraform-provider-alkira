@@ -1,62 +1,17 @@
 package alkira
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// bluecatInstanceHash computes a unique hash for Bluecat service instances
-// based on hostname + type, which are the immutable identity fields.
-//
-// Rationale for hash composition:
-// - hostname: Unique identifier, validated for uniqueness in CustomizeDiff
-// - type: Immutable after provisioning (BDDS or EDGE)
-//
-// Excluded from hash (updatable fields):
-// - model: Can be changed (e.g., cBDDS50 -> cBDDS100)
-// - version: Can be changed (e.g., 9.4.0 -> 10.0.0)
-// - name: Computed field set to hostname
-// - id: Computed field from API
-//
-// Changes to model/version will show as updates (not replacements) because
-// the hash stays the same. The expandBluecatInstances function does
-// hostname-based ID lookup to ensure the correct instance ID is used.
-var bluecatInstanceHash = typeSetHash(func(m map[string]interface{}) string {
-	hostname := getHostnameFromInstance(m)
-	instanceType, _ := m["type"].(string)
-	return fmt.Sprintf("%s-%s", hostname, instanceType)
-})
-
-func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
+func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
 	if in == nil || len(in) == 0 {
 		return nil, fmt.Errorf("[ERROR]: Bluecat instances cannot be nil or empty")
-	}
-
-	// Build hostname -> id map from old state. When instances are inserted or
-	// removed in the middle of a TypeList, Terraform's positional diff causes
-	// id values to shift to the wrong element. Matching by hostname ensures
-	// each existing instance keeps its correct id regardless of list position.
-	oldIdByHostname := make(map[string]int)
-	for _, old := range oldInstances {
-		cfg, ok := old.(map[string]interface{})
-		if !ok {
-			log.Printf("[WARN] Bluecat: skipping malformed instance entry in old state: %v", old)
-			continue
-		}
-		hostname := getHostnameFromInstance(cfg)
-		id, hasId := cfg["id"].(int)
-		if hostname == "" {
-			if hasId && id != 0 {
-				log.Printf("[WARN] Bluecat: existing instance with id=%d has no hostname; it cannot be matched by hostname during reorder and will be treated as new", id)
-			}
-			continue
-		}
-		if hasId && id != 0 {
-			oldIdByHostname[hostname] = id
-		}
 	}
 
 	instances := make([]alkira.BluecatInstance, len(in))
@@ -64,21 +19,21 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 		var r alkira.BluecatInstance
 
 		instanceCfg := instance.(map[string]interface{})
+		if v, ok := instanceCfg["id"].(int); ok {
+			if v != 0 {
+				r.Id = json.Number(strconv.Itoa(v))
+			}
+		}
+		if v, ok := instanceCfg["name"].(string); ok {
+			r.Name = v
+		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}
 
-		// Look up id by hostname from old state. If found, use the old id
-		// regardless of what Terraform's positional diff put in instanceCfg["id"].
-		// If not found, the instance is new and id stays 0 (the zero value above).
-		hostname := getHostnameFromInstance(instanceCfg)
-		if id, found := oldIdByHostname[hostname]; found {
-			r.Id = id
-		}
-
 		// Handle BDDS options
-		if bddsOptions, ok := instanceCfg["bdds_options"].([]interface{}); ok && len(bddsOptions) > 0 {
-			bddsOpt, err := expandBDDSOptions(bddsOptions, m)
+		if bddsOptions, ok := instanceCfg["bdds_options"].(*schema.Set); ok && bddsOptions.Len() > 0 {
+			bddsOpt, err := expandBDDSOptions(bddsOptions.List(), m)
 			if err != nil {
 				return nil, err
 			}
@@ -86,8 +41,8 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 		}
 
 		// Handle Edge options
-		if edgeOptions, ok := instanceCfg["edge_options"].([]interface{}); ok && len(edgeOptions) > 0 {
-			edgeOpt, err := expandEdgeOptions(edgeOptions, m)
+		if edgeOptions, ok := instanceCfg["edge_options"].(*schema.Set); ok && edgeOptions.Len() > 0 {
+			edgeOpt, err := expandEdgeOptions(edgeOptions.List(), m)
 			if err != nil {
 				return nil, err
 			}
@@ -130,7 +85,7 @@ func expandBDDSOptions(in []interface{}, m interface{}) (*alkira.BDDSOptions, er
 	if v, ok := cfg["license_credential_id"].(string); ok {
 		if v == "" {
 			licenseCredentialId, err := client.CreateCredential(
-				"bluecat-bdds-"+randomNameSuffix(),
+				options.HostName+randomNameSuffix(),
 				alkira.CredentialTypeBluecatBDDSInstanceLicense,
 				&alkira.CredentialBluecatBDDSInstanceLicense{
 					ClientId:      clientId,
@@ -177,7 +132,7 @@ func expandEdgeOptions(in []interface{}, m interface{}) (*alkira.EdgeOptions, er
 	if v, ok := cfg["credential_id"].(string); ok {
 		if v == "" {
 			credentialId, err := client.CreateCredential(
-				"bluecat-edge-"+randomNameSuffix(),
+				options.HostName+randomNameSuffix(),
 				alkira.CredentialTypeBluecatEdgeInstance,
 				&alkira.CredentialBluecatEdgeInstance{
 					ConfigData: configData,
@@ -219,69 +174,13 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 	return anycast, nil
 }
 
-// validateBluecatInstanceHostnames returns an error if any two instances in the
-// list share the same hostname. Hostnames are used as unique keys to match
-// instances across list reorders; duplicates make that lookup unreliable.
-func validateBluecatInstanceHostnames(instances []interface{}) error {
-	seen := make(map[string]int, len(instances))
-	for i, inst := range instances {
-		cfg, ok := inst.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		hostname := getHostnameFromInstance(cfg)
-		if hostname == "" {
-			continue
-		}
-		if prev, exists := seen[hostname]; exists {
-			return fmt.Errorf(
-				"instance[%d] and instance[%d] both use hostname %q; hostnames must be unique across all instances",
-				prev, i, hostname,
-			)
-		}
-		seen[hostname] = i
-	}
-	return nil
-}
-
-func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData) []map[string]interface{} {
+func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{} {
 	var m []map[string]interface{}
-
-	// Read existing instances from state to preserve sensitive fields
-	// not returned by the API.
-	oldInstances := d.Get("instance").(*schema.Set).List()
-
 	for _, v := range c {
 		j := map[string]interface{}{
 			"id":   v.Id,
 			"name": v.Name,
 			"type": v.Type,
-		}
-
-		// Find matching instance in state by id or name to preserve
-		// sensitive fields not returned by the API.
-		var oldInstance map[string]interface{}
-		for _, value := range oldInstances {
-			cfg := value.(map[string]interface{})
-
-			if cfg["id"].(int) == v.Id && v.Id != 0 {
-				oldInstance = cfg
-				break
-			}
-
-			if cfg["name"].(string) == v.Name && v.Name != "" {
-				oldInstance = cfg
-				break
-			}
-
-			// When id and name are not yet set (first apply),
-			// match by hostname from bdds_options or edge_options.
-			oldHostname := getHostnameFromInstance(cfg)
-			newHostname := getHostnameFromBluecatInstance(v)
-			if oldHostname != "" && oldHostname == newHostname {
-				oldInstance = cfg
-				break
-			}
 		}
 
 		if v.BddsOptions != nil {
@@ -291,20 +190,6 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 				"version":               v.BddsOptions.Version,
 				"license_credential_id": v.BddsOptions.LicenseCredentialId,
 			}
-
-			// Preserve client_id and activation_key from state since
-			// the API does not return these sensitive fields.
-			if oldInstance != nil {
-				if oldBdds, ok := oldInstance["bdds_options"]; ok {
-					oldBddsList := oldBdds.([]interface{})
-					if len(oldBddsList) > 0 {
-						oldBddsMap := oldBddsList[0].(map[string]interface{})
-						bddsMap["client_id"] = oldBddsMap["client_id"]
-						bddsMap["activation_key"] = oldBddsMap["activation_key"]
-					}
-				}
-			}
-
 			j["bdds_options"] = []interface{}{bddsMap}
 		}
 
@@ -314,19 +199,6 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 				"version":       v.EdgeOptions.Version,
 				"credential_id": v.EdgeOptions.CredentialId,
 			}
-
-			// Preserve config_data from state since the API does not
-			// return this field.
-			if oldInstance != nil {
-				if oldEdge, ok := oldInstance["edge_options"]; ok {
-					oldEdgeList := oldEdge.([]interface{})
-					if len(oldEdgeList) > 0 {
-						oldEdgeMap := oldEdgeList[0].(map[string]interface{})
-						edgeMap["config_data"] = oldEdgeMap["config_data"]
-					}
-				}
-			}
-
 			j["edge_options"] = []interface{}{edgeMap}
 		}
 
@@ -336,47 +208,7 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 	return m
 }
 
-// getHostnameFromBluecatInstance extracts the hostname from either
-// BddsOptions or EdgeOptions of an API-returned instance.
-func getHostnameFromBluecatInstance(instance alkira.BluecatInstance) string {
-	if instance.BddsOptions != nil {
-		return instance.BddsOptions.HostName
-	}
-	if instance.EdgeOptions != nil {
-		return instance.EdgeOptions.HostName
-	}
-	return ""
-}
-
-// getHostnameFromInstance extracts the hostname from either
-// bdds_options or edge_options of a state instance.
-func getHostnameFromInstance(cfg map[string]interface{}) string {
-	if bdds, ok := cfg["bdds_options"].([]interface{}); ok && len(bdds) > 0 {
-		if opts, ok := bdds[0].(map[string]interface{}); ok {
-			if h, ok := opts["hostname"].(string); ok {
-				return h
-			}
-		}
-	}
-
-	if edge, ok := cfg["edge_options"].([]interface{}); ok && len(edge) > 0 {
-		if opts, ok := edge[0].(map[string]interface{}); ok {
-			if h, ok := opts["hostname"].(string); ok {
-				return h
-			}
-		}
-	}
-
-	return ""
-}
-
 func deflateBluecatAnycast(anycast alkira.BluecatAnycast) []map[string]interface{} {
-	// Return nil if anycast is empty to avoid spurious diffs
-	// when the user hasn't configured anycast but API returns empty struct
-	if len(anycast.Ips) == 0 && len(anycast.BackupCxps) == 0 {
-		return nil
-	}
-
 	m := make(map[string]interface{})
 	m["ips"] = anycast.Ips
 	m["backup_cxps"] = anycast.BackupCxps
@@ -391,9 +223,10 @@ func setAllBluecatResourceFields(d *schema.ResourceData, in *alkira.ServiceBluec
 	d.Set("cxp", in.Cxp)
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
-	d.Set("instance", deflateBluecatInstances(in.Instances, d))
+	d.Set("instance", deflateBluecatInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
 	d.Set("name", in.Name)
+	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
