@@ -136,7 +136,7 @@ func resourceConnectorAzureVnetThirdPartyCreate(ctx context.Context, d *schema.R
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -184,7 +184,7 @@ func resourceConnectorAzureVnetThirdPartyRead(ctx context.Context, d *schema.Res
 	}
 
 	// Set provision state
-	if client.Provision == true && provState != "" {
+	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
 	}
 
@@ -229,7 +229,7 @@ func resourceConnectorAzureVnetThirdPartyUpdate(ctx context.Context, d *schema.R
 	}
 
 	// Set provision state
-	if client.Provision == true {
+	if client.Provision {
 		d.Set("provision_state", provState)
 
 		if provErr != nil {
@@ -265,7 +265,7 @@ func resourceConnectorAzureVnetThirdPartyDelete(ctx context.Context, d *schema.R
 		}}
 	}
 
-	if client.Provision == true && provState != "SUCCESS" {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
