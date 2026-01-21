@@ -1,0 +1,1 @@
+terraform import alkira_azure_vnet_third_party_connector.example 456
