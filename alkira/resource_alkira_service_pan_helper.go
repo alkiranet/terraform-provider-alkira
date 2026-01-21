@@ -238,6 +238,60 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 	return sgmtOptions, nil
 }
 
+func flattenGlobalProtectSegmentOptions(in map[string]*alkira.GlobalProtectSegmentName, m interface{}) []map[string]interface{} {
+
+	if len(in) == 0 {
+		return nil
+	}
+
+	var options []map[string]interface{}
+
+	for segmentName, option := range in {
+		segmentId, err := getSegmentIdByName(segmentName, m)
+		if err != nil {
+			log.Printf("[WARNING] Failed to get segment ID for segment name %s: %v", segmentName, err)
+			continue
+		}
+
+		opt := map[string]interface{}{
+			"segment_id":            segmentId,
+			"remote_user_zone_name": option.RemoteUserZoneName,
+			"portal_fqdn_prefix":    option.PortalFqdnPrefix,
+			"service_group_name":    option.ServiceGroupName,
+		}
+		options = append(options, opt)
+	}
+
+	return options
+}
+
+func flattenGlobalProtectSegmentOptionsInstance(in map[string]*alkira.GlobalProtectSegmentNameInstance, m interface{}) []map[string]interface{} {
+
+	if len(in) == 0 {
+		return nil
+	}
+
+	var options []map[string]interface{}
+
+	for segmentName, option := range in {
+		segmentId, err := getSegmentIdByName(segmentName, m)
+		if err != nil {
+			log.Printf("[WARNING] Failed to get segment ID for segment name %s: %v", segmentName, err)
+			continue
+		}
+
+		opt := map[string]interface{}{
+			"segment_id":      segmentId,
+			"portal_enabled":  option.PortalEnabled,
+			"gateway_enabled": option.GatewayEnabled,
+			"prefix_list_id":  option.PrefixListId,
+		}
+		options = append(options, opt)
+	}
+
+	return options
+}
+
 // UNUSED: Commented out to suppress linter warnings
 // func expandPanSegmentOptions(in *schema.Set, m interface{}) (map[string]interface{}, error) {
 //
@@ -438,7 +492,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 }
 
 // Set "instance" blocks from API response
-func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []map[string]interface{} {
+func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance, m interface{}) []map[string]interface{} {
 	var instances []map[string]interface{}
 
 	for _, ins := range c {
@@ -458,13 +512,14 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance) []ma
 		}
 
 		instance := map[string]interface{}{
-			"name":           ins.Name,
-			"id":             ins.Id,
-			"auth_key":       authKey,
-			"auth_code":      authCode,
-			"auth_expiry":    authExpiry,
-			"credential_id":  ins.CredentialId,
-			"enable_traffic": ins.TrafficEnabled,
+			"name":                           ins.Name,
+			"id":                             ins.Id,
+			"auth_key":                       authKey,
+			"auth_code":                      authCode,
+			"auth_expiry":                    authExpiry,
+			"credential_id":                  ins.CredentialId,
+			"enable_traffic":                 ins.TrafficEnabled,
+			"global_protect_segment_options": flattenGlobalProtectSegmentOptionsInstance(ins.GlobalProtectSegmentOptions, m),
 		}
 		instances = append(instances, instance)
 	}
