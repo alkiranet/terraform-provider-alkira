@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAlkiraServicePan_resourceSchema(t *testing.T) {
+func TestAlkiraServicePanResourceSchema(t *testing.T) {
 	resource := resourceAlkiraServicePan()
 
 	// Test required fields
@@ -62,7 +63,7 @@ func TestAlkiraServicePan_resourceSchema(t *testing.T) {
 	assert.NotNil(t, resource.CustomizeDiff, "Resource should have CustomizeDiff")
 }
 
-func TestAlkiraServicePan_validateBundle(t *testing.T) {
+func TestAlkiraServicePanValidateBundle(t *testing.T) {
 	tests := []ValidationTestCase{
 		{
 			Name:      "Valid VM_SERIES_BUNDLE_1",
@@ -119,7 +120,7 @@ func TestAlkiraServicePan_validateBundle(t *testing.T) {
 	}
 }
 
-func TestAlkiraServicePan_expandPanInstances(t *testing.T) {
+func TestAlkiraServicePanExpandPanInstances(t *testing.T) {
 	// Test the expandPanInstances helper function
 	instances := []interface{}{
 		map[string]interface{}{
@@ -150,7 +151,7 @@ func TestAlkiraServicePan_expandPanInstances(t *testing.T) {
 	assert.Equal(t, "pan-instance-2", result[1].Name)
 }
 
-func TestAlkiraServicePan_setPanInstances(t *testing.T) {
+func TestAlkiraServicePanSetPanInstances(t *testing.T) {
 	// Test the setPanInstances helper function
 	instances := []alkira.ServicePanInstance{
 		{
@@ -168,7 +169,12 @@ func TestAlkiraServicePan_setPanInstances(t *testing.T) {
 	r := resourceAlkiraServicePan()
 	d := r.TestResourceData()
 
-	result := setPanInstances(d, instances)
+	// Create a mock client since the function requires it
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	result := setPanInstances(d, instances, mockClient)
 	require.Len(t, result, 2, "Should return 2 instances")
 
 	// Check first instance
@@ -182,7 +188,7 @@ func TestAlkiraServicePan_setPanInstances(t *testing.T) {
 	assert.Equal(t, "cred-2", result[1]["credential_id"])
 }
 
-func TestAlkiraServicePan_createPanCredential(t *testing.T) {
+func TestAlkiraServicePanCreatePanCredential(t *testing.T) {
 	// Create mock client using shared utility
 	client := createMockAlkiraClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -201,6 +207,245 @@ func TestAlkiraServicePan_createPanCredential(t *testing.T) {
 	credentialId, err := createPanCredential(d, client)
 	require.NoError(t, err, "createPanCredential should not return error")
 	assert.NotEmpty(t, credentialId, "Credential ID should not be empty")
+}
+
+func TestAlkiraServicePanFlattenGlobalProtectSegmentOptions(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]*alkira.GlobalProtectSegmentName
+		expected int // expected number of results
+	}{
+		{
+			name:     "Nil input",
+			input:    nil,
+			expected: 0,
+		},
+		{
+			name:     "Empty map",
+			input:    map[string]*alkira.GlobalProtectSegmentName{},
+			expected: 0,
+		},
+		{
+			name: "Single segment option",
+			input: map[string]*alkira.GlobalProtectSegmentName{
+				"test-segment": {
+					RemoteUserZoneName: "remote-zone-1",
+					PortalFqdnPrefix:   "portal-prefix-1",
+					ServiceGroupName:   "service-group-1",
+				},
+			},
+			expected: 1,
+		},
+		{
+			name: "Multiple segment options",
+			input: map[string]*alkira.GlobalProtectSegmentName{
+				"segment-1": {
+					RemoteUserZoneName: "remote-zone-1",
+					PortalFqdnPrefix:   "portal-prefix-1",
+					ServiceGroupName:   "service-group-1",
+				},
+				"segment-2": {
+					RemoteUserZoneName: "remote-zone-2",
+					PortalFqdnPrefix:   "portal-prefix-2",
+					ServiceGroupName:   "service-group-2",
+				},
+			},
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a mock client that returns segment IDs
+			mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				// Return a segment with the ID based on the requested name
+				response := []alkira.Segment{
+					{
+						Id:   "123",
+						Name: "test-segment",
+					},
+				}
+				// Check if it's segment-1 or segment-2
+				if req.URL.Query().Get("name") == "segment-1" {
+					response[0].Id = "101"
+					response[0].Name = "segment-1"
+				} else if req.URL.Query().Get("name") == "segment-2" {
+					response[0].Id = "102"
+					response[0].Name = "segment-2"
+				}
+				w.WriteHeader(http.StatusOK)
+				jsonBytes, _ := json.Marshal(response)
+				w.Write(jsonBytes)
+			})
+
+			result := flattenGlobalProtectSegmentOptions(tt.input, mockClient)
+
+			if tt.expected == 0 {
+				assert.Nil(t, result, "Expected nil result for empty/nil input")
+			} else {
+				require.Len(t, result, tt.expected, "Expected %d results", tt.expected)
+
+				// Verify the flattened structure has all required fields
+				for _, opt := range result {
+					assert.Contains(t, opt, "segment_id", "Result should contain segment_id")
+					assert.Contains(t, opt, "remote_user_zone_name", "Result should contain remote_user_zone_name")
+					assert.Contains(t, opt, "portal_fqdn_prefix", "Result should contain portal_fqdn_prefix")
+					assert.Contains(t, opt, "service_group_name", "Result should contain service_group_name")
+				}
+			}
+		})
+	}
+}
+
+func TestAlkiraServicePanFlattenGlobalProtectSegmentOptionsValues(t *testing.T) {
+	// Test that the flattened values match the input
+	input := map[string]*alkira.GlobalProtectSegmentName{
+		"test-segment": {
+			RemoteUserZoneName: "my-remote-zone",
+			PortalFqdnPrefix:   "my-portal-prefix",
+			ServiceGroupName:   "my-service-group",
+		},
+	}
+
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		response := []alkira.Segment{
+			{
+				Id:   "999",
+				Name: "test-segment",
+			},
+		}
+		w.WriteHeader(http.StatusOK)
+		jsonBytes, _ := json.Marshal(response)
+		w.Write(jsonBytes)
+	})
+
+	result := flattenGlobalProtectSegmentOptions(input, mockClient)
+
+	require.Len(t, result, 1, "Should return 1 option")
+	assert.Equal(t, "999", result[0]["segment_id"], "segment_id should be 999")
+	assert.Equal(t, "my-remote-zone", result[0]["remote_user_zone_name"], "remote_user_zone_name should match")
+	assert.Equal(t, "my-portal-prefix", result[0]["portal_fqdn_prefix"], "portal_fqdn_prefix should match")
+	assert.Equal(t, "my-service-group", result[0]["service_group_name"], "service_group_name should match")
+}
+
+func TestAlkiraServicePanFlattenGlobalProtectSegmentOptionsInstance(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]*alkira.GlobalProtectSegmentNameInstance
+		expected int // expected number of results
+	}{
+		{
+			name:     "Nil input",
+			input:    nil,
+			expected: 0,
+		},
+		{
+			name:     "Empty map",
+			input:    map[string]*alkira.GlobalProtectSegmentNameInstance{},
+			expected: 0,
+		},
+		{
+			name: "Single instance option",
+			input: map[string]*alkira.GlobalProtectSegmentNameInstance{
+				"test-segment": {
+					PortalEnabled:  true,
+					GatewayEnabled: false,
+					PrefixListId:   100,
+				},
+			},
+			expected: 1,
+		},
+		{
+			name: "Multiple instance options",
+			input: map[string]*alkira.GlobalProtectSegmentNameInstance{
+				"segment-1": {
+					PortalEnabled:  true,
+					GatewayEnabled: true,
+					PrefixListId:   101,
+				},
+				"segment-2": {
+					PortalEnabled:  false,
+					GatewayEnabled: true,
+					PrefixListId:   102,
+				},
+			},
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				response := []alkira.Segment{
+					{
+						Id:   "123",
+						Name: "test-segment",
+					},
+				}
+				if req.URL.Query().Get("name") == "segment-1" {
+					response[0].Id = "201"
+					response[0].Name = "segment-1"
+				} else if req.URL.Query().Get("name") == "segment-2" {
+					response[0].Id = "202"
+					response[0].Name = "segment-2"
+				}
+				w.WriteHeader(http.StatusOK)
+				jsonBytes, _ := json.Marshal(response)
+				w.Write(jsonBytes)
+			})
+
+			result := flattenGlobalProtectSegmentOptionsInstance(tt.input, mockClient)
+
+			if tt.expected == 0 {
+				assert.Nil(t, result, "Expected nil result for empty/nil input")
+			} else {
+				require.Len(t, result, tt.expected, "Expected %d results", tt.expected)
+
+				// Verify the flattened structure has all required fields
+				for _, opt := range result {
+					assert.Contains(t, opt, "segment_id", "Result should contain segment_id")
+					assert.Contains(t, opt, "portal_enabled", "Result should contain portal_enabled")
+					assert.Contains(t, opt, "gateway_enabled", "Result should contain gateway_enabled")
+					assert.Contains(t, opt, "prefix_list_id", "Result should contain prefix_list_id")
+				}
+			}
+		})
+	}
+}
+
+func TestAlkiraServicePanFlattenGlobalProtectSegmentOptionsInstanceValues(t *testing.T) {
+	// Test that the flattened values match the input
+	input := map[string]*alkira.GlobalProtectSegmentNameInstance{
+		"test-segment": {
+			PortalEnabled:  true,
+			GatewayEnabled: false,
+			PrefixListId:   555,
+		},
+	}
+
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		response := []alkira.Segment{
+			{
+				Id:   "888",
+				Name: "test-segment",
+			},
+		}
+		w.WriteHeader(http.StatusOK)
+		jsonBytes, _ := json.Marshal(response)
+		w.Write(jsonBytes)
+	})
+
+	result := flattenGlobalProtectSegmentOptionsInstance(input, mockClient)
+
+	require.Len(t, result, 1, "Should return 1 option")
+	assert.Equal(t, "888", result[0]["segment_id"], "segment_id should be 888")
+	assert.Equal(t, true, result[0]["portal_enabled"], "portal_enabled should be true")
+	assert.Equal(t, false, result[0]["gateway_enabled"], "gateway_enabled should be false")
+	assert.Equal(t, 555, result[0]["prefix_list_id"], "prefix_list_id should be 555")
 }
 
 // UNUSED: Commented out to suppress linter warnings
