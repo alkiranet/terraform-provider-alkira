@@ -3,6 +3,7 @@ resource "alkira_service_bluecat" "production" {
   cxp                 = "ASIA-PACIFIC"
   description         = "Production Bluecat service for enterprise DNS"
   global_cidr_list_id = alkira_list_global_cidr.enterprise.id
+  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.production.id]
   service_group_name  = "enterprise-dns"
 
@@ -24,10 +25,11 @@ resource "alkira_service_bluecat" "production" {
 
   # Primary BDDS for enterprise services
   instance {
+    name = "bdds-enterprise-primary"
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-ent-01"
+      hostname       = "bdds-ent-01.asia.enterprise.com"
       model          = "cBDDS50"
       version        = "9.5.2"
       client_id      = "enterprise-asia-001"
@@ -37,10 +39,11 @@ resource "alkira_service_bluecat" "production" {
 
   # Secondary BDDS for redundancy
   instance {
+    name = "bdds-enterprise-secondary"
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-ent-02"
+      hostname       = "bdds-ent-02.asia.enterprise.com"
       model          = "cBDDS50"
       version        = "9.5.2"
       client_id      = "enterprise-asia-002"
@@ -50,10 +53,11 @@ resource "alkira_service_bluecat" "production" {
 
   # Edge for distributed locations
   instance {
+    name = "edge-asia-primary"
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-primary"
+      hostname    = "edge-primary.asia.enterprise.com"
       version     = "4.2.1"
       config_data = "ASIA_PRIMARY_EDGE_CONFIG_BASE64"
     }
@@ -61,10 +65,11 @@ resource "alkira_service_bluecat" "production" {
 
   # Edge for backup services
   instance {
+    name = "edge-asia-backup"
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-backup"
+      hostname    = "edge-backup.asia.enterprise.com"
       version     = "4.2.1"
       config_data = "ASIA_BACKUP_EDGE_CONFIG_BASE64"
     }

@@ -3,6 +3,7 @@ resource "alkira_service_bluecat" "bdds_only" {
   cxp                 = "US-WEST"
   description         = "Bluecat service with BDDS instances only"
   global_cidr_list_id = alkira_list_global_cidr.dns_allowed.id
+  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.corp.id]
   service_group_name  = "dns-services"
 
@@ -12,10 +13,11 @@ resource "alkira_service_bluecat" "bdds_only" {
   }
 
   instance {
+    name = "bdds-primary"
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-primary"
+      hostname       = "bdds-primary.corp.local"
       model          = "cBDDS50"
       version        = "9.4.0"
       client_id      = "bdds-client-001"
@@ -24,10 +26,11 @@ resource "alkira_service_bluecat" "bdds_only" {
   }
 
   instance {
+    name = "bdds-secondary"
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-secondary"
+      hostname       = "bdds-secondary.corp.local"
       model          = "cBDDS50"
       version        = "9.4.0"
       client_id      = "bdds-client-002"
