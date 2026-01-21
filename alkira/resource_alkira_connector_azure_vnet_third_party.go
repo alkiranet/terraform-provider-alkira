@@ -8,7 +8,6 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
@@ -66,11 +65,9 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 				Required:    true,
 			},
 			"size": {
-				Description: "The size of the connector, one of `XSMALL`, `SMALL`, `MEDIUM`, `LARGE`, `XLARGE`, `2XLARGE`.",
+				Description: "The size of the connector, one of `5XSMALL`, `XSMALL`, `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:        schema.TypeString,
 				Required:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"XSMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE", "2XLARGE"}, false),
 			},
 			"azure_vnet_third_party_connector_attachment_id": {
 				Description: "The ID of the Azure VNET Third Party Connector Attachment.",
