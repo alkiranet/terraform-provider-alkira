@@ -13,7 +13,6 @@ resource "alkira_service_bluecat" "edge_only" {
   }
 
   instance {
-    name = "edge-branch-01"
     type = "EDGE"
     
     edge_options {
@@ -24,7 +23,6 @@ resource "alkira_service_bluecat" "edge_only" {
   }
 
   instance {
-    name = "edge-branch-02"
     type = "EDGE"
     
     edge_options {
@@ -35,7 +33,6 @@ resource "alkira_service_bluecat" "edge_only" {
   }
 
   instance {
-    name = "edge-dmz"
     type = "EDGE"
     
     edge_options {

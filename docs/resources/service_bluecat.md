@@ -33,7 +33,6 @@ resource "alkira_service_bluecat" "test" {
   }
 
   instance {
-    name = "bdds-instance"
     type = "BDDS"
     
     bdds_options {
@@ -44,7 +43,6 @@ resource "alkira_service_bluecat" "test" {
   }
 
   instance {
-    name = "edge-instance"
     type = "EDGE"
     
     edge_options {
@@ -102,7 +100,6 @@ resource "alkira_service_bluecat" "test" {
 
 #### Required
 
-- `name` (String) The name of the bluecat Bluecat instance.
 - `type` (String) The type of the Bluecat instance that is to be provisioned. The value could be `BDDS`, and `EDGE`.
 
 #### Optional
@@ -113,6 +110,7 @@ resource "alkira_service_bluecat" "test" {
 #### Read-Only
 
 - `id` (Number) The ID of the Bluecat instance.
+- `name` (String) The name of the Bluecat instance, this is set to hostname from `bdds_options` or `edge_options` based on type of instance.
 
 <a id="nestedblock--instance--bddsoptions"></a>
 ### Nested Schema for `instance.bddsOptions`

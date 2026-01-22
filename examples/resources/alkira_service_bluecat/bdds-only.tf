@@ -13,7 +13,6 @@ resource "alkira_service_bluecat" "bdds_only" {
   }
 
   instance {
-    name = "bdds-primary"
     type = "BDDS"
     
     bdds_options {
@@ -26,7 +25,6 @@ resource "alkira_service_bluecat" "bdds_only" {
   }
 
   instance {
-    name = "bdds-secondary"
     type = "BDDS"
     
     bdds_options {
