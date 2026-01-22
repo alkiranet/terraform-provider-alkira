@@ -24,9 +24,6 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 				r.Id = json.Number(strconv.Itoa(v))
 			}
 		}
-		if v, ok := instanceCfg["name"].(string); ok {
-			r.Name = v
-		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}

@@ -7,7 +7,6 @@ resource "alkira_service_bluecat" "minimal" {
   service_group_name  = "dns-basic"
 
   instance {
-    name = "basic-bdds"
     type = "BDDS"
     
     bdds_options {
