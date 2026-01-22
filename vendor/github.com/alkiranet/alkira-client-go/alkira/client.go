@@ -606,7 +606,13 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			if request.State == "SUCCESS" {
 				return true, nil
 			} else if request.State == "FAILED" || request.State == "PARTIAL_SUCCESS" {
-				return false, fmt.Errorf("client-create(%s): provision request %s failed", requestId, provisionRequestId)
+				errMsg := fmt.Sprintf("client-create(%s): provision request %s failed", requestId, provisionRequestId)
+				if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
+					if contactSupport, ok := request.ErrorDetails.Metadata["contactSupport"].(bool); ok && !contactSupport {
+						errMsg = fmt.Sprintf("%s due to reason: %s", errMsg, request.ErrorDetails.Message)
+					}
+				}
+				return false, fmt.Errorf(errMsg)
 			}
 
 			logf("DEBUG", "client-create(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
@@ -729,7 +735,13 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 			if request.State == "SUCCESS" {
 				return true, nil
 			} else if request.State == "FAILED" {
-				return false, fmt.Errorf("client-delete(%s): provision request %s failed", requestId, provisionRequestId)
+				errMsg := fmt.Sprintf("client-delete(%s): provision request %s failed", requestId, provisionRequestId)
+				if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
+					if contactSupport, ok := request.ErrorDetails.Metadata["contactSupport"].(bool); ok && !contactSupport {
+						errMsg = fmt.Sprintf("%s due to reason: %s", errMsg, request.ErrorDetails.Message)
+					}
+				}
+				return false, fmt.Errorf(errMsg)
 			}
 
 			logf("DEBUG", "client-delete(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
@@ -848,7 +860,13 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 			if request.State == "SUCCESS" {
 				return true, nil
 			} else if request.State == "FAILED" {
-				return false, fmt.Errorf("client-update(%s): provision request %s failed", requestId, provisionRequestId)
+				errMsg := fmt.Sprintf("client-update(%s): provision request %s failed", requestId, provisionRequestId)
+				if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
+					if contactSupport, ok := request.ErrorDetails.Metadata["contactSupport"].(bool); ok && !contactSupport {
+						errMsg = fmt.Sprintf("%s due to reason: %s", errMsg, request.ErrorDetails.Message)
+					}
+				}
+				return false, fmt.Errorf(errMsg)
 			}
 
 			logf("DEBUG", "client-update(%s): waiting for provision request %s to finish. (state: %s)", requestId, provisionRequestId, request.State)
