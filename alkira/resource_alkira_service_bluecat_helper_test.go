@@ -41,7 +41,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   123,
+					"id":   json.Number("123"),
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
@@ -71,7 +71,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   124,
+					"id":   json.Number("124"),
 					"name": "edge-primary.example.com",
 					"type": "EDGE",
 					"edge_options": []interface{}{
@@ -111,7 +111,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   123,
+					"id":   json.Number("123"),
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
