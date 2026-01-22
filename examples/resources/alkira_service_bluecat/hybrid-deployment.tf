@@ -24,7 +24,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
 
   # Core BDDS instances for centralized management
   instance {
-    name = "bdds-core-primary"
     type = "BDDS"
     
     bdds_options {
@@ -37,7 +36,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
   }
 
   instance {
-    name = "bdds-core-secondary"
     type = "BDDS"
     
     bdds_options {
@@ -51,7 +49,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
 
   # Edge instances for distributed locations
   instance {
-    name = "edge-datacenter-east"
     type = "EDGE"
     
     edge_options {
@@ -62,7 +59,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
   }
 
   instance {
-    name = "edge-datacenter-west"
     type = "EDGE"
     
     edge_options {

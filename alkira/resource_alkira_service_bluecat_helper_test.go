@@ -29,7 +29,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			name: "single BDDS instance",
 			input: []alkira.BluecatInstance{
 				{
-					Name: "bdds-primary",
+					Name: "bdds-primary.example.com",
 					Type: "BDDS",
 					Id:   json.Number("123"),
 					BddsOptions: &alkira.BDDSOptions{
@@ -43,7 +43,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			expected: []map[string]interface{}{
 				{
 					"id":   json.Number("123"),
-					"name": "bdds-primary",
+					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
 						map[string]interface{}{
@@ -60,7 +60,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			name: "single Edge instance",
 			input: []alkira.BluecatInstance{
 				{
-					Name: "edge-primary",
+					Name: "edge-primary.example.com",
 					Type: "EDGE",
 					Id:   json.Number("124"),
 					EdgeOptions: &alkira.EdgeOptions{
@@ -73,7 +73,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			expected: []map[string]interface{}{
 				{
 					"id":   json.Number("124"),
-					"name": "edge-primary",
+					"name": "edge-primary.example.com",
 					"type": "EDGE",
 					"edge_options": []interface{}{
 						map[string]interface{}{
@@ -89,7 +89,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			name: "multiple instances",
 			input: []alkira.BluecatInstance{
 				{
-					Name: "bdds-primary",
+					Name: "bdds-primary.example.com",
 					Type: "BDDS",
 					Id:   json.Number("123"),
 					BddsOptions: &alkira.BDDSOptions{
@@ -113,7 +113,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			expected: []map[string]interface{}{
 				{
 					"id":   json.Number("123"),
-					"name": "bdds-primary",
+					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
 						map[string]interface{}{
