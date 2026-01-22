@@ -123,9 +123,9 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Description: "The name of the Bluecat instance.",
+							Description: "The name of the Bluecat instance. This is set to hostname",
 							Type:        schema.TypeString,
-							Required:    true,
+							Computed:    true,
 						},
 						"id": {
 							Description: "The ID of the Bluecat instance.",
