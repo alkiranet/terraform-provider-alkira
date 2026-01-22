@@ -1,0 +1,1 @@
+terraform import alkira_service_cisco_ftdv.example SERVICE_ID

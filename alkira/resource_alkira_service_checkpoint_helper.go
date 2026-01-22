@@ -186,19 +186,26 @@ func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interf
 
 }
 
-func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
-	m := make(map[string]interface{})
-	m["configuration_mode"] = mg.ConfigurationMode
-	m["credential_id"] = mg.CredentialId
-	m["domain"] = mg.Domain
-	m["global_cidr_list_id"] = mg.GlobalCidrListId
-	m["ips"] = convertStringArrToInterfaceArr(mg.Ips)
-	m["reachability"] = mg.Reachability
-	m["segment"] = mg.Segment
-	m["type"] = mg.Type
-	m["user_name"] = mg.UserName
+func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer, m interface{}) []map[string]interface{} {
+	result := make(map[string]interface{})
+	result["configuration_mode"] = mg.ConfigurationMode
+	result["credential_id"] = mg.CredentialId
+	result["domain"] = mg.Domain
+	result["global_cidr_list_id"] = mg.GlobalCidrListId
+	result["ips"] = convertStringArrToInterfaceArr(mg.Ips)
+	result["reachability"] = mg.Reachability
+	result["type"] = mg.Type
+	result["username"] = mg.UserName
 
-	return []map[string]interface{}{m}
+	// Convert segment name to segment ID for import support
+	if mg.Segment != "" && m != nil {
+		segmentId, err := getSegmentIdByName(mg.Segment, m)
+		if err == nil {
+			result["segment_id"] = segmentId
+		}
+	}
+
+	return []map[string]interface{}{result}
 }
 
 func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstance) []map[string]interface{} {

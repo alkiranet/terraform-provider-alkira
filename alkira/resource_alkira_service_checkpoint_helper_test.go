@@ -39,7 +39,8 @@ func TestCheckpointInstanceInvalid(t *testing.T) {
 func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	expected := initCheckpointTestManagementServer()
 
-	m := deflateCheckpointManagementServer(expected)
+	// Pass nil for meta since we're not testing segment conversion
+	m := deflateCheckpointManagementServer(expected, nil)
 
 	require.Equal(t, m[0]["configuration_mode"].(string), expected.ConfigurationMode)
 	require.Equal(t, m[0]["credential_id"].(string), expected.CredentialId)
@@ -47,10 +48,9 @@ func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	require.Equal(t, m[0]["global_cidr_list_id"].(int), expected.GlobalCidrListId)
 	require.Equal(t, convertTypeListToStringList(m[0]["ips"].([]interface{})), expected.Ips)
 	require.Equal(t, m[0]["reachability"].(string), expected.Reachability)
-	require.Equal(t, m[0]["segment"].(string), expected.Segment)
-	// require.Equal(t, m[0]["segment_id"].(int), expected.SegmentId) // Field not available
+	// segment_id is only set when meta is provided and segment name can be converted
 	require.Equal(t, m[0]["type"].(string), expected.Type)
-	require.Equal(t, m[0]["user_name"].(string), expected.UserName)
+	require.Equal(t, m[0]["username"].(string), expected.UserName)
 }
 
 func TestCheckpointDeflateSegmentOptionsValid(t *testing.T) {

@@ -1,0 +1,1 @@
+terraform import alkira_service_bluecat.example SERVICE_ID
