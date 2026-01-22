@@ -25,7 +25,6 @@ resource "alkira_service_bluecat" "production" {
 
   # Primary BDDS for enterprise services
   instance {
-    name = "bdds-enterprise-primary"
     type = "BDDS"
     
     bdds_options {
@@ -39,7 +38,6 @@ resource "alkira_service_bluecat" "production" {
 
   # Secondary BDDS for redundancy
   instance {
-    name = "bdds-enterprise-secondary"
     type = "BDDS"
     
     bdds_options {
@@ -53,7 +51,6 @@ resource "alkira_service_bluecat" "production" {
 
   # Edge for distributed locations
   instance {
-    name = "edge-asia-primary"
     type = "EDGE"
     
     edge_options {
@@ -65,7 +62,6 @@ resource "alkira_service_bluecat" "production" {
 
   # Edge for backup services
   instance {
-    name = "edge-asia-backup"
     type = "EDGE"
     
     edge_options {
