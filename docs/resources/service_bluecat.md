@@ -55,11 +55,18 @@ resource "alkira_service_bluecat" "minimal" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds"
-      model          = "cBDDS50"
-      version        = "9.4.0"
-      client_id      = "basic-client"
-      activation_key = "BASIC1234567890ABCDEF"
+      hostname = "bdds.example.com"
+      model    = "cBDDS50"
+      version  = "9.4.0"
+    }
+  }
+
+  instance {
+    type = "EDGE"
+    
+    edge_options {
+      hostname = "edge.example.com"
+      version  = "4.0.0"
     }
   }
 }
@@ -348,7 +355,7 @@ Optional:
 Read-Only:
 
 - `id` (Number) The ID of the Bluecat instance.
-- `name` (String) The name of the Bluecat instance. This is set to hostname
+- `name` (String) The name of the Bluecat instance, this is set to hostname from `bdds_options` or `edge_options` based on type of instance.
 
 <a id="nestedblock--instance--bdds_options"></a>
 ### Nested Schema for `instance.bdds_options`

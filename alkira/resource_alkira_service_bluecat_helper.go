@@ -64,6 +64,11 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 		var r alkira.BluecatInstance
 
 		instanceCfg := instance.(map[string]interface{})
+		if v, ok := instanceCfg["id"].(int); ok {
+			if v != 0 {
+				r.Id = json.Number(strconv.Itoa(v))
+			}
+		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}
