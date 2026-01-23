@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -507,16 +508,15 @@ func (ac *AlkiraClient) executeWithMutex(fn func() error) error {
 	}
 }
 
-// formatProvisionError formats the error message for provision failures
-// It includes detailed error information when contactSupport is false
-func formatProvisionError(operation, requestId, provisionRequestId string, request *TenantNetworkProvisionRequest) error {
+ // formatProvisionError formats the provision error message with detailed information if available
+func formatProvisionError(operation string, requestId string, provisionRequestId string, request *TenantNetworkProvisionRequest) error {
 	errMsg := fmt.Sprintf("client-%s(%s): provision request %s failed", operation, requestId, provisionRequestId)
 	if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
 		if contactSupport, ok := request.ErrorDetails.Metadata["contactSupport"].(bool); ok && !contactSupport {
 			errMsg = fmt.Sprintf("%s due to reason: %s", errMsg, request.ErrorDetails.Message)
 		}
 	}
-	return fmt.Errorf(errMsg)
+	return errors.New(errMsg)
 }
 
 // create send a POST request to create resource
