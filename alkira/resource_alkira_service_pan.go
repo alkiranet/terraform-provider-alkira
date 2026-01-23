@@ -509,7 +509,6 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
 	d.Set("bundle", pan.Bundle)
-	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
 	d.Set("global_protect_enabled", pan.GlobalProtectEnabled)
 	d.Set("global_protect_segment_options", flattenGlobalProtectSegmentOptions(pan.GlobalProtectSegmentOptions, m))
@@ -522,6 +521,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("min_instance_count", pan.MinInstanceCount)
 	d.Set("name", pan.Name)
 	d.Set("panorama_enabled", pan.PanoramaEnabled)
+	d.Set("panorama_ip_addresses", pan.PanoramaIpAddresses)
 	d.Set("segment_ids", pan.SegmentIds)
 	d.Set("segment_options", deflateSegmentOptions(pan.SegmentOptions))
 	d.Set("size", pan.Size)
@@ -529,6 +529,11 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
 	d.Set("description", pan.Description)
+
+	// Set credential IDs (computed fields)
+	d.Set("pan_credential_id", pan.CredentialId)
+	d.Set("pan_registration_credential_id", pan.RegistrationCredentialId)
+	d.Set("pan_master_key_credential_id", pan.MasterKeyCredentialId)
 
 	if pan.PanoramaDeviceGroup != nil {
 		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)

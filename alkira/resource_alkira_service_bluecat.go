@@ -147,7 +147,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 										Description: "The license activationKey of the Bluecat BDDS instance.",
 										Type:        schema.TypeString,
 										Required:    true,
-										Sensitive: 	 true,
+										Sensitive:   true,
 									},
 									"license_credential_id": {
 										Description: "The license credential ID of the BDDS instance.",
@@ -334,7 +334,14 @@ func resourceBluecatRead(ctx context.Context, d *schema.ResourceData, m interfac
 		}}
 	}
 
+	// Convert segment names to segment IDs
+	segmentIds, err := convertSegmentNamesToSegmentIds(bluecat.Segments, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	setAllBluecatResourceFields(d, bluecat)
+	d.Set("segment_ids", segmentIds)
 
 	// Set provision state
 	if client.Provision && provState != "" {
