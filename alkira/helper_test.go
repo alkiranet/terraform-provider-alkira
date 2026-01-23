@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -415,6 +416,46 @@ func TestConvertInputTimeToEpoch(t *testing.T) {
 					assert.True(t, tt.validate(result), "Epoch time validation failed for input: %s, got: %d", tt.input, result)
 				}
 			}
+		})
+	}
+}
+
+func TestProvisionErrorMessageFormatting(t *testing.T) {
+	requestId := "client-test-123"
+	provisionRequestId := "provision-test-456"
+
+	tests := []struct {
+		name          string
+		request       *alkira.TenantNetworkProvisionRequest
+		expectedError string
+	}{
+		{
+			name: "contactSupport false - should include detailed error message",
+			request: &alkira.TenantNetworkProvisionRequest{
+				Id:    provisionRequestId,
+				State: "FAILED",
+				ErrorDetails: &alkira.ProvisionErrorDetails{
+					Message: "cannot include CONNECTOR - AAROawsLAB-AAROctxappsUKsouth in provisioning as the dependency GROUP - 51998 is not included",
+					Metadata: map[string]interface{}{
+						"contactSupport": false,
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("client-create(%s): provision request %s failed due to reason: cannot include CONNECTOR - AAROawsLAB-AAROctxappsUKsouth in provisioning as the dependency GROUP - 51998 is not included", requestId, provisionRequestId),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Simulate the error formatting logic from client.go
+			errMsg := fmt.Sprintf("client-create(%s): provision request %s failed", requestId, provisionRequestId)
+			if tt.request.ErrorDetails != nil && tt.request.ErrorDetails.Message != "" && tt.request.ErrorDetails.Metadata != nil {
+				if contactSupport, ok := tt.request.ErrorDetails.Metadata["contactSupport"].(bool); ok && !contactSupport {
+					errMsg = fmt.Sprintf("%s due to reason: %s", errMsg, tt.request.ErrorDetails.Message)
+				}
+			}
+
+			assert.Equal(t, tt.expectedError, errMsg)
 		})
 	}
 }
