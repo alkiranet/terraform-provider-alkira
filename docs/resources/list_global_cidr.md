@@ -34,7 +34,7 @@ resource "alkira_list_global_cidr" "test" {
 ### Optional
 
 - `description` (String) Description for the list.
-- `tags` (Set of String) Tag of associated service types.Can be one of `BLUECAT`, `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.
+- `tags` (Set of String) Tag of associated service types.Can be one of `INFOBLOX`,`CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT` or `F5LB`.
 
 ### Read-Only
 

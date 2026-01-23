@@ -315,16 +315,23 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
+	// Convert segment names to segment IDs
+	segmentIds, err := convertSegmentNamesToSegmentIds(service.Segments, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.Set("auto_scale", service.AutoScale)
 	d.Set("billing_tag_ids", service.BillingTags)
 	d.Set("credential_id", service.CredentialId)
 	d.Set("cxp", service.Cxp)
-	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service))
+	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service, m))
 	d.Set("global_cidr_list_id", service.GlobalCidrListId)
 	d.Set("instance", setCiscoFTDvInstances(d, service.Instances))
 	d.Set("max_instance_count", service.MaxInstanceCount)
 	d.Set("min_instance_count", service.MinInstanceCount)
 	d.Set("name", service.Name)
+	d.Set("segment_ids", segmentIds)
 	d.Set("segment_options", deflateSegmentOptions(service.SegmentOptions))
 	d.Set("size", service.Size)
 	d.Set("tunnel_protocol", service.TunnelProtocol)

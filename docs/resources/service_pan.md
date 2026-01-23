@@ -183,3 +183,11 @@ Required:
 Optional:
 
 - `groups` (List of String) The list of groups associated with the zone.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_pan.example SERVICE_ID
+```

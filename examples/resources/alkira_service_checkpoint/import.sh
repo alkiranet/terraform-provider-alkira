@@ -1,0 +1,1 @@
+terraform import alkira_service_checkpoint.example SERVICE_ID

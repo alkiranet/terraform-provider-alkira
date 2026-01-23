@@ -179,17 +179,23 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	return segmentOptions, nil
 }
 
-func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv) []map[string]interface{} {
+func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv, m interface{}) []map[string]interface{} {
 
-	m := make(map[string]interface{})
+	result := make(map[string]interface{})
 
-	m["credential_id"] = service.CredentialId
-	m["ip_allow_list"] = service.IpAllowList
-	m["segment_id"] = service.ManagementServer.SegmentId
-	m["segment_name"] = service.ManagementServer.Segment
-	m["server_ip"] = service.ManagementServer.IPAddress
+	result["credential_id"] = service.CredentialId
+	result["ip_allow_list"] = service.IpAllowList
+	result["server_ip"] = service.ManagementServer.IPAddress
 
-	return []map[string]interface{}{m}
+	// Convert segment name to segment ID for import support
+	if service.ManagementServer.Segment != "" && m != nil {
+		segmentId, err := getSegmentIdByName(service.ManagementServer.Segment, m)
+		if err == nil {
+			result["segment_id"] = segmentId
+		}
+	}
+
+	return []map[string]interface{}{result}
 }
 
 // setCiscoFTDvInstances
