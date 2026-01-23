@@ -186,7 +186,7 @@ func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interf
 
 }
 
-func deflateCheckpointManagementServer(d *schema.ResourceData, mg alkira.CheckpointManagementServer, m interface{}) []map[string]interface{} {
+func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer, m interface{}) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["configuration_mode"] = mg.ConfigurationMode
 	result["credential_id"] = mg.CredentialId
@@ -202,17 +202,6 @@ func deflateCheckpointManagementServer(d *schema.ResourceData, mg alkira.Checkpo
 		segmentId, err := getSegmentIdByName(mg.Segment, m)
 		if err == nil {
 			result["segment_id"] = segmentId
-		}
-	}
-
-	// API doesn't return password. Carry forward from prior state.
-	if d != nil {
-		if existing, ok := d.GetOk("management_server"); ok {
-			prior := existing.([]interface{})
-			if len(prior) > 0 {
-				p := prior[0].(map[string]interface{})
-				result["password"] = p["password"]
-			}
 		}
 	}
 

@@ -39,8 +39,8 @@ func TestCheckpointInstanceInvalid(t *testing.T) {
 func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	expected := initCheckpointTestManagementServer()
 
-	// Pass nil for d and meta since we're not testing state carry-forward or segment conversion
-	m := deflateCheckpointManagementServer(nil, expected, nil)
+	// Pass nil for meta since we're not testing segment conversion
+	m := deflateCheckpointManagementServer(expected, nil)
 
 	require.Equal(t, m[0]["configuration_mode"].(string), expected.ConfigurationMode)
 	require.Equal(t, m[0]["credential_id"].(string), expected.CredentialId)
