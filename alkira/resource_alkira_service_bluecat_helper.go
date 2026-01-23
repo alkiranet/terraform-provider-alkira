@@ -223,7 +223,6 @@ func setAllBluecatResourceFields(d *schema.ResourceData, in *alkira.ServiceBluec
 	d.Set("instance", deflateBluecatInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
 	d.Set("name", in.Name)
-	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
