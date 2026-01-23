@@ -179,7 +179,7 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	return segmentOptions, nil
 }
 
-func deflateCiscoFTDvManagementServer(d *schema.ResourceData, service *alkira.ServiceCiscoFTDv, m interface{}) []map[string]interface{} {
+func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv, m interface{}) []map[string]interface{} {
 
 	result := make(map[string]interface{})
 
@@ -192,18 +192,6 @@ func deflateCiscoFTDvManagementServer(d *schema.ResourceData, service *alkira.Se
 		segmentId, err := getSegmentIdByName(service.ManagementServer.Segment, m)
 		if err == nil {
 			result["segment_id"] = segmentId
-		}
-	}
-
-	// API doesn't return username or password. Carry forward from prior state.
-	if d != nil {
-		if existing, ok := d.GetOk("firepower_management_center"); ok {
-			prior := existing.([]interface{})
-			if len(prior) > 0 {
-				p := prior[0].(map[string]interface{})
-				result["username"] = p["username"]
-				result["password"] = p["password"]
-			}
 		}
 	}
 
