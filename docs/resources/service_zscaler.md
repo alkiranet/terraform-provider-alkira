@@ -84,3 +84,11 @@ Optional:
 - `ike_encryption_algorithm` (String) The IPSEC phase 1 Encryption Algorithm to be used. Only `AES256CBC` is allowed. The default value is `AES256CBC`.
 - `ike_integrity_algorithm` (String) The IPSEC phase 1 Integrity Algorithm to be used. Only `SHA256` is allowed. The default value is `SHA256`.
 - `ping_probe_ip` (String) The ping destination to check connection health. It should be provided when `health_check_type` is `PING_PROBE`
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_zscaler.example SERVICE_ID
+```

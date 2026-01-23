@@ -172,7 +172,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"PRIVATE", "PUBLIC"}, false),
 						},
 						"segment_id": {
-							Description: "The IDs of the segment to be used to " +
+							Description: "The ID of the segment to be used to " +
 								"access the management server.",
 							Type:     schema.TypeString,
 							Optional: true,
@@ -224,9 +224,10 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_id": {
-				Description: "The ID of the segments associated with the service.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: "The ID of the segment associated with the service. " +
+					"Only one segment is supported.",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"segment_options": {
 				Description: "The segment options as used by your Checkpoint " +
@@ -379,7 +380,9 @@ func resourceCheckpointRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("description", checkpoint.Description)
 	d.Set("instance", setCheckpointInstances(d, checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
-	d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
+	if checkpoint.ManagementServer != nil {
+		d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer, m))
+	}
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)
 	d.Set("name", checkpoint.Name)
