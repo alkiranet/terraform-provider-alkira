@@ -86,8 +86,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"snat": {
 				Description: "SNAT for the endpoint." +
-					" Can be `AUTOMAP` or `NONE`." +
-					" If type is `ILB` snat must be `NONE`",
+					" Can be `AUTOMAP` or `NONE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP", "NONE"}, false),
