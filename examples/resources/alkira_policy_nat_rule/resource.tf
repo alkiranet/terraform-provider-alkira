@@ -122,3 +122,26 @@ resource "alkira_policy_nat_rule" "advanced" {
     egress_type                                            = "ALKIRA_PUBLIC_IP"
   }
 }
+
+# Example 6: OUTBOUND NAT rule with dynamic IP and port translation
+resource "alkira_policy_nat_rule" "outbound_nat" {
+  name        = "outbound-nat-rule"
+  description = "Outbound NAT rule with dynamic IP and port translation"
+  enabled     = true
+  direction   = "OUTBOUND"
+
+  match {
+    src_prefixes = ["192.168.0.0/16"]
+    dst_prefixes = ["any"]
+    src_ports    = ["any"]
+    dst_ports    = ["any"]
+    protocol     = "any"
+  }
+
+  action {
+    src_addr_translation_type                = "DYNAMIC_IP_AND_PORT"
+    src_addr_translation_prefixes            = ["10.1.55.100/31"]
+    src_addr_translation_match_and_invalidate = false
+    dst_addr_translation_type                = "NONE"
+  }
+}
