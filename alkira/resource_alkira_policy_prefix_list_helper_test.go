@@ -234,3 +234,215 @@ func TestExpandPrefixListPrefixes(t *testing.T) {
 		})
 	}
 }
+
+func TestSetPrefix(t *testing.T) {
+	// Create a mock ResourceData matching the actual schema
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"prefix": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr":        {Type: schema.TypeString},
+						"description": {Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		prefixes []string
+		details  map[string]*alkira.PolicyPrefixListDetails
+		validate func(t *testing.T, d *schema.ResourceData)
+	}{
+		{
+			name:     "nil prefixes",
+			prefixes: nil,
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name:     "empty prefixes",
+			prefixes: []string{},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name:     "prefixes without details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
+
+				// Verify first prefix
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "", first["description"])
+
+				// Verify second prefix
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "", second["description"])
+			},
+		},
+		{
+			name:     "prefixes with details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details: map[string]*alkira.PolicyPrefixListDetails{
+				"192.168.1.0/24": {Description: "internal network"},
+				"10.0.0.0/8":     {Description: "corporate network"},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
+
+				// Verify first prefix with description
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "internal network", first["description"])
+
+				// Verify second prefix with description
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "corporate network", second["description"])
+			},
+		},
+		{
+			name:     "prefixes with partial details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details: map[string]*alkira.PolicyPrefixListDetails{
+				"192.168.1.0/24": {Description: "internal network"},
+				// 10.0.0.0/8 has no details
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
+
+				// Verify first prefix with description
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "internal network", first["description"])
+
+				// Verify second prefix without description
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "", second["description"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+			setPrefix(d, tt.prefixes, tt.details)
+			tt.validate(t, d)
+		})
+	}
+}
+
+func TestSetPrefixRanges(t *testing.T) {
+	// Create a mock ResourceData matching the actual schema
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"prefix_range": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix":      {Type: schema.TypeString},
+						"le":          {Type: schema.TypeInt},
+						"ge":          {Type: schema.TypeInt},
+						"description": {Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		ranges   []alkira.PolicyPrefixListRange
+		validate func(t *testing.T, d *schema.ResourceData)
+	}{
+		{
+			name:   "nil ranges",
+			ranges: nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").([]interface{})
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name:   "empty ranges",
+			ranges: []alkira.PolicyPrefixListRange{},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").([]interface{})
+				assert.Empty(t, result)
+			},
+		},
+		{
+			name: "ranges without description",
+			ranges: []alkira.PolicyPrefixListRange{
+				{Prefix: "192.168.0.0/16", Ge: 16, Le: 24},
+				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").([]interface{})
+				assert.Len(t, result, 2)
+
+				// Verify first range
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.0.0/16", first["prefix"])
+				assert.Equal(t, 16, first["ge"])
+				assert.Equal(t, 24, first["le"])
+
+				// Verify second range
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["prefix"])
+				assert.Equal(t, 8, second["ge"])
+				assert.Equal(t, 16, second["le"])
+			},
+		},
+		{
+			name: "ranges with description",
+			ranges: []alkira.PolicyPrefixListRange{
+				{Prefix: "192.168.0.0/16", Ge: 16, Le: 24, Description: "RFC1918 private"},
+				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16, Description: "RFC1918 private"},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").([]interface{})
+				assert.Len(t, result, 2)
+
+				// Verify first range with description
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.0.0/16", first["prefix"])
+				assert.Equal(t, 16, first["ge"])
+				assert.Equal(t, 24, first["le"])
+				assert.Equal(t, "RFC1918 private", first["description"])
+
+				// Verify second range with description
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["prefix"])
+				assert.Equal(t, 8, second["ge"])
+				assert.Equal(t, 16, second["le"])
+				assert.Equal(t, "RFC1918 private", second["description"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+			setPrefixRanges(d, tt.ranges)
+			tt.validate(t, d)
+		})
+	}
+}

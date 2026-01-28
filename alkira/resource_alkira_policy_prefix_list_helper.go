@@ -101,7 +101,7 @@ func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*al
 	var prefixList []map[string]interface{}
 
 	for _, p := range prefixes {
-		prefixEntry := map[string]interface{}{"prefix": p}
+		prefixEntry := map[string]interface{}{"cidr": p}
 
 		if details[p] != nil {
 			prefixEntry["description"] = details[p].Description
