@@ -334,6 +334,7 @@ func resourceBluecatRead(ctx context.Context, d *schema.ResourceData, m interfac
 		}}
 	}
 
+<<<<<<< HEAD
 	// Convert segment names to segment IDs
 	segmentIds, err := convertSegmentNamesToSegmentIds(bluecat.Segments, m)
 	if err != nil {
@@ -342,6 +343,9 @@ func resourceBluecatRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	setAllBluecatResourceFields(d, bluecat)
 	d.Set("segment_ids", segmentIds)
+=======
+	setAllBluecatResourceFields(d, bluecat)
+>>>>>>> eb995bae (for now)
 
 	// Set provision state
 	if client.Provision && provState != "" {
