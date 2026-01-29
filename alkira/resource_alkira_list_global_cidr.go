@@ -63,8 +63,9 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
-				Description: "Tag of associated service types." +
-					"Can be one of `INFOBLOX`,`CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT` or `F5LB`.",
+				Description: "Service type that can use this Global CIDR List. " +
+					"Only one service type is allowed. Can be one of: " +
+					"`INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT`, or `F5LB`.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
