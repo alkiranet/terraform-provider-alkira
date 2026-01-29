@@ -54,16 +54,18 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 				Computed:    true,
 			},
 			"values": {
-				Description: "A list of CIDRs, The CIDR must be `/24` and a " +
-					"subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, " +
-					"`192.168.0.0/16`, `100.64.0.0/10`.",
+				Description: "CIDR prefixes for the Global CIDR List. " +
+					"The CIDR must be `/24` and a subnet of the following: " +
+					"`10.0.0.0/18`, `172.16.0.0/12`, `192.168.0.0/16`, " +
+					"`100.64.0.0/10`. Currently limited to 1 CIDR per list.",
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
-				Description: "Tag of associated service types." +
-					"Can be one of `INFOBLOX`,`CHKPFW`, `CISCO_FTDV_FW` or `F5LB`.",
+				Description: "Service type that can use this Global CIDR List. " +
+					"Only one service type is allowed. Can be one of: " +
+					"`INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT`, or `F5LB`.",
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -209,7 +211,13 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_list_global_cidr (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_list_global_cidr (id=%s)", err, d.Id()))
 	}
 
 	// Handle validation error
