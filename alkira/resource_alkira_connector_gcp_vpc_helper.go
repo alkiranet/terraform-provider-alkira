@@ -122,9 +122,7 @@ func setGcpVpcSubnets(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) 
 	subnets := make([]interface{}, len(prefixes))
 	for i, prefix := range prefixes {
 		subnet := make(map[string]interface{})
-		// Store both FqId (user-provided) and Id (internal Alkira ID)
 		subnet["id"] = prefix.FqId
-		subnet["internal_id"] = prefix.Id
 		subnet["cidr"] = prefix.Value
 		subnets[i] = subnet
 	}
