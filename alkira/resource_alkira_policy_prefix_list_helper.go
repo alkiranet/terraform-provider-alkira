@@ -101,7 +101,8 @@ func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*al
 	set := schema.NewSet(prefixHash, nil)
 
 	for _, p := range prefixes {
-		desc := ""
+		prefixEntry := map[string]interface{}{"cidr": p}
+
 		if details[p] != nil {
 			desc = details[p].Description
 		}
