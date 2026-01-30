@@ -7,5 +7,5 @@ resource "alkira_azure_vnet_third_party_connector" "example" {
   enabled     = true
   group       = "production"
 
-  azure_vnet_third_party_connector_attachment_id = alkira_azure_vnet_third_party_connector_attachment.example.id
+  azure_vnet_third_party_connector_attachment_id = alkira_peering_gateway_azure_vnet_third_party_connector_attachment.example.id
 }

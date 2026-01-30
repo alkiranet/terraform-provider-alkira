@@ -27,4 +27,23 @@ data "alkira_peering_gateway_cxp" "example-gateway" {
 
 ### Read-Only
 
+- `cloud_provider` (String) The cloud provider where this resource is created.
+- `cloud_region` (String) The region of the specified cloud provider.
+- `cxp` (String) The CXP to which the Gateway is attached.
+- `description` (String) Description of the resource.
 - `id` (String) The ID of this resource.
+- `metadata` (List of Object) Metadata information available once the Peering Gateway is in ACTIVE state. (see [below for nested schema](#nestedatt--metadata))
+- `segment_id` (String) The ID of the segment that is associated with the resource.
+- `state` (String) The state of the resource.
+
+<a id="nestedatt--metadata"></a>
+### Nested Schema for `metadata`
+
+Read-Only:
+
+- `guest_email` (String)
+- `ilb_ip_address` (String)
+- `resource_group` (String)
+- `subscription_id` (String)
+- `vnet_name` (String)
+- `vnet_resource_id` (String)

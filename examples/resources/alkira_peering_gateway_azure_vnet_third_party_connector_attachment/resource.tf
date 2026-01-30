@@ -1,4 +1,4 @@
-resource "alkira_azure_vnet_third_party_connector_attachment" "example" {
+resource "alkira_peering_gateway_azure_vnet_third_party_connector_attachment" "example" {
   name                    = "azure-vnet-attachment"
   description             = "Azure VNET Third Party Attachment"
   cxp_peering_gateway_id  = alkira_peering_gateway_cxp.example.id

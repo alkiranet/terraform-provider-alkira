@@ -64,6 +64,45 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"metadata": {
+				Description: "Metadata information available once the Peering Gateway is in ACTIVE state.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ilb_ip_address": {
+							Description: "Internal Load Balancer IP Address.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"guest_email": {
+							Description: "Guest email address.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"vnet_resource_id": {
+							Description: "Azure VNET Resource ID associated with the ATH.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"vnet_name": {
+							Description: "Azure VNET name associated with the ATH.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"subscription_id": {
+							Description: "Azure Subscription ID.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"resource_group": {
+							Description: "Azure Resource Group.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -130,6 +169,21 @@ func resourceAlkiraPeeringGatewayCxpRead(ctx context.Context, d *schema.Resource
 	d.Set("cloud_region", resource.CloudRegion)
 	d.Set("segment_id", segmentId)
 	d.Set("state", resource.State)
+
+	// Set metadata if available (only populated when state is ACTIVE)
+	if resource.Metadata != nil {
+		metadata := []interface{}{
+			map[string]interface{}{
+				"ilb_ip_address":   resource.Metadata.IlbIpAddress,
+				"guest_email":      resource.Metadata.GuestEmail,
+				"vnet_resource_id": resource.Metadata.VnetResourceId,
+				"vnet_name":        resource.Metadata.VnetName,
+				"subscription_id":  resource.Metadata.SubscriptionId,
+				"resource_group":   resource.Metadata.ResourceGroup,
+			},
+		}
+		d.Set("metadata", metadata)
+	}
 
 	return nil
 }
