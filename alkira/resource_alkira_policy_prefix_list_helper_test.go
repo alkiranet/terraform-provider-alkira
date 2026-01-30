@@ -277,8 +277,7 @@ func TestSetPrefix(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix": {
-				Type: schema.TypeSet,
-				Set:  prefixHash,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr":        {Type: schema.TypeString},
@@ -300,8 +299,8 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: nil,
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").(*schema.Set)
-				assert.Empty(t, result.List())
+				result := d.Get("prefix").([]interface{})
+				assert.Empty(t, result)
 			},
 		},
 		{
@@ -309,8 +308,8 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: []string{},
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").(*schema.Set)
-				assert.Empty(t, result.List())
+				result := d.Get("prefix").([]interface{})
+				assert.Empty(t, result)
 			},
 		},
 		{
@@ -318,18 +317,18 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").(*schema.Set)
-				assert.Len(t, result.List(), 2)
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
 
-				// Verify prefixes exist (order may vary with Set)
-				resultList := result.List()
-				cidrs := make(map[string]bool)
-				for _, item := range resultList {
-					prefix := item.(map[string]interface{})
-					cidrs[prefix["cidr"].(string)] = true
-				}
-				assert.True(t, cidrs["192.168.1.0/24"])
-				assert.True(t, cidrs["10.0.0.0/8"])
+				// Verify first prefix
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "", first["description"])
+
+				// Verify second prefix
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "", second["description"])
 			},
 		},
 		{
@@ -340,20 +339,18 @@ func TestSetPrefix(t *testing.T) {
 				"10.0.0.0/8":     {Description: "corporate network"},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").(*schema.Set)
-				assert.Len(t, result.List(), 2)
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
 
-				// Verify prefixes with descriptions (order may vary with Set)
-				resultList := result.List()
-				prefixDetails := make(map[string]string)
-				for _, item := range resultList {
-					prefix := item.(map[string]interface{})
-					cidr := prefix["cidr"].(string)
-					desc := prefix["description"].(string)
-					prefixDetails[cidr] = desc
-				}
-				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
-				assert.Equal(t, "corporate network", prefixDetails["10.0.0.0/8"])
+				// Verify first prefix with description
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "internal network", first["description"])
+
+				// Verify second prefix with description
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "corporate network", second["description"])
 			},
 		},
 		{
@@ -364,20 +361,18 @@ func TestSetPrefix(t *testing.T) {
 				// 10.0.0.0/8 has no details
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").(*schema.Set)
-				assert.Len(t, result.List(), 2)
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 2)
 
-				// Verify prefixes (order may vary with Set)
-				resultList := result.List()
-				prefixDetails := make(map[string]string)
-				for _, item := range resultList {
-					prefix := item.(map[string]interface{})
-					cidr := prefix["cidr"].(string)
-					desc := prefix["description"].(string)
-					prefixDetails[cidr] = desc
-				}
-				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
-				assert.Equal(t, "", prefixDetails["10.0.0.0/8"])
+				// Verify first prefix with description
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "internal network", first["description"])
+
+				// Verify second prefix without description
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "", second["description"])
 			},
 		},
 	}
@@ -396,8 +391,7 @@ func TestSetPrefixRanges(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix_range": {
-				Type: schema.TypeSet,
-				Set:  prefixRangeHash,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix":      {Type: schema.TypeString},
@@ -419,16 +413,16 @@ func TestSetPrefixRanges(t *testing.T) {
 			name:   "nil ranges",
 			ranges: nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").(*schema.Set)
-				assert.Empty(t, result.List())
+				result := d.Get("prefix_range").([]interface{})
+				assert.Empty(t, result)
 			},
 		},
 		{
 			name:   "empty ranges",
 			ranges: []alkira.PolicyPrefixListRange{},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").(*schema.Set)
-				assert.Empty(t, result.List())
+				result := d.Get("prefix_range").([]interface{})
+				assert.Empty(t, result)
 			},
 		},
 		{
@@ -438,27 +432,20 @@ func TestSetPrefixRanges(t *testing.T) {
 				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").(*schema.Set)
-				assert.Len(t, result.List(), 2)
-
-				// Verify ranges exist (order may vary with Set)
-				resultList := result.List()
-				rangeMap := make(map[string]map[string]interface{})
-				for _, item := range resultList {
-					r := item.(map[string]interface{})
-					prefix := r["prefix"].(string)
-					rangeMap[prefix] = r
-				}
+				result := d.Get("prefix_range").([]interface{})
+				assert.Len(t, result, 2)
 
 				// Verify first range
-				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
-				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
-				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.0.0/16", first["prefix"])
+				assert.Equal(t, 16, first["ge"])
+				assert.Equal(t, 24, first["le"])
 
 				// Verify second range
-				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
-				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
-				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["prefix"])
+				assert.Equal(t, 8, second["ge"])
+				assert.Equal(t, 16, second["le"])
 			},
 		},
 		{
@@ -468,29 +455,22 @@ func TestSetPrefixRanges(t *testing.T) {
 				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16, Description: "RFC1918 private"},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").(*schema.Set)
-				assert.Len(t, result.List(), 2)
-
-				// Verify ranges with descriptions (order may vary with Set)
-				resultList := result.List()
-				rangeMap := make(map[string]map[string]interface{})
-				for _, item := range resultList {
-					r := item.(map[string]interface{})
-					prefix := r["prefix"].(string)
-					rangeMap[prefix] = r
-				}
+				result := d.Get("prefix_range").([]interface{})
+				assert.Len(t, result, 2)
 
 				// Verify first range with description
-				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
-				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
-				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
-				assert.Equal(t, "RFC1918 private", rangeMap["192.168.0.0/16"]["description"])
+				first := result[0].(map[string]interface{})
+				assert.Equal(t, "192.168.0.0/16", first["prefix"])
+				assert.Equal(t, 16, first["ge"])
+				assert.Equal(t, 24, first["le"])
+				assert.Equal(t, "RFC1918 private", first["description"])
 
 				// Verify second range with description
-				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
-				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
-				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
-				assert.Equal(t, "RFC1918 private", rangeMap["10.0.0.0/8"]["description"])
+				second := result[1].(map[string]interface{})
+				assert.Equal(t, "10.0.0.0/8", second["prefix"])
+				assert.Equal(t, 8, second["ge"])
+				assert.Equal(t, 16, second["le"])
+				assert.Equal(t, "RFC1918 private", second["description"])
 			},
 		},
 	}
@@ -502,249 +482,4 @@ func TestSetPrefixRanges(t *testing.T) {
 			tt.validate(t, d)
 		})
 	}
-}
-
-func TestReadFieldSelection_FallbackToState(t *testing.T) {
-	// Tests the import/refresh fallback path where GetRawConfig is not
-	// available. In this case Read falls back to GetOk("prefixes") to
-	// determine which field to populate.
-	//
-	// NOTE: The GetRawConfig path (plan/apply) cannot be unit tested
-	// because TestResourceData does not support raw config. Those paths
-	// are covered by live tests (see test/AK-66046-retest/).
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name":        {Type: schema.TypeString},
-			"description": {Type: schema.TypeString},
-			"prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"prefix": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      prefixHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr":        {Type: schema.TypeString},
-						"description": {Type: schema.TypeString},
-					},
-				},
-			},
-		},
-	}
-
-	apiPrefixes := []string{"10.0.0.0/8", "172.16.0.0/12"}
-	var apiDetails map[string]*alkira.PolicyPrefixListDetails
-
-	t.Run("state has prefixes - populate only prefixes", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("prefixes", schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/8", "172.16.0.0/12"}))
-
-		// Simulate the fallback path: GetOk returns state value
-		usingDeprecatedField := false
-		if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			usingDeprecatedField = true
-		}
-
-		if usingDeprecatedField {
-			prefixes := make([]interface{}, len(apiPrefixes))
-			for i, p := range apiPrefixes {
-				prefixes[i] = p
-			}
-			d.Set("prefixes", schema.NewSet(schema.HashString, prefixes))
-		} else {
-			setPrefix(d, apiPrefixes, apiDetails)
-		}
-
-		assert.True(t, usingDeprecatedField)
-		result := d.Get("prefixes").(*schema.Set)
-		assert.Len(t, result.List(), 2)
-		prefixBlocks := d.Get("prefix").(*schema.Set)
-		assert.Empty(t, prefixBlocks.List(), "prefix blocks should NOT be populated when using deprecated field")
-	})
-
-	t.Run("state has no prefixes - populate only prefix blocks", func(t *testing.T) {
-		d := r.TestResourceData()
-
-		usingDeprecatedField := false
-		if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			usingDeprecatedField = true
-		}
-
-		if usingDeprecatedField {
-			t.Fatal("should not be using deprecated field")
-		} else {
-			setPrefix(d, apiPrefixes, apiDetails)
-		}
-
-		assert.False(t, usingDeprecatedField)
-		prefixBlocks := d.Get("prefix").(*schema.Set)
-		assert.Len(t, prefixBlocks.List(), 2)
-		cidrs := make(map[string]bool)
-		for _, item := range prefixBlocks.List() {
-			m := item.(map[string]interface{})
-			cidrs[m["cidr"].(string)] = true
-		}
-		assert.True(t, cidrs["10.0.0.0/8"])
-		assert.True(t, cidrs["172.16.0.0/12"])
-	})
-
-	t.Run("state has prefixes but API returns empty - clear prefixes", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("prefixes", schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/8"}))
-
-		usingDeprecatedField := false
-		if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			usingDeprecatedField = true
-		}
-		assert.True(t, usingDeprecatedField)
-
-		emptyPrefixes := []string{}
-		if usingDeprecatedField {
-			if len(emptyPrefixes) > 0 {
-				t.Fatal("should be empty")
-			} else {
-				d.Set("prefixes", schema.NewSet(schema.HashString, nil))
-			}
-		}
-
-		result := d.Get("prefixes").(*schema.Set)
-		assert.Empty(t, result.List(), "prefixes should be cleared when API returns empty")
-	})
-
-	t.Run("deprecated path clears stale prefix blocks", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("prefixes", schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/8"}))
-		d.Set("prefix", []interface{}{
-			map[string]interface{}{"cidr": "10.0.0.0/8", "description": "stale"},
-		})
-
-		usingDeprecatedField := false
-		if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
-			usingDeprecatedField = true
-		}
-		assert.True(t, usingDeprecatedField)
-
-		d.Set("prefix", schema.NewSet(prefixHash, nil))
-		prefixBlocks := d.Get("prefix").(*schema.Set)
-		assert.Empty(t, prefixBlocks.List(), "stale prefix blocks should be cleared")
-	})
-
-	t.Run("prefix path does not touch prefixes", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("prefixes", schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/8"}))
-
-		// Simulate the prefix block path — only sets prefix, leaves prefixes alone
-		setPrefix(d, []string{"10.0.0.0/8"}, nil)
-
-		// prefixes is untouched — without Computed, Terraform won't show drift
-		result := d.Get("prefixes").(*schema.Set)
-		assert.Len(t, result.List(), 1, "prefixes should be left alone on prefix block path")
-		prefixBlocks := d.Get("prefix").(*schema.Set)
-		assert.Len(t, prefixBlocks.List(), 1)
-	})
-}
-
-func TestGenerateRequest_PrefixBlockPath(t *testing.T) {
-	// Tests the generateRequest when user uses the new "prefix" block.
-	// The GetRawConfig check for "prefixes" returns null/unknown in
-	// TestResourceData, so this always takes the prefix block path.
-	r := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name":        {Type: schema.TypeString},
-			"description": {Type: schema.TypeString, Optional: true},
-			"prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"prefix": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      prefixHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr":        {Type: schema.TypeString},
-						"description": {Type: schema.TypeString},
-					},
-				},
-			},
-			"prefix_range": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      prefixRangeHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"prefix":      {Type: schema.TypeString},
-						"description": {Type: schema.TypeString},
-						"le":          {Type: schema.TypeInt},
-						"ge":          {Type: schema.TypeInt},
-					},
-				},
-			},
-		},
-	}
-
-	t.Run("prefix blocks produce correct API request", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("name", "test-list")
-		d.Set("description", "test desc")
-		d.Set("prefix", []interface{}{
-			map[string]interface{}{"cidr": "10.0.0.0/8", "description": "corporate"},
-			map[string]interface{}{"cidr": "192.168.0.0/16", "description": "private"},
-		})
-
-		result, err := generatePolicyPrefixListRequest(d)
-		assert.NoError(t, err)
-		assert.Equal(t, "test-list", result.Name)
-		assert.Equal(t, "test desc", result.Description)
-		assert.Len(t, result.Prefixes, 2)
-
-		prefixSet := make(map[string]bool)
-		for _, p := range result.Prefixes {
-			prefixSet[p] = true
-		}
-		assert.True(t, prefixSet["10.0.0.0/8"])
-		assert.True(t, prefixSet["192.168.0.0/16"])
-		assert.Len(t, result.PrefixDetails, 2)
-	})
-
-	t.Run("empty prefix blocks produce empty request", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("name", "empty-list")
-		d.Set("description", "")
-
-		result, err := generatePolicyPrefixListRequest(d)
-		assert.NoError(t, err)
-		assert.Equal(t, "empty-list", result.Name)
-		assert.Nil(t, result.Prefixes)
-		assert.Empty(t, result.PrefixDetails)
-	})
-
-	t.Run("prefix blocks with prefix_range produce correct API request", func(t *testing.T) {
-		d := r.TestResourceData()
-		d.Set("name", "combined-list")
-		d.Set("description", "")
-		d.Set("prefix", []interface{}{
-			map[string]interface{}{"cidr": "10.0.0.0/8", "description": ""},
-		})
-		d.Set("prefix_range", []interface{}{
-			map[string]interface{}{
-				"prefix":      "172.16.0.0/12",
-				"le":          24,
-				"ge":          16,
-				"description": "",
-			},
-		})
-
-		result, err := generatePolicyPrefixListRequest(d)
-		assert.NoError(t, err)
-		assert.Len(t, result.Prefixes, 1)
-		assert.Len(t, result.PrefixRanges, 1)
-		assert.Equal(t, "172.16.0.0/12", result.PrefixRanges[0].Prefix)
-		assert.Equal(t, 24, result.PrefixRanges[0].Le)
-		assert.Equal(t, 16, result.PrefixRanges[0].Ge)
-	})
 }
