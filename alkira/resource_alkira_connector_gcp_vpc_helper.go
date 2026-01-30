@@ -100,6 +100,27 @@ func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceDa
 	d.Set("gcp_routing", []interface{}{in})
 }
 
+func setGcpVpcSubnets(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) {
+	if c == nil {
+		return
+	}
+
+	prefixes := c.ExportOptions.Prefixes
+	if len(prefixes) == 0 {
+		return
+	}
+
+	subnets := make([]interface{}, len(prefixes))
+	for i, prefix := range prefixes {
+		subnet := make(map[string]interface{})
+		subnet["id"] = prefix.FqId
+		subnet["cidr"] = prefix.Value
+		subnets[i] = subnet
+	}
+
+	d.Set("vpc_subnet", subnets)
+}
+
 func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorGcpVpc, error) {
 
 	//
