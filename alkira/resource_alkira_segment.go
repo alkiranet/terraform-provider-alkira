@@ -28,7 +28,7 @@ func resourceAlkiraSegment() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceSegmentRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

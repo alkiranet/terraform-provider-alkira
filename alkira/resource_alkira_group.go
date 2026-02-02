@@ -29,7 +29,7 @@ func resourceAlkiraGroup() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceGroupRead),
 		},
 
 		Schema: map[string]*schema.Schema{

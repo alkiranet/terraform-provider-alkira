@@ -30,7 +30,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceIpReservationRead),
 		},
 
 		Schema: map[string]*schema.Schema{
