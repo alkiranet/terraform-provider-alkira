@@ -32,7 +32,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceServiceCiscoFTDvRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
