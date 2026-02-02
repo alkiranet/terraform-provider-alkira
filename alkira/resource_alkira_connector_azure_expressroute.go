@@ -31,7 +31,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorAzureExpressRouteRead),
 		},
 
 		Schema: map[string]*schema.Schema{

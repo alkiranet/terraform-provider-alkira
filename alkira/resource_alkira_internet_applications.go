@@ -34,7 +34,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceInternetApplicationRead),
 		},
 
 		Schema: map[string]*schema.Schema{

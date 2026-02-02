@@ -18,7 +18,7 @@ func resourceAlkiraPeeringGatewayCxp() *schema.Resource {
 		UpdateContext: resourceAlkiraPeeringGatewayCxpUpdate,
 		DeleteContext: resourceAlkiraPeeringGatewayCxpDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceAlkiraPeeringGatewayCxpRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

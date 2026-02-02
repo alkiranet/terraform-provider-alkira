@@ -31,7 +31,7 @@ func resourceAlkiraListAsPath() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListAsPathRead),
 		},
 
 		Schema: map[string]*schema.Schema{
