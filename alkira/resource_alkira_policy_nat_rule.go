@@ -31,7 +31,7 @@ func resourceAlkiraPolicyNatRule() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyNatRuleRead),
 		},
 
 		Schema: map[string]*schema.Schema{

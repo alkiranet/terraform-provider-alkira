@@ -30,7 +30,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceBluecatRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {

@@ -30,7 +30,7 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceDirectInterConnectorGroupRead),
 		},
 
 		Schema: map[string]*schema.Schema{

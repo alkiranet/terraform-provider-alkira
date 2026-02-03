@@ -29,7 +29,7 @@ func resourceAlkiraConnectorAwsTgw() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorAwsTgwRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"peering_gateway_aws_tgw_attachment_id": {
