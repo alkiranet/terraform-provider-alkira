@@ -1,0 +1,24 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+This resource manages an Azure VNET Third Party Connector, which establishes connectivity between Alkira CXP and Azure VNets using third-party peering gateways. The connector requires an existing Azure VNET Third Party Connector Attachment.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet_third_party/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
