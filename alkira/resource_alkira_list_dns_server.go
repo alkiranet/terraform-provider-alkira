@@ -29,7 +29,7 @@ func resourceAlkiraListDnsServer() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListDnsServerRead),
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -31,7 +31,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorCiscoSdwanRead),
 		},
 
 		Schema: map[string]*schema.Schema{
