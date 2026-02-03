@@ -196,27 +196,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", share.Name)
 	d.Set("description", share.Description)
 	d.Set("service_ids", share.ServiceList)
-
-	// The lookup stays non-fatal, in line with the rest of Read: GetById asks
-	// for the share with includeMarkedForDeletion=true while the segment
-	// get-by-name does not, so a segment already marked for deletion resolves
-	// to nothing and would otherwise abort the refresh that terraform destroy
-	// runs first. Collecting the warning rather than returning it keeps the
-	// attributes below refreshing.
-	var diags diag.Diagnostics
-
-	segmentId, err := getSegmentIdByName(share.DesignatedSegment, m)
-
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "FAILED TO GET SEGMENT ID",
-			Detail:   fmt.Sprintf("failed to convert segment name %q to ID: %s", share.DesignatedSegment, err),
-		})
-	} else {
-		d.Set("designated_segment_id", segmentId)
-	}
-
+	d.Set("designated_segment_id", share.DesignatedSegment)
 	d.Set("end_a_segment_resource_ids", share.EndAResources)
 	d.Set("end_b_segment_resource_ids", share.EndBResources)
 	d.Set("end_a_route_limit", share.EndARouteLimit)
