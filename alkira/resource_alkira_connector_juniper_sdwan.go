@@ -29,7 +29,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorJuniperSdwanRead),
 		},
 
 		Schema: map[string]*schema.Schema{

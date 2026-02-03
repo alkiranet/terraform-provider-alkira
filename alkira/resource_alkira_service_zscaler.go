@@ -30,7 +30,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceZscalerRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"connector_internet_exit_id": {

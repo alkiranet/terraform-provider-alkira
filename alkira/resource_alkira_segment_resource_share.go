@@ -32,7 +32,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceSegmentResourceShareRead),
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -31,7 +31,7 @@ func resourceAlkiraListCommunity() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListCommunityRead),
 		},
 
 		Schema: map[string]*schema.Schema{

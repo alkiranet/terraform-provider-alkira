@@ -35,7 +35,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorAkamaiProlexicRead),
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -30,7 +30,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorInternetExitRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

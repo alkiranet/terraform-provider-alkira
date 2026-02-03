@@ -30,7 +30,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceF5LoadBalancerRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

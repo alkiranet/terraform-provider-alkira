@@ -22,7 +22,7 @@ func resourceAlkiraCredentialOciVcn() *schema.Resource {
 		UpdateContext: resourceCredentialOciVcnUpdate,
 		DeleteContext: resourceCredentialOciVcnDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceCredentialOciVcnRead),
 		},
 
 		Schema: map[string]*schema.Schema{

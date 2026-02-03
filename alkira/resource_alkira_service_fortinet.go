@@ -31,7 +31,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceFortinetRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"auto_scale": {

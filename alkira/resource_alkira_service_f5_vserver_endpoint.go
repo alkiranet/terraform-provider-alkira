@@ -29,7 +29,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceF5vServerEndpointRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

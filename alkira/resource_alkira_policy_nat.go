@@ -19,7 +19,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 		UpdateContext: resourcePolicyNatUpdate,
 		DeleteContext: resourcePolicyNatDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyNatRead),
 		},
 
 		Schema: map[string]*schema.Schema{

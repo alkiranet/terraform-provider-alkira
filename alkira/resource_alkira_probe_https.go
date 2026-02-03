@@ -18,7 +18,7 @@ func resourceAlkiraProbeHTTPS() *schema.Resource {
 		UpdateContext: resourceProbeHTTPSUpdate,
 		DeleteContext: resourceProbeHTTPSDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceProbeHTTPSRead),
 		},
 
 		Schema: map[string]*schema.Schema{

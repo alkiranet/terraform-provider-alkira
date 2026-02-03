@@ -28,7 +28,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorRemoteAccessRead),
 		},
 
 		Schema: map[string]*schema.Schema{

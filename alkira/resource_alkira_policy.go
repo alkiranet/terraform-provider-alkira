@@ -29,7 +29,7 @@ func resourceAlkiraPolicy() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyRead),
 		},
 
 		Schema: map[string]*schema.Schema{

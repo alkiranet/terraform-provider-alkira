@@ -29,7 +29,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorVersaSdwanRead),
 		},
 
 		Schema: map[string]*schema.Schema{

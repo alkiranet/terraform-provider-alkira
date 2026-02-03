@@ -19,7 +19,7 @@ func resourceAlkiraPeeringGatewayAwsTgw() *schema.Resource {
 		UpdateContext: resourcePeeringGatewayAwsTgwUpdate,
 		DeleteContext: resourcePeeringGatewayAwsTgwDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePeeringGatewayAwsTgwRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

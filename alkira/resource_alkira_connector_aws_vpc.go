@@ -30,7 +30,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorAwsVpcRead),
 		},
 
 		Schema: map[string]*schema.Schema{
