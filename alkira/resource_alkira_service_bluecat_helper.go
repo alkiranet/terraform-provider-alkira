@@ -82,7 +82,7 @@ func expandBDDSOptions(in []interface{}, m interface{}) (*alkira.BDDSOptions, er
 	if v, ok := cfg["license_credential_id"].(string); ok {
 		if v == "" {
 			licenseCredentialId, err := client.CreateCredential(
-				options.HostName+randomNameSuffix(),
+				"bluecat-bdds-" + randomNameSuffix(),
 				alkira.CredentialTypeBluecatBDDSInstanceLicense,
 				&alkira.CredentialBluecatBDDSInstanceLicense{
 					ClientId:      clientId,
@@ -129,7 +129,7 @@ func expandEdgeOptions(in []interface{}, m interface{}) (*alkira.EdgeOptions, er
 	if v, ok := cfg["credential_id"].(string); ok {
 		if v == "" {
 			credentialId, err := client.CreateCredential(
-				options.HostName+randomNameSuffix(),
+				"bluecat-edge-" + randomNameSuffix(),
 				alkira.CredentialTypeBluecatEdgeInstance,
 				&alkira.CredentialBluecatEdgeInstance{
 					ConfigData: configData,
