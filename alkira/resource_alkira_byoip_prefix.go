@@ -192,7 +192,13 @@ func resourceByoipPrefixDelete(ctx context.Context, d *schema.ResourceData, m in
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_byoip_prefix (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_byoip_prefix (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
