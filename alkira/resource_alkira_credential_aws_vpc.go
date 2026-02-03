@@ -3,6 +3,7 @@ package alkira
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -129,7 +130,13 @@ func resourceCredentialAwsVpcDelete(ctx context.Context, d *schema.ResourceData,
 	err := client.DeleteCredential(credentialId, alkira.CredentialTypeAwsVpc)
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_credential_aws_vpc (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_credential_aws_vpc (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")

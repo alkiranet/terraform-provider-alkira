@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -83,7 +84,13 @@ func resourceCredentialSshKeyPairDelete(ctx context.Context, d *schema.ResourceD
 	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeKeyPair)
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_credential_ssh_key_pair (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_credential_ssh_key_pair (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
