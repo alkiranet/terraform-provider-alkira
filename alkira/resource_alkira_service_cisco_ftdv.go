@@ -402,7 +402,13 @@ func resourceServiceCiscoFTDvDelete(ctx context.Context, d *schema.ResourceData,
 	provState, err, valErr, provErr := api.Delete((d.Id()))
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_service_cisco_ftdv (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_service_cisco_ftdv (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
