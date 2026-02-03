@@ -190,7 +190,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", share.Name)
 	d.Set("description", share.Description)
 	d.Set("service_ids", share.ServiceList)
-	d.Set("designated_segement_id", share.DesignatedSegment)
+	d.Set("designated_segment_id", share.DesignatedSegment)
 	d.Set("end_a_segment_resource_ids", share.EndAResources)
 	d.Set("end_b_segment_resource_ids", share.EndBResources)
 	d.Set("end_a_route_limit", share.EndARouteLimit)
