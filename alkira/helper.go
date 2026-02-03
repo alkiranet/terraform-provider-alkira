@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -265,46 +264,5 @@ func importWithReadValidation(readFunc schema.ReadContextFunc) schema.StateConte
 		}
 
 		return []*schema.ResourceData{d}, nil
-	}
-}
-
-// toInt converts a value to int, handling both int and string representations
-// that may appear in raw state maps.
-func toInt(v interface{}) int {
-	switch val := v.(type) {
-	case int:
-		return val
-	case float64:
-		return int(val)
-	case string:
-		if i, err := strconv.Atoi(strings.TrimSpace(val)); err == nil {
-			return i
-		}
-	}
-	return 0
-}
-
-// typeSetHash returns a schema.SchemaSetFunc that computes a hash
-// for TypeSet elements using a key extractor function. The key extractor
-// builds a string from the element's fields, which is then hashed to
-// produce the set key. This allows elements to be matched by content
-// rather than position, preventing spurious updates when elements are
-// added, removed, or reordered.
-//
-// IMPORTANT: TypeSet compares elements solely by hash. The key extractor
-// MUST include ALL fields of the block. If any field is omitted, changes
-// to that field will be invisible to Terraform — plan will show
-// "No changes" even when the value has changed. The corresponding Read
-// helper that populates the set from API data must also always set every
-// field (including empty/zero values) so that hashes match the config.
-//
-// For single-field blocks: return just that field (e.g., m["hostname"])
-// For multi-field blocks: combine all fields with fmt.Sprintf
-func typeSetHash(keyExtractor func(map[string]interface{}) string) schema.SchemaSetFunc {
-	return func(v interface{}) int {
-		var buf bytes.Buffer
-		m := v.(map[string]interface{})
-		fmt.Fprintf(&buf, "%s-", keyExtractor(m))
-		return schema.HashString(buf.String())
 	}
 }
