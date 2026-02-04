@@ -67,5 +67,3 @@ Read-Only:
 - `subscription_id` (String)
 - `vnet_name` (String)
 - `vnet_resource_id` (String)
-
-
