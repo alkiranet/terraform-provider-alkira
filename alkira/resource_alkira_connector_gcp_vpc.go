@@ -85,6 +85,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"internal_id": {
+							Description: "Internal Alkira subnet ID (computed from API).",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"cidr": {
 							Description: "The CIDR of the subnet.",
 							Type:        schema.TypeString,
