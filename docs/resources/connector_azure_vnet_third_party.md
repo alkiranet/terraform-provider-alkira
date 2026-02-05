@@ -66,5 +66,5 @@ resource "alkira_connector_azure_vnet_third_party" "example" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import alkira_azure_vnet_third_party_connector.example 456
+terraform import alkira_connector_azure_vnet_third_party.example 456
 ```
