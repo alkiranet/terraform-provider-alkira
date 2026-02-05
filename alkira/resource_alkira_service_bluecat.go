@@ -135,7 +135,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 						"bdds_options": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Defines the options required when instance type is BDDS.",
+							Description: "Defines the options required when instance type is BDDS. bdds_options must be populated if type of instance is BDDS",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_id": {
@@ -177,7 +177,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 						"edge_options": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Defines the options required when instance type is EDGE.",
+							Description: "Defines the options required when instance type is EDGE. edge_options must be populated if type of instance is EDGE",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"config_data": {

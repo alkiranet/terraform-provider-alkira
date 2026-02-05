@@ -29,8 +29,8 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 		}
 
 		// Handle BDDS options
-		if bddsOptions, ok := instanceCfg["bdds_options"].(*schema.Set); ok && bddsOptions.Len() > 0 {
-			bddsOpt, err := expandBDDSOptions(bddsOptions.List(), m)
+		if bddsOptions, ok := instanceCfg["bdds_options"].([]interface{}); ok && len(bddsOptions) > 0 {
+			bddsOpt, err := expandBDDSOptions(bddsOptions, m)
 			if err != nil {
 				return nil, err
 			}
@@ -38,8 +38,8 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 		}
 
 		// Handle Edge options
-		if edgeOptions, ok := instanceCfg["edge_options"].(*schema.Set); ok && edgeOptions.Len() > 0 {
-			edgeOpt, err := expandEdgeOptions(edgeOptions.List(), m)
+		if edgeOptions, ok := instanceCfg["edge_options"].([]interface{}); ok && len(edgeOptions) > 0 {
+			edgeOpt, err := expandEdgeOptions(edgeOptions, m)
 			if err != nil {
 				return nil, err
 			}
@@ -206,6 +206,12 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 }
 
 func deflateBluecatAnycast(anycast alkira.BluecatAnycast) []map[string]interface{} {
+	// Return nil if anycast is empty to avoid spurious diffs
+	// when the user hasn't configured anycast but API returns empty struct
+	if len(anycast.Ips) == 0 && len(anycast.BackupCxps) == 0 {
+		return nil
+	}
+
 	m := make(map[string]interface{})
 	m["ips"] = anycast.Ips
 	m["backup_cxps"] = anycast.BackupCxps
