@@ -47,5 +47,5 @@ resource "alkira_peering_gateway_azure_vnet_third_party_connector_attachment" "e
 Import is supported using the following syntax:
 
 ```shell
-terraform import alkira_azure_vnet_third_party_connector_attachment.example 123
+terraform import alkira_peering_gateway_azure_vnet_third_party_connector_attachment.example 123
 ```
