@@ -283,14 +283,14 @@ func TestSetPrefix(t *testing.T) {
 				result := d.Get("prefix").([]interface{})
 				assert.Len(t, result, 2)
 
-				// Verify first prefix
+				// Verify first prefix (sorted: 10.0.0.0/8 comes before 192.168.1.0/24)
 				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
+				assert.Equal(t, "10.0.0.0/8", first["cidr"])
 				assert.Equal(t, "", first["description"])
 
 				// Verify second prefix
 				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
+				assert.Equal(t, "192.168.1.0/24", second["cidr"])
 				assert.Equal(t, "", second["description"])
 			},
 		},
@@ -305,15 +305,15 @@ func TestSetPrefix(t *testing.T) {
 				result := d.Get("prefix").([]interface{})
 				assert.Len(t, result, 2)
 
-				// Verify first prefix with description
+				// Verify first prefix with description (sorted: 10.0.0.0/8 comes before 192.168.1.0/24)
 				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
-				assert.Equal(t, "internal network", first["description"])
+				assert.Equal(t, "10.0.0.0/8", first["cidr"])
+				assert.Equal(t, "corporate network", first["description"])
 
 				// Verify second prefix with description
 				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
-				assert.Equal(t, "corporate network", second["description"])
+				assert.Equal(t, "192.168.1.0/24", second["cidr"])
+				assert.Equal(t, "internal network", second["description"])
 			},
 		},
 		{
@@ -327,15 +327,31 @@ func TestSetPrefix(t *testing.T) {
 				result := d.Get("prefix").([]interface{})
 				assert.Len(t, result, 2)
 
-				// Verify first prefix with description
+				// Verify first prefix without description (sorted: 10.0.0.0/8 comes before 192.168.1.0/24)
 				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
-				assert.Equal(t, "internal network", first["description"])
+				assert.Equal(t, "10.0.0.0/8", first["cidr"])
+				assert.Equal(t, "", first["description"])
 
-				// Verify second prefix without description
+				// Verify second prefix with description
 				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
-				assert.Equal(t, "", second["description"])
+				assert.Equal(t, "192.168.1.0/24", second["cidr"])
+				assert.Equal(t, "internal network", second["description"])
+			},
+		},
+		{
+			name:     "prefixes are sorted alphabetically by CIDR",
+			prefixes: []string{"192.168.1.0/24", "172.16.0.0/12", "10.0.0.0/8", "192.168.0.0/16"},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").([]interface{})
+				assert.Len(t, result, 4)
+
+				// Verify prefixes are sorted alphabetically
+				expectedOrder := []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "192.168.1.0/24"}
+				for i, expected := range expectedOrder {
+					prefix := result[i].(map[string]interface{})
+					assert.Equal(t, expected, prefix["cidr"])
+				}
 			},
 		},
 	}
@@ -398,17 +414,17 @@ func TestSetPrefixRanges(t *testing.T) {
 				result := d.Get("prefix_range").([]interface{})
 				assert.Len(t, result, 2)
 
-				// Verify first range
+				// Verify first range (sorted: 10.0.0.0/8 comes before 192.168.0.0/16)
 				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.0.0/16", first["prefix"])
-				assert.Equal(t, 16, first["ge"])
-				assert.Equal(t, 24, first["le"])
+				assert.Equal(t, "10.0.0.0/8", first["prefix"])
+				assert.Equal(t, 8, first["ge"])
+				assert.Equal(t, 16, first["le"])
 
 				// Verify second range
 				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["prefix"])
-				assert.Equal(t, 8, second["ge"])
-				assert.Equal(t, 16, second["le"])
+				assert.Equal(t, "192.168.0.0/16", second["prefix"])
+				assert.Equal(t, 16, second["ge"])
+				assert.Equal(t, 24, second["le"])
 			},
 		},
 		{
@@ -421,19 +437,39 @@ func TestSetPrefixRanges(t *testing.T) {
 				result := d.Get("prefix_range").([]interface{})
 				assert.Len(t, result, 2)
 
-				// Verify first range with description
+				// Verify first range with description (sorted: 10.0.0.0/8 comes before 192.168.0.0/16)
 				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.0.0/16", first["prefix"])
-				assert.Equal(t, 16, first["ge"])
-				assert.Equal(t, 24, first["le"])
+				assert.Equal(t, "10.0.0.0/8", first["prefix"])
+				assert.Equal(t, 8, first["ge"])
+				assert.Equal(t, 16, first["le"])
 				assert.Equal(t, "RFC1918 private", first["description"])
 
 				// Verify second range with description
 				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["prefix"])
-				assert.Equal(t, 8, second["ge"])
-				assert.Equal(t, 16, second["le"])
+				assert.Equal(t, "192.168.0.0/16", second["prefix"])
+				assert.Equal(t, 16, second["ge"])
+				assert.Equal(t, 24, second["le"])
 				assert.Equal(t, "RFC1918 private", second["description"])
+			},
+		},
+		{
+			name: "ranges are sorted alphabetically by prefix",
+			ranges: []alkira.PolicyPrefixListRange{
+				{Prefix: "192.168.0.0/16", Ge: 16, Le: 24},
+				{Prefix: "172.16.0.0/12", Ge: 12, Le: 20},
+				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16},
+				{Prefix: "192.168.1.0/24", Ge: 24, Le: 28},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").([]interface{})
+				assert.Len(t, result, 4)
+
+				// Verify ranges are sorted alphabetically
+				expectedOrder := []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "192.168.1.0/24"}
+				for i, expected := range expectedOrder {
+					rng := result[i].(map[string]interface{})
+					assert.Equal(t, expected, rng["prefix"])
+				}
 			},
 		},
 	}

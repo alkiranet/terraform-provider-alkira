@@ -55,7 +55,9 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			},
 			"prefix": {
 				Description: "Prefix with description. This new block should " +
-					"replace the old `prefixes` field.",
+					"replace the old `prefixes` field. Order does not matter " +
+					"(the schema is a List for backwards compatibility). The API " +
+					"response is sorted by CIDR to ensure predictable ordering.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -75,7 +77,9 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			},
 			"prefix_range": {
 				Description: "A valid prefix range that could be used to " +
-					"define a prefix of type `ROUTE`.",
+					"define a prefix of type `ROUTE`. Order does not matter " +
+					"(the schema is a List for backwards compatibility). The API " +
+					"response is sorted by prefix to ensure predictable ordering.",
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{

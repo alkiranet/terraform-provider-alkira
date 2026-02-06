@@ -3,6 +3,7 @@ package alkira
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +11,11 @@ import (
 
 // setPrefixRange set "prefix_range" blocks from API response
 func setPrefixRanges(d *schema.ResourceData, r []alkira.PolicyPrefixListRange) {
+	// Sort by prefix to ensure consistent ordering
+	sort.Slice(r, func(i, j int) bool {
+		return r[i].Prefix < r[j].Prefix
+	})
+
 	var prefixRanges []map[string]interface{}
 
 	for _, rng := range r {
@@ -98,6 +104,9 @@ func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPref
 
 // setPrefix Set prefix block when reading from API
 func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*alkira.PolicyPrefixListDetails) {
+	// Sort prefixes to ensure consistent ordering
+	sort.Strings(prefixes)
+
 	var prefixList []map[string]interface{}
 
 	for _, p := range prefixes {
