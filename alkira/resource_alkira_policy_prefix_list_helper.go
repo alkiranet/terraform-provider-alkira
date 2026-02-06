@@ -115,7 +115,7 @@ func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*al
 // generatePolicyPrefixListRequest
 func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPrefixList, error) {
 
-	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
+	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").(*schema.Set).List())
 
 	if err != nil {
 		return nil, err
