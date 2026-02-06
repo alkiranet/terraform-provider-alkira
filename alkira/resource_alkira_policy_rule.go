@@ -220,7 +220,7 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("description", rule.Description)
 
 	d.Set("dscp", rule.MatchCondition.Dscp)
-	d.Set("Protocol", rule.MatchCondition.Protocol)
+	d.Set("protocol", rule.MatchCondition.Protocol)
 
 	d.Set("src_ip", rule.MatchCondition.SrcIp)
 	d.Set("dst_ip", rule.MatchCondition.DstIp)
