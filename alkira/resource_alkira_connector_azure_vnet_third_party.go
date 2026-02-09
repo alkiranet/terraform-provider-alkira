@@ -29,7 +29,7 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorAzureVnetThirdPartyRead),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -85,6 +85,8 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+				MaxItems:    1,
+				MinItems:    1,
 			},
 			"implicit_group_id": {
 				Description: "The ID of implicit group automatically created with the connector.",
