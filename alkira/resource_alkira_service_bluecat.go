@@ -133,9 +133,10 @@ func resourceAlkiraBluecat() *schema.Resource {
 							Computed:    true,
 						},
 						"bdds_options": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "Defines the options required when instance type is BDDS.",
+							MaxItems:    1,
+							Description: "Defines the options required when instance type is BDDS. bdds_options must be populated if type of instance is BDDS",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_id": {
@@ -175,9 +176,10 @@ func resourceAlkiraBluecat() *schema.Resource {
 							},
 						},
 						"edge_options": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "Defines the options required when instance type is EDGE.",
+							MaxItems:    1,
+							Description: "Defines the options required when instance type is EDGE. edge_options must be populated if type of instance is EDGE",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"config_data": {
@@ -222,9 +224,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Description: "Bluecat license type, only " +
 					"`BRING_YOUR_OWN` is supported right now.",
 				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"BRING_YOUR_OWN"}, false),
+				Computed: true,
 			},
 			"name": {
 				Description: "Name of the Bluecat service.",
