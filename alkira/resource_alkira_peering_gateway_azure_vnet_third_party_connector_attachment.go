@@ -18,7 +18,7 @@ func resourceAlkiraPeeringGatewayAzureVnetThirdPartyConnectorAttachment() *schem
 		UpdateContext: resourcePeeringGatewayAzureVnetThirdPartyConnectorAttachmentUpdate,
 		DeleteContext: resourcePeeringGatewayAzureVnetThirdPartyConnectorAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePeeringGatewayAzureVnetThirdPartyConnectorAttachmentRead),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
