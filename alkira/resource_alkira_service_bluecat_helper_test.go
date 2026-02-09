@@ -254,14 +254,9 @@ func TestDeflateBluecatAnycast(t *testing.T) {
 			},
 		},
 		{
-			name:  "empty anycast configuration",
-			input: alkira.BluecatAnycast{},
-			expected: []map[string]interface{}{
-				{
-					"ips":         []string(nil),
-					"backup_cxps": []string(nil),
-				},
-			},
+			name:     "empty anycast configuration",
+			input:    alkira.BluecatAnycast{},
+			expected: nil,
 		},
 	}
 
