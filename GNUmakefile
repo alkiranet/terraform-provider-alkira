@@ -1,4 +1,8 @@
-VERSION := $(shell git describe --tags --dirty)
+LATEST_TAG := $(shell git tag --sort=-v:refname | head -1)
+COMMIT_COUNT := $(shell git rev-list --count HEAD ^$(LATEST_TAG))
+SHORT_HASH := $(shell git rev-parse --short HEAD)
+DIRTY := $(shell git diff --quiet || echo '-dirty')
+VERSION := $(LATEST_TAG)-$(COMMIT_COUNT)-g$(SHORT_HASH)$(DIRTY)
 
 RELEASE_DIR := releases/$(VERSION)
 RELEASE_BIN := releases/$(VERSION)/bin

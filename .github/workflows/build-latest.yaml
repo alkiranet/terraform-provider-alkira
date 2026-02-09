@@ -32,7 +32,10 @@ jobs:
       - name: Build terraform provider
         run: |
           cd ${{ env.BUILD_DIR }}
-          ver=`git describe`
+          latest_tag=$(git tag --sort=-v:refname | head -1)
+          commit_count=$(git rev-list --count HEAD ^${latest_tag})
+          short_hash=$(git rev-parse --short HEAD)
+          ver="${latest_tag}-${commit_count}-g${short_hash}"
           echo "latest_version=$ver" >> $GITHUB_ENV
           make release
 
