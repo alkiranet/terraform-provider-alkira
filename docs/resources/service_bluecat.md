@@ -318,7 +318,7 @@ resource "alkira_service_bluecat" "production" {
 
 - `cxp` (String) The CXP where the service should be provisioned.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Bluecat service.
-- `instance` (Block Set, Min: 1) The properties pertaining to each individual instance of the Bluecat service. (see [below for nested schema](#nestedblock--instance))
+- `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Bluecat service. (see [below for nested schema](#nestedblock--instance))
 - `name` (String) Name of the Bluecat service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
@@ -347,8 +347,8 @@ Required:
 
 Optional:
 
-- `bdds_options` (Block Set) Defines the options required when instance type is BDDS. (see [below for nested schema](#nestedblock--instance--bdds_options))
-- `edge_options` (Block Set) Defines the options required when instance type is EDGE. (see [below for nested schema](#nestedblock--instance--edge_options))
+- `bdds_options` (Block List, Max: 1) Defines the options required when instance type is BDDS. bdds_options must be populated if type of instance is BDDS (see [below for nested schema](#nestedblock--instance--bdds_options))
+- `edge_options` (Block List, Max: 1) Defines the options required when instance type is EDGE. edge_options must be populated if type of instance is EDGE (see [below for nested schema](#nestedblock--instance--edge_options))
 
 Read-Only:
 
