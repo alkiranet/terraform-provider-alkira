@@ -20,15 +20,15 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 		},
 		{
 			name:     "empty map",
-			input:    map[string]interface{}{},
+			input:    map[string]alkira.ConnectorIPSecSegmentOptions{},
 			expected: nil,
 		},
 		{
 			name: "valid segment options with all fields",
-			input: map[string]interface{}{
-				"segment1": map[string]interface{}{
-					"disableInternetExit":   false,
-					"advertiseOnPremRoutes": true,
+			input: map[string]alkira.ConnectorIPSecSegmentOptions{
+				"segment1": {
+					DisableInternetExit:   boolPtr(false),
+					AdvertiseOnPremRoutes: boolPtr(true),
 				},
 			},
 			expected: []map[string]interface{}{
@@ -41,10 +41,10 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 		},
 		{
 			name: "segment options with disable_internet_exit=true",
-			input: map[string]interface{}{
-				"segment2": map[string]interface{}{
-					"disableInternetExit":   true,
-					"advertiseOnPremRoutes": false,
+			input: map[string]alkira.ConnectorIPSecSegmentOptions{
+				"segment2": {
+					DisableInternetExit:   boolPtr(true),
+					AdvertiseOnPremRoutes: boolPtr(false),
 				},
 			},
 			expected: []map[string]interface{}{
@@ -56,9 +56,12 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 			},
 		},
 		{
-			name: "segment options with missing fields (defaults)",
-			input: map[string]interface{}{
-				"segment3": map[string]interface{}{},
+			name: "segment options with nil pointers (defaults)",
+			input: map[string]alkira.ConnectorIPSecSegmentOptions{
+				"segment3": {
+					DisableInternetExit:   nil,
+					AdvertiseOnPremRoutes: nil,
+				},
 			},
 			expected: []map[string]interface{}{
 				{
@@ -236,4 +239,9 @@ func TestFlattenConnectorIPSecPolicyOptions(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// Helper function to create bool pointers
+func boolPtr(b bool) *bool {
+	return &b
 }
