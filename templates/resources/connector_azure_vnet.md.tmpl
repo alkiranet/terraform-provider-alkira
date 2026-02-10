@@ -40,6 +40,12 @@ needed:
 
 {{ tffile "examples/resources/alkira_connector_azure_vnet/resource4.tf" }}
 
+### VNET Peering Mode with Azure CXP
+
+When tenant has Azure VNET 3rd party support enabled, when using `connection_mode` of `VNET_PEERING` with an Azure CXP, it is recommended to fill in  `peering_gateway_cxp_id`:
+
+{{ tffile "examples/resources/alkira_connector_azure_vnet/resource5.tf" }}
+
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import
