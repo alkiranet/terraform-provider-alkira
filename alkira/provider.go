@@ -82,6 +82,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_aws_tgw":                  resourceAlkiraConnectorAwsTgw(),
 			"alkira_connector_aws_vpc":                  resourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_vnet":               resourceAlkiraConnectorAzureVnet(),
+			"alkira_connector_azure_vnet_third_party":   resourceAlkiraConnectorAzureVnetThirdParty(),
 			"alkira_connector_azure_expressroute":       resourceAlkiraConnectorAzureExpressRoute(),
 			"alkira_connector_cisco_sdwan":              resourceAlkiraConnectorCiscoSdwan(),
 			"alkira_connector_fortinet_sdwan":           resourceAlkiraConnectorFortinetSdwan(),
