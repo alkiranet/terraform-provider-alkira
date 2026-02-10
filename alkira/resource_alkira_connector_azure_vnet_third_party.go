@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 		Description:   "Manage Azure VNET Third Party Connector.",
 		CreateContext: resourceConnectorAzureVnetThirdPartyCreate,
 		ReadContext:   resourceConnectorAzureVnetThirdPartyRead,
-		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureVnetThirdPartyUpdate),
+		UpdateContext: resourceConnectorAzureVnetThirdPartyUpdate,
 		DeleteContext: resourceConnectorAzureVnetThirdPartyDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -68,13 +68,6 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 				Description: "The size of the connector, one of `5XSMALL`, `XSMALL`, `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			"scale_group_id": {
-				Description: "The ID of the scale group associated with " +
-					"the connector. Can only be set at create time and " +
-					"cannot be changed after provisioning.",
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"azure_vnet_third_party_connector_attachment_id": {
 				Description: "The ID of the Azure VNET Third Party Connector Attachment.",
@@ -180,7 +173,6 @@ func resourceConnectorAzureVnetThirdPartyRead(ctx context.Context, d *schema.Res
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("size", connector.Size)
-	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("azure_vnet_third_party_connector_attachment_id", connector.AzureVnetThirdPartyConnectorAttachmentId)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 
@@ -258,7 +250,7 @@ func resourceConnectorAzureVnetThirdPartyDelete(ctx context.Context, d *schema.R
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewAzureVnetThirdPartyConnector(client)
 
-	_, err, valErr, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -281,7 +273,7 @@ func resourceConnectorAzureVnetThirdPartyDelete(ctx context.Context, d *schema.R
 		}}
 	}
 
-	if client.Provision && provErr != nil {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -309,7 +301,6 @@ func generateConnectorAzureVnetThirdPartyRequest(d *schema.ResourceData, m inter
 		Group:                                    d.Get("group").(string),
 		Segments:                                 []string{segmentName},
 		Size:                                     d.Get("size").(string),
-		ScaleGroupId:                             d.Get("scale_group_id").(string),
 		AzureVnetThirdPartyConnectorAttachmentId: d.Get("azure_vnet_third_party_connector_attachment_id").(int),
 		BillingTags:                              billingTags,
 		StaticRoutes:                             staticRoutes,
