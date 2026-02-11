@@ -20,6 +20,8 @@ This resource needs to work with one of the following connector resources so far
 * resource_alkira_connector_ipsec
 * resource_alkira_connector_aruba_edge
 
+~> **NOTE:** An Internet Application requires a traffic policy to work. Create an `alkira_policy_rule` with `internet_application_id` pointing to this resource, then add the rule to an `alkira_policy_rule_list` and attach it to an `alkira_policy`. See the [Policy Rule with Internet Application](../resources/policy_rule.md#example-usage) example for details.
+
 ## Example Usage
 
 This example assumes that `alkira_connector_aws_vpc.test` was created separately.
