@@ -13,7 +13,11 @@ import (
 
 func resourceAlkiraInternetApplication() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage Internet Application.",
+		Description: "Manage Internet Application.\n\n" +
+			"**NOTE:** An Internet Application requires a traffic policy to work. " +
+			"Create an `alkira_policy_rule` with `internet_application_id` pointing " +
+			"to this resource, then add the rule to an `alkira_policy_rule_list` " +
+			"and attach it to an `alkira_policy`.",
 		CreateContext: resourceInternetApplicationCreate,
 		ReadContext:   resourceInternetApplicationRead,
 		UpdateContext: resourceInternetApplicationUpdate,
@@ -258,7 +262,20 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(string(response.Id))
-	return resourceInternetApplicationRead(ctx, d, m)
+
+	diags := resourceInternetApplicationRead(ctx, d, m)
+
+	diags = append(diags, diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  "TRAFFIC POLICY REQUIRED",
+		Detail: "An Internet Application requires a traffic policy to work. " +
+			"Create an `alkira_policy_rule` with `internet_application_id` pointing " +
+			"to this resource, then add the rule to an `alkira_policy_rule_list` " +
+			"and attach it to an `alkira_policy`. " +
+			"Refer to the `alkira_policy_rule` documentation for an example.",
+	})
+
+	return diags
 }
 
 func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
