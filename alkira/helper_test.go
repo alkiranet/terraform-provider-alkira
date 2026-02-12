@@ -13,6 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// boolPtr returns a pointer to the given bool value
+// Helper function for test assertions that require bool pointers
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 // UNUSED: Commented out to suppress linter warnings
 // func assertStrEquals(t *testing.T, str1, str2 string) {
 // 	if str1 != str2 {

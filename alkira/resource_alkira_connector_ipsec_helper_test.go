@@ -240,8 +240,3 @@ func TestFlattenConnectorIPSecPolicyOptions(t *testing.T) {
 		})
 	}
 }
-
-// Helper function to create bool pointers
-func boolPtr(b bool) *bool {
-	return &b
-}
