@@ -435,10 +435,11 @@ func TestDeflateSegmentOptionsCanBeSetInTerraformState(t *testing.T) {
 		assert.Equal(t, "1331", segmentId, "segment_id value should be '1331'")
 
 		// Verify zones
-		if zoneName == "trust-zone" {
+		switch zoneName {
+		case "trust-zone":
 			foundTrustZone = true
 			assert.Equal(t, []interface{}{"group1", "group2"}, groups)
-		} else if zoneName == "untrust-zone" {
+		case "untrust-zone":
 			foundUntrustZone = true
 			assert.Equal(t, []interface{}{"group3"}, groups)
 		}
