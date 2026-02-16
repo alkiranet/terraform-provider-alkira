@@ -248,7 +248,22 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 		var oldInstance map[string]interface{}
 		for _, value := range oldInstances {
 			cfg := value.(map[string]interface{})
-			if cfg["id"].(int) == v.Id || cfg["name"].(string) == v.Name {
+
+			if cfg["id"].(int) == v.Id && v.Id != 0 {
+				oldInstance = cfg
+				break
+			}
+
+			if cfg["name"].(string) == v.Name && v.Name != "" {
+				oldInstance = cfg
+				break
+			}
+
+			// When id and name are not yet set (first apply),
+			// match by hostname from bdds_options or edge_options.
+			oldHostname := getHostnameFromInstance(cfg)
+			newHostname := getHostnameFromBluecatInstance(v)
+			if oldHostname != "" && oldHostname == newHostname {
 				oldInstance = cfg
 				break
 			}
