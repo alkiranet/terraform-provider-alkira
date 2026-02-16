@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -31,7 +30,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 				{
 					Name: "bdds-primary.example.com",
 					Type: "BDDS",
-					Id:   json.Number("123"),
+					Id:   123,
 					BddsOptions: &alkira.BDDSOptions{
 						HostName:            "bdds-primary.example.com",
 						Model:               "cBDDS50",
@@ -42,7 +41,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("123"),
+					"id":   123,
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
@@ -62,7 +61,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 				{
 					Name: "edge-primary.example.com",
 					Type: "EDGE",
-					Id:   json.Number("124"),
+					Id:   124,
 					EdgeOptions: &alkira.EdgeOptions{
 						HostName:     "edge-primary.example.com",
 						Version:      "4.2.0",
@@ -72,7 +71,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("124"),
+					"id":   124,
 					"name": "edge-primary.example.com",
 					"type": "EDGE",
 					"edge_options": []interface{}{
@@ -91,7 +90,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 				{
 					Name: "bdds-primary.example.com",
 					Type: "BDDS",
-					Id:   json.Number("123"),
+					Id:   123,
 					BddsOptions: &alkira.BDDSOptions{
 						HostName:            "bdds-primary.example.com",
 						Model:               "cBDDS50",
@@ -102,7 +101,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 				{
 					Name: "edge-primary",
 					Type: "EDGE",
-					Id:   json.Number("124"),
+					Id:   124,
 					EdgeOptions: &alkira.EdgeOptions{
 						HostName:     "edge-primary.example.com",
 						Version:      "4.2.0",
@@ -112,7 +111,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("123"),
+					"id":   123,
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
@@ -125,7 +124,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 					},
 				},
 				{
-					"id":   json.Number("124"),
+					"id":   124,
 					"name": "edge-primary",
 					"type": "EDGE",
 					"edge_options": []interface{}{
@@ -142,7 +141,10 @@ func TestDeflateBluecatInstances(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := deflateBluecatInstances(tt.input)
+			// Create a ResourceData with empty instance state to simulate
+			// an import (no prior sensitive values in state).
+			d := resourceAlkiraBluecat().TestResourceData()
+			result := deflateBluecatInstances(tt.input, d)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -254,14 +256,9 @@ func TestDeflateBluecatAnycast(t *testing.T) {
 			},
 		},
 		{
-			name:  "empty anycast configuration",
-			input: alkira.BluecatAnycast{},
-			expected: []map[string]interface{}{
-				{
-					"ips":         []string(nil),
-					"backup_cxps": []string(nil),
-				},
-			},
+			name:     "empty anycast configuration",
+			input:    alkira.BluecatAnycast{},
+			expected: nil,
 		},
 	}
 

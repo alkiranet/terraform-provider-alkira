@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -187,7 +186,7 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 	segmentSet := schema.NewSet(schema.HashString, []interface{}{"segment-1"})
 	d.Set("segment_ids", segmentSet)
 
-	// Create BDDS options set
+	// Create BDDS options list
 	bddsOptionsData := map[string]interface{}{
 		"hostname":       "bdds-primary.example.com",
 		"model":          "cBDDS50",
@@ -195,40 +194,26 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithInstances(t *testing
 		"client_id":      "test-client-001",
 		"activation_key": "test-key-001",
 	}
-	bddsOptionsSet := schema.NewSet(schema.HashResource(&schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"hostname":       {Type: schema.TypeString},
-			"model":          {Type: schema.TypeString},
-			"version":        {Type: schema.TypeString},
-			"client_id":      {Type: schema.TypeString},
-			"activation_key": {Type: schema.TypeString},
-		},
-	}), []interface{}{bddsOptionsData})
+	bddsOptionsList := []interface{}{bddsOptionsData}
 
-	// Create Edge options set
+	// Create Edge options list
 	edgeOptionsData := map[string]interface{}{
 		"hostname":    "edge-primary.example.com",
 		"version":     "4.2.0",
 		"config_data": "base64encodeddata",
 	}
-	edgeOptionsSet := schema.NewSet(schema.HashResource(&schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"hostname":    {Type: schema.TypeString},
-			"version":     {Type: schema.TypeString},
-			"config_data": {Type: schema.TypeString},
-		},
-	}), []interface{}{edgeOptionsData})
+	edgeOptionsList := []interface{}{edgeOptionsData}
 
 	instancesData := []interface{}{
 		map[string]interface{}{
 			"name":         "bdds-primary",
 			"type":         "BDDS",
-			"bdds_options": bddsOptionsSet,
+			"bdds_options": bddsOptionsList,
 		},
 		map[string]interface{}{
 			"name":         "edge-primary",
 			"type":         "EDGE",
-			"edge_options": edgeOptionsSet,
+			"edge_options": edgeOptionsList,
 		},
 	}
 
@@ -291,11 +276,6 @@ func TestAlkiraServiceBluecat_resourceSchema(t *testing.T) {
 	if cxpSchema, exists := resource.Schema["cxp"]; exists {
 		assert.Equal(t, schema.TypeString, cxpSchema.Type, "CXP should be string type")
 		assert.True(t, cxpSchema.Required, "CXP should be required")
-	}
-
-	if licenseTypeSchema, exists := resource.Schema["license_type"]; exists {
-		assert.Equal(t, schema.TypeString, licenseTypeSchema.Type, "License type should be string type")
-		assert.True(t, licenseTypeSchema.Required, "License type should be required")
 	}
 
 	if globalCidrSchema, exists := resource.Schema["global_cidr_list_id"]; exists {
@@ -449,7 +429,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-bdds-01",
 				Type: "BDDS",
-				Id:   json.Number("456"),
+				Id:   456,
 				BddsOptions: &alkira.BDDSOptions{
 					HostName:            "bdds-01.example.com",
 					Model:               "cBDDS50",
@@ -460,7 +440,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-edge-01",
 				Type: "EDGE",
-				Id:   json.Number("789"),
+				Id:   789,
 				EdgeOptions: &alkira.EdgeOptions{
 					HostName:     "edge-01.example.com",
 					Version:      "4.2.0",
@@ -646,15 +626,12 @@ func buildServiceBluecatRequest(d *schema.ResourceData) *alkira.ServiceBluecat {
 
 					// Handle BDDS options
 					if bddsOptionsRaw, exists := instanceMap["bdds_options"]; exists {
-						if bddsOptionsSet, ok := bddsOptionsRaw.(*schema.Set); ok && bddsOptionsSet.Len() > 0 {
-							for _, optionRaw := range bddsOptionsSet.List() {
-								if bddsOptionsMap, ok := optionRaw.(map[string]interface{}); ok {
-									instance.BddsOptions = &alkira.BDDSOptions{
-										HostName: getStringFromMapBluecat(bddsOptionsMap, "hostname"),
-										Model:    getStringFromMapBluecat(bddsOptionsMap, "model"),
-										Version:  getStringFromMapBluecat(bddsOptionsMap, "version"),
-									}
-									break // Take only the first one
+						if bddsOptionsList, ok := bddsOptionsRaw.([]interface{}); ok && len(bddsOptionsList) > 0 {
+							if bddsOptionsMap, ok := bddsOptionsList[0].(map[string]interface{}); ok {
+								instance.BddsOptions = &alkira.BDDSOptions{
+									HostName: getStringFromMapBluecat(bddsOptionsMap, "hostname"),
+									Model:    getStringFromMapBluecat(bddsOptionsMap, "model"),
+									Version:  getStringFromMapBluecat(bddsOptionsMap, "version"),
 								}
 							}
 						}
@@ -662,14 +639,11 @@ func buildServiceBluecatRequest(d *schema.ResourceData) *alkira.ServiceBluecat {
 
 					// Handle Edge options
 					if edgeOptionsRaw, exists := instanceMap["edge_options"]; exists {
-						if edgeOptionsSet, ok := edgeOptionsRaw.(*schema.Set); ok && edgeOptionsSet.Len() > 0 {
-							for _, optionRaw := range edgeOptionsSet.List() {
-								if edgeOptionsMap, ok := optionRaw.(map[string]interface{}); ok {
-									instance.EdgeOptions = &alkira.EdgeOptions{
-										HostName: getStringFromMapBluecat(edgeOptionsMap, "hostname"),
-										Version:  getStringFromMapBluecat(edgeOptionsMap, "version"),
-									}
-									break // Take only the first one
+						if edgeOptionsList, ok := edgeOptionsRaw.([]interface{}); ok && len(edgeOptionsList) > 0 {
+							if edgeOptionsMap, ok := edgeOptionsList[0].(map[string]interface{}); ok {
+								instance.EdgeOptions = &alkira.EdgeOptions{
+									HostName: getStringFromMapBluecat(edgeOptionsMap, "hostname"),
+									Version:  getStringFromMapBluecat(edgeOptionsMap, "version"),
 								}
 							}
 						}

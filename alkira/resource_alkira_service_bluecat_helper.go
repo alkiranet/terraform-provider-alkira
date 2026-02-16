@@ -1,9 +1,7 @@
 package alkira
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,17 +18,15 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {
-			if v != 0 {
-				r.Id = json.Number(strconv.Itoa(v))
-			}
+			r.Id = v
 		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}
 
 		// Handle BDDS options
-		if bddsOptions, ok := instanceCfg["bdds_options"].(*schema.Set); ok && bddsOptions.Len() > 0 {
-			bddsOpt, err := expandBDDSOptions(bddsOptions.List(), m)
+		if bddsOptions, ok := instanceCfg["bdds_options"].([]interface{}); ok && len(bddsOptions) > 0 {
+			bddsOpt, err := expandBDDSOptions(bddsOptions, m)
 			if err != nil {
 				return nil, err
 			}
@@ -38,8 +34,8 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 		}
 
 		// Handle Edge options
-		if edgeOptions, ok := instanceCfg["edge_options"].(*schema.Set); ok && edgeOptions.Len() > 0 {
-			edgeOpt, err := expandEdgeOptions(edgeOptions.List(), m)
+		if edgeOptions, ok := instanceCfg["edge_options"].([]interface{}); ok && len(edgeOptions) > 0 {
+			edgeOpt, err := expandEdgeOptions(edgeOptions, m)
 			if err != nil {
 				return nil, err
 			}
@@ -171,13 +167,44 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 	return anycast, nil
 }
 
-func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{} {
+func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData) []map[string]interface{} {
 	var m []map[string]interface{}
+
+	// Read existing instances from state to preserve sensitive fields
+	// not returned by the API.
+	oldInstances := d.Get("instance").([]interface{})
+
 	for _, v := range c {
 		j := map[string]interface{}{
 			"id":   v.Id,
 			"name": v.Name,
 			"type": v.Type,
+		}
+
+		// Find matching instance in state by id or name to preserve
+		// sensitive fields not returned by the API.
+		var oldInstance map[string]interface{}
+		for _, value := range oldInstances {
+			cfg := value.(map[string]interface{})
+
+			if cfg["id"].(int) == v.Id && v.Id != 0 {
+				oldInstance = cfg
+				break
+			}
+
+			if cfg["name"].(string) == v.Name && v.Name != "" {
+				oldInstance = cfg
+				break
+			}
+
+			// When id and name are not yet set (first apply),
+			// match by hostname from bdds_options or edge_options.
+			oldHostname := getHostnameFromInstance(cfg)
+			newHostname := getHostnameFromBluecatInstance(v)
+			if oldHostname != "" && oldHostname == newHostname {
+				oldInstance = cfg
+				break
+			}
 		}
 
 		if v.BddsOptions != nil {
@@ -187,6 +214,20 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 				"version":               v.BddsOptions.Version,
 				"license_credential_id": v.BddsOptions.LicenseCredentialId,
 			}
+
+			// Preserve client_id and activation_key from state since
+			// the API does not return these sensitive fields.
+			if oldInstance != nil {
+				if oldBdds, ok := oldInstance["bdds_options"]; ok {
+					oldBddsList := oldBdds.([]interface{})
+					if len(oldBddsList) > 0 {
+						oldBddsMap := oldBddsList[0].(map[string]interface{})
+						bddsMap["client_id"] = oldBddsMap["client_id"]
+						bddsMap["activation_key"] = oldBddsMap["activation_key"]
+					}
+				}
+			}
+
 			j["bdds_options"] = []interface{}{bddsMap}
 		}
 
@@ -196,6 +237,19 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 				"version":       v.EdgeOptions.Version,
 				"credential_id": v.EdgeOptions.CredentialId,
 			}
+
+			// Preserve config_data from state since the API does not
+			// return this field.
+			if oldInstance != nil {
+				if oldEdge, ok := oldInstance["edge_options"]; ok {
+					oldEdgeList := oldEdge.([]interface{})
+					if len(oldEdgeList) > 0 {
+						oldEdgeMap := oldEdgeList[0].(map[string]interface{})
+						edgeMap["config_data"] = oldEdgeMap["config_data"]
+					}
+				}
+			}
+
 			j["edge_options"] = []interface{}{edgeMap}
 		}
 
@@ -205,7 +259,47 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 	return m
 }
 
+// getHostnameFromBluecatInstance extracts the hostname from either
+// BddsOptions or EdgeOptions of an API-returned instance.
+func getHostnameFromBluecatInstance(instance alkira.BluecatInstance) string {
+	if instance.BddsOptions != nil {
+		return instance.BddsOptions.HostName
+	}
+	if instance.EdgeOptions != nil {
+		return instance.EdgeOptions.HostName
+	}
+	return ""
+}
+
+// getHostnameFromInstance extracts the hostname from either
+// bdds_options or edge_options of a state instance.
+func getHostnameFromInstance(cfg map[string]interface{}) string {
+	if bdds, ok := cfg["bdds_options"].([]interface{}); ok && len(bdds) > 0 {
+		if opts, ok := bdds[0].(map[string]interface{}); ok {
+			if h, ok := opts["hostname"].(string); ok {
+				return h
+			}
+		}
+	}
+
+	if edge, ok := cfg["edge_options"].([]interface{}); ok && len(edge) > 0 {
+		if opts, ok := edge[0].(map[string]interface{}); ok {
+			if h, ok := opts["hostname"].(string); ok {
+				return h
+			}
+		}
+	}
+
+	return ""
+}
+
 func deflateBluecatAnycast(anycast alkira.BluecatAnycast) []map[string]interface{} {
+	// Return nil if anycast is empty to avoid spurious diffs
+	// when the user hasn't configured anycast but API returns empty struct
+	if len(anycast.Ips) == 0 && len(anycast.BackupCxps) == 0 {
+		return nil
+	}
+
 	m := make(map[string]interface{})
 	m["ips"] = anycast.Ips
 	m["backup_cxps"] = anycast.BackupCxps
@@ -220,7 +314,7 @@ func setAllBluecatResourceFields(d *schema.ResourceData, in *alkira.ServiceBluec
 	d.Set("cxp", in.Cxp)
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
-	d.Set("instance", deflateBluecatInstances(in.Instances))
+	d.Set("instance", deflateBluecatInstances(in.Instances, d))
 	d.Set("license_type", in.LicenseType)
 	d.Set("name", in.Name)
 	d.Set("service_group_name", in.ServiceGroupName)

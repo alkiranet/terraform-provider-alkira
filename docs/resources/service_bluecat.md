@@ -48,7 +48,6 @@ resource "alkira_service_bluecat" "minimal" {
   name                = "bluecat-minimal"
   cxp                 = "US-WEST"
   global_cidr_list_id = alkira_list_global_cidr.basic.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.default.id]
   service_group_name  = "dns-basic"
 
@@ -56,7 +55,7 @@ resource "alkira_service_bluecat" "minimal" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds.example.com"
+      hostname       = "bdds"
       model          = "cBDDS50"
       version        = "9.4.0"
       client_id      = "basic-client"
@@ -74,7 +73,6 @@ resource "alkira_service_bluecat" "bdds_only" {
   cxp                 = "US-WEST"
   description         = "Bluecat service with BDDS instances only"
   global_cidr_list_id = alkira_list_global_cidr.dns_allowed.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.corp.id]
   service_group_name  = "dns-services"
 
@@ -87,7 +85,7 @@ resource "alkira_service_bluecat" "bdds_only" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-primary.corp.local"
+      hostname       = "bdds-primary"
       model          = "cBDDS50"
       version        = "9.4.0"
       client_id      = "bdds-client-001"
@@ -99,7 +97,7 @@ resource "alkira_service_bluecat" "bdds_only" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-secondary.corp.local"
+      hostname       = "bdds-secondary\"
       model          = "cBDDS50"
       version        = "9.4.0"
       client_id      = "bdds-client-002"
@@ -117,7 +115,6 @@ resource "alkira_service_bluecat" "edge_only" {
   cxp                 = "EU-CENTRAL"
   description         = "Bluecat service with Edge instances only"
   global_cidr_list_id = alkira_list_global_cidr.branch_dns.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.branch.id, alkira_segment.dmz.id]
   service_group_name  = "edge-dns-services"
 
@@ -130,7 +127,7 @@ resource "alkira_service_bluecat" "edge_only" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-branch-01.example.com"
+      hostname    = "edge-branch-01"
       version     = "4.1.2"
       config_data = "CONFIG_DATA_STRING_BRANCH_01_ENCODED_BASE64"
     }
@@ -140,7 +137,7 @@ resource "alkira_service_bluecat" "edge_only" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-branch-02.example.com"
+      hostname    = "edge-branch-02"
       version     = "4.1.2"
       config_data = "CONFIG_DATA_STRING_BRANCH_02_ENCODED_BASE64"
     }
@@ -150,7 +147,7 @@ resource "alkira_service_bluecat" "edge_only" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-dmz.example.com"
+      hostname    = "edge-dmz"
       version     = "4.0.5"
       config_data = "CONFIG_DATA_STRING_DMZ_ENCODED_BASE64"
     }
@@ -166,7 +163,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
   cxp                 = "US-EAST"
   description         = "Hybrid Bluecat deployment with both BDDS and Edge instances"
   global_cidr_list_id = alkira_list_global_cidr.global_dns.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.production.id]
   service_group_name  = "hybrid-dns-services"
 
@@ -190,7 +186,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-core-01.enterprise.local"
+      hostname       = "bdds-core-01"
       model          = "cBDDS50"
       version        = "9.5.1"
       client_id      = "enterprise-core-001"
@@ -202,7 +198,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-core-02.enterprise.local"
+      hostname       = "bdds-core-02"
       model          = "cBDDS50"
       version        = "9.5.1"
       client_id      = "enterprise-core-002"
@@ -215,7 +211,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-dc-east.enterprise.local"
+      hostname    = "edge-dc-east"
       version     = "4.2.0"
       config_data = "EDGE_DC_EAST_CONFIG_BASE64_ENCODED_STRING"
     }
@@ -225,7 +221,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-dc-west.enterprise.local"
+      hostname    = "edge-dc-west"
       version     = "4.2.0"
       config_data = "EDGE_DC_WEST_CONFIG_BASE64_ENCODED_STRING"
     }
@@ -241,7 +237,6 @@ resource "alkira_service_bluecat" "production" {
   cxp                 = "ASIA-PACIFIC"
   description         = "Production Bluecat service for enterprise DNS"
   global_cidr_list_id = alkira_list_global_cidr.enterprise.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.production.id]
   service_group_name  = "enterprise-dns"
 
@@ -266,7 +261,7 @@ resource "alkira_service_bluecat" "production" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-ent-01.asia.enterprise.com"
+      hostname       = "bdds-ent-01"
       model          = "cBDDS50"
       version        = "9.5.2"
       client_id      = "enterprise-asia-001"
@@ -279,7 +274,7 @@ resource "alkira_service_bluecat" "production" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-ent-02.asia.enterprise.com"
+      hostname       = "bdds-ent-02"
       model          = "cBDDS50"
       version        = "9.5.2"
       client_id      = "enterprise-asia-002"
@@ -292,7 +287,7 @@ resource "alkira_service_bluecat" "production" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-primary.asia.enterprise.com"
+      hostname    = "edge-primary"
       version     = "4.2.1"
       config_data = "ASIA_PRIMARY_EDGE_CONFIG_BASE64"
     }
@@ -303,7 +298,7 @@ resource "alkira_service_bluecat" "production" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-backup.asia.enterprise.com"
+      hostname    = "edge-backup"
       version     = "4.2.1"
       config_data = "ASIA_BACKUP_EDGE_CONFIG_BASE64"
     }
@@ -319,7 +314,6 @@ resource "alkira_service_bluecat" "production" {
 - `cxp` (String) The CXP where the service should be provisioned.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Bluecat service.
 - `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Bluecat service. (see [below for nested schema](#nestedblock--instance))
-- `license_type` (String) Bluecat license type, only `BRING_YOUR_OWN` is supported right now.
 - `name` (String) Name of the Bluecat service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
@@ -334,6 +328,7 @@ resource "alkira_service_bluecat" "production" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `license_type` (String) Bluecat license type, only `BRING_YOUR_OWN` is supported right now.
 - `provision_state` (String) The provision state of the resource.
 - `service_group_id` (Number) The ID of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
 - `service_group_implicit_group_id` (Number) The ID of the implicit group to be associated with the service.
@@ -347,8 +342,8 @@ Required:
 
 Optional:
 
-- `bdds_options` (Block Set) Defines the options required when instance type is BDDS. (see [below for nested schema](#nestedblock--instance--bdds_options))
-- `edge_options` (Block Set) Defines the options required when instance type is EDGE. (see [below for nested schema](#nestedblock--instance--edge_options))
+- `bdds_options` (Block List, Max: 1) Defines the options required when instance type is BDDS. bdds_options must be populated if type of instance is BDDS (see [below for nested schema](#nestedblock--instance--bdds_options))
+- `edge_options` (Block List, Max: 1) Defines the options required when instance type is EDGE. edge_options must be populated if type of instance is EDGE (see [below for nested schema](#nestedblock--instance--edge_options))
 
 Read-Only:
 
