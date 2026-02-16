@@ -186,7 +186,22 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 		var oldInstance map[string]interface{}
 		for _, value := range oldInstances {
 			cfg := value.(map[string]interface{})
-			if cfg["id"].(int) == v.Id || cfg["name"].(string) == v.Name {
+
+			if cfg["id"].(int) == v.Id && v.Id != 0 {
+				oldInstance = cfg
+				break
+			}
+
+			if cfg["name"].(string) == v.Name && v.Name != "" {
+				oldInstance = cfg
+				break
+			}
+
+			// When id and name are not yet set (first apply),
+			// match by hostname from bdds_options or edge_options.
+			oldHostname := getHostnameFromInstance(cfg)
+			newHostname := getHostnameFromBluecatInstance(v)
+			if oldHostname != "" && oldHostname == newHostname {
 				oldInstance = cfg
 				break
 			}
@@ -242,6 +257,40 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 	}
 
 	return m
+}
+
+// getHostnameFromBluecatInstance extracts the hostname from either
+// BddsOptions or EdgeOptions of an API-returned instance.
+func getHostnameFromBluecatInstance(instance alkira.BluecatInstance) string {
+	if instance.BddsOptions != nil {
+		return instance.BddsOptions.HostName
+	}
+	if instance.EdgeOptions != nil {
+		return instance.EdgeOptions.HostName
+	}
+	return ""
+}
+
+// getHostnameFromInstance extracts the hostname from either
+// bdds_options or edge_options of a state instance.
+func getHostnameFromInstance(cfg map[string]interface{}) string {
+	if bdds, ok := cfg["bdds_options"].([]interface{}); ok && len(bdds) > 0 {
+		if opts, ok := bdds[0].(map[string]interface{}); ok {
+			if h, ok := opts["hostname"].(string); ok {
+				return h
+			}
+		}
+	}
+
+	if edge, ok := cfg["edge_options"].([]interface{}); ok && len(edge) > 0 {
+		if opts, ok := edge[0].(map[string]interface{}); ok {
+			if h, ok := opts["hostname"].(string); ok {
+				return h
+			}
+		}
+	}
+
+	return ""
 }
 
 func deflateBluecatAnycast(anycast alkira.BluecatAnycast) []map[string]interface{} {
