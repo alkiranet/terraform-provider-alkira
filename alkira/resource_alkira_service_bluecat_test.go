@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -430,7 +429,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-bdds-01",
 				Type: "BDDS",
-				Id:   json.Number("456"),
+				Id:   456,
 				BddsOptions: &alkira.BDDSOptions{
 					HostName:            "bdds-01.example.com",
 					Model:               "cBDDS50",
@@ -441,7 +440,7 @@ func TestAlkiraServiceBluecat_setServiceBluecatFields(t *testing.T) {
 			{
 				Name: "bluecat-edge-01",
 				Type: "EDGE",
-				Id:   json.Number("789"),
+				Id:   789,
 				EdgeOptions: &alkira.EdgeOptions{
 					HostName:     "edge-01.example.com",
 					Version:      "4.2.0",
