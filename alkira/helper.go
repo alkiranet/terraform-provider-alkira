@@ -230,3 +230,19 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 
 	return timeInput.Unix(), nil
 }
+
+// toInt converts a value to int, handling both int and string representations
+// that may appear in raw state maps.
+func toInt(v interface{}) int {
+	switch val := v.(type) {
+	case int:
+		return val
+	case float64:
+		return int(val)
+	case string:
+		if i, err := strconv.Atoi(strings.TrimSpace(val)); err == nil {
+			return i
+		}
+	}
+	return 0
+}
