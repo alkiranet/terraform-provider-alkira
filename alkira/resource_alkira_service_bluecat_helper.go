@@ -1,9 +1,7 @@
 package alkira
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,9 +18,7 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {
-			if v != 0 {
-				r.Id = json.Number(strconv.Itoa(v))
-			}
+			r.Id = v
 		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
@@ -171,13 +167,29 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 	return anycast, nil
 }
 
-func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{} {
+func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData) []map[string]interface{} {
 	var m []map[string]interface{}
+
+	// Read existing instances from state to preserve sensitive fields
+	// not returned by the API.
+	oldInstances := d.Get("instance").([]interface{})
+
 	for _, v := range c {
 		j := map[string]interface{}{
 			"id":   v.Id,
 			"name": v.Name,
 			"type": v.Type,
+		}
+
+		// Find matching instance in state by id or name to preserve
+		// sensitive fields not returned by the API.
+		var oldInstance map[string]interface{}
+		for _, value := range oldInstances {
+			cfg := value.(map[string]interface{})
+			if cfg["id"].(int) == v.Id || cfg["name"].(string) == v.Name {
+				oldInstance = cfg
+				break
+			}
 		}
 
 		if v.BddsOptions != nil {
@@ -187,6 +199,20 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 				"version":               v.BddsOptions.Version,
 				"license_credential_id": v.BddsOptions.LicenseCredentialId,
 			}
+
+			// Preserve client_id and activation_key from state since
+			// the API does not return these sensitive fields.
+			if oldInstance != nil {
+				if oldBdds, ok := oldInstance["bdds_options"]; ok {
+					oldBddsList := oldBdds.([]interface{})
+					if len(oldBddsList) > 0 {
+						oldBddsMap := oldBddsList[0].(map[string]interface{})
+						bddsMap["client_id"] = oldBddsMap["client_id"]
+						bddsMap["activation_key"] = oldBddsMap["activation_key"]
+					}
+				}
+			}
+
 			j["bdds_options"] = []interface{}{bddsMap}
 		}
 
@@ -196,6 +222,19 @@ func deflateBluecatInstances(c []alkira.BluecatInstance) []map[string]interface{
 				"version":       v.EdgeOptions.Version,
 				"credential_id": v.EdgeOptions.CredentialId,
 			}
+
+			// Preserve config_data from state since the API does not
+			// return this field.
+			if oldInstance != nil {
+				if oldEdge, ok := oldInstance["edge_options"]; ok {
+					oldEdgeList := oldEdge.([]interface{})
+					if len(oldEdgeList) > 0 {
+						oldEdgeMap := oldEdgeList[0].(map[string]interface{})
+						edgeMap["config_data"] = oldEdgeMap["config_data"]
+					}
+				}
+			}
+
 			j["edge_options"] = []interface{}{edgeMap}
 		}
 
@@ -226,7 +265,7 @@ func setAllBluecatResourceFields(d *schema.ResourceData, in *alkira.ServiceBluec
 	d.Set("cxp", in.Cxp)
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
-	d.Set("instance", deflateBluecatInstances(in.Instances))
+	d.Set("instance", deflateBluecatInstances(in.Instances, d))
 	d.Set("license_type", in.LicenseType)
 	d.Set("name", in.Name)
 	d.Set("service_group_name", in.ServiceGroupName)

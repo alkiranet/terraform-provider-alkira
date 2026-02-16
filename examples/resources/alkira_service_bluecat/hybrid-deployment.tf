@@ -3,7 +3,6 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
   cxp                 = "US-EAST"
   description         = "Hybrid Bluecat deployment with both BDDS and Edge instances"
   global_cidr_list_id = alkira_list_global_cidr.global_dns.id
-  license_type        = "BRING_YOUR_OWN"
   segment_ids         = [alkira_segment.production.id]
   service_group_name  = "hybrid-dns-services"
 
@@ -27,7 +26,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-core-01.enterprise.local"
+      hostname       = "bdds-core-01"
       model          = "cBDDS50"
       version        = "9.5.1"
       client_id      = "enterprise-core-001"
@@ -39,7 +38,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "BDDS"
     
     bdds_options {
-      hostname       = "bdds-core-02.enterprise.local"
+      hostname       = "bdds-core-02"
       model          = "cBDDS50"
       version        = "9.5.1"
       client_id      = "enterprise-core-002"
@@ -52,7 +51,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-dc-east.enterprise.local"
+      hostname    = "edge-dc-east"
       version     = "4.2.0"
       config_data = "EDGE_DC_EAST_CONFIG_BASE64_ENCODED_STRING"
     }
@@ -62,7 +61,7 @@ resource "alkira_service_bluecat" "hybrid_deployment" {
     type = "EDGE"
     
     edge_options {
-      hostname    = "edge-dc-west.enterprise.local"
+      hostname    = "edge-dc-west"
       version     = "4.2.0"
       config_data = "EDGE_DC_WEST_CONFIG_BASE64_ENCODED_STRING"
     }
