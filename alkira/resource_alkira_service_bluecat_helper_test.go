@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -42,7 +41,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("123"),
+					"id":   123,
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{
@@ -72,7 +71,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("124"),
+					"id":   124,
 					"name": "edge-primary.example.com",
 					"type": "EDGE",
 					"edge_options": []interface{}{
@@ -112,7 +111,7 @@ func TestDeflateBluecatInstances(t *testing.T) {
 			},
 			expected: []map[string]interface{}{
 				{
-					"id":   json.Number("123"),
+					"id":   123,
 					"name": "bdds-primary.example.com",
 					"type": "BDDS",
 					"bdds_options": []interface{}{

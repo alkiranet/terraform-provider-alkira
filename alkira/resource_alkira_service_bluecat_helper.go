@@ -2,7 +2,6 @@ package alkira
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,9 +64,7 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["id"].(int); ok {
-			if v != 0 {
-				r.Id = json.Number(strconv.Itoa(v))
-			}
+			r.Id = v
 		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
@@ -232,37 +229,12 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 	return anycast, nil
 }
 
-// validateBluecatInstanceHostnames returns an error if any two instances in the
-// list share the same hostname. Hostnames are used as unique keys to match
-// instances across list reorders; duplicates make that lookup unreliable.
-func validateBluecatInstanceHostnames(instances []interface{}) error {
-	seen := make(map[string]int, len(instances))
-	for i, inst := range instances {
-		cfg, ok := inst.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		hostname := getHostnameFromInstance(cfg)
-		if hostname == "" {
-			continue
-		}
-		if prev, exists := seen[hostname]; exists {
-			return fmt.Errorf(
-				"instance[%d] and instance[%d] both use hostname %q; hostnames must be unique across all instances",
-				prev, i, hostname,
-			)
-		}
-		seen[hostname] = i
-	}
-	return nil
-}
-
 func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData) []map[string]interface{} {
 	var m []map[string]interface{}
 
 	// Read existing instances from state to preserve sensitive fields
 	// not returned by the API.
-	oldInstances := d.Get("instance").(*schema.Set).List()
+	oldInstances := d.Get("instance").([]interface{})
 
 	for _, v := range c {
 		j := map[string]interface{}{
@@ -276,22 +248,7 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 		var oldInstance map[string]interface{}
 		for _, value := range oldInstances {
 			cfg := value.(map[string]interface{})
-
-			if cfg["id"].(int) == v.Id && v.Id != 0 {
-				oldInstance = cfg
-				break
-			}
-
-			if cfg["name"].(string) == v.Name && v.Name != "" {
-				oldInstance = cfg
-				break
-			}
-
-			// When id and name are not yet set (first apply),
-			// match by hostname from bdds_options or edge_options.
-			oldHostname := getHostnameFromInstance(cfg)
-			newHostname := getHostnameFromBluecatInstance(v)
-			if oldHostname != "" && oldHostname == newHostname {
+			if cfg["id"].(int) == v.Id || cfg["name"].(string) == v.Name {
 				oldInstance = cfg
 				break
 			}
