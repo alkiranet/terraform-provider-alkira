@@ -78,7 +78,7 @@ func TestCheckpointDeflateSegmentOptionsValid(t *testing.T) {
 	require.Len(t, m, 1)
 	require.Equal(t, m[0]["groups"], expectedGroups)
 	require.Equal(t, m[0]["zone_name"], expectedZoneName)
-	require.Equal(t, m[0]["segment_id"], 0) // expectedSegment.Id
+	require.Equal(t, m[0]["segment_id"], "0") // expectedSegment.Id
 }
 
 func TestCheckpointInstancesDeflate(t *testing.T) {
