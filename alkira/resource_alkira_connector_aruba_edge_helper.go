@@ -13,10 +13,12 @@ func deflateArubaEdgeInstances(ins []alkira.ArubaEdgeInstance) []map[string]inte
 	var instances []map[string]interface{}
 
 	for _, instance := range ins {
+		id, _ := instance.Id.Int64()
 		i := map[string]interface{}{
 			"account_name":  instance.AccountName,
 			"credential_id": instance.CredentialId,
 			"host_name":     instance.HostName,
+			"id":            int(id),
 			"name":          instance.Name,
 			"site_tag":      instance.SiteTag,
 		}
@@ -48,8 +50,8 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 		if v, ok := m["host_name"].(string); ok {
 			hostName = v
 		}
-		if v, ok := m["id"].(string); ok {
-			id = v
+		if v, ok := m["id"].(int); ok {
+			id = strconv.Itoa(v)
 		}
 		if v, ok := m["account_name"].(string); ok {
 			accountName = v

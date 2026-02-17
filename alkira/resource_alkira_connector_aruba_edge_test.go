@@ -20,6 +20,8 @@ func TestArubaEdgeDefalteInstance(t *testing.T) {
 		require.NotZero(t, v["credential_id"])
 		require.Contains(t, v, "host_name")
 		require.NotZero(t, v["host_name"])
+		require.Contains(t, v, "id")
+		require.NotZero(t, v["id"])
 		require.Contains(t, v, "name")
 		require.NotZero(t, v["name"])
 		require.Contains(t, v, "site_tag")
@@ -37,7 +39,7 @@ func generateNumArubaEdgeInstance(num int) []alkira.ArubaEdgeInstance {
 	}
 
 	var instances []alkira.ArubaEdgeInstance
-	for i := 0; i < num; i++ {
+	for i := 1; i <= num; i++ {
 		instances = append(instances, alkira.ArubaEdgeInstance{
 			Id:           json.Number(strconv.Itoa(i)),
 			AccountName:  "accountName" + strconv.Itoa(i),

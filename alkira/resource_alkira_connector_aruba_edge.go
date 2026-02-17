@@ -130,6 +130,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"credential_id": {
+							Description: "The credential ID for the instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"host_name": {
 							Description: "The host name given to the Aruba SD-WAN " +
 								"appliance that appears in Silver Peak orchestrator.",
