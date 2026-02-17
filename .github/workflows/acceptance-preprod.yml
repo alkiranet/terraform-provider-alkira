@@ -6,10 +6,16 @@ on:
     branches:
       - main
       - dev
+      - 'release/*'
   push:
     branches:
       - main
       - dev
+      - 'release/*'
+
+concurrency:
+  group: acceptance-test-preprod
+  cancel-in-progress: false
 
 env:
   ALKIRA_PORTAL:   ${{ secrets.PREPROD_TERRAFORM_PORTAL }}
