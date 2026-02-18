@@ -342,7 +342,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 		targets = append(targets, i)
 	}
 
-	d.Set("targets", targets)
+	d.Set("target", targets)
 
 	// Set provision state
 	if client.Provision && provState != "" {
