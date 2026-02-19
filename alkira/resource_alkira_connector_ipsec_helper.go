@@ -333,8 +333,8 @@ func flattenConnectorIPSecSegmentOptions(segmentOptions interface{}) []map[strin
 		return nil
 	}
 
-	// SegmentOptions comes as map[string]ConnectorIPSecSegmentOptions
-	segmentOptionsMap, ok := segmentOptions.(map[string]alkira.ConnectorIPSecSegmentOptions)
+	// SegmentOptions comes as map[string]interface{} because the client defines it as interface{}
+	segmentOptionsMap, ok := segmentOptions.(map[string]interface{})
 	if !ok || len(segmentOptionsMap) == 0 {
 		return nil
 	}
@@ -346,19 +346,26 @@ func flattenConnectorIPSecSegmentOptions(segmentOptions interface{}) []map[strin
 			"name": segmentName,
 		}
 
-		if opts.DisableInternetExit != nil {
-			// Invert the boolean back to advertise_default_route
-			flattened["advertise_default_route"] = !*opts.DisableInternetExit
-		} else {
-			// Default value
-			flattened["advertise_default_route"] = false
-		}
+		// opts is map[string]interface{}, need to extract values
+		if optsMap, ok := opts.(map[string]interface{}); ok {
+			if disableInternetExit, exists := optsMap["disableInternetExit"]; exists {
+				if val, ok := disableInternetExit.(bool); ok {
+					// Invert the boolean back to advertise_default_route
+					flattened["advertise_default_route"] = !val
+				}
+			} else {
+				// Default value
+				flattened["advertise_default_route"] = false
+			}
 
-		if opts.AdvertiseOnPremRoutes != nil {
-			flattened["advertise_on_prem_routes"] = *opts.AdvertiseOnPremRoutes
-		} else {
-			// Default value
-			flattened["advertise_on_prem_routes"] = false
+			if advertiseOnPremRoutes, exists := optsMap["advertiseOnPremRoutes"]; exists {
+				if val, ok := advertiseOnPremRoutes.(bool); ok {
+					flattened["advertise_on_prem_routes"] = val
+				}
+			} else {
+				// Default value
+				flattened["advertise_on_prem_routes"] = false
+			}
 		}
 
 		result = append(result, flattened)
