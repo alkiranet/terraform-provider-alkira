@@ -222,18 +222,29 @@ func resourcePolicyRuleRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("dscp", rule.MatchCondition.Dscp)
 	d.Set("protocol", rule.MatchCondition.Protocol)
 
-	d.Set("src_ip", rule.MatchCondition.SrcIp)
-	d.Set("dst_ip", rule.MatchCondition.DstIp)
+	// Set string fields only if non-empty to avoid ConflictsWith issues during import
+	if rule.MatchCondition.SrcIp != "" {
+		d.Set("src_ip", rule.MatchCondition.SrcIp)
+	}
+	if rule.MatchCondition.DstIp != "" {
+		d.Set("dst_ip", rule.MatchCondition.DstIp)
+	}
 
-	d.Set("src_prefix_list_id", rule.MatchCondition.SrcPrefixListId)
-	d.Set("dst_prefix_list_id", rule.MatchCondition.DstPrefixListId)
+	// Set int fields only if non-zero to avoid ConflictsWith issues during import
+	if rule.MatchCondition.SrcPrefixListId != 0 {
+		d.Set("src_prefix_list_id", rule.MatchCondition.SrcPrefixListId)
+	}
+	if rule.MatchCondition.DstPrefixListId != 0 {
+		d.Set("dst_prefix_list_id", rule.MatchCondition.DstPrefixListId)
+	}
+	if rule.MatchCondition.InternetApplicationId != 0 {
+		d.Set("internet_application_id", rule.MatchCondition.InternetApplicationId)
+	}
 
 	d.Set("src_ports", rule.MatchCondition.SrcPortList)
 	d.Set("dst_ports", rule.MatchCondition.DstPortList)
 
 	d.Set("application_ids", rule.MatchCondition.ApplicationList)
-
-	d.Set("internet_application_id", rule.MatchCondition.InternetApplicationId)
 
 	d.Set("rule_action", rule.RuleAction.Action)
 	d.Set("rule_action_service_types", rule.RuleAction.ServiceTypeList)
