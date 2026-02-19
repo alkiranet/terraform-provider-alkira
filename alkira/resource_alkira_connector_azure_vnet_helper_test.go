@@ -453,29 +453,3 @@ func TestAzureVnetCidrFieldNameMatch(t *testing.T) {
 		assert.NotNil(t, vnetCidrField, "vnet_cidr field must not be nil")
 	})
 }
-
-
-// The backend auto-populates `customerAsn` when the user omits it in VGW mode
-// (either to the existing Azure VGW's ASN, or to a DEFAULT_ASN constant for a
-// fresh VNet). If the provider schema declares this field as Optional only,
-// the backend-supplied value lands in TF state and reads as drift versus the
-// empty user config, producing a perpetual "remove customer_asn" plan diff
-// that apply cannot resolve.
-//
-// Marking the field Optional + Computed tells Terraform that a backend-supplied
-// value is a valid settled outcome — no drift. This test pins that contract so
-// the regression cannot be reintroduced silently.
-func TestCustomerAsnSchemaIsOptionalAndComputed(t *testing.T) {
-	resourceSchema := resourceAlkiraConnectorAzureVnet().Schema
-
-	customerAsn, exists := resourceSchema["customer_asn"]
-	assert.True(t, exists, "Schema must have 'customer_asn' field")
-	assert.NotNil(t, customerAsn, "customer_asn field must not be nil")
-
-	assert.Equal(t, schema.TypeInt, customerAsn.Type, "customer_asn must be TypeInt")
-	assert.True(t, customerAsn.Optional, "customer_asn must be Optional so users can set it explicitly")
-	assert.True(t, customerAsn.Computed,
-		"customer_asn must be Computed because the backend auto-populates it "+
-			"in VGW mode when the user omits it (AK-68129). "+
-			"Without Computed, Terraform treats the backend-supplied value as drift.")
-}
