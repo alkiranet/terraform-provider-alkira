@@ -77,7 +77,7 @@ func deflateSegmentOptions(c alkira.SegmentNameToZone) []map[string]interface{} 
 	for _, outerZoneToGroups := range c {
 		for zone, groups := range outerZoneToGroups.ZonesToGroups {
 			i := map[string]interface{}{
-				"segment_id": outerZoneToGroups.SegmentId,
+				"segment_id": strconv.Itoa(outerZoneToGroups.SegmentId),
 				"zone_name":  zone,
 				"groups":     groups,
 			}
