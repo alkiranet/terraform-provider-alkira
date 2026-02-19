@@ -23,7 +23,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 		UpdateContext: resourceCredentialAzureVnetUpdate,
 		DeleteContext: resourceCredentialAzureVnetDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceCredentialAzureVnetRead),
 		},
 
 		Schema: map[string]*schema.Schema{

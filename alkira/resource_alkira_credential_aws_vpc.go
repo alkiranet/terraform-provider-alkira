@@ -30,7 +30,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 		UpdateContext: resourceCredentialAwsVpcUpdate,
 		DeleteContext: resourceCredentialAwsVpcDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceCredentialAwsVpcRead),
 		},
 
 		Schema: map[string]*schema.Schema{
