@@ -72,7 +72,7 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 		}
 	}
 
-	d.Set("vnet_subnets", vnetSubnets)
+	d.Set("vnet_subnet", vnetSubnets)
 	d.Set("vnet_cidr", vnetCidrs)
 }
 

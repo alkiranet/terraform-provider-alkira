@@ -234,6 +234,6 @@ func setAwsDirectConnectInstance(d *schema.ResourceData, m interface{}, connecto
 		instances = append(instances, instance)
 	}
 
-	d.Set("instances", instances)
+	d.Set("instance", instances)
 	return nil
 }

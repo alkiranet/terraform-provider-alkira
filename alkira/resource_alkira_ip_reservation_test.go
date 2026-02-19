@@ -503,3 +503,83 @@ func validatePrefix(v interface{}, k string) (warnings []string, errors []error)
 
 	return warnings, errors
 }
+
+func TestIpReservationFieldNameMatch(t *testing.T) {
+	t.Run("schema uses first_ip_assignment field name", func(t *testing.T) {
+		resourceSchema := resourceAlkiraIpReservation().Schema
+
+		// Verify "first_ip_assignment" field exists in schema (correct spelling)
+		firstIpField, exists := resourceSchema["first_ip_assignment"]
+		assert.True(t, exists, "Schema must have 'first_ip_assignment' field")
+		assert.NotNil(t, firstIpField, "first_ip_assignment field must not be nil")
+
+		// Verify "first_ip_assignement" (typo - the bug) does NOT exist in schema
+		_, wrongFieldExists := resourceSchema["first_ip_assignement"]
+		assert.False(t, wrongFieldExists, "Schema should NOT have 'first_ip_assignement' field (bug was typo with extra 'e')")
+	})
+}
+
+func TestIpReservationStateHandling(t *testing.T) {
+	t.Run("first_ip_assignment data can be saved and retrieved", func(t *testing.T) {
+		resourceSchema := resourceAlkiraIpReservation().Schema
+		d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+			"name":        "test-reservation",
+			"prefix_type": "CONNECTOR",
+		})
+
+		// Set first_ip_assignment with correct spelling
+		testValue := "connector-123"
+		err := d.Set("first_ip_assignment", testValue)
+		require.NoError(t, err, "Should be able to set first_ip_assignment data")
+
+		// Verify we can read it back
+		valueFromState := d.Get("first_ip_assignment")
+		require.NotNil(t, valueFromState, "Should be able to get first_ip_assignment data")
+		assert.Equal(t, testValue, valueFromState.(string), "Value should match")
+	})
+
+	t.Run("verify wrong spelling not accessible", func(t *testing.T) {
+		resourceSchema := resourceAlkiraIpReservation().Schema
+		d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+			"name":        "test-reservation",
+			"prefix_type": "CONNECTOR",
+		})
+
+		// Try to set with wrong spelling (the typo)
+		err := d.Set("first_ip_assignement", "test-value")
+		// This should fail or be ignored because "first_ip_assignement" is not in schema
+		if err == nil {
+			wrongData := d.Get("first_ip_assignement")
+			t.Logf("Setting 'first_ip_assignement' (typo) returned: %v", wrongData)
+		}
+
+		// Verify correct spelling works
+		err = d.Set("first_ip_assignment", "test-value")
+		require.NoError(t, err)
+
+		correctData := d.Get("first_ip_assignment")
+		require.NotNil(t, correctData, "Correct spelling 'first_ip_assignment' must work")
+		assert.Equal(t, "test-value", correctData.(string))
+	})
+}
+
+func TestIpReservationFieldSpelling(t *testing.T) {
+	t.Run("document common typo to prevent regression", func(t *testing.T) {
+		// This test documents the typo to prevent it from being reintroduced
+		// Common mistake: "assignement" (with extra 'e') vs "assignment" (correct)
+
+		correctSpelling := "first_ip_assignment"
+		incorrectSpelling := "first_ip_assignement"
+
+		assert.NotEqual(t, correctSpelling, incorrectSpelling,
+			"Typo documented: 'assignement' != 'assignment'")
+
+		// Verify the schema uses the correct spelling
+		resourceSchema := resourceAlkiraIpReservation().Schema
+		_, hasCorrect := resourceSchema[correctSpelling]
+		_, hasIncorrect := resourceSchema[incorrectSpelling]
+
+		assert.True(t, hasCorrect, "Schema must use correct spelling")
+		assert.False(t, hasIncorrect, "Schema must NOT have typo version")
+	})
+}
