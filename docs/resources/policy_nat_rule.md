@@ -101,22 +101,34 @@ resource "alkira_policy_nat_rule" "dest_translation" {
 }
 
 # Example 5: Advanced NAT rule with prefix lists and routing tracking
-resource "alkira_list_global_cidr" "source_prefixes" {
+resource "alkira_policy_prefix_list" "source_prefixes" {
   name        = "source-prefixes-list"
   description = "Source prefixes for NAT rule"
-  values      = ["10.0.0.0/8", "172.16.0.0/12"]
+
+  prefix {
+    cidr = "10.0.0.0/8"
+  }
+  prefix {
+    cidr = "172.16.0.0/12"
+  }
 }
 
-resource "alkira_list_global_cidr" "dest_prefixes" {
+resource "alkira_policy_prefix_list" "dest_prefixes" {
   name        = "dest-prefixes-list"
   description = "Destination prefixes for NAT rule"
-  values      = ["192.168.0.0/16"]
+
+  prefix {
+    cidr = "192.168.0.0/16"
+  }
 }
 
-resource "alkira_list_global_cidr" "track_prefixes" {
+resource "alkira_policy_prefix_list" "track_prefixes" {
   name        = "track-prefixes-list"
   description = "Prefixes to track for routing"
-  values      = ["203.0.113.0/24"]
+
+  prefix {
+    cidr = "203.0.113.0/24"
+  }
 }
 
 resource "alkira_policy_nat_rule" "advanced" {
@@ -126,15 +138,15 @@ resource "alkira_policy_nat_rule" "advanced" {
   category    = "DEFAULT"
 
   match {
-    src_prefix_list_ids = [alkira_list_global_cidr.source_prefixes.id]
-    dst_prefix_list_ids = [alkira_list_global_cidr.dest_prefixes.id]
+    src_prefix_list_ids = [alkira_policy_prefix_list.source_prefixes.id]
+    dst_prefix_list_ids = [alkira_policy_prefix_list.dest_prefixes.id]
     protocol            = "tcp"
   }
 
   action {
     src_addr_translation_type                              = "STATIC_IP"
     src_addr_translation_prefixes                          = ["198.51.100.0/24"]
-    src_addr_translation_routing_track_prefix_list_ids     = [alkira_list_global_cidr.track_prefixes.id]
+    src_addr_translation_routing_track_prefix_list_ids     = [alkira_policy_prefix_list.track_prefixes.id]
     src_addr_translation_routing_track_invalidate_prefixes = true
     dst_addr_translation_type                              = "NONE"
     egress_type                                            = "ALKIRA_PUBLIC_IP"

@@ -44,3 +44,5 @@ resource "alkira_byoip" "test" {
 
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provision state of the resource.
+
+
