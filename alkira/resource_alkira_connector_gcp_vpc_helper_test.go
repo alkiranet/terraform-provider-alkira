@@ -29,7 +29,7 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "single subnet",
+			name: "single subnet with id and cidr (backward compatibility)",
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
@@ -44,6 +44,60 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 			),
 			expected: []alkira.UserInputPrefixes{
 				{
+					Id:    "",
+					FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
+					Value: "10.0.1.0/24",
+					Type:  "SUBNET",
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "single subnet with internal_id (from UI/import)",
+			subnets: schema.NewSet(
+				func(i interface{}) int {
+					m := i.(map[string]interface{})
+					return schema.HashString(m["internal_id"].(string))
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"internal_id": "7442940776704048352",
+						"id":          "",
+						"cidr":        "10.0.1.0/24",
+					},
+				},
+			),
+			expected: []alkira.UserInputPrefixes{
+				{
+					Id:    "7442940776704048352",
+					FqId:  "",
+					Value: "10.0.1.0/24",
+					Type:  "SUBNET",
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "single subnet with both internal_id and id (internal_id takes precedence)",
+			subnets: schema.NewSet(
+				func(i interface{}) int {
+					m := i.(map[string]interface{})
+					if id, ok := m["internal_id"].(string); ok && id != "" {
+						return schema.HashString(id)
+					}
+					return schema.HashString(m["id"].(string))
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"internal_id": "7442940776704048352",
+						"id":          "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr":        "10.0.1.0/24",
+					},
+				},
+			),
+			expected: []alkira.UserInputPrefixes{
+				{
+					Id:    "7442940776704048352",
 					FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
 					Value: "10.0.1.0/24",
 					Type:  "SUBNET",
@@ -56,12 +110,16 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
+					if id, ok := m["internal_id"].(string); ok && id != "" {
+						return schema.HashString(id)
+					}
 					return schema.HashString(m["id"].(string))
 				},
 				[]interface{}{
 					map[string]interface{}{
-						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
-						"cidr": "10.0.1.0/24",
+						"internal_id": "7442940776704048352",
+						"id":          "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr":        "10.0.1.0/24",
 					},
 					map[string]interface{}{
 						"id":   "projects/test/regions/us-east1/subnetworks/subnet-2",
@@ -71,11 +129,13 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 			),
 			expected: []alkira.UserInputPrefixes{
 				{
+					Id:    "7442940776704048352",
 					FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
 					Value: "10.0.1.0/24",
 					Type:  "SUBNET",
 				},
 				{
+					Id:    "",
 					FqId:  "projects/test/regions/us-east1/subnetworks/subnet-2",
 					Value: "10.0.2.0/24",
 					Type:  "SUBNET",
@@ -84,28 +144,25 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "empty id field - should error",
+			name: "missing internal_id and id - should error",
 			subnets: schema.NewSet(
 				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					if id, ok := m["id"].(string); ok {
-						return schema.HashString(id)
-					}
 					return schema.HashString("")
 				},
 				[]interface{}{
 					map[string]interface{}{
-						"id":   "",
-						"cidr": "10.0.1.0/24",
+						"internal_id": "",
+						"id":          "",
+						"cidr":        "10.0.1.0/24",
 					},
 				},
 			),
 			expected:    nil,
 			expectError: true,
-			errorMsg:    "both subnetwork ID",
+			errorMsg:    "internal_id or both id and cidr",
 		},
 		{
-			name: "empty cidr field - should error",
+			name: "missing cidr without internal_id - should error",
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
@@ -116,56 +173,33 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 				},
 				[]interface{}{
 					map[string]interface{}{
-						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
-						"cidr": "",
+						"internal_id": "",
+						"id":          "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr":        "",
 					},
 				},
 			),
 			expected:    nil,
 			expectError: true,
-			errorMsg:    "both subnetwork ID",
+			errorMsg:    "internal_id or both id and cidr",
 		},
 		{
-			name: "empty id field - should error",
+			name: "missing internal_id, id, and cidr - should error",
 			subnets: schema.NewSet(
 				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					if id, ok := m["id"].(string); ok {
-						return schema.HashString(id)
-					}
 					return schema.HashString("")
 				},
 				[]interface{}{
 					map[string]interface{}{
-						"id":   "",
-						"cidr": "10.0.1.0/24",
+						"internal_id": "",
+						"id":          "",
+						"cidr":        "",
 					},
 				},
 			),
 			expected:    nil,
 			expectError: true,
-			errorMsg:    "both subnetwork ID",
-		},
-		{
-			name: "empty cidr field - should error",
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					if id, ok := m["id"].(string); ok {
-						return schema.HashString(id)
-					}
-					return schema.HashString("")
-				},
-				[]interface{}{
-					map[string]interface{}{
-						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
-						"cidr": "",
-					},
-				},
-			),
-			expected:    nil,
-			expectError: true,
-			errorMsg:    "both subnetwork ID",
+			errorMsg:    "internal_id or both id and cidr",
 		},
 	}
 
@@ -185,7 +219,8 @@ func TestGenerateGCPUserInputPrefixes(t *testing.T) {
 				for _, expectedPrefix := range tt.expected {
 					found := false
 					for _, resultPrefix := range result {
-						if expectedPrefix.FqId == resultPrefix.FqId &&
+						if expectedPrefix.Id == resultPrefix.Id &&
+							expectedPrefix.FqId == resultPrefix.FqId &&
 							expectedPrefix.Value == resultPrefix.Value &&
 							expectedPrefix.Type == resultPrefix.Type {
 							found = true
@@ -280,8 +315,9 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id":   {Type: schema.TypeString},
-						"cidr": {Type: schema.TypeString},
+						"id":          {Type: schema.TypeString},
+						"internal_id": {Type: schema.TypeString},
+						"cidr":        {Type: schema.TypeString},
 					},
 				},
 			},
@@ -289,11 +325,12 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 	}
 
 	tests := []struct {
-		name          string
-		gcpRouting    *alkira.ConnectorGcpVpcRouting
-		expectEmpty   bool
-		expectedIds   []string
-		expectedCidrs []string
+		name           string
+		gcpRouting     *alkira.ConnectorGcpVpcRouting
+		expectEmpty    bool
+		expectedIds    []string
+		expectedCidrs  []string
+		expectedIntIds []string
 	}{
 		{
 			name:        "nil routing - should not set",
@@ -311,12 +348,13 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 			expectEmpty: true,
 		},
 		{
-			name: "single subnet",
+			name: "single subnet with FqId only (Terraform created)",
 			gcpRouting: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: false,
 					Prefixes: []alkira.UserInputPrefixes{
 						{
+							Id:    "",
 							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
 							Value: "10.0.1.0/24",
 							Type:  "SUBNET",
@@ -324,22 +362,45 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 					},
 				},
 			},
-			expectEmpty:   false,
-			expectedIds:   []string{"projects/test/regions/us-central1/subnetworks/subnet-1"},
-			expectedCidrs: []string{"10.0.1.0/24"},
+			expectEmpty:    false,
+			expectedIds:    []string{"projects/test/regions/us-central1/subnetworks/subnet-1"},
+			expectedCidrs:  []string{"10.0.1.0/24"},
+			expectedIntIds: []string{""},
 		},
 		{
-			name: "multiple subnets",
+			name: "single subnet with internal Id only (UI created/import)",
 			gcpRouting: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: false,
 					Prefixes: []alkira.UserInputPrefixes{
 						{
-							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
+							Id:    "7442940776704048352",
+							FqId:  "",
+							Value: "10.0.1.0/24",
+							Type:  "SUBNET",
+						},
+					},
+				},
+			},
+			expectEmpty:    false,
+			expectedIds:    []string{""},
+			expectedCidrs:  []string{"10.0.1.0/24"},
+			expectedIntIds: []string{"7442940776704048352"},
+		},
+		{
+			name: "multiple subnets with mixed FqId and Id",
+			gcpRouting: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false,
+					Prefixes: []alkira.UserInputPrefixes{
+						{
+							Id:    "7442940776704048352",
+							FqId:  "",
 							Value: "10.0.1.0/24",
 							Type:  "SUBNET",
 						},
 						{
+							Id:    "",
 							FqId:  "projects/test/regions/us-east1/subnetworks/subnet-2",
 							Value: "10.0.2.0/24",
 							Type:  "SUBNET",
@@ -347,9 +408,10 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 					},
 				},
 			},
-			expectEmpty:   false,
-			expectedIds:   []string{"projects/test/regions/us-central1/subnetworks/subnet-1", "projects/test/regions/us-east1/subnetworks/subnet-2"},
-			expectedCidrs: []string{"10.0.1.0/24", "10.0.2.0/24"},
+			expectEmpty:    false,
+			expectedIds:    []string{"", "projects/test/regions/us-east1/subnetworks/subnet-2"},
+			expectedCidrs:  []string{"10.0.1.0/24", "10.0.2.0/24"},
+			expectedIntIds: []string{"7442940776704048352", ""},
 		},
 		{
 			name: "nil prefixes",
@@ -378,6 +440,7 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 					s := subnet.(map[string]interface{})
 					assert.Contains(t, tt.expectedIds, s["id"].(string))
 					assert.Contains(t, tt.expectedCidrs, s["cidr"].(string))
+					assert.Contains(t, tt.expectedIntIds, s["internal_id"].(string))
 				}
 			}
 		})
