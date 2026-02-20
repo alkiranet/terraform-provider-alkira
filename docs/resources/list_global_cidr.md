@@ -29,12 +29,12 @@ resource "alkira_list_global_cidr" "test" {
 
 - `cxp` (String) CXP the list belongs to.
 - `name` (String) Name of the list.
-- `values` (List of String) A list of CIDRs, The CIDR must be `/24` and a subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, `192.168.0.0/16`, `100.64.0.0/10`.
+- `values` (List of String) CIDR prefixes for the Global CIDR List. The CIDR must be `/24` and a subnet of the following: `10.0.0.0/18`, `172.16.0.0/12`, `192.168.0.0/16`, `100.64.0.0/10`. Currently limited to 1 CIDR per list.
 
 ### Optional
 
 - `description` (String) Description for the list.
-- `tags` (Set of String) Tag of associated service types.Can be one of `INFOBLOX`,`CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT` or `F5LB`.
+- `tags` (Set of String) Service type that can use this Global CIDR List. Only one service type is allowed. Can be one of: `INFOBLOX`, `CHKPFW`, `CISCO_FTDV_FW`, `BLUECAT`, or `F5LB`.
 
 ### Read-Only
 
