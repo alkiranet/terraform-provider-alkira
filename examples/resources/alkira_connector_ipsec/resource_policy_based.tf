@@ -10,8 +10,8 @@ resource "alkira_connector_ipsec" "policy_based" {
   vpn_mode = "POLICY_BASED"
 
   policy_options {
-    on_prem_prefix_list_ids = [alkira_list_global_cidr.on_prem_subnets.id]
-    cxp_prefix_list_ids     = [alkira_list_global_cidr.cxp_subnets.id]
+    on_prem_prefix_list_ids = [alkira_policy_prefix_list.on_prem_subnets.id]
+    cxp_prefix_list_ids     = [alkira_policy_prefix_list.cxp_subnets.id]
   }
 
   endpoint {

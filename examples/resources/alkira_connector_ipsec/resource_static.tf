@@ -11,7 +11,7 @@ resource "alkira_connector_ipsec" "route_based_static" {
 
   routing_options {
     type           = "STATIC"
-    prefix_list_id = alkira_list_global_cidr.remote_subnets.id
+    prefix_list_id = alkira_policy_prefix_list.remote_subnets.id
     availability   = "IKE_STATUS"
   }
 
