@@ -29,7 +29,7 @@ func resourceAlkiraFlowCollector() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceFlowCollectorRead),
 		},
 
 		Schema: map[string]*schema.Schema{

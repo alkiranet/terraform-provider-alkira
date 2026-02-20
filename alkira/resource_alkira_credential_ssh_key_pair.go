@@ -17,7 +17,7 @@ func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 		UpdateContext: resourceCredentialSshKeyPairUpdate,
 		DeleteContext: resourceCredentialSshKeyPairDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceCredentialSshKeyPairRead),
 		},
 
 		Schema: map[string]*schema.Schema{

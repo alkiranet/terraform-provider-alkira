@@ -29,7 +29,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListGlobalCidrRead),
 		},
 
 		Schema: map[string]*schema.Schema{
