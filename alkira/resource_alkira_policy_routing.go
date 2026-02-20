@@ -32,7 +32,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyRoutingRead),
 		},
 
 		Schema: map[string]*schema.Schema{

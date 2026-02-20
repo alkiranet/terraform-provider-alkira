@@ -31,7 +31,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorGcpVpcRead),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -272,7 +272,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.CXP)
 	d.Set("credential_id", connector.CredentialId)
-	d.Set("customer_region", connector.CustomerRegion)
+	d.Set("gcp_region", connector.CustomerRegion)
 	d.Set("enabled", connector.Enabled)
 	d.Set("failover_cxps", connector.SecondaryCXPs)
 	d.Set("gcp_project_id", connector.ProjectId)
@@ -285,6 +285,7 @@ func resourceConnectorGcpVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("description", connector.Description)
 	setGcpRoutingOptions(connector.GcpRouting, d)
+	setGcpVpcSubnets(connector.GcpRouting, d)
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
