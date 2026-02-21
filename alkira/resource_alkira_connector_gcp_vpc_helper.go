@@ -63,10 +63,18 @@ func generateGCPUserInputPrefixes(subnets *schema.Set) ([]alkira.UserInputPrefix
 			r := alkira.UserInputPrefixes{}
 			t := subnet.(map[string]interface{})
 
-			if t["id"] == "" || t["cidr"] == "" {
-				log.Printf("[ERROR] both subnetwork ID %s and cidr %s must be provided", t["id"], t["cidr"])
-				return nil, fmt.Errorf("[ERROR] both subnetwork ID %s and cidr %s must be provided", t["id"], t["cidr"])
+			internalId := ""
+			if v, ok := t["internal_id"].(string); ok && v != "" {
+				internalId = v
 			}
+
+			if internalId == "" && (t["id"] == "" || t["cidr"] == "") {
+				log.Printf("[ERROR] subnet configuration must have either internal_id or both id and cidr")
+				return nil, fmt.Errorf("[ERROR] subnet configuration must have either internal_id or both id and cidr")
+			}
+
+			// Set the internal Alkira ID
+			r.Id = internalId
 
 			if v, ok := t["id"].(string); ok {
 				r.FqId = v
@@ -113,7 +121,9 @@ func setGcpVpcSubnets(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) 
 	subnets := make([]interface{}, len(prefixes))
 	for i, prefix := range prefixes {
 		subnet := make(map[string]interface{})
+		// Store both FqId (user-provided) and Id (internal Alkira ID)
 		subnet["id"] = prefix.FqId
+		subnet["internal_id"] = prefix.Id
 		subnet["cidr"] = prefix.Value
 		subnets[i] = subnet
 	}

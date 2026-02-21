@@ -427,3 +427,29 @@ func TestAzureVnetErrorConditions(t *testing.T) {
 		assert.True(t, conditionWithTags)
 	})
 }
+
+func TestAzureVnetFieldNameMatch(t *testing.T) {
+	t.Run("schema uses vnet_subnet field name", func(t *testing.T) {
+		resourceSchema := resourceAlkiraConnectorAzureVnet().Schema
+
+		// Verify "vnet_subnet" field exists in schema
+		vnetSubnetField, exists := resourceSchema["vnet_subnet"]
+		assert.True(t, exists, "Schema must have 'vnet_subnet' field")
+		assert.NotNil(t, vnetSubnetField, "vnet_subnet field must not be nil")
+
+		// Verify "vnet_subnets" (plural - the bug) does NOT exist in schema
+		_, wrongFieldExists := resourceSchema["vnet_subnets"]
+		assert.False(t, wrongFieldExists, "Schema should NOT have 'vnet_subnets' field (bug was using plural)")
+	})
+}
+
+func TestAzureVnetCidrFieldNameMatch(t *testing.T) {
+	t.Run("schema uses vnet_cidr field name", func(t *testing.T) {
+		resourceSchema := resourceAlkiraConnectorAzureVnet().Schema
+
+		// Verify "vnet_cidr" exists (this one was already correct)
+		vnetCidrField, exists := resourceSchema["vnet_cidr"]
+		assert.True(t, exists, "Schema must have 'vnet_cidr' field")
+		assert.NotNil(t, vnetCidrField, "vnet_cidr field must not be nil")
+	})
+}

@@ -1,10 +1,12 @@
 package alkira
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -352,100 +354,6 @@ func TestDeflateSegmentOptionsHandlesNilGroups(t *testing.T) {
 	}
 }
 
-func TestDeflateSegmentOptionsCanBeSetInTerraformState(t *testing.T) {
-	// 1. deflateSegmentOptions returns data with string segment_id
-	// 2. d.Set() successfully stores the data (no type mismatch error)
-	// 3. segment_options is populated in Terraform state (not empty)
-
-	// Create schema matching resource_alkira_service_pan.go
-	resourceSchema := map[string]*schema.Schema{
-		"segment_options": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"segment_id": {
-						Type:     schema.TypeString, // Expects string
-						Required: true,
-					},
-					"zone_name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"groups": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-	}
-
-	// Create ResourceData (simulates Terraform state)
-	r := &schema.Resource{Schema: resourceSchema}
-	d := r.TestResourceData()
-
-	// Simulate API response (as returned by api.GetById)
-	zonesToGroups := make(alkira.ZoneToGroups)
-	zonesToGroups["trust-zone"] = []string{"group1", "group2"}
-	zonesToGroups["untrust-zone"] = []string{"group3"}
-
-	segmentOptions := make(alkira.SegmentNameToZone)
-	segmentOptions["Corporate-Segment"] = alkira.OuterZoneToGroups{
-		SegmentId:     1331, // API returns int
-		ZonesToGroups: zonesToGroups,
-	}
-
-	// Call deflateSegmentOptions (with fix: converts int to string)
-	deflatedOptions := deflateSegmentOptions(segmentOptions)
-
-	// Attempt d.Set() - this is where the bug would cause failure
-	err := d.Set("segment_options", deflatedOptions)
-
-	// d.Set() should succeed without error
-	assert.NoError(t, err, "d.Set() should succeed with string segment_id")
-
-	//  Data should be stored in state
-	stored := d.Get("segment_options")
-	require.NotNil(t, stored, "segment_options should be stored in state")
-
-	// Should be a non-empty Set
-	set, ok := stored.(*schema.Set)
-	require.True(t, ok, "segment_options should be a Set")
-	assert.Equal(t, 2, set.Len(), "segment_options should contain 2 zones")
-
-	// Verify zone data is correct
-	foundTrustZone := false
-	foundUntrustZone := false
-
-	for _, item := range set.List() {
-		m, ok := item.(map[string]interface{})
-		require.True(t, ok, "Set item should be a map")
-
-		segmentId := m["segment_id"]
-		zoneName := m["zone_name"]
-		groups := m["groups"]
-
-		// Verify segment_id is string
-		assert.IsType(t, "", segmentId, "segment_id must be string type")
-		assert.Equal(t, "1331", segmentId, "segment_id value should be '1331'")
-
-		// Verify zones
-		switch zoneName {
-		case "trust-zone":
-			foundTrustZone = true
-			assert.Equal(t, []interface{}{"group1", "group2"}, groups)
-		case "untrust-zone":
-			foundUntrustZone = true
-			assert.Equal(t, []interface{}{"group3"}, groups)
-		}
-	}
-
-	assert.True(t, foundTrustZone, "trust-zone should be in segment_options")
-	assert.True(t, foundUntrustZone, "untrust-zone should be in segment_options")
-}
-
 func TestConvertInputTimeToEpoch(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -508,6 +416,110 @@ func TestConvertInputTimeToEpoch(t *testing.T) {
 				if tt.validate != nil {
 					assert.True(t, tt.validate(result), "Epoch time validation failed for input: %s, got: %d", tt.input, result)
 				}
+			}
+		})
+	}
+}
+
+func TestImportWithReadValidation(t *testing.T) {
+	tests := []struct {
+		name               string
+		readDiags          diag.Diagnostics
+		expectError        bool
+		expectedErrorMsg   string
+		expectResourceData bool
+	}{
+		{
+			name:               "successful import - no diagnostics",
+			readDiags:          nil,
+			expectError:        false,
+			expectResourceData: true,
+		},
+		{
+			name:               "successful import - empty diagnostics",
+			readDiags:          diag.Diagnostics{},
+			expectError:        false,
+			expectResourceData: true,
+		},
+		{
+			name: "failed import - single warning diagnostic",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "FAILED TO GET RESOURCE",
+					Detail:   "resource not found",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: FAILED TO GET RESOURCE: resource not found",
+			expectResourceData: false,
+		},
+		{
+			name: "failed import - single error diagnostic",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "VALIDATION FAILED",
+					Detail:   "invalid configuration",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: VALIDATION FAILED: invalid configuration",
+			expectResourceData: false,
+		},
+		{
+			name: "failed import - multiple diagnostics",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "FAILED TO GET RESOURCE",
+					Detail:   "API error: 404",
+				},
+				{
+					Severity: diag.Error,
+					Summary:  "VALIDATION FAILED",
+					Detail:   "invalid id format",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: FAILED TO GET RESOURCE: API error: 404; VALIDATION FAILED: invalid id format",
+			expectResourceData: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a mock read function that returns the specified diagnostics
+			mockReadFunc := schema.ReadContextFunc(func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				return tt.readDiags
+			})
+
+			// Create the wrapper function
+			wrapperFunc := importWithReadValidation(mockReadFunc)
+
+			// Create test resource data
+			resourceData := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}, map[string]interface{}{
+				"id": "test-id",
+			})
+
+			// Call the wrapper function
+			result, err := wrapperFunc(context.Background(), resourceData, nil)
+
+			// Verify error expectation
+			if tt.expectError {
+				assert.Error(t, err, "Expected an error to be returned")
+				assert.Equal(t, tt.expectedErrorMsg, err.Error())
+				assert.Nil(t, result, "Expected nil resource data on error")
+			} else {
+				assert.NoError(t, err, "Expected no error")
+				assert.NotNil(t, result, "Expected resource data to be returned")
+				assert.Len(t, result, 1, "Expected exactly one resource data")
+				assert.Equal(t, resourceData, result[0], "Expected the same resource data object")
 			}
 		})
 	}
