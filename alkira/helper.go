@@ -248,7 +248,6 @@ func toInt(v interface{}) int {
 	return 0
 }
 
-
 // importWithReadValidation wraps a Read function for import operations.
 // During import, any diagnostic (warning or error) is treated as a failure
 // to ensure imports fail clearly when the resource cannot be retrieved.
