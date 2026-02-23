@@ -28,7 +28,7 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyRuleListRead),
 		},
 
 		Schema: map[string]*schema.Schema{

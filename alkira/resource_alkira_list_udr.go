@@ -30,7 +30,7 @@ func resourceAlkiraListUdr() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListUdrRead),
 		},
 
 		Schema: map[string]*schema.Schema{

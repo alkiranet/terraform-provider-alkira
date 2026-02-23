@@ -31,7 +31,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorGcpInterconnectRead),
 		},
 
 		Schema: map[string]*schema.Schema{

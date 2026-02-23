@@ -19,7 +19,7 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 		UpdateContext: resourcePolicyNatUpdate,
 		DeleteContext: resourcePolicyNatDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourcePolicyNatRead),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -168,7 +168,7 @@ func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interf
 	d.Set("excluded_group_ids", policy.ExcludedGroups)
 	d.Set("nat_rule_ids", policy.NatRuleIds)
 	d.Set("category", policy.Category)
-	d.Set("allow_overlapping_translated_source_address", policy.AllowOverlappingTranslatedPrefixes)
+	d.Set("allow_overlapping_translated_source_addresses", policy.AllowOverlappingTranslatedPrefixes)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(policy.Segment, m)

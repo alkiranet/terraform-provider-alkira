@@ -61,13 +61,32 @@ func TestExpandPrefixListPrefixRanges(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := expandPrefixListPrefixRanges(tt.input)
+			var inputSet *schema.Set
+			if tt.input != nil {
+				inputSet = schema.NewSet(prefixRangeHash, tt.input)
+			}
+			result, err := expandPrefixListPrefixRanges(inputSet)
 
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
+				// For TypeSet, compare lengths and check each expected element exists
+				if tt.expected == nil {
+					assert.Nil(t, result)
+				} else {
+					assert.Len(t, result, len(tt.expected))
+					// Create a map for easier comparison
+					resultMap := make(map[string]alkira.PolicyPrefixListRange)
+					for _, r := range result {
+						resultMap[r.Prefix] = r
+					}
+					for _, expected := range tt.expected {
+						actual, found := resultMap[expected.Prefix]
+						assert.True(t, found, "Expected prefix %s not found", expected.Prefix)
+						assert.Equal(t, expected, actual)
+					}
+				}
 			}
 		})
 	}
@@ -78,7 +97,8 @@ func TestExtractPrefixes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
+				Set:  prefixHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr":        {Type: schema.TypeString},
@@ -125,7 +145,15 @@ func TestExtractPrefixes(t *testing.T) {
 			if tt.expected == nil {
 				assert.Nil(t, result)
 			} else {
-				assert.Equal(t, tt.expected, result)
+				// For TypeSet, compare lengths and check each expected element exists
+				assert.Len(t, result, len(tt.expected))
+				resultMap := make(map[string]bool)
+				for _, r := range result {
+					resultMap[r] = true
+				}
+				for _, expected := range tt.expected {
+					assert.True(t, resultMap[expected], "Expected prefix %s not found", expected)
+				}
 			}
 		})
 	}
@@ -166,7 +194,8 @@ func TestExpandPrefixListPrefixes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
+				Set:  prefixHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr":        {Type: schema.TypeString},
@@ -227,10 +256,250 @@ func TestExpandPrefixListPrefixes(t *testing.T) {
 			if tt.expectedPrefixes == nil {
 				assert.Nil(t, resultPrefixes)
 			} else {
-				assert.Equal(t, tt.expectedPrefixes, resultPrefixes)
+				// For TypeSet, compare lengths and check each expected element exists
+				assert.Len(t, resultPrefixes, len(tt.expectedPrefixes))
+				resultMap := make(map[string]bool)
+				for _, r := range resultPrefixes {
+					resultMap[r] = true
+				}
+				for _, expected := range tt.expectedPrefixes {
+					assert.True(t, resultMap[expected], "Expected prefix %s not found", expected)
+				}
 			}
 
 			assert.Len(t, resultDetails, tt.expectedDetailsLen)
+		})
+	}
+}
+
+func TestSetPrefix(t *testing.T) {
+	// Create a mock ResourceData matching the actual schema
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"prefix": {
+				Type: schema.TypeSet,
+				Set:  prefixHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr":        {Type: schema.TypeString},
+						"description": {Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		prefixes []string
+		details  map[string]*alkira.PolicyPrefixListDetails
+		validate func(t *testing.T, d *schema.ResourceData)
+	}{
+		{
+			name:     "nil prefixes",
+			prefixes: nil,
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name:     "empty prefixes",
+			prefixes: []string{},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name:     "prefixes without details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify prefixes exist (order may vary with Set)
+				resultList := result.List()
+				cidrs := make(map[string]bool)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidrs[prefix["cidr"].(string)] = true
+				}
+				assert.True(t, cidrs["192.168.1.0/24"])
+				assert.True(t, cidrs["10.0.0.0/8"])
+			},
+		},
+		{
+			name:     "prefixes with details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details: map[string]*alkira.PolicyPrefixListDetails{
+				"192.168.1.0/24": {Description: "internal network"},
+				"10.0.0.0/8":     {Description: "corporate network"},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify prefixes with descriptions (order may vary with Set)
+				resultList := result.List()
+				prefixDetails := make(map[string]string)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidr := prefix["cidr"].(string)
+					desc := prefix["description"].(string)
+					prefixDetails[cidr] = desc
+				}
+				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
+				assert.Equal(t, "corporate network", prefixDetails["10.0.0.0/8"])
+			},
+		},
+		{
+			name:     "prefixes with partial details",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details: map[string]*alkira.PolicyPrefixListDetails{
+				"192.168.1.0/24": {Description: "internal network"},
+				// 10.0.0.0/8 has no details
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify prefixes (order may vary with Set)
+				resultList := result.List()
+				prefixDetails := make(map[string]string)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidr := prefix["cidr"].(string)
+					desc := prefix["description"].(string)
+					prefixDetails[cidr] = desc
+				}
+				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
+				assert.Equal(t, "", prefixDetails["10.0.0.0/8"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+			setPrefix(d, tt.prefixes, tt.details)
+			tt.validate(t, d)
+		})
+	}
+}
+
+func TestSetPrefixRanges(t *testing.T) {
+	// Create a mock ResourceData matching the actual schema
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"prefix_range": {
+				Type: schema.TypeSet,
+				Set:  prefixRangeHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix":      {Type: schema.TypeString},
+						"le":          {Type: schema.TypeInt},
+						"ge":          {Type: schema.TypeInt},
+						"description": {Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		ranges   []alkira.PolicyPrefixListRange
+		validate func(t *testing.T, d *schema.ResourceData)
+	}{
+		{
+			name:   "nil ranges",
+			ranges: nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name:   "empty ranges",
+			ranges: []alkira.PolicyPrefixListRange{},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name: "ranges without description",
+			ranges: []alkira.PolicyPrefixListRange{
+				{Prefix: "192.168.0.0/16", Ge: 16, Le: 24},
+				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify ranges exist (order may vary with Set)
+				resultList := result.List()
+				rangeMap := make(map[string]map[string]interface{})
+				for _, item := range resultList {
+					r := item.(map[string]interface{})
+					prefix := r["prefix"].(string)
+					rangeMap[prefix] = r
+				}
+
+				// Verify first range
+				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
+				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
+				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
+
+				// Verify second range
+				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
+				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
+				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
+			},
+		},
+		{
+			name: "ranges with description",
+			ranges: []alkira.PolicyPrefixListRange{
+				{Prefix: "192.168.0.0/16", Ge: 16, Le: 24, Description: "RFC1918 private"},
+				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16, Description: "RFC1918 private"},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify ranges with descriptions (order may vary with Set)
+				resultList := result.List()
+				rangeMap := make(map[string]map[string]interface{})
+				for _, item := range resultList {
+					r := item.(map[string]interface{})
+					prefix := r["prefix"].(string)
+					rangeMap[prefix] = r
+				}
+
+				// Verify first range with description
+				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
+				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
+				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
+				assert.Equal(t, "RFC1918 private", rangeMap["192.168.0.0/16"]["description"])
+
+				// Verify second range with description
+				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
+				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
+				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
+				assert.Equal(t, "RFC1918 private", rangeMap["10.0.0.0/8"]["description"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+			setPrefixRanges(d, tt.ranges)
+			tt.validate(t, d)
 		})
 	}
 }

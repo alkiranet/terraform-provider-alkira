@@ -10,46 +10,49 @@ import (
 
 // setPrefixRange set "prefix_range" blocks from API response
 func setPrefixRanges(d *schema.ResourceData, r []alkira.PolicyPrefixListRange) {
-	var prefixRanges []map[string]interface{}
+	set := schema.NewSet(prefixRangeHash, nil)
 
 	for _, rng := range r {
 		prefixRange := map[string]interface{}{
-			"prefix":      rng.Prefix,
-			"le":          rng.Le,
-			"ge":          rng.Ge,
-			"description": rng.Description,
+			"prefix": rng.Prefix,
+			"le":     rng.Le,
+			"ge":     rng.Ge,
 		}
-		prefixRanges = append(prefixRanges, prefixRange)
+		if rng.Description != "" {
+			prefixRange["description"] = rng.Description
+		}
+		set.Add(prefixRange)
 	}
 
-	d.Set("prefix_range", prefixRanges)
+	d.Set("prefix_range", set)
 }
 
 // expandPrefixListPrefixRanges expand block "prefix_range" to
 // construct payload
-func expandPrefixListPrefixRanges(in []interface{}) ([]alkira.PolicyPrefixListRange, error) {
+func expandPrefixListPrefixRanges(in *schema.Set) ([]alkira.PolicyPrefixListRange, error) {
 
-	if in == nil || len(in) == 0 {
+	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] prefix_ranges is empty.")
 		return nil, nil
 	}
 
-	prefixListRanges := make([]alkira.PolicyPrefixListRange, len(in))
+	values := in.List()
+	prefixListRanges := make([]alkira.PolicyPrefixListRange, len(values))
 
-	for i, values := range in {
+	for i, value := range values {
 		prefixListRange := alkira.PolicyPrefixListRange{}
-		value := values.(map[string]interface{})
+		valueMap := value.(map[string]interface{})
 
-		if v, ok := value["prefix"].(string); ok {
+		if v, ok := valueMap["prefix"].(string); ok {
 			prefixListRange.Prefix = v
 		}
-		if v, ok := value["le"].(int); ok {
+		if v, ok := valueMap["le"].(int); ok {
 			prefixListRange.Le = v
 		}
-		if v, ok := value["ge"].(int); ok {
+		if v, ok := valueMap["ge"].(int); ok {
 			prefixListRange.Ge = v
 		}
-		if v, ok := value["description"].(string); ok {
+		if v, ok := valueMap["description"].(string); ok {
 			prefixListRange.Description = v
 		}
 
@@ -63,7 +66,7 @@ func extractPrefixes(d *schema.ResourceData) []string {
 	var prefixes []string
 
 	if v, ok := d.GetOk("prefix"); ok {
-		for _, p := range v.([]interface{}) {
+		for _, p := range v.(*schema.Set).List() {
 			prefixMap := p.(map[string]interface{})
 			prefixes = append(prefixes, prefixMap["cidr"].(string))
 		}
@@ -83,7 +86,7 @@ func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPref
 	details := make(map[string]*alkira.PolicyPrefixListDetails)
 
 	if v, ok := d.GetOk("prefix"); ok {
-		for _, p := range v.([]interface{}) {
+		for _, p := range v.(*schema.Set).List() {
 
 			prefixMap := p.(map[string]interface{})
 			prefix := prefixMap["cidr"].(string)
@@ -98,24 +101,25 @@ func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPref
 
 // setPrefix Set prefix block when reading from API
 func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*alkira.PolicyPrefixListDetails) {
-	var prefixList []map[string]interface{}
+	set := schema.NewSet(prefixHash, nil)
 
 	for _, p := range prefixes {
-		prefixEntry := map[string]interface{}{"prefix": p}
-
-		if details[p] != nil {
+		prefixEntry := map[string]interface{}{
+			"cidr": p,
+		}
+		if details[p] != nil && details[p].Description != "" {
 			prefixEntry["description"] = details[p].Description
 		}
-		prefixList = append(prefixList, prefixEntry)
+		set.Add(prefixEntry)
 	}
 
-	d.Set("prefix", prefixList)
+	d.Set("prefix", set)
 }
 
 // generatePolicyPrefixListRequest
 func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPrefixList, error) {
 
-	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").([]interface{}))
+	prefixRanges, err := expandPrefixListPrefixRanges(d.Get("prefix_range").(*schema.Set))
 
 	if err != nil {
 		return nil, err

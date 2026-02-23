@@ -1,10 +1,12 @@
 package alkira
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -414,6 +416,110 @@ func TestConvertInputTimeToEpoch(t *testing.T) {
 				if tt.validate != nil {
 					assert.True(t, tt.validate(result), "Epoch time validation failed for input: %s, got: %d", tt.input, result)
 				}
+			}
+		})
+	}
+}
+
+func TestImportWithReadValidation(t *testing.T) {
+	tests := []struct {
+		name               string
+		readDiags          diag.Diagnostics
+		expectError        bool
+		expectedErrorMsg   string
+		expectResourceData bool
+	}{
+		{
+			name:               "successful import - no diagnostics",
+			readDiags:          nil,
+			expectError:        false,
+			expectResourceData: true,
+		},
+		{
+			name:               "successful import - empty diagnostics",
+			readDiags:          diag.Diagnostics{},
+			expectError:        false,
+			expectResourceData: true,
+		},
+		{
+			name: "failed import - single warning diagnostic",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "FAILED TO GET RESOURCE",
+					Detail:   "resource not found",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: FAILED TO GET RESOURCE: resource not found",
+			expectResourceData: false,
+		},
+		{
+			name: "failed import - single error diagnostic",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "VALIDATION FAILED",
+					Detail:   "invalid configuration",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: VALIDATION FAILED: invalid configuration",
+			expectResourceData: false,
+		},
+		{
+			name: "failed import - multiple diagnostics",
+			readDiags: diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "FAILED TO GET RESOURCE",
+					Detail:   "API error: 404",
+				},
+				{
+					Severity: diag.Error,
+					Summary:  "VALIDATION FAILED",
+					Detail:   "invalid id format",
+				},
+			},
+			expectError:        true,
+			expectedErrorMsg:   "import failed: FAILED TO GET RESOURCE: API error: 404; VALIDATION FAILED: invalid id format",
+			expectResourceData: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a mock read function that returns the specified diagnostics
+			mockReadFunc := schema.ReadContextFunc(func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				return tt.readDiags
+			})
+
+			// Create the wrapper function
+			wrapperFunc := importWithReadValidation(mockReadFunc)
+
+			// Create test resource data
+			resourceData := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}, map[string]interface{}{
+				"id": "test-id",
+			})
+
+			// Call the wrapper function
+			result, err := wrapperFunc(context.Background(), resourceData, nil)
+
+			// Verify error expectation
+			if tt.expectError {
+				assert.Error(t, err, "Expected an error to be returned")
+				assert.Equal(t, tt.expectedErrorMsg, err.Error())
+				assert.Nil(t, result, "Expected nil resource data on error")
+			} else {
+				assert.NoError(t, err, "Expected no error")
+				assert.NotNil(t, result, "Expected resource data to be returned")
+				assert.Len(t, result, 1, "Expected exactly one resource data")
+				assert.Equal(t, resourceData, result[0], "Expected the same resource data object")
 			}
 		})
 	}

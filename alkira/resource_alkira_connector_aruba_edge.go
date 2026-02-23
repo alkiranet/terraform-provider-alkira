@@ -31,7 +31,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorArubaEdgeRead),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -129,6 +129,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 								"Silver Peak orchestrator account.",
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"credential_id": {
+							Description: "The credential ID for the instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"host_name": {
 							Description: "The host name given to the Aruba SD-WAN " +

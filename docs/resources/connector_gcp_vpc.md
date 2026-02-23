@@ -137,6 +137,10 @@ Optional:
 - `cidr` (String) The CIDR of the subnet.
 - `id` (String) An identifier for the subnetwork resource with format `projects/{{project}}/regions/{{region}}/subnetworks/{{name}}`.
 
+Read-Only:
+
+- `internal_id` (String) Internal Alkira subnet ID (computed from API).
+
 ## Import
 
 Import is supported using the following syntax:
