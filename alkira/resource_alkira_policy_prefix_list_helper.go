@@ -13,10 +13,9 @@ func setPrefixRanges(d *schema.ResourceData, r []alkira.PolicyPrefixListRange) {
 
 	for _, rng := range r {
 		prefixRange := map[string]interface{}{
-			"prefix":      rng.Prefix,
-			"le":          rng.Le,
-			"ge":          rng.Ge,
-			"description": rng.Description,
+			"prefix": rng.Prefix,
+			"le":     rng.Le,
+			"ge":     rng.Ge,
 		}
 		set.Add(prefixRange)
 	}
