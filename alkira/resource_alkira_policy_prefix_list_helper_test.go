@@ -277,7 +277,8 @@ func TestSetPrefix(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
+				Set:  prefixHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr":        {Type: schema.TypeString},
@@ -299,8 +300,8 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: nil,
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").([]interface{})
-				assert.Empty(t, result)
+				result := d.Get("prefix").(*schema.Set)
+				assert.Empty(t, result.List())
 			},
 		},
 		{
@@ -308,8 +309,8 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: []string{},
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").([]interface{})
-				assert.Empty(t, result)
+				result := d.Get("prefix").(*schema.Set)
+				assert.Empty(t, result.List())
 			},
 		},
 		{
@@ -317,18 +318,18 @@ func TestSetPrefix(t *testing.T) {
 			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
 			details:  nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").([]interface{})
-				assert.Len(t, result, 2)
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
 
-				// Verify first prefix
-				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
-				assert.Equal(t, "", first["description"])
-
-				// Verify second prefix
-				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
-				assert.Equal(t, "", second["description"])
+				// Verify prefixes exist (order may vary with Set)
+				resultList := result.List()
+				cidrs := make(map[string]bool)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidrs[prefix["cidr"].(string)] = true
+				}
+				assert.True(t, cidrs["192.168.1.0/24"])
+				assert.True(t, cidrs["10.0.0.0/8"])
 			},
 		},
 		{
@@ -339,18 +340,20 @@ func TestSetPrefix(t *testing.T) {
 				"10.0.0.0/8":     {Description: "corporate network"},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").([]interface{})
-				assert.Len(t, result, 2)
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
 
-				// Verify first prefix with description
-				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
-				assert.Equal(t, "internal network", first["description"])
-
-				// Verify second prefix with description
-				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
-				assert.Equal(t, "corporate network", second["description"])
+				// Verify prefixes with descriptions (order may vary with Set)
+				resultList := result.List()
+				prefixDetails := make(map[string]string)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidr := prefix["cidr"].(string)
+					desc := prefix["description"].(string)
+					prefixDetails[cidr] = desc
+				}
+				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
+				assert.Equal(t, "corporate network", prefixDetails["10.0.0.0/8"])
 			},
 		},
 		{
@@ -361,18 +364,20 @@ func TestSetPrefix(t *testing.T) {
 				// 10.0.0.0/8 has no details
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix").([]interface{})
-				assert.Len(t, result, 2)
+				result := d.Get("prefix").(*schema.Set)
+				assert.Len(t, result.List(), 2)
 
-				// Verify first prefix with description
-				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.1.0/24", first["cidr"])
-				assert.Equal(t, "internal network", first["description"])
-
-				// Verify second prefix without description
-				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["cidr"])
-				assert.Equal(t, "", second["description"])
+				// Verify prefixes (order may vary with Set)
+				resultList := result.List()
+				prefixDetails := make(map[string]string)
+				for _, item := range resultList {
+					prefix := item.(map[string]interface{})
+					cidr := prefix["cidr"].(string)
+					desc := prefix["description"].(string)
+					prefixDetails[cidr] = desc
+				}
+				assert.Equal(t, "internal network", prefixDetails["192.168.1.0/24"])
+				assert.Equal(t, "", prefixDetails["10.0.0.0/8"])
 			},
 		},
 	}
@@ -391,7 +396,8 @@ func TestSetPrefixRanges(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"prefix_range": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
+				Set:  prefixRangeHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix":      {Type: schema.TypeString},
@@ -413,16 +419,16 @@ func TestSetPrefixRanges(t *testing.T) {
 			name:   "nil ranges",
 			ranges: nil,
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").([]interface{})
-				assert.Empty(t, result)
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Empty(t, result.List())
 			},
 		},
 		{
 			name:   "empty ranges",
 			ranges: []alkira.PolicyPrefixListRange{},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").([]interface{})
-				assert.Empty(t, result)
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Empty(t, result.List())
 			},
 		},
 		{
@@ -432,20 +438,27 @@ func TestSetPrefixRanges(t *testing.T) {
 				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").([]interface{})
-				assert.Len(t, result, 2)
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify ranges exist (order may vary with Set)
+				resultList := result.List()
+				rangeMap := make(map[string]map[string]interface{})
+				for _, item := range resultList {
+					r := item.(map[string]interface{})
+					prefix := r["prefix"].(string)
+					rangeMap[prefix] = r
+				}
 
 				// Verify first range
-				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.0.0/16", first["prefix"])
-				assert.Equal(t, 16, first["ge"])
-				assert.Equal(t, 24, first["le"])
+				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
+				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
+				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
 
 				// Verify second range
-				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["prefix"])
-				assert.Equal(t, 8, second["ge"])
-				assert.Equal(t, 16, second["le"])
+				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
+				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
+				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
 			},
 		},
 		{
@@ -455,22 +468,29 @@ func TestSetPrefixRanges(t *testing.T) {
 				{Prefix: "10.0.0.0/8", Ge: 8, Le: 16, Description: "RFC1918 private"},
 			},
 			validate: func(t *testing.T, d *schema.ResourceData) {
-				result := d.Get("prefix_range").([]interface{})
-				assert.Len(t, result, 2)
+				result := d.Get("prefix_range").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify ranges with descriptions (order may vary with Set)
+				resultList := result.List()
+				rangeMap := make(map[string]map[string]interface{})
+				for _, item := range resultList {
+					r := item.(map[string]interface{})
+					prefix := r["prefix"].(string)
+					rangeMap[prefix] = r
+				}
 
 				// Verify first range with description
-				first := result[0].(map[string]interface{})
-				assert.Equal(t, "192.168.0.0/16", first["prefix"])
-				assert.Equal(t, 16, first["ge"])
-				assert.Equal(t, 24, first["le"])
-				assert.Equal(t, "RFC1918 private", first["description"])
+				assert.Equal(t, "192.168.0.0/16", rangeMap["192.168.0.0/16"]["prefix"])
+				assert.Equal(t, 16, rangeMap["192.168.0.0/16"]["ge"])
+				assert.Equal(t, 24, rangeMap["192.168.0.0/16"]["le"])
+				assert.Equal(t, "RFC1918 private", rangeMap["192.168.0.0/16"]["description"])
 
 				// Verify second range with description
-				second := result[1].(map[string]interface{})
-				assert.Equal(t, "10.0.0.0/8", second["prefix"])
-				assert.Equal(t, 8, second["ge"])
-				assert.Equal(t, 16, second["le"])
-				assert.Equal(t, "RFC1918 private", second["description"])
+				assert.Equal(t, "10.0.0.0/8", rangeMap["10.0.0.0/8"]["prefix"])
+				assert.Equal(t, 8, rangeMap["10.0.0.0/8"]["ge"])
+				assert.Equal(t, 16, rangeMap["10.0.0.0/8"]["le"])
+				assert.Equal(t, "RFC1918 private", rangeMap["10.0.0.0/8"]["description"])
 			},
 		},
 	}
