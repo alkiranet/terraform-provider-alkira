@@ -79,7 +79,7 @@ resource "alkira_policy_prefix_list" "ranges" {
 - `description` (String) The description of the prefix list.
 - `prefix` (Block Set) Prefix with description. This new block should replace the old `prefixes` field. (see [below for nested schema](#nestedblock--prefix))
 - `prefix_range` (Block Set) A valid prefix range that could be used to define a prefix of type `ROUTE`. (see [below for nested schema](#nestedblock--prefix_range))
-- `prefixes` (Set of String, Deprecated) A list of prefixes. **Deprecated:** Use `prefix` block instead.
+- `prefixes` (Set of String) A list of prefixes. (**DEPRECATED**)
 
 ### Read-Only
 
