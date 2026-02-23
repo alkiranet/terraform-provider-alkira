@@ -25,7 +25,7 @@ jobs:
       - name: Set up Golang
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: '1.22'
 
       - name: Determine branch name
         id: branch
@@ -47,7 +47,7 @@ jobs:
       - name: Build terraform provider
         run: |
           cd ${{ env.BUILD_DIR }}
-          ver=$(git describe --tags)
+          ver=$(git describe)
           echo "latest_version=$ver" >> $GITHUB_ENV
           make release
 
