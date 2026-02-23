@@ -326,3 +326,115 @@ func setConnectorIPSecEndpoint(site *alkira.ConnectorIPSecSite, configuredKeyCou
 
 	return endpoint
 }
+
+// flattenConnectorIPSecSegmentOptions flattens segment options from API response
+func flattenConnectorIPSecSegmentOptions(segmentOptions interface{}) []map[string]interface{} {
+	if segmentOptions == nil {
+		return nil
+	}
+
+	// SegmentOptions comes as map[string]interface{} because the client defines it as interface{}
+	segmentOptionsMap, ok := segmentOptions.(map[string]interface{})
+	if !ok || len(segmentOptionsMap) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0, len(segmentOptionsMap))
+
+	for segmentName, opts := range segmentOptionsMap {
+		flattened := map[string]interface{}{
+			"name": segmentName,
+		}
+
+		// opts is map[string]interface{}, need to extract values
+		if optsMap, ok := opts.(map[string]interface{}); ok {
+			if disableInternetExit, exists := optsMap["disableInternetExit"]; exists {
+				if val, ok := disableInternetExit.(bool); ok {
+					// Invert the boolean back to advertise_default_route
+					flattened["advertise_default_route"] = !val
+				}
+			} else {
+				// Default value
+				flattened["advertise_default_route"] = false
+			}
+
+			if advertiseOnPremRoutes, exists := optsMap["advertiseOnPremRoutes"]; exists {
+				if val, ok := advertiseOnPremRoutes.(bool); ok {
+					flattened["advertise_on_prem_routes"] = val
+				}
+			} else {
+				// Default value
+				flattened["advertise_on_prem_routes"] = false
+			}
+		}
+
+		result = append(result, flattened)
+	}
+
+	return result
+}
+
+// flattenConnectorIPSecRoutingOptions flattens routing options from API response
+func flattenConnectorIPSecRoutingOptions(routingOptions *alkira.ConnectorIPSecRoutingOptions) []map[string]interface{} {
+	if routingOptions == nil {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0)
+
+	// Determine the routing type based on which options are set
+	var routingType string
+	if routingOptions.StaticRouting != nil && routingOptions.DynamicRouting != nil {
+		routingType = "BOTH"
+	} else if routingOptions.DynamicRouting != nil {
+		routingType = "DYNAMIC"
+	} else if routingOptions.StaticRouting != nil {
+		routingType = "STATIC"
+	} else {
+		return nil
+	}
+
+	flattened := map[string]interface{}{
+		"type": routingType,
+	}
+
+	// Process static routing options
+	if routingOptions.StaticRouting != nil {
+		flattened["prefix_list_id"] = routingOptions.StaticRouting.PrefixListId
+		if routingOptions.StaticRouting.Availability != "" {
+			flattened["availability"] = routingOptions.StaticRouting.Availability
+		} else {
+			flattened["availability"] = "IPSEC_INTERFACE_PING"
+		}
+	}
+
+	// Process dynamic routing options
+	if routingOptions.DynamicRouting != nil {
+		flattened["customer_gateway_asn"] = routingOptions.DynamicRouting.CustomerGwAsn
+		if routingOptions.DynamicRouting.Availability != "" {
+			flattened["availability"] = routingOptions.DynamicRouting.Availability
+		} else {
+			flattened["availability"] = "IPSEC_INTERFACE_PING"
+		}
+		if routingOptions.DynamicRouting.BgpAuthKeyAlkira != "" {
+			flattened["bgp_auth_key"] = routingOptions.DynamicRouting.BgpAuthKeyAlkira
+		}
+	}
+
+	result = append(result, flattened)
+	return result
+}
+
+// flattenConnectorIPSecPolicyOptions flattens policy options from API response
+func flattenConnectorIPSecPolicyOptions(policyOptions *alkira.ConnectorIPSecPolicyOptions) []map[string]interface{} {
+	if policyOptions == nil {
+		return nil
+	}
+
+	flattened := map[string]interface{}{
+		"on_prem_prefix_list_ids": policyOptions.BranchTSPrefixListIds,
+		"cxp_prefix_list_ids":     policyOptions.CxpTSPrefixListIds,
+	}
+
+	return []map[string]interface{}{flattened}
+}

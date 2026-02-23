@@ -21,7 +21,7 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 		UpdateContext: resourceNetworkEntityScaleOptionsUpdate,
 		DeleteContext: resourceNetworkEntityScaleOptionsDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceNetworkEntityScaleOptionsRead),
 		},
 
 		Schema: map[string]*schema.Schema{

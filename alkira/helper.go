@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -245,4 +246,28 @@ func toInt(v interface{}) int {
 		}
 	}
 	return 0
+}
+
+// importWithReadValidation wraps a Read function for import operations.
+// During import, any diagnostic (warning or error) is treated as a failure
+// to ensure imports fail clearly when the resource cannot be retrieved.
+// This addresses the issue where Read returns diag.Warning for failed API calls,
+// which Terraform treats as non-fatal during import, causing "Import successful!"
+// messages even when the import actually failed.
+func importWithReadValidation(readFunc schema.ReadContextFunc) schema.StateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+		// Call the Read function to populate state
+		diags := readFunc(ctx, d, m)
+
+		// During import, treat any diagnostic (warning or error) as failure
+		if diags.HasError() || len(diags) > 0 {
+			var msgs []string
+			for _, diagnostic := range diags {
+				msgs = append(msgs, diagnostic.Summary+": "+diagnostic.Detail)
+			}
+			return nil, errors.New("import failed: " + strings.Join(msgs, "; "))
+		}
+
+		return []*schema.ResourceData{d}, nil
+	}
 }

@@ -17,7 +17,7 @@ func resourceAlkiraProbeTCP() *schema.Resource {
 		UpdateContext: resourceProbeTCPUpdate,
 		DeleteContext: resourceProbeTCPDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceProbeTCPRead),
 		},
 
 		Schema: map[string]*schema.Schema{

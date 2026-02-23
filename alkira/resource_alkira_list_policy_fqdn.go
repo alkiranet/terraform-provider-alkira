@@ -29,7 +29,7 @@ func resourceAlkiraListPolicyFqdn() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceListPolicyFqdnRead),
 		},
 
 		Schema: map[string]*schema.Schema{
