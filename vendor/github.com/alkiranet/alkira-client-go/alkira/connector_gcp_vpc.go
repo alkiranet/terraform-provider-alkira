@@ -16,7 +16,7 @@ type UserInputPrefixes struct {
 
 type ConnectorGcpVpcExportOptions struct {
 	ExportAllSubnets bool                `json:"exportAllSubnets,omitempty"`
-	Prefixes         []UserInputPrefixes `json:"userInputPrefixes,omitempty"`
+	Prefixes         []UserInputPrefixes `json:"userInputPrefixes"`
 }
 
 type ConnectorGcpVpcImportOptions struct {
