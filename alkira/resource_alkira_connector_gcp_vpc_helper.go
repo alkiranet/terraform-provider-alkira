@@ -15,7 +15,7 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 	}
 
 	exportOptions := alkira.ConnectorGcpVpcExportOptions{
-		ExportAllSubnets: false,
+		ExportAllSubnets: true,
 	}
 
 	if in != nil && len(in) == 1 {

@@ -519,7 +519,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expectError: false,
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
-					ExportAllSubnets: false,
+					ExportAllSubnets: true,
 					Prefixes:         nil,
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
@@ -568,12 +568,12 @@ func TestExpandGcpRouting(t *testing.T) {
 			},
 		},
 		{
-			name: "default route mode with subnets but export_all_subnets defaults to false",
+			name: "default route mode with subnets but export_all_subnets defaults to true",
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
 					"prefix_list_ids": []interface{}{},
-					// export_all_subnets not specified, defaults to false
+					// export_all_subnets not specified, defaults to true
 				},
 			},
 			subnets: schema.NewSet(
@@ -591,7 +591,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expectError: false,
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
-					ExportAllSubnets: false, // defaults to false
+					ExportAllSubnets: true, // defaults to true
 					Prefixes: []alkira.UserInputPrefixes{
 						{
 							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
@@ -618,7 +618,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expectError: false,
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
-					ExportAllSubnets: false,
+					ExportAllSubnets: true,
 					Prefixes:         nil,
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
@@ -852,7 +852,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "export_all_subnets defaults to false with vpc_subnet - valid",
+			name: "export_all_subnets defaults to true with vpc_subnet - valid",
 			config: map[string]interface{}{
 				"name":          "test-connector",
 				"cxp":           "us-west1",
@@ -865,7 +865,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 					map[string]interface{}{
 						"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
 						"prefix_list_ids": []interface{}{},
-						// export_all_subnets not specified, defaults to false
+						// export_all_subnets not specified, defaults to true
 					},
 				},
 				"vpc_subnet": []interface{}{

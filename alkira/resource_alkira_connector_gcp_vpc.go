@@ -150,7 +150,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 								"the subnets specified in vpc_subnet are advertised.",
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Default:  true,
 						},
 					},
 				},
