@@ -30,7 +30,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: importWithReadValidation(resourceConnectorIPSecRead),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -474,6 +474,32 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 		d.Set("segment_id", segmentId)
 	} else {
 		return diag.FromErr(fmt.Errorf("failed to find segment"))
+	}
+
+	// Set segment_options from API response
+	if connector.SegmentOptions != nil {
+		flatSegmentOpts := flattenConnectorIPSecSegmentOptions(connector.SegmentOptions)
+		if flatSegmentOpts != nil {
+			d.Set("segment_options", flatSegmentOpts)
+		}
+	}
+
+	// Set routing_options and policy_options based on vpn_mode
+	switch connector.VpnMode {
+	case "ROUTE_BASED":
+		if connector.RoutingOptions != nil {
+			flatRoutingOpts := flattenConnectorIPSecRoutingOptions(connector.RoutingOptions)
+			if flatRoutingOpts != nil {
+				d.Set("routing_options", flatRoutingOpts)
+			}
+		}
+	case "POLICY_BASED":
+		if connector.PolicyOptions != nil {
+			flatPolicyOpts := flattenConnectorIPSecPolicyOptions(connector.PolicyOptions)
+			if flatPolicyOpts != nil {
+				d.Set("policy_options", flatPolicyOpts)
+			}
+		}
 	}
 
 	//
