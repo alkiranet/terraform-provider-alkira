@@ -26,9 +26,15 @@ type TenantNetworkServiceState struct {
 	DocState string `json:"docState"`
 }
 
+type ProvisionErrorDetails struct {
+	Message  string                 `json:"message"`
+	Metadata map[string]interface{} `json:"metadata"`
+}
+
 type TenantNetworkProvisionRequest struct {
-	Id    string `json:"id"`
-	State string `json:"state"`
+	Id           string                 `json:"id"`
+	State        string                 `json:"state"`
+	ErrorDetails *ProvisionErrorDetails `json:"errorDetails,omitempty"`
 }
 
 // GetTenantNetworks get the tenant networks of the current tenant
