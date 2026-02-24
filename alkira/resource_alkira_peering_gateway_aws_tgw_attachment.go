@@ -201,6 +201,9 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
 	d.Set("state", attachment.State)
 	d.Set("failure_reason", attachment.FailureReason)
+	d.Set("type", attachment.Type)
+	d.Set("peer_direct_connect_gateway_id", attachment.PeerDirectConnectGatewayId)
+	d.Set("peer_allowed_prefixes", attachment.PeerAllowedPrefixes)
 	if attachment.ProposalDetails != nil {
 		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetails.ProposalState)
 		d.Set("direct_connect_gateway_association_proposal_id", attachment.ProposalDetails.ProposalId)
