@@ -1,0 +1,175 @@
+name: build-branch
+on:
+  push:
+    branches:
+      - main
+      - release/*
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_DOWNLOADS_DEV_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_DOWNLOADS_DEV_SECRET_KEY }}
+  AWS_REGION: us-east-1
+  BUILD_DIR: /home/runner/work/terraform-provider-alkira/terraform-provider-alkira
+  CGO_ENABLED: 0
+
+jobs:
+  build-and-notify:
+    name: build-and-notify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Determine branch name
+        id: branch
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          # Create S3-safe path from branch name (replace / with -)
+          S3_PATH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+          echo "s3_path=$S3_PATH" >> $GITHUB_OUTPUT
+
+          # Set a display label for Slack
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "label=:rocket: main" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH_NAME" == release/* ]]; then
+            echo "label=:package: $BRANCH_NAME" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build terraform provider
+        run: |
+          cd ${{ env.BUILD_DIR }}
+          ver=$(git describe)
+          echo "latest_version=$ver" >> $GITHUB_ENV
+          make release
+
+      - name: Upload to S3
+        run: |
+          S3_DEST="s3://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}"
+          aws s3 rm "$S3_DEST/" --recursive
+          aws s3 cp releases/${{ env.latest_version }} "$S3_DEST/" --recursive
+
+      - name: Send Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "text": "Build: terraform-provider-alkira (${{ steps.branch.outputs.name }}): ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Terraform Provider Build - ${{ steps.branch.outputs.label }}",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n${{ env.latest_version }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n`${{ steps.branch.outputs.name }}`"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committed By:*\n${{ github.triggering_actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n<${{ github.event.head_commit.url }}|${{ github.sha }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Downloads:*\n- <https://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}/terraform-provider-alkira-${{ env.latest_version }}-darwin-amd64.tar.gz|darwin-amd64> - <https://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}/terraform-provider-alkira-${{ env.latest_version }}-darwin-arm64.tar.gz|darwin-arm64> - <https://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}/terraform-provider-alkira-${{ env.latest_version }}-linux-amd64.tar.gz|linux-amd64> - <https://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}/terraform-provider-alkira-${{ env.latest_version }}-linux-arm64.tar.gz|linux-arm64> - <https://downloads.alkira.com/dev/terraform-provider-alkira/${{ steps.branch.outputs.s3_path }}/terraform-provider-alkira-${{ env.latest_version }}-windows-amd64.zip|win-amd64>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Post status of build failures on Slack channels
+        if: failure()
+        id: slack-build-failure
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.AK_BUILDBOT_SLACK_BOT_TOKEN }}
+        with:
+          channel-id: "C072N7RDAKZ"
+          payload: |
+            {
+              "text": "Build: terraform-provider-alkira [${{ steps.branch.outputs.name }}]: ${{ job.status }}",
+               "blocks": [
+                   {
+                       "type": "header",
+                       "text": {
+                           "type": "plain_text",
+                           "text": "terraform-provider-alkira [${{ steps.branch.outputs.name }}]",
+                           "emoji": true
+                       }
+                   },
+                   {
+                       "type": "divider"
+                   },
+                   {
+                       "type": "section",
+                       "fields": [
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Status:*\n${{ job.status }}"
+                           },
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Committed By:*\n${{ github.triggering_actor }}"
+                           }
+                       ]
+                   },
+                   {
+                       "type": "section",
+                       "fields": [
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Version:*\n${{ env.latest_version }}"
+                           },
+                           {
+                               "type": "mrkdwn",
+                               "text": "*Commit:*\n<${{ github.event.head_commit.url }}|${{ github.sha }}>"
+                           }
+                       ]
+                   },
+                   {
+                       "type": "section",
+                       "text": {
+                           "type": "mrkdwn",
+                           "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Build Action>"
+                       }
+                   }
+               ]
+            }
