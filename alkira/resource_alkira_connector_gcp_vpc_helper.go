@@ -91,7 +91,7 @@ func generateGCPUserInputPrefixes(subnets *schema.Set) ([]alkira.UserInputPrefix
 		return prefixes, nil
 	}
 
-	return nil, nil
+	return []alkira.UserInputPrefixes{}, nil
 }
 
 func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) {
