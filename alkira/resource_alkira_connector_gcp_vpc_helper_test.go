@@ -463,7 +463,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: true,
-					Prefixes:         nil,
+					Prefixes:         []alkira.UserInputPrefixes{},
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
 					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
@@ -522,7 +522,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: true,
-					Prefixes:         nil,
+					Prefixes:         []alkira.UserInputPrefixes{},
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
 					RouteImportMode: "ADVERTISE_CUSTOM_PREFIX",
