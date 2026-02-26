@@ -54,6 +54,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 					"ignored.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"prefix_len": {
 				Description: "The IP Prefix length of the IP Reservation.",

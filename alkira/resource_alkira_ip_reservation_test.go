@@ -97,11 +97,12 @@ func TestAlkiraIpReservation_resourceSchema(t *testing.T) {
 	assert.True(t, segmentIdSchema.Required, "Segment ID should be required")
 	assert.Equal(t, schema.TypeString, segmentIdSchema.Type, "Segment ID should be string type")
 
-	// Test optional fields
+	// Test optional+computed fields
 	prefixSchema := resource.Schema["prefix"]
-	if prefixSchema != nil {
-		assert.Equal(t, schema.TypeString, prefixSchema.Type, "Prefix should be string type")
-	}
+	require.NotNil(t, prefixSchema, "Prefix field must exist in schema")
+	assert.Equal(t, schema.TypeString, prefixSchema.Type, "Prefix should be string type")
+	assert.True(t, prefixSchema.Optional, "Prefix should be optional (user may omit it)")
+	assert.True(t, prefixSchema.Computed, "Prefix should be computed (backend can assign it)")
 
 	prefixLenSchema := resource.Schema["prefix_len"]
 	if prefixLenSchema != nil {
