@@ -36,3 +36,5 @@ resource "alkira_list_community" "test" {
 
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provisioning state of the resource.
+
+

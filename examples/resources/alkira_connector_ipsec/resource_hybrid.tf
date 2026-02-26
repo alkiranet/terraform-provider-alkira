@@ -11,7 +11,7 @@ resource "alkira_connector_ipsec" "hybrid_routing" {
 
   routing_options {
     type                 = "BOTH"
-    prefix_list_id       = alkira_list_global_cidr.remote_subnets.id
+    prefix_list_id       = alkira_policy_prefix_list.remote_subnets.id
     customer_gateway_asn = "65320"
     availability         = "IPSEC_INTERFACE_PING"
   }

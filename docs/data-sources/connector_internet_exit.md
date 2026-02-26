@@ -29,3 +29,5 @@ data "alkira_connector_internet_exit" "test" {
 
 - `id` (String) The ID of this resource.
 - `implicit_group_id` (Number) The implicit group associated with the connector.
+
+

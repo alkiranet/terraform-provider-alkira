@@ -57,3 +57,5 @@ resource "alkira_connector_aws_vpc" "connector-aws-vpc1" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+

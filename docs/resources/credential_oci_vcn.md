@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Credential for accessing Oracle Cloud.
   You can provide your credentials via the following environmental variables:
-  AK_OCI_USER_OCIDAK_OCI_FINGERPRINTAK_OCI_KEYAK_OCI_TENANT_OCID
+  AKOCIUSER_OCIDAKOCIFINGERPRINTAKOCIKEYAKOCITENANT_OCID
 ---
 
 # alkira_credential_oci_vcn (Resource)
@@ -45,3 +45,5 @@ resource "alkira_credential_oci_vcn" "example" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+
