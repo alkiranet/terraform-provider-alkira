@@ -135,8 +135,18 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 
 	// WAIT FOR STATE
 	state := response.State
+	maxRetries := 60 // 5 minutes with 5-second intervals
+	retryCount := 0
 
-	for state != "PENDING_ACCEPTANCE" {
+	for state != "PENDING_ACCEPTANCE" && state != "FAILED" {
+		if retryCount >= maxRetries {
+			return diag.Diagnostics{{
+				Severity: diag.Error,
+				Summary:  "Timeout waiting for request to complete",
+				Detail:   fmt.Sprintf("Timed out after %d retries (%d minutes)", maxRetries, maxRetries*5/60),
+			}}
+		}
+
 		resource, _, err := api.GetById(d.Id())
 
 		if err != nil {
@@ -149,6 +159,19 @@ func resourcePeeringGatewayAwsTgwAttachmentCreate(ctx context.Context, d *schema
 
 		state = resource.State
 		time.Sleep(5 * time.Second)
+		retryCount++
+	}
+
+	if state == "FAILED" {
+		// Populate state (including failure_reason) before returning the error.
+		// Because d.SetId() was already called above, Terraform will retain this
+		// resource in state on error, allowing the user to run `terraform destroy`.
+		diags := resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Attachment creation failed",
+			Detail:   fmt.Sprintf("Attachment reached FAILED state: %s", d.Get("failure_reason").(string)),
+		})
 	}
 
 	return resourcePeeringGatewayAwsTgwAttachmentRead(ctx, d, m)
@@ -178,6 +201,9 @@ func resourcePeeringGatewayAwsTgwAttachmentRead(ctx context.Context, d *schema.R
 	d.Set("peering_gateway_aws_tgw_id", attachment.AwsTgwId)
 	d.Set("state", attachment.State)
 	d.Set("failure_reason", attachment.FailureReason)
+	d.Set("type", attachment.Type)
+	d.Set("peer_direct_connect_gateway_id", attachment.PeerDirectConnectGatewayId)
+	d.Set("peer_allowed_prefixes", attachment.PeerAllowedPrefixes)
 	if attachment.ProposalDetails != nil {
 		d.Set("direct_connect_gateway_association_proposal_state", attachment.ProposalDetails.ProposalState)
 		d.Set("direct_connect_gateway_association_proposal_id", attachment.ProposalDetails.ProposalId)

@@ -13,10 +13,12 @@ func deflateArubaEdgeInstances(ins []alkira.ArubaEdgeInstance) []map[string]inte
 	var instances []map[string]interface{}
 
 	for _, instance := range ins {
+		id, _ := instance.Id.Int64()
 		i := map[string]interface{}{
 			"account_name":  instance.AccountName,
 			"credential_id": instance.CredentialId,
 			"host_name":     instance.HostName,
+			"id":            int(id),
 			"name":          instance.Name,
 			"site_tag":      instance.SiteTag,
 		}
@@ -24,6 +26,68 @@ func deflateArubaEdgeInstances(ins []alkira.ArubaEdgeInstance) []map[string]inte
 	}
 
 	return instances
+}
+
+// setArubaEdgeInstances sets the instances block, preserving write-only fields
+// (account_key) from existing state since the API does not return them.
+func setArubaEdgeInstances(d *schema.ResourceData, connector *alkira.ConnectorArubaEdge) {
+	var instances []map[string]interface{}
+
+	//
+	// First pass: match existing state instances to API instances by ID or
+	// name, preserving account_key which is not returned by the API.
+	//
+	for _, inst := range d.Get("instances").([]interface{}) {
+		config := inst.(map[string]interface{})
+
+		for _, info := range connector.Instances {
+			id, _ := info.Id.Int64()
+			if config["id"].(int) == int(id) || config["name"].(string) == info.Name {
+				instance := map[string]interface{}{
+					"account_key":   config["account_key"].(string),
+					"account_name":  info.AccountName,
+					"credential_id": info.CredentialId,
+					"host_name":     info.HostName,
+					"id":            int(id),
+					"name":          info.Name,
+					"site_tag":      info.SiteTag,
+				}
+				instances = append(instances, instance)
+				break
+			}
+		}
+	}
+
+	//
+	// Second pass: find any API instances not present in state (e.g. added
+	// outside Terraform) and append them. This will generate a diff.
+	//
+	for _, info := range connector.Instances {
+		isNew := true
+		id, _ := info.Id.Int64()
+
+		for _, inst := range d.Get("instances").([]interface{}) {
+			config := inst.(map[string]interface{})
+			if config["id"].(int) == int(id) || config["name"].(string) == info.Name {
+				isNew = false
+				break
+			}
+		}
+
+		if isNew {
+			instance := map[string]interface{}{
+				"account_name":  info.AccountName,
+				"credential_id": info.CredentialId,
+				"host_name":     info.HostName,
+				"id":            int(id),
+				"name":          info.Name,
+				"site_tag":      info.SiteTag,
+			}
+			instances = append(instances, instance)
+		}
+	}
+
+	d.Set("instances", instances)
 }
 
 func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]alkira.ArubaEdgeInstance, error) {
@@ -48,8 +112,8 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 		if v, ok := m["host_name"].(string); ok {
 			hostName = v
 		}
-		if v, ok := m["id"].(string); ok {
-			id = v
+		if v, ok := m["id"].(int); ok {
+			id = strconv.Itoa(v)
 		}
 		if v, ok := m["account_name"].(string); ok {
 			accountName = v
@@ -58,9 +122,14 @@ func expandArubaEdgeInstances(in []interface{}, client *alkira.AlkiraClient) ([]
 			siteTag = v
 		}
 
-		credId, err := findOrCreateArubaEdgeInstanceCredentialByName(client, credentialResponse, name, accountKey)
-		if err != nil {
-			return nil, err
+		var credId string
+		if existingCredId, ok := m["credential_id"].(string); ok && existingCredId != "" {
+			credId = existingCredId
+		} else {
+			credId, err = findOrCreateArubaEdgeInstanceCredentialByName(client, credentialResponse, name, accountKey)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		c := alkira.ArubaEdgeInstance{

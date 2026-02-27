@@ -54,6 +54,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 					"ignored.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"prefix_len": {
 				Description: "The IP Prefix length of the IP Reservation.",
@@ -205,7 +206,7 @@ func resourceIpReservationRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("prefix", reservation.Prefix)
 	d.Set("prefix_len", reservation.PrefixLen)
 	d.Set("prefix_type", reservation.PrefixType)
-	d.Set("first_ip_assignement", reservation.FirstIpAssignedTo)
+	d.Set("first_ip_assignment", reservation.FirstIpAssignedTo)
 	d.Set("node_id", reservation.NodeId)
 	d.Set("cxp", reservation.Cxp)
 	d.Set("scale_group_id", reservation.ScaleGroupId)

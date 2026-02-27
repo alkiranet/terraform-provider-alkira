@@ -20,15 +20,15 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 		},
 		{
 			name:     "empty map",
-			input:    map[string]alkira.ConnectorIPSecSegmentOptions{},
+			input:    map[string]interface{}{},
 			expected: nil,
 		},
 		{
 			name: "valid segment options with all fields",
-			input: map[string]alkira.ConnectorIPSecSegmentOptions{
-				"segment1": {
-					DisableInternetExit:   boolPtr(false),
-					AdvertiseOnPremRoutes: boolPtr(true),
+			input: map[string]interface{}{
+				"segment1": map[string]interface{}{
+					"disableInternetExit":   false,
+					"advertiseOnPremRoutes": true,
 				},
 			},
 			expected: []map[string]interface{}{
@@ -41,10 +41,10 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 		},
 		{
 			name: "segment options with disable_internet_exit=true",
-			input: map[string]alkira.ConnectorIPSecSegmentOptions{
-				"segment2": {
-					DisableInternetExit:   boolPtr(true),
-					AdvertiseOnPremRoutes: boolPtr(false),
+			input: map[string]interface{}{
+				"segment2": map[string]interface{}{
+					"disableInternetExit":   true,
+					"advertiseOnPremRoutes": false,
 				},
 			},
 			expected: []map[string]interface{}{
@@ -56,12 +56,9 @@ func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
 			},
 		},
 		{
-			name: "segment options with nil pointers (defaults)",
-			input: map[string]alkira.ConnectorIPSecSegmentOptions{
-				"segment3": {
-					DisableInternetExit:   nil,
-					AdvertiseOnPremRoutes: nil,
-				},
+			name: "segment options with missing fields (defaults)",
+			input: map[string]interface{}{
+				"segment3": map[string]interface{}{},
 			},
 			expected: []map[string]interface{}{
 				{

@@ -104,6 +104,7 @@ Required:
 
 Read-Only:
 
+- `credential_id` (String) The credential ID for the instance.
 - `id` (Number) The ID of the endpoint.
 
 ## Import

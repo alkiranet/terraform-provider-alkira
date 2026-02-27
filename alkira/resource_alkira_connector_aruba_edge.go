@@ -130,6 +130,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"credential_id": {
+							Description: "The credential ID for the instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"host_name": {
 							Description: "The host name given to the Aruba SD-WAN " +
 								"appliance that appears in Silver Peak orchestrator.",
@@ -284,7 +289,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("cxp", connector.Cxp)
 	d.Set("group", connector.Group)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
-	d.Set("instances", deflateArubaEdgeInstances(connector.Instances))
+	setArubaEdgeInstances(d, connector)
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)

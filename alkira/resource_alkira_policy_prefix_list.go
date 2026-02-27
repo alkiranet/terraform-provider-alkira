@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -16,6 +17,14 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 		ReadContext:   resourcePolicyPrefixListRead,
 		UpdateContext: resourcePolicyPrefixListUpdate,
 		DeleteContext: resourcePolicyPrefixListDelete,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourcePolicyPrefixListV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourcePolicyPrefixListStateUpgradeV0,
+			},
+		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
 
@@ -56,8 +65,9 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			"prefix": {
 				Description: "Prefix with description. This new block should " +
 					"replace the old `prefixes` field.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
+				Set:      prefixHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr": {
@@ -68,6 +78,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 						"description": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Description for the prefix.",
 						},
 					},
@@ -76,8 +87,9 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 			"prefix_range": {
 				Description: "A valid prefix range that could be used to " +
 					"define a prefix of type `ROUTE`.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
+				Set:      prefixRangeHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix": {
@@ -89,12 +101,14 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"le": {
 							Description: "Integer less than `32` but " +
 								"greater than mask `m` in prefix",
 							Type:     schema.TypeInt,
 							Optional: true,
+							Default:  0,
 						},
 						"ge": {
 							Description: "Integer less than `32` but " +
@@ -102,6 +116,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 								"than `le`.",
 							Type:     schema.TypeInt,
 							Optional: true,
+							Default:  0,
 						},
 					},
 				},
@@ -286,4 +301,26 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
+}
+
+// prefixHash computes a hash for a prefix block based on its cidr field.
+// This allows Terraform to identify prefixes by their CIDR value rather than
+// their position in the list, preventing unwanted reordering when prefixes
+// are deleted from the middle of the list.
+func prefixHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	fmt.Fprintf(&buf, "%s-", m["cidr"])
+	return schema.HashString(buf.String())
+}
+
+// prefixRangeHash computes a hash for a prefix_range block based on its
+// prefix, le, and ge fields. This allows Terraform to identify prefix ranges
+// by their content rather than their position in the list, preventing unwanted
+// reordering when ranges are deleted from the middle of the list.
+func prefixRangeHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	fmt.Fprintf(&buf, "%s-%d-%d-", m["prefix"], toInt(m["le"]), toInt(m["ge"]))
+	return schema.HashString(buf.String())
 }
