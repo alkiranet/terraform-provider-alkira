@@ -29,6 +29,10 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 			if v, ok := cfg["custom_prefix"].(string); ok {
 				importOptions.RouteImportMode = v
 			}
+
+			if v, ok := cfg["export_all_subnets"].(bool); ok {
+				exportOptions.ExportAllSubnets = v
+			}
 		}
 	}
 
@@ -39,19 +43,6 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 	}
 
 	exportOptions.Prefixes = prefixes
-
-	// Subnet entries and exportAllSubnets are mutually exclusive.
-	// Subnets present → exportAllSubnets must be false.
-	// No subnets → exportAllSubnets must be true.
-	// Enforced bidirectionally: if subnets are present exportAllSubnets must be
-	// false; if absent it must be true. Without the else branch, a stale state
-	// value of false is sent to the API when vpc_subnet blocks are removed,
-	// causing a 400 error.
-	if len(prefixes) > 0 {
-		exportOptions.ExportAllSubnets = false
-	} else {
-		exportOptions.ExportAllSubnets = true
-	}
 
 	gcp := &alkira.ConnectorGcpVpcRouting{
 		ExportOptions: exportOptions,
