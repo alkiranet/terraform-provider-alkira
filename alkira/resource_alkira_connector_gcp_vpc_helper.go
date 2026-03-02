@@ -29,6 +29,10 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 			if v, ok := cfg["custom_prefix"].(string); ok {
 				importOptions.RouteImportMode = v
 			}
+
+			if v, ok := cfg["export_all_subnets"].(bool); ok {
+				exportOptions.ExportAllSubnets = v
+			}
 		}
 	}
 
