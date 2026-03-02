@@ -132,6 +132,10 @@ Optional:
 
 - `export_all_subnets` (Boolean) Whether to export all subnets to CXP. When set to true, all subnets in the VPC are advertised to the CXP. When set to false, only the subnets specified in vpc_subnet are advertised.
 
+Optional:
+
+- `export_all_subnets` (Boolean) Whether to export all subnets to CXP. When set to true, all subnets in the VPC are advertised to the CXP. When set to false, only the subnets specified in vpc_subnet are advertised.
+
 
 <a id="nestedblock--vpc_subnet"></a>
 ### Nested Schema for `vpc_subnet`
