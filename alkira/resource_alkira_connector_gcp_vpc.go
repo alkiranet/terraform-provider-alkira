@@ -29,7 +29,23 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return validateExportAllSubnets(d)
+			// Validate export_all_subnets and vpc_subnet mutual exclusion
+			if gcpRouting, ok := d.GetOk("gcp_routing"); ok {
+				routing := gcpRouting.([]interface{})
+				if len(routing) > 0 {
+					routingCfg := routing[0].(map[string]interface{})
+					if exportAll, ok := routingCfg["export_all_subnets"].(bool); ok && exportAll {
+						if vpcSubnets, ok := d.GetOk("vpc_subnet"); ok {
+							if vpcSubnets.(*schema.Set).Len() > 0 {
+								return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
+									"When exporting all subnets, specific vpc_subnet entries should not be provided")
+							}
+						}
+					}
+				}
+			}
+
+			return nil
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceConnectorGcpVpcRead),
@@ -135,7 +151,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 								"the subnets specified in vpc_subnet are advertised.",
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
+							Default:  true,
 						},
 					},
 				},
