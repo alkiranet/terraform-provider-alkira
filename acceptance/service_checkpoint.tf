@@ -7,7 +7,7 @@ resource "alkira_service_checkpoint" "test" {
   size         = "SMALL"
   version      = "R80.30"
   pdp_ips      = ["10.0.0.1"]
-  password     = "abcd1234"
+  password     = "Checkpoint123"
 
   max_instance_count = 2
   min_instance_count = 2
@@ -23,7 +23,7 @@ resource "alkira_service_checkpoint" "test" {
     segment_id          = alkira_segment.test1.id
 
     username = "checkpoint-user"
-    password = "abcd1234"
+    password = "MgmtServer2024"
 
     # domain only required when configuration_mode is AUTOMATED and
     # when type is MDS.
@@ -51,7 +51,7 @@ resource "alkira_service_checkpoint" "test2" {
   max_instance_count = 1
   min_instance_count = 1
 
-  password        = "xxxxxxxx"
+  password        = "TestPass456"
   pdp_ips         = ["10.1.1.116"]
   segment_id      = alkira_segment.test1.id
   size            = "LARGE"
