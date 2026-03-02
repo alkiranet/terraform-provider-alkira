@@ -128,6 +128,10 @@ Required:
 - `custom_prefix` (String) Specifies the source of the routes that need to be imported. The value could be `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
 - `prefix_list_ids` (List of Number) IDs of prefix lists defined on the network.
 
+Optional:
+
+- `export_all_subnets` (Boolean) Whether to export all subnets to CXP. When set to true, all subnets in the VPC are advertised to the CXP. When set to false, only the subnets specified in vpc_subnet are advertised.
+
 
 <a id="nestedblock--vpc_subnet"></a>
 ### Nested Schema for `vpc_subnet`
