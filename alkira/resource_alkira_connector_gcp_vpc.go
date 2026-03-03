@@ -127,8 +127,8 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 						"prefix_list_ids": {
 							Description: "IDs of prefix lists defined on the " +
 								"network.",
-							Type:     schema.TypeList,
-							Required: true,
+							Type:     schema.TypeSet,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"custom_prefix": {
