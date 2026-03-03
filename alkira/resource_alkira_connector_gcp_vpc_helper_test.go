@@ -244,7 +244,7 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 					Schema: map[string]*schema.Schema{
 						"prefix_list_ids":    {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeInt}},
 						"custom_prefix":      {Type: schema.TypeString},
-						"export_all_subnets": {Type: schema.TypeBool, Optional: true, Default: true},
+						"export_all_subnets": {Type: schema.TypeBool, Optional: true, Computed: true},
 					},
 				},
 			},
