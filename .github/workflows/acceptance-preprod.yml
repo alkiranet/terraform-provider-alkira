@@ -22,6 +22,7 @@ env:
   ALKIRA_USERNAME: ${{ secrets.PREPROD_TERRAFORM_USERNAME }}
   ALKIRA_PASSWORD: ${{ secrets.PREPROD_TERRAFORM_PASSWORD }}
   ALKIRA_CXP:      "US-WEST-1"
+  ALKIRA_API_SERIALIZATION_ENABLED:    "true"
 
 jobs:
   acceptance-test-preprod:
