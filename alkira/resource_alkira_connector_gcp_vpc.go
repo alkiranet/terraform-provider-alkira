@@ -127,6 +127,15 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 								"ADVERTISE_CUSTOM_PREFIX",
 							}, false),
 						},
+						"export_all_subnets": {
+							Description: "Whether to export all subnets to CXP. " +
+								"When set to true, all subnets in the VPC are " +
+								"advertised to the CXP. When set to false, only " +
+								"the subnets specified in vpc_subnet are advertised.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed:  true,
+						},
 					},
 				},
 				Optional: true,
