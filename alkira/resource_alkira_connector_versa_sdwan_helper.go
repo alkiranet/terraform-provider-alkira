@@ -129,7 +129,7 @@ func setVersaSdwanInstance(d *schema.ResourceData, connector *alkira.ConnectorVe
 					"hostname":                   info.HostName,
 					"id":                         info.Id,
 					"local_device_serial_number": info.SerialNumber,
-					"version":                     info.Version,
+					"version":                    info.Version,
 				}
 				vosDevices = append(vosDevices, instance)
 				break
