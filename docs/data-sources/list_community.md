@@ -32,3 +32,5 @@ data "alkira_list_community" "test" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+

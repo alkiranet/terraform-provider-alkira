@@ -83,7 +83,7 @@ resource "alkira_connector_ipsec" "route_based_static" {
 
   routing_options {
     type           = "STATIC"
-    prefix_list_id = alkira_list_global_cidr.remote_subnets.id
+    prefix_list_id = alkira_policy_prefix_list.remote_subnets.id
     availability   = "IKE_STATUS"
   }
 
@@ -112,7 +112,7 @@ resource "alkira_connector_ipsec" "hybrid_routing" {
 
   routing_options {
     type                 = "BOTH"
-    prefix_list_id       = alkira_list_global_cidr.remote_subnets.id
+    prefix_list_id       = alkira_policy_prefix_list.remote_subnets.id
     customer_gateway_asn = "65320"
     availability         = "IPSEC_INTERFACE_PING"
   }
@@ -173,8 +173,8 @@ resource "alkira_connector_ipsec" "policy_based" {
   vpn_mode = "POLICY_BASED"
 
   policy_options {
-    on_prem_prefix_list_ids = [alkira_list_global_cidr.on_prem_subnets.id]
-    cxp_prefix_list_ids     = [alkira_list_global_cidr.cxp_subnets.id]
+    on_prem_prefix_list_ids = [alkira_policy_prefix_list.on_prem_subnets.id]
+    cxp_prefix_list_ids     = [alkira_policy_prefix_list.cxp_subnets.id]
   }
 
   endpoint {
@@ -381,7 +381,7 @@ resource "alkira_connector_ipsec" "multi_site_advanced" {
 
   routing_options {
     type                 = "BOTH"
-    prefix_list_id       = alkira_list_global_cidr.remote_subnets.id
+    prefix_list_id       = alkira_policy_prefix_list.remote_subnets.id
     customer_gateway_asn = "65380"
     bgp_auth_key         = "multi-site-bgp-key"
     availability         = "IPSEC_INTERFACE_PING"
