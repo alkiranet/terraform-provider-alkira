@@ -26,3 +26,5 @@ This data source allows to retrieve an existing Peering Gateway AWS TGW by its n
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+

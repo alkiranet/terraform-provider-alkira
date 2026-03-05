@@ -36,3 +36,5 @@ resource "alkira_connector_internet_exit" "cn" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+
