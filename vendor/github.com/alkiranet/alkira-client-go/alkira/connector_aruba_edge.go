@@ -21,6 +21,7 @@ type ConnectorArubaEdge struct {
 	TunnelProtocol       string                 `json:"tunnelProtocol"`
 	Version              string                 `json:"version"`
 	Enabled              bool                   `json:"enabled"`
+	ScaleGroupId         string                 `json:"scaleGroupId,omitempty"`
 	Description          string                 `json:"description,omitempty"`
 }
 
