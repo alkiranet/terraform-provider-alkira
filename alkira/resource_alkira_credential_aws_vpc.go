@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -100,6 +101,56 @@ func resourceCredentialAwsVpc(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCredentialAwsVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*alkira.AlkiraClient)
+
+	// Get all credentials and find the one matching the ID
+	// Note: GetCredentialById() doesn't work in all environments (405 error),
+	// so we use GetCredentials() which lists all credentials.
+	credentialsJSON, err := client.GetCredentials()
+	if err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("Error reading credential %s: %s", d.Id(), err),
+		}}
+	}
+
+	// Parse the JSON array of credentials
+	var credentials []alkira.CredentialResponseDetail
+	if err := json.Unmarshal([]byte(credentialsJSON), &credentials); err != nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("Error parsing credentials for %s: %s", d.Id(), err),
+		}}
+	}
+
+	// Find the credential matching the ID
+	var credential *alkira.CredentialResponseDetail
+	for i := range credentials {
+		if credentials[i].Id == d.Id() {
+			credential = &credentials[i]
+			break
+		}
+	}
+
+	// If not found, return error
+	if credential == nil {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("Credential %s not found", d.Id()),
+		}}
+	}
+
+	// Set fields returned by API
+	d.Set("name", credential.Name)
+	d.Set("type", credential.SubType)
+
+	// Note: Sensitive fields (access_key, secret_key, role_arn, external_id)
+	// are NOT returned by the API for security reasons and must be
+	// maintained in the user's HCL configuration.
+
 	return nil
 }
 
