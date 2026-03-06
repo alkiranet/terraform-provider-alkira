@@ -21,7 +21,7 @@ func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error, error, error) {
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("api-create: failed to marshal: %v", err), nil, nil
+		return nil, "", fmt.Errorf("api-create: failed to marshal: %w", err), nil, nil
 	}
 
 	data, state, err, errVal, errProv := a.Client.create(a.Uri, body, a.Provision)
@@ -31,10 +31,10 @@ func (a *AlkiraAPI[T]) Create(resource *T) (*T, string, error, error, error) {
 	}
 
 	var result T
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("api-create: failed to unmarshal: %v", err), errVal, errProv
+		return nil, state, fmt.Errorf("api-create: failed to unmarshal: %w", err), errVal, errProv
 	}
 
 	return &result, state, nil, errVal, errProv
@@ -60,7 +60,7 @@ func (a *AlkiraAPI[T]) Update(id string, resource *T) (string, error, error, err
 	body, err := json.Marshal(resource)
 
 	if err != nil {
-		return "", fmt.Errorf("api-update: failed to marshal: %v", err), nil, nil
+		return "", fmt.Errorf("api-update: failed to marshal: %w", err), nil, nil
 	}
 
 	state, err, errVal, errProv := a.Client.update(uri, body, a.Provision)
@@ -86,10 +86,10 @@ func (a *AlkiraAPI[T]) GetById(id string) (*T, string, error) {
 	}
 
 	var result T
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return nil, provState, fmt.Errorf("api-get-all: failed to unmarshal: %v", err)
+		return nil, provState, fmt.Errorf("api-get-all: failed to unmarshal: %w", err)
 	}
 
 	return &result, provState, nil
@@ -112,10 +112,10 @@ func (a *AlkiraAPI[T]) GetByName(name string) (*T, string, error) {
 	}
 
 	var result []T
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return nil, state, fmt.Errorf("api-get-by-name: failed to unmarshal: %v", err)
+		return nil, state, fmt.Errorf("api-get-by-name: failed to unmarshal: %w", err)
 	}
 
 	if len(result) != 1 {

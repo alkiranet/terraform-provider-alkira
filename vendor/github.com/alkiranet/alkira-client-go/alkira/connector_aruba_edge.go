@@ -21,6 +21,7 @@ type ConnectorArubaEdge struct {
 	TunnelProtocol       string                 `json:"tunnelProtocol"`
 	Version              string                 `json:"version"`
 	Enabled              bool                   `json:"enabled"`
+	ScaleGroupId         string                 `json:"scaleGroupId,omitempty"`
 	Description          string                 `json:"description,omitempty"`
 }
 
@@ -47,7 +48,7 @@ type ArubaEdgeInstanceConfig struct {
 	//json structure.
 }
 
-// NewConnectorArubaEdge initalize a new connector
+// NewConnectorArubaEdge initialize a new connector
 func NewConnectorArubaEdge(ac *AlkiraClient) *AlkiraAPI[ConnectorArubaEdge] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/aruba-edge-connectors", ac.URI, ac.TenantNetworkId)
 	api := &AlkiraAPI[ConnectorArubaEdge]{ac, uri, true}

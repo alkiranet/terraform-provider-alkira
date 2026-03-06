@@ -36,7 +36,7 @@ type BluecatInstance struct {
 	EdgeOptions      *EdgeOptions `json:"edgeOptions,omitempty"`
 	Id               int          `json:"id,omitempty"`
 	InternalName     string       `json:"internalName,omitempty"`
-	Name             string       `json:"name"`
+	Name             string       `json:"name,omitempty"`
 	Type             string       `json:"type"`                       // BDDS or EDGE
 	CxpBgpIp         string       `json:"cxpBgpIp,omitempty"`         // RESPONSE ONLY
 	CxpBgpAsn        string       `json:"cxpBgpAsn,omitempty"`        // RESPONSE ONLY

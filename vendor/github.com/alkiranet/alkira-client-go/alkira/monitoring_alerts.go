@@ -15,7 +15,7 @@ func (ac *AlkiraClient) GetAlerts(queryStatus string, queryType string, queryPri
 	uri, err := url.Parse(baseUri)
 
 	if err != nil {
-		return "", fmt.Errorf("GetAlerts: failed to parse URI: %v", err)
+		return "", fmt.Errorf("GetAlerts: failed to parse URI: %w", err)
 	}
 
 	// Process optional query parameters

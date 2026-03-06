@@ -31,6 +31,7 @@ type RouteQueryParams struct {
 	RouteRecvType        string `json:"routeRecvType,omitempty"`        // route receive type filter
 	Prefix               string `json:"prefix,omitempty"`               // prefix filter
 	LPMPrefix            string `json:"lpmPrefix,omitempty"`            // LPM prefix filter
+	MatchOriginalPrefix  bool   `json:"matchOriginalPrefix,omitempty"`  // match original prefix filter
 }
 
 // Route count query parameters
@@ -52,6 +53,8 @@ type RouteCountQueryParams struct {
 	Prefix               string `json:"prefix,omitempty"`               // prefix filter
 	LPMPrefix            string `json:"lpmPrefix,omitempty"`            // LPM prefix filter
 	PrefixType           string `json:"prefixType,omitempty"`           // prefix type filter
+	RouteType            string `json:"routeType,omitempty"`            // route type filter
+	MatchOriginalPrefix  bool   `json:"matchOriginalPrefix,omitempty"`  // match original prefix filter
 }
 
 // Route UI connector represents a connector in a route
@@ -183,6 +186,9 @@ func (ac *AlkiraClient) GetRoutes(params RouteQueryParams) (*RoutesUIResponse, e
 	if params.LPMPrefix != "" {
 		queryParams.Set("lpmPrefix", params.LPMPrefix)
 	}
+	if params.MatchOriginalPrefix {
+		queryParams.Set("matchOriginalPrefix", "true")
+	}
 
 	// Append query parameters to URI if any
 	if len(queryParams) > 0 {
@@ -192,14 +198,14 @@ func (ac *AlkiraClient) GetRoutes(params RouteQueryParams) (*RoutesUIResponse, e
 	// Make the request
 	data, _, err := ac.get(uri)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get routes: %v", err)
+		return nil, fmt.Errorf("failed to get routes: %w", err)
 	}
 
 	// Parse response
 	var routes RoutesUIResponse
-	err = json.Unmarshal([]byte(data), &routes)
+	err = json.Unmarshal(data, &routes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal routes response: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal routes response: %w", err)
 	}
 
 	return &routes, nil
@@ -265,6 +271,12 @@ func (ac *AlkiraClient) GetRouteCount(params RouteCountQueryParams) (*RouteCount
 	if params.PrefixType != "" {
 		queryParams.Set("prefixType", params.PrefixType)
 	}
+	if params.RouteType != "" {
+		queryParams.Set("routeType", params.RouteType)
+	}
+	if params.MatchOriginalPrefix {
+		queryParams.Set("matchOriginalPrefix", "true")
+	}
 
 	// Append query parameters to URI if any
 	if len(queryParams) > 0 {
@@ -274,14 +286,14 @@ func (ac *AlkiraClient) GetRouteCount(params RouteCountQueryParams) (*RouteCount
 	// Make the request
 	data, _, err := ac.get(uri)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get route count: %v", err)
+		return nil, fmt.Errorf("failed to get route count: %w", err)
 	}
 
 	// Parse response
 	var routeCount RouteCountUIResult
-	err = json.Unmarshal([]byte(data), &routeCount)
+	err = json.Unmarshal(data, &routeCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal route count response: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal route count response: %w", err)
 	}
 
 	return &routeCount, nil
