@@ -21,7 +21,7 @@ type SegmentScaleOptions struct {
 	AdditionalTunnelOptionsPerNode []AdditionalTunnelOptionsPerNode `json:"additionalTunnelOptionsPerNode"`
 }
 
-type ControllerScaleOptions struct {
+type NetworkEntityScaleOptions struct {
 	Description          string                `json:"description"`
 	DocState             string                `json:"docState,omitempty"`
 	EntityId             int                   `json:"entityId"`
@@ -36,9 +36,9 @@ type ControllerScaleOptions struct {
 	State                string                `json:"state,omitempty"` // response only
 }
 
-// NewControllerScaleOptions new controller scale options
-func NewControllerScaleOptions(ac *AlkiraClient) *AlkiraAPI[ControllerScaleOptions] {
+// NewNetworkEntityScaleOptions new network entity scale options
+func NewNetworkEntityScaleOptions(ac *AlkiraClient) *AlkiraAPI[NetworkEntityScaleOptions] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/network-entity-scale-options", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ControllerScaleOptions]{ac, uri, true}
+	api := &AlkiraAPI[NetworkEntityScaleOptions]{ac, uri, true}
 	return api
 }

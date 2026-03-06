@@ -1,11 +1,9 @@
 module github.com/alkiranet/terraform-provider-alkira
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.23.8
 
 require (
-	github.com/alkiranet/alkira-client-go v1.55.2
+	github.com/alkiranet/alkira-client-go v1.59.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
 	github.com/stretchr/testify v1.8.4
