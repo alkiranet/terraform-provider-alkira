@@ -15,7 +15,7 @@ func (ac *AlkiraClient) GetJobs(queryStatus string, queryType string) (string, e
 	uri, err := url.Parse(baseUri)
 
 	if err != nil {
-		return "", fmt.Errorf("GetJobs: failed to parse URI: %v", err)
+		return "", fmt.Errorf("GetJobs: failed to parse URI: %w", err)
 	}
 
 	// Process optional query parameters

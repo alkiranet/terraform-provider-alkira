@@ -30,22 +30,22 @@ const defaultProvTimeout time.Duration = 240 * time.Minute
 const defaultValTimeout time.Duration = 10 * time.Minute
 
 // Default Retry
-const defaultRetryInterval time.Duration = 5 * time.Second
+// const defaultRetryInterval time.Duration = 5 * time.Second
 const defaultRetryTimeout time.Duration = 10 * time.Second
 
 type AlkiraClient struct {
-	Client                *retryablehttp.Client
-	URI                   string
-	Username              string
-	Password              string
-	Secret                string
-	Authorization         string
-	Provision             bool
-	Validate              bool
-	TenantNetworkId       string
-	SerializationEnabled  bool
-	serializationTimeout  time.Duration
-	apiMutex              sync.Mutex
+	Client               *retryablehttp.Client
+	URI                  string
+	Username             string
+	Password             string
+	Secret               string
+	Authorization        string
+	Provision            bool
+	Validate             bool
+	TenantNetworkId      string
+	SerializationEnabled bool
+	serializationTimeout time.Duration
+	apiMutex             sync.Mutex
 }
 
 type Session struct {
@@ -104,7 +104,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	}
 
 	// Generate Authorization header string
-	auth := ""
+	var auth string
 
 	if len(secret) > 0 {
 		authStr := secret
@@ -163,15 +163,15 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 	tenantNetworkResponse, err := retryClient.Do(tenantNetworkRequest)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to make tenant network request, %v", err)
+		return nil, fmt.Errorf("failed to make tenant network request, %w", err)
 	}
 
-	defer tenantNetworkResponse.Body.Close()
+	defer func() { _ = tenantNetworkResponse.Body.Close() }()
 
 	data, err := io.ReadAll(tenantNetworkResponse.Body)
 	if err != nil {
 		logf("ERROR", "NewAlkiraClientWithAuthHeader: failed to read tenant network response body: %v", err)
-		return nil, fmt.Errorf("NewAlkiraClientWithAuthHeader: failed to read tenant network response body: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientWithAuthHeader: failed to read tenant network response body: %w", err)
 	}
 	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
 
@@ -179,9 +179,13 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
 	}
 
-	json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		logf("ERROR", "NewAlkiraClientWithAuthHeader: failed to unmarshal tenant network data: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientWithAuthHeader: failed to unmarshal tenant network data: %w", err)
+	}
 
-	tenantNetworkId := 0
+	var tenantNetworkId int
 
 	if len(result) > 0 {
 		tenantNetworkId = result[0].Id
@@ -242,6 +246,9 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		"password": password,
 		"secret":   secret,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal login request: %w", err)
+	}
 
 	// Create retry-able HTTP client
 	tr := &http.Transport{
@@ -262,7 +269,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 				}
 			}
 		} else {
-			return time.Duration(defaultRetryTimeout)
+			return defaultRetryTimeout
 		}
 		return retryablehttp.LinearJitterBackoff(min, max, attemptNum, resp)
 	}
@@ -291,22 +298,22 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	request, requestErr := retryablehttp.NewRequest("POST", loginUrl, bytes.NewBuffer(loginRequestBody))
 
 	if requestErr != nil {
-		return nil, fmt.Errorf("failed to create login request, %v", requestErr)
+		return nil, fmt.Errorf("failed to create login request, %w", requestErr)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
 	response, err := retryClient.Do(request)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to make login request, %v", err)
+		return nil, fmt.Errorf("failed to make login request, %w", err)
 	}
 
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	userAuthData, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "NewAlkiraClientInternal: failed to read user auth response body: %v", err)
-		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read user auth response body: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read user auth response body: %w", err)
 	}
 
 	if response.StatusCode != 200 {
@@ -321,15 +328,15 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	sessionResponse, err := retryClient.Do(sessionRequest)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to make session request, %v", err)
+		return nil, fmt.Errorf("failed to make session request, %w", err)
 	}
 
-	defer sessionResponse.Body.Close()
+	defer func() { _ = sessionResponse.Body.Close() }()
 
 	sessionData, err := io.ReadAll(sessionResponse.Body)
 	if err != nil {
 		logf("ERROR", "NewAlkiraClientInternal: failed to read session response body: %v", err)
-		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read session response body: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read session response body: %w", err)
 	}
 	logf("TRACE", "session data: %s\n", string(sessionData))
 
@@ -346,15 +353,15 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 	tenantNetworkResponse, err := retryClient.Do(tenantNetworkRequest)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to make tenant network request, %v", err)
+		return nil, fmt.Errorf("failed to make tenant network request, %w", err)
 	}
 
-	defer tenantNetworkResponse.Body.Close()
+	defer func() { _ = tenantNetworkResponse.Body.Close() }()
 
 	data, err := io.ReadAll(tenantNetworkResponse.Body)
 	if err != nil {
 		logf("ERROR", "NewAlkiraClientInternal: failed to read tenant network response body: %v", err)
-		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read tenant network response body: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read tenant network response body: %w", err)
 	}
 	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
 
@@ -362,13 +369,13 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
 	}
 
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 	if err != nil {
 		logf("ERROR", "NewAlkiraClientInternal: failed to unmarshal tenant network data: %v", err)
-		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to unmarshal tenant network data: %v", err)
+		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to unmarshal tenant network data: %w", err)
 	}
 
-	tenantNetworkId := 0
+	var tenantNetworkId int
 
 	if len(result) > 0 {
 		tenantNetworkId = result[0].Id
@@ -409,16 +416,16 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get(%s) failed to send request, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s) failed to send request, %w", requestId, err)
 	}
 
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	logf("DEBUG", "client-get(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-get(%s): response headers: %v", requestId, response.Header)
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-get(%s): failed to read response body: %v", requestId, err)
-		return nil, "", fmt.Errorf("client-get(%s) failed to read response body: %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s) failed to read response body: %w", requestId, err)
 	}
 	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-get(%s): response body length: %d", requestId, len(data))
@@ -449,16 +456,16 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	response, err := ac.Client.Do(request)
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-get(%s): failed to send request, %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s): failed to send request, %w", requestId, err)
 	}
 
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	logf("DEBUG", "client-get(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-get(%s): response headers: %v", requestId, response.Header)
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-get(%s): failed to read response body: %v", requestId, err)
-		return nil, "", fmt.Errorf("client-get(%s): failed to read response body: %v", requestId, err)
+		return nil, "", fmt.Errorf("client-get(%s): failed to read response body: %w", requestId, err)
 	}
 	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-get(%s): response body length: %d", requestId, len(data))
@@ -488,11 +495,19 @@ func (ac *AlkiraClient) executeWithMutex(fn func() error) error {
 
 	// Channel to signal mutex acquisition
 	mutexAcquired := make(chan struct{})
+	// Channel to signal that a timeout occurred before the mutex was acquired
+	timedOut := make(chan struct{})
 
 	// Try to acquire the mutex in a goroutine
 	go func() {
 		ac.apiMutex.Lock()
-		close(mutexAcquired)
+		select {
+		case <-timedOut:
+			// Timeout already fired — release the mutex immediately so it isn't leaked
+			ac.apiMutex.Unlock()
+		default:
+			close(mutexAcquired)
+		}
 	}()
 
 	// Wait for either mutex acquisition or timeout
@@ -503,12 +518,13 @@ func (ac *AlkiraClient) executeWithMutex(fn func() error) error {
 		logf("DEBUG", "API mutex acquired, executing request")
 		return fn()
 	case <-time.After(ac.serializationTimeout):
-		// Timeout occurred
+		// Timeout occurred — signal the goroutine to release the mutex if it acquires it late
+		close(timedOut)
 		return fmt.Errorf("failed to acquire API mutex within timeout (%v)", ac.serializationTimeout)
 	}
 }
 
- // formatProvisionError formats the provision error message with detailed information if available
+// formatProvisionError formats the provision error message with detailed information if available
 func formatProvisionError(operation string, requestId string, provisionRequestId string, request *TenantNetworkProvisionRequest) error {
 	errMsg := fmt.Sprintf("client-%s(%s): provision request %s failed", operation, requestId, provisionRequestId)
 	if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
@@ -529,23 +545,23 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	// to provision.
 	//
 	parsedURL, urlErr := url.Parse(uri)
-    if urlErr != nil {
-        return nil, "", fmt.Errorf("client-create: failed to parse URI: %w", urlErr), nil, nil
-    }
+	if urlErr != nil {
+		return nil, "", fmt.Errorf("client-create: failed to parse URI: %w", urlErr), nil, nil
+	}
 
-    query := parsedURL.Query()
+	query := parsedURL.Query()
 
-    if ac.Provision && provision {
-        logf("DEBUG", "client-create: enable provision")
-       	query.Set("provision", "true")
-    }
-    if ac.Validate {
-       	logf("DEBUG", "client-create: enable async validation")
-       	query.Set("async", "true")
-    }
+	if ac.Provision && provision {
+		logf("DEBUG", "client-create: enable provision")
+		query.Set("provision", "true")
+	}
+	if ac.Validate {
+		logf("DEBUG", "client-create: enable async validation")
+		query.Set("async", "true")
+	}
 
-    parsedURL.RawQuery = query.Encode()
-    uri = parsedURL.String()
+	parsedURL.RawQuery = query.Encode()
+	uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("POST", uri, bytes.NewBuffer(body))
@@ -558,32 +574,35 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	var response *http.Response
 	var err error
 	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request)
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
 		return err
 	})
 
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
+	}
+
 	if mutexErr != nil {
-		return nil, "", fmt.Errorf("client-create(%s): %v", requestId, mutexErr), nil, nil
+		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, mutexErr), nil, nil
 	}
 
 	if err != nil {
-		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %v", requestId, err), nil, nil
+		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %w", requestId, err), nil, nil
 	}
-
-	defer response.Body.Close()
 	logf("DEBUG", "client-create(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-create(%s): response headers: %v", requestId, response.Header)
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-create(%s): failed to read response body: %v", requestId, err)
-		return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %v", requestId, err), nil, nil
+		return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %w", requestId, err), nil, nil
 	}
 
 	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-create(%s): response body length: %d", requestId, len(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 && response.StatusCode != 202 {
-		return nil, "", fmt.Errorf("client-create(%s): %d %s.", requestId, response.StatusCode, string(data)), nil, nil
+		return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil, nil
 	}
 
 	// Handle validation if enabled and response is 202
@@ -601,7 +620,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	// If provision is enabled, wait for provision to finish and
 	// return the provision state
 	//
-	if ac.Provision == true && provision == true {
+	if ac.Provision && provision {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
@@ -615,9 +634,10 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 				return false, err
 			}
 
-			if request.State == "SUCCESS" {
+			switch request.State {
+			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" || request.State == "PARTIAL_SUCCESS" {
+			case "FAILED", "PARTIAL_SUCCESS":
 				return false, formatProvisionError("create", requestId, provisionRequestId, request)
 			}
 
@@ -626,7 +646,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 		})
 
 		if err != nil {
-			if err == wait.ErrWaitTimeout {
+			if errors.Is(err, wait.ErrWaitTimeout) {
 				return data, "FAILED", nil, nil, fmt.Errorf("client-create(%s): provision request %s timed out", requestId, provisionRequestId)
 			}
 
@@ -649,23 +669,23 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	// to provision.
 	//
 	parsedURL, urlErr := url.Parse(uri)
-    if urlErr != nil {
-        return "", fmt.Errorf("client-delete: failed to parse URI: %w", urlErr), nil, nil
-    }
+	if urlErr != nil {
+		return "", fmt.Errorf("client-delete: failed to parse URI: %w", urlErr), nil, nil
+	}
 
-    query := parsedURL.Query()
+	query := parsedURL.Query()
 
-    if ac.Provision && provision {
-        logf("DEBUG", "client-delete: enable provision")
-       	query.Set("provision", "true")
-    }
-    if ac.Validate {
-       	logf("DEBUG", "client-delete: enable async validation")
-       	query.Set("async", "true")
-    }
+	if ac.Provision && provision {
+		logf("DEBUG", "client-delete: enable provision")
+		query.Set("provision", "true")
+	}
+	if ac.Validate {
+		logf("DEBUG", "client-delete: enable async validation")
+		query.Set("async", "true")
+	}
 
-    parsedURL.RawQuery = query.Encode()
-    uri = parsedURL.String()
+	parsedURL.RawQuery = query.Encode()
+	uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("DELETE", uri, nil)
@@ -678,25 +698,28 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	var response *http.Response
 	var err error
 	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request)
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
 		return err
 	})
 
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
+	}
+
 	if mutexErr != nil {
-		return "", fmt.Errorf("client-delete(%s): %v", requestId, mutexErr), nil, nil
+		return "", fmt.Errorf("client-delete(%s): %w", requestId, mutexErr), nil, nil
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("client-delete(%s): failed to send request, %v", requestId, err), nil, nil
+		return "", fmt.Errorf("client-delete(%s): failed to send request, %w", requestId, err), nil, nil
 	}
-
-	defer response.Body.Close()
 	logf("DEBUG", "client-delete(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-delete(%s): response headers: %v", requestId, response.Header)
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-delete(%s): failed to read response body: %v", requestId, err)
-		return "", fmt.Errorf("client-delete(%s): failed to read response body: %v", requestId, err), nil, nil
+		return "", fmt.Errorf("client-delete(%s): failed to read response body: %w", requestId, err), nil, nil
 	}
 
 	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
@@ -724,7 +747,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 
 	// If provision is enabled, wait for provision to finish and
 	// return the proper provision state
-	if ac.Provision == true && provision == true {
+	if ac.Provision && provision {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
@@ -738,9 +761,10 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 				return false, err
 			}
 
-			if request.State == "SUCCESS" {
+			switch request.State {
+			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" {
+			case "FAILED":
 				return false, formatProvisionError("delete", requestId, provisionRequestId, request)
 			}
 
@@ -749,7 +773,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 		})
 
 		if err != nil {
-			if err == wait.ErrWaitTimeout {
+			if errors.Is(err, wait.ErrWaitTimeout) {
 				return "FAILED", nil, nil, fmt.Errorf("client-delete(%s): provision request %s timed out", requestId, provisionRequestId)
 			}
 
@@ -772,23 +796,23 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	// to provision.
 	//
 	parsedURL, urlErr := url.Parse(uri)
-    if urlErr != nil {
-        return "", fmt.Errorf("client-update: failed to parse URI: %w", urlErr), nil, nil
-    }
+	if urlErr != nil {
+		return "", urlErr, nil, nil
+	}
 
-    query := parsedURL.Query()
+	query := parsedURL.Query()
 
-    if ac.Provision && provision {
-        logf("DEBUG", "client-update: enable provision")
-       	query.Set("provision", "true")
-    }
-    if ac.Validate {
-       	logf("DEBUG", "client-update: enable async validation")
-       	query.Set("async", "true")
-    }
+	if ac.Provision && provision {
+		logf("DEBUG", "client-update: enable provision")
+		query.Set("provision", "true")
+	}
+	if ac.Validate {
+		logf("DEBUG", "client-update: enable async validation")
+		query.Set("async", "true")
+	}
 
-    parsedURL.RawQuery = query.Encode()
-    uri = parsedURL.String()
+	parsedURL.RawQuery = query.Encode()
+	uri = parsedURL.String()
 
 	requestId := "client-" + uuid.New().String()
 	request, _ := retryablehttp.NewRequest("PUT", uri, bytes.NewBuffer(body))
@@ -801,25 +825,28 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	var response *http.Response
 	var err error
 	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request)
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
 		return err
 	})
 
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
+	}
+
 	if mutexErr != nil {
-		return "", fmt.Errorf("client-update(%s): %v", requestId, mutexErr), nil, nil
+		return "", fmt.Errorf("client-update(%s): %w", requestId, mutexErr), nil, nil
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("client-update(%s): failed to send request, %v", requestId, err), nil, nil
+		return "", fmt.Errorf("client-update(%s): failed to send request, %w", requestId, err), nil, nil
 	}
-
-	defer response.Body.Close()
 	logf("DEBUG", "client-update(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-update(%s): response headers: %v", requestId, response.Header)
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-update(%s): failed to read response body: %v", requestId, err)
-		return "", fmt.Errorf("client-update(%s): failed to read response body: %v", requestId, err), nil, nil
+		return "", fmt.Errorf("client-update(%s): failed to read response body: %w", requestId, err), nil, nil
 	}
 
 	logf("DEBUG", "client-update(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
@@ -843,7 +870,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	//
 	// If provision is enabled, wait for provision to finish and return the proper state
 	//
-	if ac.Provision == true && provision == true {
+	if ac.Provision && provision {
 		provisionRequestId := response.Header.Get("x-provision-request-id")
 
 		if provisionRequestId == "" {
@@ -857,9 +884,10 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 				return false, err
 			}
 
-			if request.State == "SUCCESS" {
+			switch request.State {
+			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" {
+			case "FAILED":
 				return false, formatProvisionError("update", requestId, provisionRequestId, request)
 			}
 
@@ -868,7 +896,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 		})
 
 		if err != nil {
-			if err == wait.ErrWaitTimeout {
+			if errors.Is(err, wait.ErrWaitTimeout) {
 				return "FAILED", nil, nil, fmt.Errorf("client-update(%s): provision request %s timed out", requestId, provisionRequestId)
 			}
 
