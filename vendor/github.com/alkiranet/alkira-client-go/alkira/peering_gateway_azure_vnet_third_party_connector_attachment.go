@@ -10,9 +10,9 @@ type AzureVnetThirdPartyConnectorAttachment struct {
 	Description         string      `json:"description,omitempty"`
 	CxpPeeringGatewayId int         `json:"cxpPeeringGatewayId"`
 	VnetId              string      `json:"vnetId"`
-	Id                  json.Number `json:"id,omitempty"`    // response only
+	Id                  json.Number `json:"id,omitempty"`           // response only
 	InternalName        string      `json:"internalName,omitempty"` // response only
-	State               string      `json:"state,omitempty"` // response only
+	State               string      `json:"state,omitempty"`        // response only
 }
 
 func NewAzureVnetThirdPartyConnectorAttachment(ac *AlkiraClient) *AlkiraAPI[AzureVnetThirdPartyConnectorAttachment] {

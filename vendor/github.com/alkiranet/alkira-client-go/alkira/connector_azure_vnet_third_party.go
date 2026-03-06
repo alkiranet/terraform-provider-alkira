@@ -16,8 +16,8 @@ type AzureVnetThirdPartyConnector struct {
 	AzureVnetThirdPartyConnectorAttachmentId int         `json:"azureVnetThirdPartyConnectorAttachmentId"`
 	BillingTags                              []int       `json:"billingTags,omitempty"`
 	StaticRoutes                             []int       `json:"staticRoutes,omitempty"`
-	Id                                       json.Number `json:"id,omitempty"`              // response only
-	ImplicitGroupId                          int         `json:"implicitGroupId,omitempty"` // response only
+	Id                                       json.Number `json:"id,omitempty"`                  // response only
+	ImplicitGroupId                          int         `json:"implicitGroupId,omitempty"`     // response only
 	CxpPeeringGatewayId                      int         `json:"cxpPeeringGatewayId,omitempty"` // response only
 }
 
