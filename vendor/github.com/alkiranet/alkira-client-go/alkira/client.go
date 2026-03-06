@@ -44,7 +44,7 @@ type AlkiraClient struct {
 	TenantNetworkId      string
 	SerializationEnabled bool
 	serializationTimeout time.Duration
-	apiQueue             chan struct{}
+	apiMutex             sync.Mutex
 }
 
 type Session struct {
@@ -497,24 +497,34 @@ func (ac *AlkiraClient) executeWithQueue(request *retryablehttp.Request, fn func
 		return fn()
 	}
 
-	// Wait for our turn — no timeout on queue wait.
-	ac.apiQueue <- struct{}{}
-	defer func() { <-ac.apiQueue }()
+	// Channel to signal mutex acquisition
+	mutexAcquired := make(chan struct{})
+	// Channel to signal that a timeout occurred before the mutex was acquired
+	timedOut := make(chan struct{})
 
-	logf("DEBUG", "API queue slot acquired, executing request")
-
-	// Apply a per-request execution timeout via context cancellation.
-	// This ensures that when the timeout fires, the underlying HTTP request
-	// is cancelled — no goroutine leak or orphaned connection.
-	ctx, cancel := context.WithTimeout(context.Background(), ac.serializationTimeout)
-	defer cancel()
-	*request = *request.WithContext(ctx)
-
-	if err := fn(); err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("request execution timed out after %v: %w", ac.serializationTimeout, err)
+	// Try to acquire the mutex in a goroutine
+	go func() {
+		ac.apiMutex.Lock()
+		select {
+		case <-timedOut:
+			// Timeout already fired — release the mutex immediately so it isn't leaked
+			ac.apiMutex.Unlock()
+		default:
+			close(mutexAcquired)
 		}
-		return err
+	}()
+
+	// Wait for either mutex acquisition or timeout
+	select {
+	case <-mutexAcquired:
+		// Mutex acquired successfully
+		defer ac.apiMutex.Unlock()
+		logf("DEBUG", "API mutex acquired, executing request")
+		return fn()
+	case <-time.After(ac.serializationTimeout):
+		// Timeout occurred — signal the goroutine to release the mutex if it acquires it late
+		close(timedOut)
+		return fmt.Errorf("failed to acquire API mutex within timeout (%v)", ac.serializationTimeout)
 	}
 	return nil
 }
@@ -530,7 +540,7 @@ func formatProvisionError(operation string, requestId string, provisionRequestId
 	return errors.New(errMsg)
 }
 
- // formatProvisionError formats the provision error message with detailed information if available
+// formatProvisionError formats the provision error message with detailed information if available
 func formatProvisionError(operation string, requestId string, provisionRequestId string, request *TenantNetworkProvisionRequest) error {
 	errMsg := fmt.Sprintf("client-%s(%s): provision request %s failed", operation, requestId, provisionRequestId)
 	if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
@@ -581,31 +591,32 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	// TCP connection is not reused by another goroutine before this response
 	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var data []byte
-	var doErr, readErr error
-	queueErr := ac.executeWithQueue(request, func() error {
-		response, doErr = ac.Client.Do(request)
-		if doErr != nil {
-			return doErr
-		}
-		defer func() { _ = response.Body.Close() }()
-		data, readErr = io.ReadAll(response.Body)
-		return readErr
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+		return err
 	})
 
-	if queueErr != nil {
-		if doErr != nil {
-			return nil, "", fmt.Errorf("client-create(%s): failed to send request, %w", requestId, queueErr), nil, nil
-		}
-		if readErr != nil {
-			logf("ERROR", "client-create(%s): failed to read response body: %v", requestId, readErr)
-			return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %w", requestId, queueErr), nil, nil
-		}
-		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, queueErr), nil, nil
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
 	}
 
+	if mutexErr != nil {
+		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, mutexErr), nil, nil
+	}
+
+	if err != nil {
+		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %w", requestId, err), nil, nil
+	}
 	logf("DEBUG", "client-create(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-create(%s): response headers: %v", requestId, response.Header)
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		logf("ERROR", "client-create(%s): failed to read response body: %v", requestId, err)
+		return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %w", requestId, err), nil, nil
+	}
+
 	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-create(%s): response body length: %d", requestId, len(data))
 
@@ -645,7 +656,7 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 			switch request.State {
 			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" || request.State == "PARTIAL_SUCCESS" {
+			case "FAILED", "PARTIAL_SUCCESS":
 				return false, formatProvisionError("create", requestId, provisionRequestId, request)
 			}
 
@@ -707,31 +718,32 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	// TCP connection is not reused by another goroutine before this response
 	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var data []byte
-	var doErr, readErr error
-	queueErr := ac.executeWithQueue(request, func() error {
-		response, doErr = ac.Client.Do(request)
-		if doErr != nil {
-			return doErr
-		}
-		defer func() { _ = response.Body.Close() }()
-		data, readErr = io.ReadAll(response.Body)
-		return readErr
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+		return err
 	})
 
-	if queueErr != nil {
-		if doErr != nil {
-			return "", fmt.Errorf("client-delete(%s): failed to send request, %w", requestId, queueErr), nil, nil
-		}
-		if readErr != nil {
-			logf("ERROR", "client-delete(%s): failed to read response body: %v", requestId, readErr)
-			return "", fmt.Errorf("client-delete(%s): failed to read response body: %w", requestId, queueErr), nil, nil
-		}
-		return "", fmt.Errorf("client-delete(%s): %w", requestId, queueErr), nil, nil
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
 	}
 
+	if mutexErr != nil {
+		return "", fmt.Errorf("client-delete(%s): %w", requestId, mutexErr), nil, nil
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("client-delete(%s): failed to send request, %w", requestId, err), nil, nil
+	}
 	logf("DEBUG", "client-delete(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-delete(%s): response headers: %v", requestId, response.Header)
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		logf("ERROR", "client-delete(%s): failed to read response body: %v", requestId, err)
+		return "", fmt.Errorf("client-delete(%s): failed to read response body: %w", requestId, err), nil, nil
+	}
+
 	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-delete(%s): response body length: %d", requestId, len(data))
 
@@ -774,7 +786,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 			switch request.State {
 			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" {
+			case "FAILED":
 				return false, formatProvisionError("delete", requestId, provisionRequestId, request)
 			}
 
@@ -836,31 +848,32 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	// TCP connection is not reused by another goroutine before this response
 	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var data []byte
-	var doErr, readErr error
-	queueErr := ac.executeWithQueue(request, func() error {
-		response, doErr = ac.Client.Do(request)
-		if doErr != nil {
-			return doErr
-		}
-		defer func() { _ = response.Body.Close() }()
-		data, readErr = io.ReadAll(response.Body)
-		return readErr
+	var err error
+	mutexErr := ac.executeWithMutex(func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+		return err
 	})
 
-	if queueErr != nil {
-		if doErr != nil {
-			return "", fmt.Errorf("client-update(%s): failed to send request, %w", requestId, queueErr), nil, nil
-		}
-		if readErr != nil {
-			logf("ERROR", "client-update(%s): failed to read response body: %v", requestId, readErr)
-			return "", fmt.Errorf("client-update(%s): failed to read response body: %w", requestId, queueErr), nil, nil
-		}
-		return "", fmt.Errorf("client-update(%s): %w", requestId, queueErr), nil, nil
+	// Ensure response body is closed on all paths after we use it
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
 	}
 
+	if mutexErr != nil {
+		return "", fmt.Errorf("client-update(%s): %w", requestId, mutexErr), nil, nil
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("client-update(%s): failed to send request, %w", requestId, err), nil, nil
+	}
 	logf("DEBUG", "client-update(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-update(%s): response headers: %v", requestId, response.Header)
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		logf("ERROR", "client-update(%s): failed to read response body: %v", requestId, err)
+		return "", fmt.Errorf("client-update(%s): failed to read response body: %w", requestId, err), nil, nil
+	}
+
 	logf("DEBUG", "client-update(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-update(%s): response body length: %d", requestId, len(data))
 
@@ -899,7 +912,7 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 			switch request.State {
 			case "SUCCESS":
 				return true, nil
-			} else if request.State == "FAILED" {
+			case "FAILED":
 				return false, formatProvisionError("update", requestId, provisionRequestId, request)
 			}
 
