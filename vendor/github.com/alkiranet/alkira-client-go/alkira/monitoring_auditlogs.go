@@ -41,7 +41,7 @@ func (ac *AlkiraClient) GetAuditLogs(queryStatus string, queryType string) (stri
 	uri, err := url.Parse(baseUri)
 
 	if err != nil {
-		return "", fmt.Errorf("GetAuditLogs: failed to parse URI: %v", err)
+		return "", fmt.Errorf("GetAuditLogs: failed to parse URI: %w", err)
 	}
 
 	// Process optional query parameters

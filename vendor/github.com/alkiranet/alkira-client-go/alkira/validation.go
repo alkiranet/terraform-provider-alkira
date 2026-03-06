@@ -4,6 +4,7 @@ package alkira
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -42,13 +43,13 @@ func (ac *AlkiraClient) GetValidationState(id string) (*ValidationState, error) 
 	logf("DEBUG", "GetValidationState: raw response data as bytes: %v", data)
 
 	var result ValidationState
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 	if err != nil {
 		// Log additional debugging information
 		logf("ERROR", "GetValidationState: JSON unmarshal failed with data length: %d", len(data))
 		logf("ERROR", "GetValidationState: JSON unmarshal failed with data as string: %s", string(data))
 		logf("ERROR", "GetValidationState: JSON unmarshal error: %v", err)
-		return nil, fmt.Errorf("GetValidationState: failed to unmarshal: %v", err)
+		return nil, fmt.Errorf("GetValidationState: failed to unmarshal: %w", err)
 	}
 
 	logf("DEBUG", "GetValidationState: successfully unmarshaled validation state: %+v", result)
@@ -99,7 +100,7 @@ func (ac *AlkiraClient) handleValidation(response *http.Response) error {
 		})
 
 		if err != nil {
-			if err == wait.ErrWaitTimeout {
+			if errors.Is(err, wait.ErrWaitTimeout) {
 				logf("ERROR", "handleValidation: validation %s timed out", validationStateID)
 				return fmt.Errorf("validation %s timed out", validationStateID)
 			}
