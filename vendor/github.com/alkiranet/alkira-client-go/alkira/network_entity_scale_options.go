@@ -22,17 +22,18 @@ type SegmentScaleOptions struct {
 }
 
 type NetworkEntityScaleOptions struct {
-	Description         string                `json:"description"`
-	DocState            string                `json:"docState,omitempty"`
-	EntityId            int                   `json:"entityId"`
-	EntityType          string                `json:"entityType"`
-	Id                  json.Number           `json:"id,omitempty"`                  // response only
-	LastConfigUpdatedAt int                   `json:"lastConfigUpdatedAt,omitempty"` // response only
-	Name                string                `json:"name"`
-	NetworkEntityId     string                `json:"networkEntityId"`
-	NetworkEntityType   string                `json:"networkEntityType"`
-	SegmentScaleOptions []SegmentScaleOptions `json:"segmentScaleOptions"`
-	State               string                `json:"state,omitempty"` // response only
+	Description          string                `json:"description"`
+	DocState             string                `json:"docState,omitempty"`
+	EntityId             int                   `json:"entityId"`
+	EntityType           string                `json:"entityType"`
+	Id                   json.Number           `json:"id,omitempty"`                  // response only
+	LastConfigUpdatedAt  int                   `json:"lastConfigUpdatedAt,omitempty"` // response only
+	Name                 string                `json:"name"`
+	NetworkEntityId      string                `json:"networkEntityId"`
+	NetworkEntitySubType string                `json:"networkEntitySubType"`
+	NetworkEntityType    string                `json:"networkEntityType"`
+	SegmentScaleOptions  []SegmentScaleOptions `json:"segmentScaleOptions"`
+	State                string                `json:"state,omitempty"` // response only
 }
 
 // NewNetworkEntityScaleOptions new network entity scale options
