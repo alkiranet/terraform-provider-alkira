@@ -530,7 +530,7 @@ func formatProvisionError(operation string, requestId string, provisionRequestId
 	return errors.New(errMsg)
 }
 
- // formatProvisionError formats the provision error message with detailed information if available
+// formatProvisionError formats the provision error message with detailed information if available
 func formatProvisionError(operation string, requestId string, provisionRequestId string, request *TenantNetworkProvisionRequest) error {
 	errMsg := fmt.Sprintf("client-%s(%s): provision request %s failed", operation, requestId, provisionRequestId)
 	if request.ErrorDetails != nil && request.ErrorDetails.Message != "" && request.ErrorDetails.Metadata != nil {
