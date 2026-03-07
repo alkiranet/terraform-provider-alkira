@@ -242,7 +242,7 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix_list_ids":    {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeInt}},
+						"prefix_list_ids":    {Type: schema.TypeSet, Elem: &schema.Schema{Type: schema.TypeInt}},
 						"custom_prefix":      {Type: schema.TypeString},
 						"export_all_subnets": {Type: schema.TypeBool, Optional: true, Computed: true},
 					},
@@ -343,9 +343,10 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 				assert.Len(t, result, 1)
 				routing := result[0].(map[string]interface{})
 				assert.Equal(t, tt.expectedPrefix, routing["custom_prefix"])
-				// Convert []interface{} to []int for comparison
-				actualIds := convertTypeListToIntList(routing["prefix_list_ids"].([]interface{}))
-				assert.Equal(t, tt.expectedIds, actualIds)
+				// Convert *schema.Set to []int for comparison
+				actualIds := convertTypeSetToIntList(routing["prefix_list_ids"].(*schema.Set))
+				// Use order-insensitive comparison for TypeSet-based fields
+				assert.ElementsMatch(t, tt.expectedIds, actualIds)
 				// Check export_all_subnets if specified
 				if tt.expectedExportAll != nil {
 					assert.Equal(t, *tt.expectedExportAll, routing["export_all_subnets"].(bool))
@@ -533,7 +534,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-					"prefix_list_ids":    []interface{}{},
+					"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 					"export_all_subnets": false,
 				},
 			},
@@ -572,7 +573,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
-					"prefix_list_ids": []interface{}{},
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
 					// export_all_subnets not specified, defaults to true
 				},
 			},
@@ -611,7 +612,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_CUSTOM_PREFIX",
-					"prefix_list_ids": []interface{}{1, 2, 3},
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{1, 2, 3}),
 				},
 			},
 			subnets:     nil,
@@ -632,7 +633,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
-					"prefix_list_ids": []interface{}{},
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
 				},
 			},
 			subnets: schema.NewSet(
@@ -663,7 +664,8 @@ func TestExpandGcpRouting(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.ImportOptions.RouteImportMode, result.ImportOptions.RouteImportMode)
-				assert.Equal(t, tt.expected.ImportOptions.PrefixListIds, result.ImportOptions.PrefixListIds)
+				// Use order-insensitive comparison for TypeSet-based fields
+				assert.ElementsMatch(t, tt.expected.ImportOptions.PrefixListIds, result.ImportOptions.PrefixListIds)
 				assert.Equal(t, tt.expected.ExportOptions.ExportAllSubnets, result.ExportOptions.ExportAllSubnets)
 				assert.Equal(t, tt.expected.ExportOptions.Prefixes, result.ExportOptions.Prefixes)
 			}
@@ -752,7 +754,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids":    []interface{}{},
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 						"export_all_subnets": true,
 					},
 				},
@@ -772,7 +774,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids":    []interface{}{},
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 						"export_all_subnets": true,
 					},
 				},
@@ -799,7 +801,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids":    []interface{}{},
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 						"export_all_subnets": false,
 					},
 				},
@@ -825,7 +827,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids":    []interface{}{},
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 						"export_all_subnets": false,
 					},
 				},
@@ -864,7 +866,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids": []interface{}{},
+						"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
 						// export_all_subnets not specified, defaults to true
 					},
 				},
@@ -890,7 +892,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 				"gcp_routing": []interface{}{
 					map[string]interface{}{
 						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
-						"prefix_list_ids":    []interface{}{},
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
 						"export_all_subnets": true,
 					},
 				},
