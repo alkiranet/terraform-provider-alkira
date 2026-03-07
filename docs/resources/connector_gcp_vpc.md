@@ -126,7 +126,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 Required:
 
 - `custom_prefix` (String) Specifies the source of the routes that need to be imported. The value could be `ADVERTISE_DEFAULT_ROUTE` and `ADVERTISE_CUSTOM_PREFIX`.
-- `prefix_list_ids` (List of Number) IDs of prefix lists defined on the network.
+- `prefix_list_ids` (Set of Number) IDs of prefix lists defined on the network.
 
 
 <a id="nestedblock--vpc_subnet"></a>

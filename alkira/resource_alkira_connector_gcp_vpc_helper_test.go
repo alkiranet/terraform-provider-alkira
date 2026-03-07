@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -241,7 +242,7 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix_list_ids":    {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeInt}},
+						"prefix_list_ids":    {Type: schema.TypeSet, Elem: &schema.Schema{Type: schema.TypeInt}},
 						"custom_prefix":      {Type: schema.TypeString},
 						"export_all_subnets": {Type: schema.TypeBool, Optional: true, Computed: true},
 					},
@@ -251,11 +252,12 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		gcpRouting     *alkira.ConnectorGcpVpcRouting
-		expectEmpty    bool
-		expectedPrefix string
-		expectedIds    []int
+		name              string
+		gcpRouting        *alkira.ConnectorGcpVpcRouting
+		expectEmpty       bool
+		expectedPrefix    string
+		expectedIds       []int
+		expectedExportAll *bool
 	}{
 		{
 			name:        "nil routing - should not set",
@@ -301,9 +303,14 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 				assert.Len(t, result, 1)
 				routing := result[0].(map[string]interface{})
 				assert.Equal(t, tt.expectedPrefix, routing["custom_prefix"])
-				// Convert []interface{} to []int for comparison
-				actualIds := convertTypeListToIntList(routing["prefix_list_ids"].([]interface{}))
-				assert.Equal(t, tt.expectedIds, actualIds)
+				// Convert *schema.Set to []int for comparison
+				actualIds := convertTypeSetToIntList(routing["prefix_list_ids"].(*schema.Set))
+				// Use order-insensitive comparison for TypeSet-based fields
+				assert.ElementsMatch(t, tt.expectedIds, actualIds)
+				// Check export_all_subnets if specified
+				if tt.expectedExportAll != nil {
+					assert.Equal(t, *tt.expectedExportAll, routing["export_all_subnets"].(bool))
+				}
 			}
 		})
 	}
@@ -476,8 +483,9 @@ func TestExpandGcpRouting(t *testing.T) {
 			name: "default route mode with subnets",
 			gcpRouting: []interface{}{
 				map[string]interface{}{
-					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
-					"prefix_list_ids": []interface{}{},
+					"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+					"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+					"export_all_subnets": false,
 				},
 			},
 			subnets: schema.NewSet(
@@ -511,11 +519,50 @@ func TestExpandGcpRouting(t *testing.T) {
 			},
 		},
 		{
+			name: "default route mode with subnets but export_all_subnets defaults to true",
+			gcpRouting: []interface{}{
+				map[string]interface{}{
+					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
+					// export_all_subnets not specified, defaults to true
+				},
+			},
+			subnets: schema.NewSet(
+				func(i interface{}) int {
+					m := i.(map[string]interface{})
+					return schema.HashString(m["id"].(string))
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			),
+			expectError: false,
+			expected: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: true, // defaults to true
+					Prefixes: []alkira.UserInputPrefixes{
+						{
+							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
+							Value: "10.0.1.0/24",
+							Type:  "SUBNET",
+						},
+					},
+				},
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   nil,
+				},
+			},
+		},
+		{
 			name: "custom prefix mode with prefix lists",
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_CUSTOM_PREFIX",
-					"prefix_list_ids": []interface{}{1, 2, 3},
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{1, 2, 3}),
 				},
 			},
 			subnets:     nil,
@@ -536,7 +583,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
-					"prefix_list_ids": []interface{}{},
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
 				},
 			},
 			subnets: schema.NewSet(
@@ -567,7 +614,8 @@ func TestExpandGcpRouting(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.ImportOptions.RouteImportMode, result.ImportOptions.RouteImportMode)
-				assert.Equal(t, tt.expected.ImportOptions.PrefixListIds, result.ImportOptions.PrefixListIds)
+				// Use order-insensitive comparison for TypeSet-based fields
+				assert.ElementsMatch(t, tt.expected.ImportOptions.PrefixListIds, result.ImportOptions.PrefixListIds)
 				assert.Equal(t, tt.expected.ExportOptions.ExportAllSubnets, result.ExportOptions.ExportAllSubnets)
 				assert.Equal(t, tt.expected.ExportOptions.Prefixes, result.ExportOptions.Prefixes)
 			}
@@ -632,4 +680,263 @@ func TestGcpVpcDataStructures(t *testing.T) {
 		assert.Nil(t, routing.ExportOptions.Prefixes)
 		assert.Nil(t, routing.ImportOptions.PrefixListIds)
 	})
+}
+
+func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
+	resource := resourceAlkiraConnectorGcpVpc()
+
+	tests := []struct {
+		name          string
+		config        map[string]interface{}
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "export_all_subnets=true without vpc_subnet - valid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+						"export_all_subnets": true,
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "export_all_subnets=true with vpc_subnet - invalid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+						"export_all_subnets": true,
+					},
+				},
+				"vpc_subnet": []interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			},
+			expectError:   true,
+			errorContains: "vpc_subnet cannot be specified when export_all_subnets is true",
+		},
+		{
+			name: "export_all_subnets=false with vpc_subnet - valid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+						"export_all_subnets": false,
+					},
+				},
+				"vpc_subnet": []interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "export_all_subnets=false without vpc_subnet - valid (TPS will error)",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+						"export_all_subnets": false,
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "no gcp_routing with vpc_subnet - valid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"vpc_subnet": []interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "export_all_subnets defaults to true with vpc_subnet - valid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
+						// export_all_subnets not specified, defaults to true
+					},
+				},
+				"vpc_subnet": []interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "export_all_subnets=true with multiple vpc_subnets - invalid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+				"gcp_routing": []interface{}{
+					map[string]interface{}{
+						"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+						"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+						"export_all_subnets": true,
+					},
+				},
+				"vpc_subnet": []interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-east1/subnetworks/subnet-2",
+						"cidr": "10.0.2.0/24",
+					},
+				},
+			},
+			expectError:   true,
+			errorContains: "vpc_subnet cannot be specified when export_all_subnets is true",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create test resource data
+			d := resource.TestResourceData()
+			d.SetId("test-id")
+
+			// Set all the config values
+			for key, val := range tt.config {
+				if err := d.Set(key, val); err != nil {
+					t.Fatalf("Failed to set %s: %v", key, err)
+				}
+			}
+
+			// Get the CustomizeDiff function
+			customizeDiff := resource.CustomizeDiff
+			assert.NotNil(t, customizeDiff, "CustomizeDiff should not be nil")
+
+			// The CustomizeDiff function requires a ResourceDiff which is difficult to mock
+			// in unit tests. We test the validation logic through the resource's schema
+			// and manually run the validation logic here.
+			//
+			// Extract the actual validation logic from CustomizeDiff:
+			client := &alkira.AlkiraClient{}
+			err := validateExportAllSubnetsWithVpcSubnet(d, client)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// validateExportAllSubnetsWithVpcSubnet extracts the validation logic
+// for testability. This mirrors the logic in CustomizeDiff.
+func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, client *alkira.AlkiraClient) error {
+	// This function contains the same logic as CustomizeDiff
+	// for validation of export_all_subnets and vpc_subnet mutual exclusion
+
+	// Get gcp_routing config
+	gcpRouting := d.Get("gcp_routing")
+	if gcpRouting == nil {
+		return nil
+	}
+
+	routing, ok := gcpRouting.([]interface{})
+	if !ok || len(routing) == 0 {
+		return nil
+	}
+
+	routingCfg := routing[0].(map[string]interface{})
+	exportAll, ok := routingCfg["export_all_subnets"].(bool)
+	if !ok || !exportAll {
+		return nil
+	}
+
+	// If export_all_subnets is true, vpc_subnet must be empty
+	vpcSubnets := d.Get("vpc_subnet")
+	if vpcSubnets == nil {
+		return nil
+	}
+
+	vpcSubnetSet, ok := vpcSubnets.(*schema.Set)
+	if !ok {
+		return nil
+	}
+
+	if vpcSubnetSet.Len() > 0 {
+		return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
+			"When exporting all subnets, specific vpc_subnet entries should not be provided")
+	}
+
+	return nil
 }

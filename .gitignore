@@ -8,3 +8,4 @@ releases
 terraform-provider-alkira
 terraform.tfstate
 terraform.tfstate.*
+test/*

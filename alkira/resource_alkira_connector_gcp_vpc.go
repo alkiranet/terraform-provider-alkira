@@ -33,6 +33,14 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceConnectorGcpVpcRead),
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceConnectorGcpVpcV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceConnectorGcpVpcStateUpgradeV0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"billing_tag_ids": {
@@ -111,7 +119,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 						"prefix_list_ids": {
 							Description: "IDs of prefix lists defined on the " +
 								"network.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},

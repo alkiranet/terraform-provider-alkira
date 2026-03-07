@@ -15,21 +15,27 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 		RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
 	}
 
+	exportOptions := alkira.ConnectorGcpVpcExportOptions{
+		ExportAllSubnets: true,
+	}
+
 	if in != nil && len(in) == 1 {
 		for _, option := range in {
 			cfg := option.(map[string]interface{})
 
-			if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
-				importOptions.PrefixListIds = convertTypeListToIntList(v)
+			if v, ok := cfg["prefix_list_ids"].(*schema.Set); ok {
+				importOptions.PrefixListIds = convertTypeSetToIntList(v)
 			}
 
 			if v, ok := cfg["custom_prefix"].(string); ok {
 				importOptions.RouteImportMode = v
 			}
+
+			if v, ok := cfg["export_all_subnets"].(bool); ok {
+				exportOptions.ExportAllSubnets = v
+			}
 		}
 	}
-
-	exportAllSubnets := true
 
 	prefixes, err := generateGCPUserInputPrefixes(subnets)
 
@@ -37,14 +43,7 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 		return nil, err
 	}
 
-	if prefixes != nil && len(prefixes) > 0 {
-		exportAllSubnets = false
-	}
-
-	exportOptions := alkira.ConnectorGcpVpcExportOptions{
-		ExportAllSubnets: exportAllSubnets,
-		Prefixes:         prefixes,
-	}
+	exportOptions.Prefixes = prefixes
 
 	gcp := &alkira.ConnectorGcpVpcRouting{
 		ExportOptions: exportOptions,

@@ -1,8 +1,8 @@
 package alkira
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -421,7 +421,6 @@ func TestConvertInputTimeToEpoch(t *testing.T) {
 		})
 	}
 }
-
 
 func TestProvisionErrorMessageFormatting(t *testing.T) {
 	requestId := "client-test-123"
