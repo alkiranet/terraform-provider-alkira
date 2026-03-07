@@ -19,8 +19,8 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 		for _, option := range in {
 			cfg := option.(map[string]interface{})
 
-			if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
-				importOptions.PrefixListIds = convertTypeListToIntList(v)
+			if v, ok := cfg["prefix_list_ids"].(*schema.Set); ok {
+				importOptions.PrefixListIds = convertTypeSetToIntList(v)
 			}
 
 			if v, ok := cfg["custom_prefix"].(string); ok {
