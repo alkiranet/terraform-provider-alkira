@@ -9,6 +9,53 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestConnectorArubaEdgeScaleGroupId(t *testing.T) {
+	t.Run("omitted when empty", func(t *testing.T) {
+		connector := alkira.ConnectorArubaEdge{
+			Name: "test-connector",
+			Cxp:  "US-EAST-2",
+		}
+
+		data, err := json.Marshal(connector)
+		require.NoError(t, err)
+
+		var m map[string]interface{}
+		require.NoError(t, json.Unmarshal(data, &m))
+		require.NotContains(t, m, "scaleGroupId", "scaleGroupId should be omitted when empty")
+	})
+
+	t.Run("included when set", func(t *testing.T) {
+		connector := alkira.ConnectorArubaEdge{
+			Name:         "test-connector",
+			Cxp:          "US-EAST-2",
+			ScaleGroupId: "sg-abc123",
+		}
+
+		data, err := json.Marshal(connector)
+		require.NoError(t, err)
+
+		var m map[string]interface{}
+		require.NoError(t, json.Unmarshal(data, &m))
+		require.Contains(t, m, "scaleGroupId", "scaleGroupId should be present when set")
+		require.Equal(t, "sg-abc123", m["scaleGroupId"])
+	})
+
+	t.Run("round-trip marshal/unmarshal", func(t *testing.T) {
+		original := alkira.ConnectorArubaEdge{
+			Name:         "test-connector",
+			Cxp:          "US-WEST-1",
+			ScaleGroupId: "sg-xyz789",
+		}
+
+		data, err := json.Marshal(original)
+		require.NoError(t, err)
+
+		var decoded alkira.ConnectorArubaEdge
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		require.Equal(t, original.ScaleGroupId, decoded.ScaleGroupId)
+	})
+}
+
 func TestArubaEdgeDefalteInstance(t *testing.T) {
 	expectedInstances := generateNumArubaEdgeInstance(4)
 	m := deflateArubaEdgeInstances(expectedInstances)
