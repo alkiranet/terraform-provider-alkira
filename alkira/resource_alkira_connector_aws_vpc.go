@@ -330,6 +330,14 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("description", connector.Description)
 
+	// Set routing configuration from API response
+	setAwsVpcRoutingOptions(connector, d)
+
+	// Set TGW attachments (reusing existing function)
+	if connector.TgwAttachments != nil && len(connector.TgwAttachments) > 0 {
+		setTgwAttachment(d, connector.TgwAttachments)
+	}
+
 	// Get segment
 	numOfSegments := len(connector.Segments)
 
