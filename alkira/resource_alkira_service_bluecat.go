@@ -440,9 +440,14 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceBluecat, error) {
-	// Parse Instances
-	instanceList := d.Get("instance").([]interface{})
-	instances, err := expandBluecatInstances(instanceList, m)
+	// Parse Instances - use GetChange so we can pass old state for hostname-based
+	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
+	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
+	instances, err := expandBluecatInstances(
+		newInstanceListRaw.([]interface{}),
+		oldInstanceListRaw.([]interface{}),
+		m,
+	)
 	if err != nil {
 		return nil, err
 	}
