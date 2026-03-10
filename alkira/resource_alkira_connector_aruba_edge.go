@@ -201,6 +201,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+            "scale_group_id": {
+                Description: "The ID of the scale group associated with the connector.",
+             	Type:        schema.TypeString,
+             	Optional:    true,
+			},
 		},
 	}
 }
@@ -296,6 +301,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("version", connector.Version)
 	d.Set("enabled", connector.Enabled)
 	d.Set("description", connector.Description)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 
 	// Set provision state
 	if client.Provision && provState != "" {
@@ -432,5 +438,6 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		Version:              d.Get("version").(string),
 		Enabled:              d.Get("enabled").(bool),
 		Description:          d.Get("description").(string),
+		ScaleGroupId:         d.Get("scale_group_id").(string),
 	}, nil
 }
