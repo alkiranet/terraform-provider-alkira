@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,12 +21,19 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 	for _, old := range oldInstances {
 		cfg, ok := old.(map[string]interface{})
 		if !ok {
+			log.Printf("[WARN] Bluecat: skipping malformed instance entry in old state: %v", old)
 			continue
 		}
-		if hostname := getHostnameFromInstance(cfg); hostname != "" {
-			if id, ok := cfg["id"].(int); ok && id != 0 {
-				oldIdByHostname[hostname] = id
+		hostname := getHostnameFromInstance(cfg)
+		id, hasId := cfg["id"].(int)
+		if hostname == "" {
+			if hasId && id != 0 {
+				log.Printf("[WARN] Bluecat: existing instance with id=%d has no hostname; it cannot be matched by hostname during reorder and will be treated as new", id)
 			}
+			continue
+		}
+		if hasId && id != 0 {
+			oldIdByHostname[hostname] = id
 		}
 	}
 
@@ -40,9 +48,7 @@ func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m inte
 
 		// Look up id by hostname from old state. If found, use the old id
 		// regardless of what Terraform's positional diff put in instanceCfg["id"].
-		// If not found, the instance is new and id stays 0. We never fall back
-		// to instanceCfg["id"] because positional shifting can put the wrong
-		// (non-zero) id there for a new instance.
+		// If not found, the instance is new and id stays 0 (the zero value above).
 		hostname := getHostnameFromInstance(instanceCfg)
 		if id, found := oldIdByHostname[hostname]; found {
 			r.Id = id
@@ -189,6 +195,31 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 		}
 	}
 	return anycast, nil
+}
+
+// validateBluecatInstanceHostnames returns an error if any two instances in the
+// list share the same hostname. Hostnames are used as unique keys to match
+// instances across list reorders; duplicates make that lookup unreliable.
+func validateBluecatInstanceHostnames(instances []interface{}) error {
+	seen := make(map[string]int, len(instances))
+	for i, inst := range instances {
+		cfg, ok := inst.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		hostname := getHostnameFromInstance(cfg)
+		if hostname == "" {
+			continue
+		}
+		if prev, exists := seen[hostname]; exists {
+			return fmt.Errorf(
+				"instance[%d] and instance[%d] both use hostname %q; hostnames must be unique across all instances",
+				prev, i, hostname,
+			)
+		}
+		seen[hostname] = i
+	}
+	return nil
 }
 
 func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData) []map[string]interface{} {
