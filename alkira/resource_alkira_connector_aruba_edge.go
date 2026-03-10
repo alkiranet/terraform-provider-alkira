@@ -63,11 +63,6 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"scale_group_id": {
-							Description: "The ID of the scale group associated with the connector.",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
 						"aruba_edge_connect_segment": {
 							Description: "The segment of the Aruba Edge connector.",
 							Type:        schema.TypeString,
@@ -205,6 +200,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+            "scale_group_id": {
+                Description: "The ID of the scale group associated with the connector.",
+             	Type:        schema.TypeString,
+             	Optional:    true,
 			},
 		},
 	}
