@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -98,4 +100,35 @@ func generateNumArubaEdgeInstance(num int) []alkira.ArubaEdgeInstance {
 	}
 
 	return instances
+}
+
+func TestArubaEdgeScaleGroupIdSchema(t *testing.T) {
+	resourceSchema := resourceAlkiraConnectorArubaEdge().Schema
+
+	t.Run("field exists in schema", func(t *testing.T) {
+		_, ok := resourceSchema["scale_group_id"]
+		assert.True(t, ok, "scale_group_id must be present in schema")
+	})
+
+	t.Run("field is Optional TypeString", func(t *testing.T) {
+		field := resourceSchema["scale_group_id"]
+		assert.Equal(t, schema.TypeString, field.Type)
+		assert.True(t, field.Optional)
+		assert.False(t, field.Required)
+		assert.False(t, field.Computed)
+	})
+}
+
+func TestArubaEdgeScaleGroupIdRequest(t *testing.T) {
+	t.Run("ScaleGroupId populated when set", func(t *testing.T) {
+		connector := alkira.ConnectorArubaEdge{
+			ScaleGroupId: "sg-123",
+		}
+		assert.Equal(t, "sg-123", connector.ScaleGroupId)
+	})
+
+	t.Run("ScaleGroupId empty when not set", func(t *testing.T) {
+		connector := alkira.ConnectorArubaEdge{}
+		assert.Empty(t, connector.ScaleGroupId)
+	})
 }
