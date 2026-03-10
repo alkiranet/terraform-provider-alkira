@@ -27,7 +27,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return nil
+			return validateBluecatInstanceHostnames(d.Get("instance").([]interface{}))
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
