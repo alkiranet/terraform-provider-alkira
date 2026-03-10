@@ -452,8 +452,8 @@ func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.Serv
 	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
 	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
 	instances, err := expandBluecatInstances(
-		newInstanceListRaw.(*schema.Set).List(),
-		oldInstanceListRaw.(*schema.Set).List(),
+		newInstanceListRaw.([]interface{}),
+		oldInstanceListRaw.([]interface{}),
 		m,
 	)
 	if err != nil {
