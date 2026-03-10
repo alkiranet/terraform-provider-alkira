@@ -7,9 +7,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
+func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
 	if in == nil || len(in) == 0 {
 		return nil, fmt.Errorf("[ERROR]: Bluecat instances cannot be nil or empty")
+	}
+
+	// Build hostname -> id map from old state. When instances are inserted or
+	// removed in the middle of a TypeList, Terraform's positional diff causes
+	// id values to shift to the wrong element. Matching by hostname ensures
+	// each existing instance keeps its correct id regardless of list position.
+	oldIdByHostname := make(map[string]int)
+	for _, old := range oldInstances {
+		cfg, ok := old.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if hostname := getHostnameFromInstance(cfg); hostname != "" {
+			if id, ok := cfg["id"].(int); ok && id != 0 {
+				oldIdByHostname[hostname] = id
+			}
+		}
 	}
 
 	instances := make([]alkira.BluecatInstance, len(in))
@@ -17,11 +34,18 @@ func expandBluecatInstances(in []interface{}, m interface{}) ([]alkira.BluecatIn
 		var r alkira.BluecatInstance
 
 		instanceCfg := instance.(map[string]interface{})
-		if v, ok := instanceCfg["id"].(int); ok {
-			r.Id = v
-		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
+		}
+
+		// Look up id by hostname from old state. If found, use the old id
+		// regardless of what Terraform's positional diff put in instanceCfg["id"].
+		// If not found, the instance is new and id stays 0. We never fall back
+		// to instanceCfg["id"] because positional shifting can put the wrong
+		// (non-zero) id there for a new instance.
+		hostname := getHostnameFromInstance(instanceCfg)
+		if id, found := oldIdByHostname[hostname]; found {
+			r.Id = id
 		}
 
 		// Handle BDDS options
