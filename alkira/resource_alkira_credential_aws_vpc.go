@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -43,33 +46,29 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 				Description: "AWS access key.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AWS_ACCESS_KEY_ID",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"aws_secret_key": {
 				Description: "AWS secret key.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AWS_SECRET_ACCESS_KEY",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"aws_role_arn": {
 				Description: "AWS Role ARN.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AWS_ROLE_ARN",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"aws_external_id": {
 				Description: "AWS Role External ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AWS_ROLE_EXTERNAL_ID",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"type": {
 				Description: "Type of AWS-VPC credential.",
@@ -100,6 +99,27 @@ func resourceCredentialAwsVpc(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCredentialAwsVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*alkira.AlkiraClient)
+
+	credential, err := client.GetCredentialById(d.Id())
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(err)
+	}
+
+	d.Set("name", credential.Name)
+
+	if credential.SubType != "" {
+		d.Set("type", credential.SubType)
+	}
+
+	// Sensitive fields (access_key, secret_key, role_arn, external_id)
+	// are NOT returned by the API for security reasons and are
+	// maintained in the user's HCL configuration via WriteOnly.
+
 	return nil
 }
 
@@ -143,22 +163,65 @@ func resourceCredentialAwsVpcDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
+// getAwsVpcCredentialValue gets a value from config or environment variable.
+// For WriteOnly fields, reads from raw config since values are not stored in state.
+func getAwsVpcCredentialValue(d *schema.ResourceData, field string, envVar string, required bool) (string, error) {
+	// First try raw config (for WriteOnly fields)
+	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		strVal := val.AsString()
+		if strVal != "" {
+			return strVal, nil
+		}
+	}
+
+	// Fall back to environment variable
+	envValue := os.Getenv(envVar)
+	if envValue != "" {
+		return envValue, nil
+	}
+
+	if required {
+		return "", fmt.Errorf("required field '%s' is not set in configuration and environment variable '%s' is not set", field, envVar)
+	}
+	return "", nil
+}
+
 func generateCredentialAwsVpc(d *schema.ResourceData) (interface{}, error) {
 	credentialType := d.Get("type").(string)
 	var c interface{}
 
 	switch credentialType {
 	case "ACCESS_KEY":
+		accessKey, err := getAwsVpcCredentialValue(d, "aws_access_key", "AK_AWS_ACCESS_KEY_ID", true)
+		if err != nil {
+			return nil, err
+		}
+
+		secretKey, err := getAwsVpcCredentialValue(d, "aws_secret_key", "AK_AWS_SECRET_ACCESS_KEY", true)
+		if err != nil {
+			return nil, err
+		}
+
 		c = alkira.CredentialAwsVpcKey{
-			Ec2AccessKey: d.Get("aws_access_key").(string),
-			Ec2SecretKey: d.Get("aws_secret_key").(string),
-			Type:         d.Get("type").(string),
+			Ec2AccessKey: accessKey,
+			Ec2SecretKey: secretKey,
+			Type:         credentialType,
 		}
 	case "ROLE":
+		roleArn, err := getAwsVpcCredentialValue(d, "aws_role_arn", "AK_AWS_ROLE_ARN", true)
+		if err != nil {
+			return nil, err
+		}
+
+		externalId, _ := getAwsVpcCredentialValue(d, "aws_external_id", "AK_AWS_ROLE_EXTERNAL_ID", false)
+
 		c = alkira.CredentialAwsVpcRole{
-			Ec2RoleArn:    d.Get("aws_role_arn").(string),
-			Ec2ExternalId: d.Get("aws_external_id").(string),
-			Type:          d.Get("type").(string),
+			Ec2RoleArn:    roleArn,
+			Ec2ExternalId: externalId,
+			Type:          credentialType,
 		}
 	default:
 		return nil, errors.New("ERROR: Invalid AWS-VPC credential type")
