@@ -201,10 +201,10 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-            "scale_group_id": {
-                Description: "The ID of the scale group associated with the connector.",
-             	Type:        schema.TypeString,
-             	Optional:    true,
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}
