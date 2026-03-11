@@ -325,23 +325,28 @@ func (ac *AlkiraClient) GetCredentials() (string, error) {
 
 // GetCredentialById get one credential by its Id
 func (ac *AlkiraClient) GetCredentialById(id string) (CredentialResponseDetail, error) {
-	uri := fmt.Sprintf("%s/api/credentials/%s", ac.URI, id)
-
 	var credential CredentialResponseDetail
 
-	data, _, err := ac.get(uri)
-
+	// Get all credentials and filter by ID
+	// Note:  API endpoint /api/credentials/{id} is not valid.
+	credentialsJSON, err := ac.GetCredentials()
 	if err != nil {
-		return credential, err
+		return credential, fmt.Errorf("GetCredentialById: failed to get credentials: %w", err)
 	}
 
-	err = json.Unmarshal(data, &credential)
-
-	if err != nil {
-		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal: %w", err)
+	var credentials []CredentialResponseDetail
+	if err := json.Unmarshal([]byte(credentialsJSON), &credentials); err != nil {
+		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal credentials: %w", err)
 	}
 
-	return credential, nil
+	// Find the credential matching the ID
+	for i := range credentials {
+		if credentials[i].Id == id {
+			return credentials[i], nil
+		}
+	}
+
+	return credential, fmt.Errorf("GetCredentialById: credential with id %s not found", id)
 }
 
 // GetCredentialByName get the credential by its name
