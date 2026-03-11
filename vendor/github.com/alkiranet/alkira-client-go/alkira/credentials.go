@@ -334,10 +334,9 @@ func (ac *AlkiraClient) GetCredentialById(id string) (CredentialResponseDetail, 
 		return credential, fmt.Errorf("GetCredentialById: failed to get credentials: %w", err)
 	}
 
-	err = json.Unmarshal(data, &credential)
-
-	if err != nil {
-		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal: %w", err)
+	var credentials []CredentialResponseDetail
+	if err := json.Unmarshal([]byte(credentialsJSON), &credentials); err != nil {
+		return credential, fmt.Errorf("GetCredentialById: failed to unmarshal credentials: %w", err)
 	}
 
 	// Find the credential matching the ID
