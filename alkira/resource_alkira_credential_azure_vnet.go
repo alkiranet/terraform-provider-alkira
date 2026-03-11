@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -36,33 +39,29 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 				Description: "Azure Application ID.",
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AZURE_APPLICATION_ID",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"subscription_id": {
 				Description: "Azure subscription ID.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AZURE_SUBSCRIPTION_ID",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"secret_key": {
 				Description: "Azure Secret Key.",
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AZURE_SECRET_KEY",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"tenant_id": {
 				Description: "Azure Tenant ID.",
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc(
-					"AK_AZURE_TENANT_ID",
-					nil),
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"environment": {
 				Description: "Azure environment can be `AZURE`, " +
@@ -78,15 +77,71 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 	}
 }
 
+// getAzureVnetCredentialValue gets a value from config or environment variable
+// For WriteOnly fields, reads from raw config since values are not stored in state
+// Returns the value and an error if required but not found
+func getAzureVnetCredentialValue(d *schema.ResourceData, field string, envVar string, required bool) (string, error) {
+	// First try raw config (for WriteOnly fields and normal config values)
+	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		strVal := val.AsString()
+		if strVal != "" {
+			return strVal, nil
+		}
+	}
+
+	// Check environment variable
+	envValue := os.Getenv(envVar)
+	if envValue != "" {
+		return envValue, nil
+	}
+
+	if required {
+		return "", fmt.Errorf("required field '%s' is not set in configuration and environment variable '%s' is not set", field, envVar)
+	}
+	return "", nil
+}
+
+// buildAzureVnetCredential builds the CredentialAzureVnet struct from ResourceData
+func buildAzureVnetCredential(d *schema.ResourceData) (alkira.CredentialAzureVnet, error) {
+	// Get values from config or environment variables
+	applicationId, err := getAzureVnetCredentialValue(d, "application_id", "AK_AZURE_APPLICATION_ID", true)
+	if err != nil {
+		return alkira.CredentialAzureVnet{}, err
+	}
+
+	secretKey, err := getAzureVnetCredentialValue(d, "secret_key", "AK_AZURE_SECRET_KEY", true)
+	if err != nil {
+		return alkira.CredentialAzureVnet{}, err
+	}
+
+	tenantId, err := getAzureVnetCredentialValue(d, "tenant_id", "AK_AZURE_TENANT_ID", true)
+	if err != nil {
+		return alkira.CredentialAzureVnet{}, err
+	}
+
+	subscriptionId, _ := getAzureVnetCredentialValue(d, "subscription_id", "AK_AZURE_SUBSCRIPTION_ID", false)
+
+	// Environment is not WriteOnly, use d.Get() directly
+	environment := d.Get("environment").(string)
+
+	return alkira.CredentialAzureVnet{
+		ApplicationId:  applicationId,
+		SecretKey:      secretKey,
+		SubscriptionId: subscriptionId,
+		TenantId:       tenantId,
+		Environment:    environment,
+	}, nil
+}
+
 func resourceCredentialAzureVnet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	c := alkira.CredentialAzureVnet{
-		ApplicationId:  d.Get("application_id").(string),
-		SecretKey:      d.Get("secret_key").(string),
-		SubscriptionId: d.Get("subscription_id").(string),
-		TenantId:       d.Get("tenant_id").(string),
-		Environment:    d.Get("environment").(string),
+	c, err := buildAzureVnetCredential(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Credential (AZURE-VNET)")
@@ -101,22 +156,43 @@ func resourceCredentialAzureVnet(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceCredentialAzureVnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*alkira.AlkiraClient)
+
+	// Use GetCredentialById which now properly filters from GetCredentials
+	credential, err := client.GetCredentialById(d.Id())
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(err)
+	}
+
+	// Set fields returned by API
+	d.Set("name", credential.Name)
+
+	// Set environment from SubType if available
+	if credential.SubType != "" {
+		d.Set("environment", credential.SubType)
+	}
+
+	// Note: Sensitive fields (secret_key, application_id, tenant_id, subscription_id)
+	// are NOT returned by the API for security reasons and must be maintained
+	// in the user's HCL configuration.
+
 	return nil
 }
 
 func resourceCredentialAzureVnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	c := alkira.CredentialAzureVnet{
-		ApplicationId:  d.Get("application_id").(string),
-		SecretKey:      d.Get("secret_key").(string),
-		SubscriptionId: d.Get("subscription_id").(string),
-		TenantId:       d.Get("tenant_id").(string),
-		Environment:    d.Get("environment").(string),
+	c, err := buildAzureVnetCredential(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Updating Credential (AZURE-VNET)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
+	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeAzureVnet, c, 0)
 
 	if err != nil {
 		return diag.FromErr(err)
