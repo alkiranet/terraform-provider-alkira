@@ -5,8 +5,8 @@ github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbt
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
-github.com/alkiranet/alkira-client-go v1.59.1-0.20260309060415-942fb14519ba h1:Z/6wtMuh7GZDvNuwrovzSELPE0G6BtLejl0Yrm2EpDo=
-github.com/alkiranet/alkira-client-go v1.59.1-0.20260309060415-942fb14519ba/go.mod h1:ms9LjOc4O1Zrr7/VQOva+xwv3sJuBUqS9JsI+MbE2go=
+github.com/alkiranet/alkira-client-go v1.59.1-0.20260310051734-d6fba43c6ebf h1:ec3I0vG3Ry5Yte6rtIPW3JWe+ieJzbkRlz0SGOSlCLI=
+github.com/alkiranet/alkira-client-go v1.59.1-0.20260310051734-d6fba43c6ebf/go.mod h1:ms9LjOc4O1Zrr7/VQOva+xwv3sJuBUqS9JsI+MbE2go=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
