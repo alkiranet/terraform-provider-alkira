@@ -44,7 +44,7 @@ func setTCPProbeState(probe *alkira.Probe, d *schema.ResourceData) error {
 	d.Set("success_threshold", probe.SuccessThreshold)
 	d.Set("period_seconds", probe.PeriodSeconds)
 	d.Set("timeout_seconds", probe.TimeoutSeconds)
-	d.Set("network_entity_id", &probe.NetworkEntity.ID)
+	d.Set("network_entity_id", probe.NetworkEntity.ID)
 
 	// TCP Parameters
 	var params alkira.TcpProbe
