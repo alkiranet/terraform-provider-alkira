@@ -36,13 +36,13 @@ resource "alkira_credential_gcp_vpc" "gcp" {
 
 ### Required
 
-- `client_email` (String) GCP Client email
-- `client_id` (String) GCP Client ID
-- `client_x509_cert_url` (String) GCP Client X509 Cert URL
+- `client_email` (String, Sensitive) GCP Client email
+- `client_id` (String, Sensitive) GCP Client ID
+- `client_x509_cert_url` (String, Sensitive) GCP Client X509 Cert URL
 - `name` (String) The name of the credential
-- `private_key` (String) GCP Private Key
-- `private_key_id` (String) GCP Private Key ID
-- `project_id` (String) GCP Project ID
+- `private_key` (String, Sensitive) GCP Private Key
+- `private_key_id` (String, Sensitive) GCP Private Key ID
+- `project_id` (String, Sensitive) GCP Project ID
 
 ### Optional
 
@@ -54,5 +54,3 @@ resource "alkira_credential_gcp_vpc" "gcp" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-
