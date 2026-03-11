@@ -187,7 +187,7 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 			"split_tunneling": option.UserGroupMappings[0].SplitTunneling,
 			"prefix_list_id":  option.UserGroupMappings[0].PrefixListId,
 			"billing_tag_id":  option.UserGroupMappings[0].BillingTag,
-			"subnet":          option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets,
+			"subnet":          option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets[0],
 		}
 
 		authorizations = append(authorizations, auth)
