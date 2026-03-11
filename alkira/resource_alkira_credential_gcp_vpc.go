@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,7 +16,7 @@ import (
 func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manage Credential for GCP.",
-		CreateContext: resourceCredentialGcpVpc,
+		CreateContext: resourceCredentialGcpVpcCreate,
 		ReadContext:   resourceCredentialGcpVpcRead,
 		UpdateContext: resourceCredentialGcpVpcUpdate,
 		DeleteContext: resourceCredentialGcpVpcDelete,
@@ -44,31 +46,43 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 				Description: "GCP Client email",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"client_id": {
 				Description: "GCP Client ID",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"client_x509_cert_url": {
 				Description: "GCP Client X509 Cert URL",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"private_key_id": {
 				Description: "GCP Private Key ID",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"private_key": {
 				Description: "GCP Private Key",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"project_id": {
 				Description: "GCP Project ID",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"token_uri": {
 				Description: "Token URI",
@@ -86,24 +100,16 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 	}
 }
 
-func resourceCredentialGcpVpc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCredentialGcpVpcCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	c := alkira.CredentialGcpVpc{
-		AuthProvider:      d.Get("auth_provider").(string),
-		AuthUri:           d.Get("auth_uri").(string),
-		ClientEmail:       d.Get("client_email").(string),
-		ClientId:          d.Get("client_id").(string),
-		ClientX509CertUrl: d.Get("client_x509_cert_url").(string),
-		PrivateKey:        d.Get("private_key").(string),
-		PrivateKeyId:      d.Get("private_key_id").(string),
-		ProjectId:         d.Get("project_id").(string),
-		TokenUri:          d.Get("token_uri").(string),
-		Type:              d.Get("type").(string),
+	c, err := buildCredentialGcpVpc(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Credential (GCP-VPC)")
-	credentialId, err := client.CreateCredential(d.Get("name").(string), "gcpvpc", c, 0)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeGcpVpc, c, 0)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -114,27 +120,36 @@ func resourceCredentialGcpVpc(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCredentialGcpVpcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*alkira.AlkiraClient)
+
+	credential, err := client.GetCredentialById(d.Id())
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(err)
+	}
+
+	d.Set("name", credential.Name)
+
+	// Note: Sensitive WriteOnly fields (client_email, client_id, client_x509_cert_url,
+	// private_key_id, private_key, project_id) are NOT returned by the API for security
+	// reasons and must be maintained in the user's HCL configuration.
+
 	return nil
 }
 
 func resourceCredentialGcpVpcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	c := alkira.CredentialGcpVpc{
-		AuthProvider:      d.Get("auth_provider").(string),
-		AuthUri:           d.Get("auth_uri").(string),
-		ClientEmail:       d.Get("client_email").(string),
-		ClientId:          d.Get("client_id").(string),
-		ClientX509CertUrl: d.Get("client_x509_cert_url").(string),
-		PrivateKey:        d.Get("private_key").(string),
-		PrivateKeyId:      d.Get("private_key_id").(string),
-		ProjectId:         d.Get("project_id").(string),
-		TokenUri:          d.Get("token_uri").(string),
-		Type:              d.Get("type").(string),
+	c, err := buildCredentialGcpVpc(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Updating Credential (GCP-VPC)")
-	err := client.UpdateCredential(d.Id(), d.Get("name").(string), "gcpvpc", c, 0)
+	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeGcpVpc, c, 0)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -146,7 +161,7 @@ func resourceCredentialGcpVpcUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceCredentialGcpVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	err := client.DeleteCredential(d.Id(), "gcpvpc")
+	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeGcpVpc)
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -160,4 +175,72 @@ func resourceCredentialGcpVpcDelete(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId("")
 	return nil
+}
+
+// buildCredentialGcpVpc constructs the CredentialGcpVpc struct from ResourceData
+// For WriteOnly fields, reads from raw config since values are not stored in state
+func buildCredentialGcpVpc(d *schema.ResourceData) (alkira.CredentialGcpVpc, error) {
+	// Helper function to get WriteOnly field values from raw config
+	getWriteOnlyString := func(field string) (string, error) {
+		attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+		val, diags := d.GetRawConfigAt(attrPath)
+
+		if diags.HasError() {
+			return "", fmt.Errorf("error reading %s from config: %v", field, diags)
+		}
+
+		if val.IsNull() || !val.IsKnown() {
+			return "", fmt.Errorf("required field '%s' is not set in configuration", field)
+		}
+
+		if val.Type() != cty.String {
+			return "", fmt.Errorf("field '%s' is not a string", field)
+		}
+
+		return val.AsString(), nil
+	}
+
+	// Get WriteOnly sensitive fields from raw config
+	clientEmail, err := getWriteOnlyString("client_email")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	clientId, err := getWriteOnlyString("client_id")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	clientX509CertUrl, err := getWriteOnlyString("client_x509_cert_url")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	privateKeyId, err := getWriteOnlyString("private_key_id")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	privateKey, err := getWriteOnlyString("private_key")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	projectId, err := getWriteOnlyString("project_id")
+	if err != nil {
+		return alkira.CredentialGcpVpc{}, err
+	}
+
+	return alkira.CredentialGcpVpc{
+		AuthProvider:      d.Get("auth_provider").(string),
+		AuthUri:           d.Get("auth_uri").(string),
+		ClientEmail:       clientEmail,
+		ClientId:          clientId,
+		ClientX509CertUrl: clientX509CertUrl,
+		PrivateKey:        privateKey,
+		PrivateKeyId:      privateKeyId,
+		ProjectId:         projectId,
+		TokenUri:          d.Get("token_uri").(string),
+		Type:              d.Get("type").(string),
+	}, nil
 }
