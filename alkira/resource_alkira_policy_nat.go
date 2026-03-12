@@ -87,6 +87,11 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
