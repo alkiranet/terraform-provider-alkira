@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,21 +15,27 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 		RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
 	}
 
+	exportOptions := alkira.ConnectorGcpVpcExportOptions{
+		ExportAllSubnets: true,
+	}
+
 	if in != nil && len(in) == 1 {
 		for _, option := range in {
 			cfg := option.(map[string]interface{})
 
-			if v, ok := cfg["prefix_list_ids"].([]interface{}); ok {
-				importOptions.PrefixListIds = convertTypeListToIntList(v)
+			if v, ok := cfg["prefix_list_ids"].(*schema.Set); ok {
+				importOptions.PrefixListIds = convertTypeSetToIntList(v)
 			}
 
 			if v, ok := cfg["custom_prefix"].(string); ok {
 				importOptions.RouteImportMode = v
 			}
+
+			if v, ok := cfg["export_all_subnets"].(bool); ok {
+				exportOptions.ExportAllSubnets = v
+			}
 		}
 	}
-
-	exportAllSubnets := true
 
 	prefixes, err := generateGCPUserInputPrefixes(subnets)
 
@@ -36,14 +43,7 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 		return nil, err
 	}
 
-	if prefixes != nil && len(prefixes) > 0 {
-		exportAllSubnets = false
-	}
-
-	exportOptions := alkira.ConnectorGcpVpcExportOptions{
-		ExportAllSubnets: exportAllSubnets,
-		Prefixes:         prefixes,
-	}
+	exportOptions.Prefixes = prefixes
 
 	gcp := &alkira.ConnectorGcpVpcRouting{
 		ExportOptions: exportOptions,
@@ -91,7 +91,7 @@ func generateGCPUserInputPrefixes(subnets *schema.Set) ([]alkira.UserInputPrefix
 		return prefixes, nil
 	}
 
-	return nil, nil
+	return []alkira.UserInputPrefixes{}, nil
 }
 
 func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceData) {
@@ -104,6 +104,7 @@ func setGcpRoutingOptions(c *alkira.ConnectorGcpVpcRouting, d *schema.ResourceDa
 
 	in["prefix_list_ids"] = c.ImportOptions.PrefixListIds
 	in["custom_prefix"] = c.ImportOptions.RouteImportMode
+	in["export_all_subnets"] = c.ExportOptions.ExportAllSubnets
 
 	d.Set("gcp_routing", []interface{}{in})
 }
@@ -141,6 +142,25 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	if err != nil {
 		log.Printf("[ERROR] failed to convert gcp routing")
 		return nil, err
+	}
+
+	// For Optional+Computed booleans, the SDK cannot distinguish between
+	// "user explicitly set false" and "user didn't set it" in the config
+	// map (both appear as false). Use GetRawConfig to check if the user
+	// actually wrote export_all_subnets in their HCL. If they didn't,
+	// default to true (export all subnets).
+	// This only applies during Create (d.Id() is empty). During Update,
+	// the plan already includes the correct state value for unset
+	// Computed fields, so overriding would silently change the value.
+	if d.Id() == "" {
+		rawConfig := d.GetRawConfig()
+		gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
+		if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
+			exportAll := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
+			if exportAll.IsNull() {
+				gcpRouting.ExportOptions.ExportAllSubnets = true
+			}
+		}
 	}
 
 	//
