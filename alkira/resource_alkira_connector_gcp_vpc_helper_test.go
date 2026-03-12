@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -251,11 +252,12 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		gcpRouting     *alkira.ConnectorGcpVpcRouting
-		expectEmpty    bool
-		expectedPrefix string
-		expectedIds    []int
+		name              string
+		gcpRouting        *alkira.ConnectorGcpVpcRouting
+		expectEmpty       bool
+		expectedPrefix    string
+		expectedIds       []int
+		expectedExportAll *bool // nil means don't check
 	}{
 		{
 			name:        "nil routing - should not set",
@@ -269,10 +271,14 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
 					PrefixListIds:   []int{},
 				},
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false, // default value
+				},
 			},
-			expectEmpty:    false,
-			expectedPrefix: "ADVERTISE_DEFAULT_ROUTE",
-			expectedIds:    nil, // convertTypeListToIntList returns nil for empty slices
+			expectEmpty:       false,
+			expectedPrefix:    "ADVERTISE_DEFAULT_ROUTE",
+			expectedIds:       nil, // convertTypeListToIntList returns nil for empty slices
+			expectedExportAll: boolPtr(false),
 		},
 		{
 			name: "custom prefix mode with prefix lists",
@@ -281,10 +287,46 @@ func TestSetGcpRoutingOptions(t *testing.T) {
 					RouteImportMode: "ADVERTISE_CUSTOM_PREFIX",
 					PrefixListIds:   []int{1, 2, 3},
 				},
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false, // default value
+				},
 			},
-			expectEmpty:    false,
-			expectedPrefix: "ADVERTISE_CUSTOM_PREFIX",
-			expectedIds:    []int{1, 2, 3},
+			expectEmpty:       false,
+			expectedPrefix:    "ADVERTISE_CUSTOM_PREFIX",
+			expectedIds:       []int{1, 2, 3},
+			expectedExportAll: boolPtr(false),
+		},
+		{
+			name: "with export_all_subnets set to false",
+			gcpRouting: &alkira.ConnectorGcpVpcRouting{
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   []int{},
+				},
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false,
+				},
+			},
+			expectEmpty:       false,
+			expectedPrefix:    "ADVERTISE_DEFAULT_ROUTE",
+			expectedIds:       nil,
+			expectedExportAll: boolPtr(false),
+		},
+		{
+			name: "with export_all_subnets set to true (explicit)",
+			gcpRouting: &alkira.ConnectorGcpVpcRouting{
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   []int{},
+				},
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: true,
+				},
+			},
+			expectEmpty:       false,
+			expectedPrefix:    "ADVERTISE_DEFAULT_ROUTE",
+			expectedIds:       nil,
+			expectedExportAll: boolPtr(true),
 		},
 	}
 
@@ -429,6 +471,16 @@ func TestSetGcpVpcSubnets(t *testing.T) {
 			},
 			expectEmpty: true,
 		},
+		{
+			name: "export_all_subnets=false with nil prefixes",
+			gcpRouting: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false,
+					Prefixes:         nil,
+				},
+			},
+			expectEmpty: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -469,7 +521,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: true,
-					Prefixes:         nil,
+					Prefixes:         []alkira.UserInputPrefixes{},
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
 					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
@@ -478,7 +530,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			},
 		},
 		{
-			name: "default route mode with subnets",
+			name: "default route mode with subnets and explicit export_all_subnets=false",
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
@@ -568,7 +620,7 @@ func TestExpandGcpRouting(t *testing.T) {
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
 					ExportAllSubnets: true,
-					Prefixes:         nil,
+					Prefixes:         []alkira.UserInputPrefixes{},
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
 					RouteImportMode: "ADVERTISE_CUSTOM_PREFIX",
