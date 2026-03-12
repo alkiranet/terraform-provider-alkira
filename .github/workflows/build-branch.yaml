@@ -47,7 +47,7 @@ jobs:
       - name: Build terraform provider
         run: |
           cd ${{ env.BUILD_DIR }}
-          ver=$(git describe)
+          ver=$(git describe --tags)
           echo "latest_version=$ver" >> $GITHUB_ENV
           make release
 
