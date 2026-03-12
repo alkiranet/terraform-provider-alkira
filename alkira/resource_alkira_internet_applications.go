@@ -334,10 +334,9 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 	for _, target := range app.Targets {
 		i := map[string]interface{}{
-			"type":       target.Type,
-			"value":      target.Value,
-			"ports":      target.Ports,
-			"portRanges": target.PortRanges,
+			"type":        target.Type,
+			"value":       target.Value,
+			"port_ranges": target.PortRanges,
 		}
 		targets = append(targets, i)
 	}
