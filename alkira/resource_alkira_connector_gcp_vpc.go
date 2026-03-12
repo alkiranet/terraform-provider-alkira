@@ -28,10 +28,34 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Validate export_all_subnets and vpc_subnet mutual exclusion
+			if gcpRouting, ok := d.GetOk("gcp_routing"); ok {
+				routing := gcpRouting.([]interface{})
+				if len(routing) > 0 {
+					routingCfg := routing[0].(map[string]interface{})
+					if exportAll, ok := routingCfg["export_all_subnets"].(bool); ok && exportAll {
+						if vpcSubnets, ok := d.GetOk("vpc_subnet"); ok {
+							if vpcSubnets.(*schema.Set).Len() > 0 {
+								return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
+									"When exporting all subnets, specific vpc_subnet entries should not be provided")
+							}
+						}
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceConnectorGcpVpcRead),
+		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceConnectorGcpVpcV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceConnectorGcpVpcStateUpgradeV0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -111,7 +135,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 						"prefix_list_ids": {
 							Description: "IDs of prefix lists defined on the " +
 								"network.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
@@ -126,6 +150,15 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 								"ADVERTISE_DEFAULT_ROUTE",
 								"ADVERTISE_CUSTOM_PREFIX",
 							}, false),
+						},
+						"export_all_subnets": {
+							Description: "Whether to export all subnets to CXP. " +
+								"When set to true, all subnets in the VPC are " +
+								"advertised to the CXP. When set to false, only " +
+								"the subnets specified in vpc_subnet are advertised.",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
