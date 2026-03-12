@@ -150,6 +150,334 @@ func TestDeflateBluecatInstances(t *testing.T) {
 	}
 }
 
+func TestExpandBluecatInstances_HostnameIdLookup(t *testing.T) {
+	mockClient := &alkira.AlkiraClient{}
+
+	// Simulate old state: [bdds1(id=1), bdds2(id=2), edge1(id=3), edge2(id=4)]
+	oldInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "bdds1.example.com", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds1.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c1", "activation_key": "k1", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 2, "name": "bdds2.example.com", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds2.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c2", "activation_key": "k2", "license_credential_id": "cred-2",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 3, "name": "edge1.example.com", "type": "EDGE",
+			"bdds_options": []interface{}{},
+			"edge_options": []interface{}{map[string]interface{}{
+				"hostname": "edge1.example.com", "version": "4.2.0",
+				"config_data": "data1", "credential_id": "cred-3",
+			}},
+		},
+		map[string]interface{}{
+			"id": 4, "name": "edge2.example.com", "type": "EDGE",
+			"bdds_options": []interface{}{},
+			"edge_options": []interface{}{map[string]interface{}{
+				"hostname": "edge2.example.com", "version": "4.2.0",
+				"config_data": "data2", "credential_id": "cred-4",
+			}},
+		},
+	}
+
+	// New config: [bdds1, bdds2, bdds3(new), bdds4(new), edge1, edge2]
+	// After positional shift, Terraform would assign id=3 to bdds3 and id=4 to
+	// bdds4 (inherited from edge1/edge2's old positions), and id=0 to edge1/edge2.
+	// Our fix must correct this: bdds3/bdds4 → id=0 (new), edge1/edge2 → id=3/4.
+	newInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "bdds1.example.com", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds1.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c1", "activation_key": "k1", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 2, "name": "bdds2.example.com", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds2.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c2", "activation_key": "k2", "license_credential_id": "cred-2",
+			}},
+			"edge_options": []interface{}{},
+		},
+		// bdds3: new instance - positional shift gave it id=3 (edge1's old id), must become 0
+		map[string]interface{}{
+			"id": 3, "name": "", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds3.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c3", "activation_key": "k3", "license_credential_id": "cred-new3",
+			}},
+			"edge_options": []interface{}{},
+		},
+		// bdds4: new instance - positional shift gave it id=4 (edge2's old id), must become 0
+		map[string]interface{}{
+			"id": 4, "name": "", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds4.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c4", "activation_key": "k4", "license_credential_id": "cred-new4",
+			}},
+			"edge_options": []interface{}{},
+		},
+		// edge1: existing - positional shift gave it id=0, must be restored to 3
+		map[string]interface{}{
+			"id": 0, "name": "", "type": "EDGE",
+			"bdds_options": []interface{}{},
+			"edge_options": []interface{}{map[string]interface{}{
+				"hostname": "edge1.example.com", "version": "4.2.0",
+				"config_data": "data1", "credential_id": "cred-3",
+			}},
+		},
+		// edge2: existing - positional shift gave it id=0, must be restored to 4
+		map[string]interface{}{
+			"id": 0, "name": "", "type": "EDGE",
+			"bdds_options": []interface{}{},
+			"edge_options": []interface{}{map[string]interface{}{
+				"hostname": "edge2.example.com", "version": "4.2.0",
+				"config_data": "data2", "credential_id": "cred-4",
+			}},
+		},
+	}
+
+	result, err := expandBluecatInstances(newInstances, oldInstances, mockClient)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 6)
+
+	// bdds1 and bdds2: unchanged, ids must be preserved
+	assert.Equal(t, 1, result[0].Id)
+	assert.Equal(t, 2, result[1].Id)
+
+	// bdds3 and bdds4: new, must NOT inherit edge1/edge2's ids
+	assert.Equal(t, 0, result[2].Id, "bdds3 is new and must have id=0")
+	assert.Equal(t, 0, result[3].Id, "bdds4 is new and must have id=0")
+
+	// edge1 and edge2: existing, must get their correct ids back via hostname match
+	assert.Equal(t, 3, result[4].Id, "edge1 must keep id=3 despite positional shift")
+	assert.Equal(t, 4, result[5].Id, "edge2 must keep id=4 despite positional shift")
+}
+
+func TestExpandBluecatInstances_EmptyHostname(t *testing.T) {
+	mockClient := &alkira.AlkiraClient{}
+
+	// Old state: one instance with id=5 but no bdds_options/edge_options (no hostname).
+	// It must not be matched to any new instance; the new instance should be treated
+	// as new (id=0).
+	oldInstances := []interface{}{
+		map[string]interface{}{
+			"id": 5, "name": "mystery", "type": "BDDS",
+			"bdds_options": []interface{}{},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	newInstances := []interface{}{
+		map[string]interface{}{
+			"id": 5, "name": "", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "bdds-new.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c1", "activation_key": "k1", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	result, err := expandBluecatInstances(newInstances, oldInstances, mockClient)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	// bdds-new has no match in old state (old instance had no hostname), so id must be 0
+	assert.Equal(t, 0, result[0].Id, "new instance must not inherit id from unmatched old instance")
+}
+
+func TestExpandBluecatInstances_RemoveFromMiddle(t *testing.T) {
+	mockClient := &alkira.AlkiraClient{}
+
+	// Old state: [A(id=1), B(id=2), C(id=3)]
+	// New config: [A, C] — B removed from the middle.
+	// Terraform's positional diff puts C at index 1 with id=2 (B's old id).
+	// Our fix must restore C's correct id=3.
+	oldInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "a", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "a.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "ca", "activation_key": "ka", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 2, "name": "b", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "b.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cb", "activation_key": "kb", "license_credential_id": "cred-2",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 3, "name": "c", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "c.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cc", "activation_key": "kc", "license_credential_id": "cred-3",
+			}},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	// After B is removed, Terraform positionally assigns B's old id=2 to C.
+	newInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "a", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "a.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "ca", "activation_key": "ka", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 2, "name": "c", "type": "BDDS", // positional shift gave id=2
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "c.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cc", "activation_key": "kc", "license_credential_id": "cred-3",
+			}},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	result, err := expandBluecatInstances(newInstances, oldInstances, mockClient)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, 1, result[0].Id, "A must keep id=1")
+	assert.Equal(t, 3, result[1].Id, "C must keep id=3 despite positional shift to id=2")
+}
+
+func TestExpandBluecatInstances_MixedCreateUpdateDelete(t *testing.T) {
+	mockClient := &alkira.AlkiraClient{}
+
+	// Old state: [A(id=1), B(id=2)]
+	// New config: [A, C(new), B] — C inserted in the middle, B moved to end.
+	// Terraform's positional diff would give:
+	//   index 0: A  → id=1  (unchanged, correct)
+	//   index 1: C  → id=2  (positional shift; should be 0 since C is new)
+	//   index 2: B  → id=0  (fell off the end; should be 2)
+	oldInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "a", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "a.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "ca", "activation_key": "ka", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		map[string]interface{}{
+			"id": 2, "name": "b", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "b.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cb", "activation_key": "kb", "license_credential_id": "cred-2",
+			}},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	newInstances := []interface{}{
+		map[string]interface{}{
+			"id": 1, "name": "a", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "a.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "ca", "activation_key": "ka", "license_credential_id": "cred-1",
+			}},
+			"edge_options": []interface{}{},
+		},
+		// C is new; Terraform positionally assigned id=2
+		map[string]interface{}{
+			"id": 2, "name": "", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "c.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cc", "activation_key": "kc", "license_credential_id": "cred-new",
+			}},
+			"edge_options": []interface{}{},
+		},
+		// B was moved to end; Terraform assigned id=0
+		map[string]interface{}{
+			"id": 0, "name": "b", "type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": "b.example.com", "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "cb", "activation_key": "kb", "license_credential_id": "cred-2",
+			}},
+			"edge_options": []interface{}{},
+		},
+	}
+
+	result, err := expandBluecatInstances(newInstances, oldInstances, mockClient)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 3)
+	assert.Equal(t, 1, result[0].Id, "A must keep id=1")
+	assert.Equal(t, 0, result[1].Id, "C is new and must have id=0")
+	assert.Equal(t, 2, result[2].Id, "B must keep id=2 despite positional shift")
+}
+
+func TestValidateBluecatInstanceHostnames(t *testing.T) {
+	bddsInstance := func(hostname string) map[string]interface{} {
+		return map[string]interface{}{
+			"type": "BDDS",
+			"bdds_options": []interface{}{map[string]interface{}{
+				"hostname": hostname, "model": "cBDDS50", "version": "9.4.0",
+				"client_id": "c", "activation_key": "k", "license_credential_id": "cred",
+			}},
+			"edge_options": []interface{}{},
+		}
+	}
+
+	t.Run("no instances", func(t *testing.T) {
+		assert.NoError(t, validateBluecatInstanceHostnames([]interface{}{}))
+	})
+
+	t.Run("unique hostnames", func(t *testing.T) {
+		instances := []interface{}{bddsInstance("a.example.com"), bddsInstance("b.example.com")}
+		assert.NoError(t, validateBluecatInstanceHostnames(instances))
+	})
+
+	t.Run("duplicate hostname", func(t *testing.T) {
+		instances := []interface{}{bddsInstance("dup.example.com"), bddsInstance("dup.example.com")}
+		err := validateBluecatInstanceHostnames(instances)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "dup.example.com")
+		assert.Contains(t, err.Error(), "instance[0]")
+		assert.Contains(t, err.Error(), "instance[1]")
+	})
+
+	t.Run("duplicate among many", func(t *testing.T) {
+		instances := []interface{}{
+			bddsInstance("a.example.com"),
+			bddsInstance("b.example.com"),
+			bddsInstance("a.example.com"), // duplicate of index 0
+		}
+		err := validateBluecatInstanceHostnames(instances)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "instance[0]")
+		assert.Contains(t, err.Error(), "instance[2]")
+	})
+
+	t.Run("instances with no hostname are skipped", func(t *testing.T) {
+		noHostname := map[string]interface{}{
+			"type": "BDDS", "bdds_options": []interface{}{}, "edge_options": []interface{}{},
+		}
+		instances := []interface{}{noHostname, noHostname} // two empty-hostname entries: no error
+		assert.NoError(t, validateBluecatInstanceHostnames(instances))
+	})
+}
+
 func TestExpandBluecatAnycast(t *testing.T) {
 	tests := []struct {
 		name        string
