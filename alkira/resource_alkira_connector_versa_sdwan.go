@@ -283,6 +283,7 @@ func resourceConnectorVersaSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("description", connector.Description)
+	d.Set("global_tenant_id", connector.GlobalTenantId)
 
 	// Set Instances
 	setVersaSdwanInstance(d, connector)
