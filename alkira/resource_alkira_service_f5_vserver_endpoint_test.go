@@ -37,6 +37,25 @@ func TestAlkiraServiceF5vServerEndpoint_basicFunctionality(t *testing.T) {
 	assert.Equal(t, []string{"80", "443"}, serviceF5vServerEndpoint.PortRanges)
 }
 
+func TestAlkiraServiceF5vServerEndpoint_destinationEndpoints(t *testing.T) {
+	// Test with destination endpoints
+	endpointWithDest := &alkira.F5vServerEndpoint{
+		Id:   json.Number("123"),
+		Name: "test-endpoint",
+		DestinationEndpoints: &alkira.F5VServerDestinationEndpoints{
+			PortRanges:  []string{"8080", "9090-9100"},
+			IpAddresses: []string{"10.0.0.1", "10.0.0.2"},
+		},
+	}
+
+	// Verify all fields are set correctly
+	assert.Equal(t, json.Number("123"), endpointWithDest.Id)
+	assert.Equal(t, "test-endpoint", endpointWithDest.Name)
+	assert.NotNil(t, endpointWithDest.DestinationEndpoints)
+	assert.Equal(t, []string{"8080", "9090-9100"}, endpointWithDest.DestinationEndpoints.PortRanges)
+	assert.Equal(t, []string{"10.0.0.1", "10.0.0.2"}, endpointWithDest.DestinationEndpoints.IpAddresses)
+}
+
 func TestAlkiraServiceF5vServerEndpoint_nameValidation(t *testing.T) {
 	tests := GetCommonNameValidationTestCases()
 
