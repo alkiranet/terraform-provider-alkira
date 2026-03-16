@@ -27,7 +27,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return nil
+			return validateBluecatInstanceHostnames(d.Get("instance").(*schema.Set).List())
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
@@ -116,7 +116,8 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Computed:    true,
 			},
 			"instance": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Set:      bluecatInstanceHash,
 				Required: true,
 				Description: "The properties pertaining to each individual " +
 					"instance of the Bluecat service.",
@@ -440,9 +441,14 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceBluecat, error) {
-	// Parse Instances
-	instanceList := d.Get("instance").([]interface{})
-	instances, err := expandBluecatInstances(instanceList, m)
+	// Parse Instances - use GetChange so we can pass old state for hostname-based
+	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
+	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
+	instances, err := expandBluecatInstances(
+		newInstanceListRaw.(*schema.Set).List(),
+		oldInstanceListRaw.(*schema.Set).List(),
+		m,
+	)
 	if err != nil {
 		return nil, err
 	}
