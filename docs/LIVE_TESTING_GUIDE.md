@@ -100,6 +100,8 @@ unset TF_CLI_CONFIG_FILE
 
 Create a `terraform.tfvars` file in your test directory (never commit this):
 
+**Note:** The repository's `.gitignore` excludes sensitive files including `*.tfvars`, `*.tfvars.json`, `terraform.tfstate*`, credential files (`*_creds`, `*_credentials`), and `.env` files.
+
 ```hcl
 # Alkira Provider Configuration
 alkira_portal = "your-portal.alkira.com"  # Do NOT include https://
@@ -291,7 +293,7 @@ TF_LOG=DEBUG TF_LOG_PATH=./tf-create.log terraform apply -auto-approve
 #### 1.2 Read / Refresh
 
 ```bash
-TF_LOG=DEBUG TF_LOG_PATH=./tf-refresh.log terraform refresh
+TF_LOG=DEBUG TF_LOG_PATH=./tf-refresh.log terraform apply -refresh-only
 terraform plan
 ```
 
@@ -734,8 +736,10 @@ terraform state show <resource_name>
 # List all resources in state
 terraform state list
 
-# Refresh state from API
-terraform refresh
+# Refresh state from API (preferred in Terraform 1.x)
+terraform apply -refresh-only
+
+# Note: terraform refresh is deprecated in Terraform 1.x
 
 # Destroy resources
 terraform destroy -auto-approve
