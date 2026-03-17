@@ -125,7 +125,12 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPref
 		return nil, err
 	}
 
-	if d.Get("prefixes").(*schema.Set).Len() > 0 {
+	// Check if the user explicitly set "prefixes" in their config (not
+	// just computed from state by Read). GetRawConfig returns the raw
+	// config value which is null for fields not explicitly set.
+	rawConfig := d.GetRawConfig()
+	rawPrefixes := rawConfig.GetAttr("prefixes")
+	if !rawPrefixes.IsNull() && rawPrefixes.IsKnown() && rawPrefixes.LengthInt() > 0 {
 		return nil, fmt.Errorf("ERROR: Please use the new 'prefix' block to replace the old 'prefixes' field")
 	}
 
