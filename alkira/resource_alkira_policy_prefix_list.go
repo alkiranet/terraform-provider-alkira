@@ -57,10 +57,14 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Computed:    true,
 			},
 			"prefixes": {
-				Description: "A list of prefixes. (**DEPRECATED**)",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of prefixes. " +
+					"**Deprecated:** Use `prefix` block instead.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Deprecated:    "Use the 'prefix' block instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"prefix"},
 			},
 			"prefix": {
 				Description: "Prefix with description. This new block should " +
@@ -196,6 +200,15 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
+
+	// Set deprecated "prefixes" field for backward compatibility
+	if list.Prefixes != nil && len(list.Prefixes) > 0 {
+		prefixes := make([]interface{}, len(list.Prefixes))
+		for i, p := range list.Prefixes {
+			prefixes[i] = p
+		}
+		d.Set("prefixes", schema.NewSet(schema.HashString, prefixes))
+	}
 
 	// Set "prefix" block
 	setPrefix(d, list.Prefixes, list.PrefixDetails)
