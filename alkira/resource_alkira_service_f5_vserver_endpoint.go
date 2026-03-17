@@ -248,6 +248,16 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("f5_service_id", f5.F5ServiceId)
 	d.Set("f5_service_instance_ids", f5.F5ServiceInstanceIds)
 
+	// Set destination endpoint fields if present
+	if f5.DestinationEndpoints != nil {
+		if f5.DestinationEndpoints.PortRanges != nil {
+			d.Set("destination_endpoint_port_ranges", f5.DestinationEndpoints.PortRanges)
+		}
+		if f5.DestinationEndpoints.IpAddresses != nil {
+			d.Set("destination_endpoint_ip_addresses", f5.DestinationEndpoints.IpAddresses)
+		}
+	}
+
 	segmentId, err := getSegmentIdByName(f5.Segment, m)
 
 	if err != nil {
