@@ -274,7 +274,7 @@ func toInt(v interface{}) int {
 	return 0
 }
 
-// serviceInstanceHash returns a schema.SchemaSetFunc that computes a hash
+// typeSetHash returns a schema.SchemaSetFunc that computes a hash
 // for TypeSet elements using a key extractor function. The key extractor
 // builds a string from the element's fields, which is then hashed to
 // produce the set key. This allows elements to be matched by content
@@ -290,7 +290,7 @@ func toInt(v interface{}) int {
 //
 // For single-field blocks: return just that field (e.g., m["hostname"])
 // For multi-field blocks: combine all fields with fmt.Sprintf
-func serviceInstanceHash(keyExtractor func(map[string]interface{}) string) schema.SchemaSetFunc {
+func typeSetHash(keyExtractor func(map[string]interface{}) string) schema.SchemaSetFunc {
 	return func(v interface{}) int {
 		var buf bytes.Buffer
 		m := v.(map[string]interface{})

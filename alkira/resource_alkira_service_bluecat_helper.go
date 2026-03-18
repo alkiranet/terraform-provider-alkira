@@ -24,7 +24,7 @@ import (
 // Changes to model/version will show as updates (not replacements) because
 // the hash stays the same. The expandBluecatInstances function does
 // hostname-based ID lookup to ensure the correct instance ID is used.
-var bluecatInstanceHash = serviceInstanceHash(func(m map[string]interface{}) string {
+var bluecatInstanceHash = typeSetHash(func(m map[string]interface{}) string {
 	hostname := getHostnameFromInstance(m)
 	instanceType, _ := m["type"].(string)
 	return fmt.Sprintf("%s-%s", hostname, instanceType)
