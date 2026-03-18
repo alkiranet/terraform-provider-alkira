@@ -503,3 +503,112 @@ func TestSetPrefixRanges(t *testing.T) {
 		})
 	}
 }
+
+func TestResourcePolicyPrefixListRead_SetsDeprecatedPrefixes(t *testing.T) {
+	// Create a mock ResourceData with both "prefix" and "prefixes" fields
+	r := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name":        {Type: schema.TypeString},
+			"description": {Type: schema.TypeString},
+			"prefixes": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{Type: schema.TypeString},
+			},
+			"prefix": {
+				Type: schema.TypeSet,
+				Set:  prefixHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr":        {Type: schema.TypeString},
+						"description": {Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		prefixes []string
+		details  map[string]*alkira.PolicyPrefixListDetails
+		validate func(t *testing.T, d *schema.ResourceData)
+	}{
+		{
+			name:     "nil prefixes - no deprecated field set",
+			prefixes: nil,
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefixes").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name:     "empty prefixes - no deprecated field set",
+			prefixes: []string{},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefixes").(*schema.Set)
+				assert.Empty(t, result.List())
+			},
+		},
+		{
+			name:     "prefixes populated for backward compatibility",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details:  nil,
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefixes").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify deprecated field contains all prefixes (order may vary with Set)
+				resultList := result.List()
+				prefixSet := make(map[string]bool)
+				for _, item := range resultList {
+					prefixSet[item.(string)] = true
+				}
+				assert.True(t, prefixSet["192.168.1.0/24"])
+				assert.True(t, prefixSet["10.0.0.0/8"])
+			},
+		},
+		{
+			name:     "prefixes with details - deprecated field still populated",
+			prefixes: []string{"192.168.1.0/24", "10.0.0.0/8"},
+			details: map[string]*alkira.PolicyPrefixListDetails{
+				"192.168.1.0/24": {Description: "internal network"},
+				"10.0.0.0/8":     {Description: "corporate network"},
+			},
+			validate: func(t *testing.T, d *schema.ResourceData) {
+				result := d.Get("prefixes").(*schema.Set)
+				assert.Len(t, result.List(), 2)
+
+				// Verify deprecated field contains all prefixes (descriptions ignored)
+				resultList := result.List()
+				prefixSet := make(map[string]bool)
+				for _, item := range resultList {
+					prefixSet[item.(string)] = true
+				}
+				assert.True(t, prefixSet["192.168.1.0/24"])
+				assert.True(t, prefixSet["10.0.0.0/8"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+
+			// Set both "prefix" and "prefixes" fields as Read would
+			setPrefix(d, tt.prefixes, tt.details)
+
+			// Set deprecated "prefixes" field
+			if tt.prefixes != nil && len(tt.prefixes) > 0 {
+				prefixes := make([]interface{}, len(tt.prefixes))
+				for i, p := range tt.prefixes {
+					prefixes[i] = p
+				}
+				d.Set("prefixes", schema.NewSet(schema.HashString, prefixes))
+			}
+
+			tt.validate(t, d)
+		})
+	}
+}
