@@ -176,7 +176,8 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 	for _, option := range segmentOptions {
 
 		if len(option.UserGroupMappings) != 1 ||
-			len(option.UserGroupMappings[0].CxpToSubnetsMapping) != 1 {
+			len(option.UserGroupMappings[0].CxpToSubnetsMapping) != 1 ||
+			len(option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets) == 0 {
 			log.Printf("[ERROR] Invalid SegmentOptions in connector-remote-access")
 			continue
 		}
