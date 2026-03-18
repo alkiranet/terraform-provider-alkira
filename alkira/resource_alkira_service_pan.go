@@ -535,6 +535,16 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("pan_registration_credential_id", pan.RegistrationCredentialId)
 	d.Set("pan_master_key_credential_id", pan.MasterKeyCredentialId)
 
+	// Set PAN credential name (computed field)
+	// API returns credential name via GetCredentialById()
+	if pan.CredentialId != "" {
+		if cred, err := client.GetCredentialById(pan.CredentialId); err == nil {
+			d.Set("pan_credential_name", cred.Name)
+		} else {
+			log.Printf("[WARNING] Failed to get PAN credential name: %v", err)
+		}
+	}
+
 	if pan.PanoramaDeviceGroup != nil {
 		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
 	}
