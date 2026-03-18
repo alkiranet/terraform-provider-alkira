@@ -19,7 +19,7 @@ import (
 // The corresponding Read helper (setPrefix) must also always populate
 // every field — including empty strings — so the hash computed from
 // API data matches the hash computed from the user's config.
-var prefixHash = serviceInstanceHash(func(m map[string]interface{}) string {
+var prefixHash = typeSetHash(func(m map[string]interface{}) string {
 	cidr := ""
 	if v, ok := m["cidr"].(string); ok {
 		cidr = v
@@ -41,7 +41,7 @@ var prefixHash = serviceInstanceHash(func(m map[string]interface{}) string {
 //
 // The corresponding Read helper (setPrefixRanges) must also always
 // populate every field so the hash from API data matches the config hash.
-var prefixRangeHash = serviceInstanceHash(func(m map[string]interface{}) string {
+var prefixRangeHash = typeSetHash(func(m map[string]interface{}) string {
 	prefix := ""
 	if v, ok := m["prefix"].(string); ok {
 		prefix = v
