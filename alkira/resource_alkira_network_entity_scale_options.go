@@ -208,7 +208,6 @@ func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.Resour
 	d.Set("entity_id", strconv.Itoa(networkEntityScaleOptions.EntityId))
 	d.Set("entity_type", networkEntityScaleOptions.EntityType)
 	d.Set("network_entity_id", networkEntityScaleOptions.NetworkEntityId)
-	d.Set("network_entity_sub_type", networkEntityScaleOptions.NetworkEntitySubType)
 	d.Set("network_entity_type", networkEntityScaleOptions.NetworkEntityType)
 	d.Set("doc_state", networkEntityScaleOptions.DocState)
 	d.Set("last_config_updated_at", networkEntityScaleOptions.LastConfigUpdatedAt)
