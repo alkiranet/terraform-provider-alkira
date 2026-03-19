@@ -35,9 +35,10 @@ func setConnectorOciVcnRouting(d *schema.ResourceData, vcnRouting interface{}) {
 				value, _ := prefix["value"].(string)
 				id, _ := prefix["id"].(string)
 
-				if prefixType == "CIDR" {
+				switch prefixType {
+				case "CIDR":
 					cidrList = append(cidrList, value)
-				} else if prefixType == "SUBNET" {
+				case "SUBNET":
 					subnetList = append(subnetList, map[string]interface{}{
 						"id":   id,
 						"cidr": value,
