@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -9,6 +8,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// prefixHash computes a hash for a "prefix" block in a policy prefix list.
+//
+// IMPORTANT: Every field in the block MUST be included in the hash.
+// TypeSet compares elements solely by their hash value. If a field is
+// omitted from the hash, changes to that field will be invisible to
+// Terraform (plan will show "No changes" even when the value differs).
+//
+// The corresponding Read helper (setPrefix) must also always populate
+// every field — including empty strings — so the hash computed from
+// API data matches the hash computed from the user's config.
+var prefixHash = typeSetHash(func(m map[string]interface{}) string {
+	cidr := ""
+	if v, ok := m["cidr"].(string); ok {
+		cidr = v
+	}
+	desc := ""
+	if v, ok := m["description"].(string); ok {
+		desc = v
+	}
+	return fmt.Sprintf("%s-%s", cidr, desc)
+})
+
+// prefixRangeHash computes a hash for a "prefix_range" block in a policy
+// prefix list.
+//
+// IMPORTANT: Every field in the block MUST be included in the hash.
+// TypeSet compares elements solely by their hash value. If a field is
+// omitted (e.g. le, ge, or description), changes to that field will be
+// invisible to Terraform and plan will silently show "No changes".
+//
+// The corresponding Read helper (setPrefixRanges) must also always
+// populate every field so the hash from API data matches the config hash.
+var prefixRangeHash = typeSetHash(func(m map[string]interface{}) string {
+	prefix := ""
+	if v, ok := m["prefix"].(string); ok {
+		prefix = v
+	}
+	desc := ""
+	if v, ok := m["description"].(string); ok {
+		desc = v
+	}
+	le := toInt(m["le"])
+	ge := toInt(m["ge"])
+	return fmt.Sprintf("%s-%d-%d-%s", prefix, le, ge, desc)
+})
 
 func resourceAlkiraPolicyPrefixList() *schema.Resource {
 	return &schema.Resource{
@@ -314,26 +359,4 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-// prefixHash computes a hash for a prefix block based on its cidr field.
-// This allows Terraform to identify prefixes by their CIDR value rather than
-// their position in the list, preventing unwanted reordering when prefixes
-// are deleted from the middle of the list.
-func prefixHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	fmt.Fprintf(&buf, "%s-", m["cidr"])
-	return schema.HashString(buf.String())
-}
-
-// prefixRangeHash computes a hash for a prefix_range block based on its
-// prefix, le, and ge fields. This allows Terraform to identify prefix ranges
-// by their content rather than their position in the list, preventing unwanted
-// reordering when ranges are deleted from the middle of the list.
-func prefixRangeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	fmt.Fprintf(&buf, "%s-%d-%d-", m["prefix"], toInt(m["le"]), toInt(m["ge"]))
-	return schema.HashString(buf.String())
 }
