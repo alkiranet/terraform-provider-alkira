@@ -27,7 +27,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return validateBluecatInstanceHostnames(d.Get("instance").([]interface{}))
+			return validateBluecatInstanceHostnames(d.Get("instance").(*schema.Set).List())
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
@@ -452,8 +452,8 @@ func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.Serv
 	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
 	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
 	instances, err := expandBluecatInstances(
-		newInstanceListRaw.([]interface{}),
-		oldInstanceListRaw.([]interface{}),
+		newInstanceListRaw.(*schema.Set).List(),
+		oldInstanceListRaw.(*schema.Set).List(),
 		m,
 	)
 	if err != nil {
