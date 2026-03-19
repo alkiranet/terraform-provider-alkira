@@ -8,4 +8,11 @@ releases
 terraform-provider-alkira
 terraform.tfstate
 terraform.tfstate.*
+*.tfvars
+*.tfvars.json
+*_creds
+*_credentials
+*.key
+*.pem
+.env
 test/*
