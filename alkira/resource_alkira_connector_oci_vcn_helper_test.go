@@ -58,8 +58,8 @@ func TestSetConnectorOciVcnRouting_Nil(t *testing.T) {
 	setConnectorOciVcnRouting(d, nil)
 
 	assert.Empty(t, d.Get("vcn_cidr"))
-	assert.Empty(t, d.Get("vcn_subnet"))
-	assert.Empty(t, d.Get("vcn_route_table"))
+	assert.Equal(t, 0, d.Get("vcn_subnet").(*schema.Set).Len())
+	assert.Equal(t, 0, d.Get("vcn_route_table").(*schema.Set).Len())
 }
 
 func TestSetConnectorOciVcnRouting_InvalidType(t *testing.T) {
@@ -86,8 +86,8 @@ func TestSetConnectorOciVcnRouting_EmptyRouting(t *testing.T) {
 	setConnectorOciVcnRouting(d, vcnRouting)
 
 	assert.Empty(t, d.Get("vcn_cidr"))
-	assert.Empty(t, d.Get("vcn_subnet"))
-	assert.Empty(t, d.Get("vcn_route_table"))
+	assert.Equal(t, 0, d.Get("vcn_subnet").(*schema.Set).Len())
+	assert.Equal(t, 0, d.Get("vcn_route_table").(*schema.Set).Len())
 }
 
 func TestSetConnectorOciVcnRouting_WithCidr(t *testing.T) {
@@ -112,7 +112,7 @@ func TestSetConnectorOciVcnRouting_WithCidr(t *testing.T) {
 	assert.Len(t, cidr, 2)
 	assert.Contains(t, cidr, "10.0.0.0/16")
 	assert.Contains(t, cidr, "192.168.0.0/24")
-	assert.Empty(t, d.Get("vcn_subnet"))
+	assert.Equal(t, 0, d.Get("vcn_subnet").(*schema.Set).Len())
 }
 
 func TestSetConnectorOciVcnRouting_WithSubnets(t *testing.T) {
