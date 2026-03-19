@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -377,26 +376,4 @@ func resourcePolicyPrefixListDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-// prefixHash computes a hash for a prefix block based on its cidr field.
-// This allows Terraform to identify prefixes by their CIDR value rather than
-// their position in the list, preventing unwanted reordering when prefixes
-// are deleted from the middle of the list.
-func prefixHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	fmt.Fprintf(&buf, "%s-", m["cidr"])
-	return schema.HashString(buf.String())
-}
-
-// prefixRangeHash computes a hash for a prefix_range block based on its
-// prefix, le, and ge fields. This allows Terraform to identify prefix ranges
-// by their content rather than their position in the list, preventing unwanted
-// reordering when ranges are deleted from the middle of the list.
-func prefixRangeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	fmt.Fprintf(&buf, "%s-%d-%d-", m["prefix"], toInt(m["le"]), toInt(m["ge"]))
-	return schema.HashString(buf.String())
 }
