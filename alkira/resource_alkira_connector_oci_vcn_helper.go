@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -9,85 +10,98 @@ import (
 )
 
 // setConnectorOciVcnRouting sets vcn_cidr, vcn_subnet, and vcn_route_table in state
-// by parsing the VcnRouting interface{} returned from the API.
+// by unmarshaling the VcnRouting interface{} returned from the API into typed structs.
 func setConnectorOciVcnRouting(d *schema.ResourceData, vcnRouting interface{}) {
 	if vcnRouting == nil {
 		return
 	}
 
-	routing, ok := vcnRouting.(map[string]interface{})
-	if !ok {
+	routingJSON, err := json.Marshal(vcnRouting)
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshal VcnRouting: %v", err)
 		return
 	}
 
-	// Parse exportToCXPOptions → vcn_cidr or vcn_subnet
-	if exportOpts, ok := routing["exportToCXPOptions"].(map[string]interface{}); ok {
-		if prefixes, ok := exportOpts["userInputPrefixes"].([]interface{}); ok {
-			var cidrList []string
-			var subnetList []map[string]interface{}
+	var routing alkira.ConnectorOciVcnRouting
+	if err := json.Unmarshal(routingJSON, &routing); err != nil {
+		log.Printf("[ERROR] Failed to unmarshal VcnRouting: %v", err)
+		return
+	}
 
-			for _, p := range prefixes {
-				prefix, ok := p.(map[string]interface{})
-				if !ok {
-					continue
-				}
-				prefixType, _ := prefix["type"].(string)
-				value, _ := prefix["value"].(string)
-				id, _ := prefix["id"].(string)
+	setOciVcnExportPrefixes(routing.Export, d)
+	setOciVcnImportRouteTables(routing.Import, d)
+}
 
-				switch prefixType {
-				case "CIDR":
-					cidrList = append(cidrList, value)
-				case "SUBNET":
-					subnetList = append(subnetList, map[string]interface{}{
-						"id":   id,
-						"cidr": value,
-					})
-				}
-			}
+// setOciVcnExportPrefixes sets vcn_cidr or vcn_subnet from export options.
+func setOciVcnExportPrefixes(exportOptions interface{}, d *schema.ResourceData) {
+	if exportOptions == nil {
+		return
+	}
 
-			if len(cidrList) > 0 {
-				d.Set("vcn_cidr", cidrList)
-			}
-			if len(subnetList) > 0 {
-				d.Set("vcn_subnet", subnetList)
-			}
+	exportJSON, err := json.Marshal(exportOptions)
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshal ExportOptions: %v", err)
+		return
+	}
+
+	var export alkira.ConnectorOciVcnExportOptions
+	if err := json.Unmarshal(exportJSON, &export); err != nil {
+		log.Printf("[ERROR] Failed to unmarshal ExportOptions: %v", err)
+		return
+	}
+
+	var cidrList []string
+	var subnetList []map[string]interface{}
+
+	for _, prefix := range export.Prefixes {
+		switch prefix.Type {
+		case "CIDR":
+			cidrList = append(cidrList, prefix.Value)
+		case "SUBNET":
+			subnetList = append(subnetList, map[string]interface{}{
+				"id":   prefix.Id,
+				"cidr": prefix.Value,
+			})
 		}
 	}
 
-	// Parse importFromCXPOptions → vcn_route_table
-	if importOpts, ok := routing["importFromCXPOptions"].(map[string]interface{}); ok {
-		if routeTables, ok := importOpts["routeTables"].([]interface{}); ok {
-			var tables []map[string]interface{}
+	if len(cidrList) > 0 {
+		d.Set("vcn_cidr", cidrList)
+	}
+	if len(subnetList) > 0 {
+		d.Set("vcn_subnet", subnetList)
+	}
+}
 
-			for _, rt := range routeTables {
-				table, ok := rt.(map[string]interface{})
-				if !ok {
-					continue
-				}
-				id, _ := table["id"].(string)
-				mode, _ := table["routeImportMode"].(string)
+// setOciVcnImportRouteTables sets vcn_route_table from import options.
+func setOciVcnImportRouteTables(importOptions interface{}, d *schema.ResourceData) {
+	if importOptions == nil {
+		return
+	}
 
-				var prefixListIds []int
-				if pids, ok := table["prefixListIds"].([]interface{}); ok {
-					for _, pid := range pids {
-						if v, ok := pid.(float64); ok {
-							prefixListIds = append(prefixListIds, int(v))
-						}
-					}
-				}
+	importJSON, err := json.Marshal(importOptions)
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshal ImportOptions: %v", err)
+		return
+	}
 
-				tables = append(tables, map[string]interface{}{
-					"id":              id,
-					"options":         mode,
-					"prefix_list_ids": prefixListIds,
-				})
-			}
+	var importOpts alkira.ConnectorOciVcnImportOptions
+	if err := json.Unmarshal(importJSON, &importOpts); err != nil {
+		log.Printf("[ERROR] Failed to unmarshal ImportOptions: %v", err)
+		return
+	}
 
-			if len(tables) > 0 {
-				d.Set("vcn_route_table", tables)
-			}
-		}
+	var tables []map[string]interface{}
+	for _, rt := range importOpts.RouteTables {
+		tables = append(tables, map[string]interface{}{
+			"id":              rt.Id,
+			"options":         rt.Mode,
+			"prefix_list_ids": rt.PrefixListIds,
+		})
+	}
+
+	if len(tables) > 0 {
+		d.Set("vcn_route_table", tables)
 	}
 }
 
