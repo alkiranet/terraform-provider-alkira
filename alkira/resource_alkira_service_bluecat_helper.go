@@ -8,6 +8,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// bluecatInstanceHash computes a unique hash for Bluecat service instances
+// based on hostname + type, which are the immutable identity fields.
+//
+// Rationale for hash composition:
+// - hostname: Unique identifier, validated for uniqueness in CustomizeDiff
+// - type: Immutable after provisioning (BDDS or EDGE)
+//
+// Excluded from hash (updatable fields):
+// - model: Can be changed (e.g., cBDDS50 -> cBDDS100)
+// - version: Can be changed (e.g., 9.4.0 -> 10.0.0)
+// - name: Computed field set to hostname
+// - id: Computed field from API
+//
+// Changes to model/version will show as updates (not replacements) because
+// the hash stays the same. The expandBluecatInstances function does
+// hostname-based ID lookup to ensure the correct instance ID is used.
+var bluecatInstanceHash = typeSetHash(func(m map[string]interface{}) string {
+	hostname := getHostnameFromInstance(m)
+	instanceType, _ := m["type"].(string)
+	return fmt.Sprintf("%s-%s", hostname, instanceType)
+})
+
 func expandBluecatInstances(in []interface{}, oldInstances []interface{}, m interface{}) ([]alkira.BluecatInstance, error) {
 	if in == nil || len(in) == 0 {
 		return nil, fmt.Errorf("[ERROR]: Bluecat instances cannot be nil or empty")
@@ -227,7 +249,7 @@ func deflateBluecatInstances(c []alkira.BluecatInstance, d *schema.ResourceData)
 
 	// Read existing instances from state to preserve sensitive fields
 	// not returned by the API.
-	oldInstances := d.Get("instance").([]interface{})
+	oldInstances := d.Get("instance").(*schema.Set).List()
 
 	for _, v := range c {
 		j := map[string]interface{}{
