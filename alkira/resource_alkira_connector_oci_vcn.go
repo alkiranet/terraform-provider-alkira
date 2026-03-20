@@ -274,6 +274,9 @@ func resourceConnectorOciVcnRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(fmt.Errorf("failed to find segment"))
 	}
 
+	// Set vcn_cidr, vcn_subnet, vcn_route_table
+	setConnectorOciVcnRouting(d, connector.VcnRouting)
+
 	// Set provision state
 	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
