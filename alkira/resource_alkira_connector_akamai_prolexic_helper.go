@@ -59,6 +59,27 @@ func expandConnectorAkamaiTunnelConfiguration(in *schema.Set) []alkira.Connector
 	return configurations
 }
 
+// setConnectorAkamaiTunnelConfiguration sets tunnel_configuration in state
+// from the OverlayConfiguration returned by the API.
+func setConnectorAkamaiTunnelConfiguration(d *schema.ResourceData, overlayConfig []alkira.ConnectorAkamaiProlexicOverlayConfiguration) {
+	var tunnelConfigs []map[string]interface{}
+	for _, cfg := range overlayConfig {
+		var tunnelIps []map[string]interface{}
+		for _, ip := range cfg.TunnelIps {
+			tunnelIps = append(tunnelIps, map[string]interface{}{
+				"ran_tunnel_ip":            ip.RanTunnelDestinationIp,
+				"alkira_overlay_tunnel_ip": ip.AlkiraOverlayTunnelIp,
+				"akamai_overlay_tunnel_ip": ip.AkamaiOverlayTunnelIp,
+			})
+		}
+		tunnelConfigs = append(tunnelConfigs, map[string]interface{}{
+			"alkira_public_ip": cfg.AlkiraPublicIp,
+			"tunnel_ips":       tunnelIps,
+		})
+	}
+	d.Set("tunnel_configuration", tunnelConfigs)
+}
+
 // expandConnectorAkamaiByoipOptions
 func expandConnectorAkamaiByoipOptions(in *schema.Set) []alkira.ConnectorAkamaiProlexicByoipOption {
 
