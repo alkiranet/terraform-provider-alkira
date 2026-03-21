@@ -285,6 +285,9 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 		options = append(options, i)
 	}
 	d.Set("byoip_options", options)
+
+	setConnectorAkamaiTunnelConfiguration(d, connector.OverlayConfiguration)
+
 	// Set provision state
 	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
