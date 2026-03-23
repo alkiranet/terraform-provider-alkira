@@ -745,7 +745,7 @@ func TestExpandGcpRouting(t *testing.T) {
 				// Use order-insensitive comparison for TypeSet-based fields
 				assert.ElementsMatch(t, tt.expected.ImportOptions.PrefixListIds, result.ImportOptions.PrefixListIds)
 				assert.Equal(t, tt.expected.ExportOptions.ExportAllSubnets, result.ExportOptions.ExportAllSubnets)
-				assert.Equal(t, tt.expected.ExportOptions.Prefixes, result.ExportOptions.Prefixes)
+				assert.ElementsMatch(t, tt.expected.ExportOptions.Prefixes, result.ExportOptions.Prefixes)
 			}
 		})
 	}
