@@ -569,12 +569,14 @@ func TestExpandGcpRouting(t *testing.T) {
 			},
 		},
 		{
-			name: "default route mode with subnets but export_all_subnets defaults to true",
+			// vpc_subnet present but export_all_subnets not set.
+			// Provider must send exportAllSubnets=false; the API rejects true+userInputPrefixes together.
+			name: "vpc_subnet present without explicit export_all_subnets — must force false",
 			gcpRouting: []interface{}{
 				map[string]interface{}{
 					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
 					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
-					// export_all_subnets not specified, defaults to true
+					// export_all_subnets omitted — Go zero-value is false, but default was hardcoded true
 				},
 			},
 			subnets: schema.NewSet(
@@ -592,13 +594,89 @@ func TestExpandGcpRouting(t *testing.T) {
 			expectError: false,
 			expected: &alkira.ConnectorGcpVpcRouting{
 				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
-					ExportAllSubnets: true, // defaults to true
+					ExportAllSubnets: false, // subnets present → must be false
 					Prefixes: []alkira.UserInputPrefixes{
 						{
 							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
 							Value: "10.0.1.0/24",
 							Type:  "SUBNET",
 						},
+					},
+				},
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   nil,
+				},
+			},
+		},
+		{
+			// no gcp_routing block at all, but vpc_subnet present.
+			// exportAllSubnets must be false when subnets are provided.
+			name: "no gcp_routing block with vpc_subnet present — must force false",
+			gcpRouting: nil,
+			subnets: schema.NewSet(
+				func(i interface{}) int {
+					m := i.(map[string]interface{})
+					return schema.HashString(m["id"].(string))
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.0.1.0/24",
+					},
+				},
+			),
+			expectError: false,
+			expected: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false,
+					Prefixes: []alkira.UserInputPrefixes{
+						{
+							FqId:  "projects/test/regions/us-central1/subnetworks/subnet-1",
+							Value: "10.0.1.0/24",
+							Type:  "SUBNET",
+						},
+					},
+				},
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   nil,
+				},
+			},
+		},
+		{
+			// multiple subnets, no explicit export_all_subnets.
+			// All three connectors (-31, -32, -33) used multiple subnets.
+			name: "multiple vpc_subnets without explicit export_all_subnets — must force false",
+			gcpRouting: []interface{}{
+				map[string]interface{}{
+					"custom_prefix":   "ADVERTISE_DEFAULT_ROUTE",
+					"prefix_list_ids": schema.NewSet(schema.HashInt, []interface{}{}),
+				},
+			},
+			subnets: schema.NewSet(
+				func(i interface{}) int {
+					m := i.(map[string]interface{})
+					return schema.HashString(m["id"].(string))
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-central1/subnetworks/subnet-1",
+						"cidr": "10.22.1.0/24",
+					},
+					map[string]interface{}{
+						"id":   "projects/test/regions/us-east1/subnetworks/subnet-2",
+						"cidr": "10.22.2.0/24",
+					},
+				},
+			),
+			expectError: false,
+			expected: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: false,
+					Prefixes: []alkira.UserInputPrefixes{
+						{FqId: "projects/test/regions/us-central1/subnetworks/subnet-1", Value: "10.22.1.0/24", Type: "SUBNET"},
+						{FqId: "projects/test/regions/us-east1/subnetworks/subnet-2", Value: "10.22.2.0/24", Type: "SUBNET"},
 					},
 				},
 				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
