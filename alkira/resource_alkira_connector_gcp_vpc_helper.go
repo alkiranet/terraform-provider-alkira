@@ -45,6 +45,12 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 
 	exportOptions.Prefixes = prefixes
 
+	// Subnet entries and exportAllSubnets are mutually exclusive.
+	// If specific subnets are provided, exportAllSubnets must be false.
+	if len(prefixes) > 0 {
+		exportOptions.ExportAllSubnets = false
+	}
+
 	gcp := &alkira.ConnectorGcpVpcRouting{
 		ExportOptions: exportOptions,
 		ImportOptions: importOptions,
@@ -157,7 +163,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
 		if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
 			exportAll := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
-			if exportAll.IsNull() {
+			if exportAll.IsNull() && len(gcpRouting.ExportOptions.Prefixes) == 0 {
 				gcpRouting.ExportOptions.ExportAllSubnets = true
 			}
 		}
