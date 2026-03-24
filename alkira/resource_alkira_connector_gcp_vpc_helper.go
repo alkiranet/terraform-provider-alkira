@@ -170,7 +170,7 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 		gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
 		if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
 			exportAll := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
-			if exportAll.IsNull() {
+			if exportAll.IsNull() && len(gcpRouting.ExportOptions.Prefixes) == 0 {
 				gcpRouting.ExportOptions.ExportAllSubnets = true
 			}
 		}
