@@ -235,6 +235,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 				Description: "IDs of segments associated with the service.",
 				Type:        schema.TypeSet,
 				Required:    true,
+				MinItems:    1,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"service_group_name": {
