@@ -106,6 +106,64 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"instance_metadata": {
+				Description: "Per-instance metadata populated after provisioning." +
+					"ELB instances populate: elastic_ip, secondary_ip, vlan, route_domain_id, ecmp_pool_name. " +
+					"ILB instances populate: virtual_ip, route_domain_id, ecmp_pool_name. " +
+					"If provisioning occurs out of band (e.g. via the Alkira portal), run " +
+					"`terraform apply -refresh-only` to sync this data into state.",
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_id": {
+							Description: "F5 service instance ID.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elastic_ip": {
+							Description: "Elastic IP address assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"secondary_ip": {
+							Description: "Secondary IP address assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"virtual_ip": {
+							Description: "Virtual IP address assigned to the instance. Populated for ILB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"vlan": {
+							Description: "VLAN assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"ecmp_pool_name": {
+							Description: "ECMP pool name assigned to the instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"route_domain_id": {
+							Description: "Route domain ID assigned to the instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+						"segment_id": {
+							Description: "Segment ID associated with the instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -198,6 +256,24 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	d.Set("segment_id", segmentId)
+
+	// Set post-provisioning instance metadata
+	if f5.Metadata != nil && f5.Metadata.InstanceToMetadata != nil {
+		var metadataList []map[string]interface{}
+		for instanceId, m := range f5.Metadata.InstanceToMetadata {
+			metadataList = append(metadataList, map[string]interface{}{
+				"instance_id":     instanceId,
+				"elastic_ip":      m.ElasticIp,
+				"secondary_ip":    m.SecondaryIp,
+				"virtual_ip":      m.VirtualIp,
+				"vlan":            m.Vlan,
+				"ecmp_pool_name":  m.EcmpPoolName,
+				"route_domain_id": int(m.RouteDomainId),
+				"segment_id":      int(m.SegmentId),
+			})
+		}
+		d.Set("instance_metadata", metadataList)
+	}
 
 	// Set provision state
 	if client.Provision && provState != "" {

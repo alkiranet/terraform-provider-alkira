@@ -219,11 +219,52 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 			"f5_username":                f5Username,
 			"f5_password":                f5Password,
 			"availability_zone":          in.AvailabilityZone,
+			"instance_metadata":          flattenF5LBInstanceMetadata(in.Metadata),
 		}
 
 		instances = append(instances, instance)
 	}
 	return instances
+}
+
+func flattenF5LBInstanceMetadata(m *alkira.F5LBServiceInstanceMetadata) []map[string]interface{} {
+	if m == nil || m.SegmentToMetadata == nil {
+		return nil
+	}
+	var result []map[string]interface{}
+	for segId, seg := range m.SegmentToMetadata {
+		var tunnels []map[string]interface{}
+		for _, t := range seg.Tunnels {
+			bgpEnabled := false
+			if t.BgpEnabled != nil {
+				bgpEnabled = *t.BgpEnabled
+			}
+			tunnels = append(tunnels, map[string]interface{}{
+				"tunnel_protocol":      t.TunnelProtocol,
+				"tunnel_uuid":          t.TunnelUUID,
+				"tunnel_id":            t.TunnelId,
+				"customer_tunnel_name": t.CustomerTunnelName,
+				"cxp_tunnel_name":      t.CxpTunnelName,
+				"tunnel_internal_name": t.TunnelInternalName,
+				"infra_node_name":      t.InfraNodeName,
+				"customer_outer_ip":    t.CustomerOuterIp,
+				"cxp_outer_ip":         t.CxpOuterIp,
+				"cxp_inner_ip":         t.CxpInnerIp,
+				"customer_inner_ip":    t.CustomerInnerIp,
+				"lb_type":              t.LbType,
+				"bgp_enabled":          bgpEnabled,
+			})
+		}
+		result = append(result, map[string]interface{}{
+			"f5_mgmt_public_ip": seg.F5MgmtPublicIp,
+			"segment_id":        segId,
+			"route_domain_id":   int(seg.RouteDomainId),
+			"routing_type":      seg.RoutingType,
+			"vlans":             seg.Vlans,
+			"tunnels":           tunnels,
+		})
+	}
+	return result
 }
 
 // generateRequestF5Lb generates the request payload for creating an F5 Load Balancer service.
