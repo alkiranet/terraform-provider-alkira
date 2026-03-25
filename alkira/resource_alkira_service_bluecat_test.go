@@ -307,6 +307,7 @@ func TestAlkiraServiceBluecat_resourceSchema(t *testing.T) {
 	if segmentIdsSchema, exists := resource.Schema["segment_ids"]; exists {
 		assert.Equal(t, schema.TypeSet, segmentIdsSchema.Type, "Segment IDs should be set type")
 		assert.True(t, segmentIdsSchema.Required, "Segment IDs should be required")
+		assert.Equal(t, 1, segmentIdsSchema.MinItems, "Segment IDs should require at least 1 element")
 	}
 
 	if instanceSchema, exists := resource.Schema["instance"]; exists {
@@ -316,6 +317,18 @@ func TestAlkiraServiceBluecat_resourceSchema(t *testing.T) {
 
 	// Basic test - just verify the resource can be created
 	assert.True(t, true, "Bluecat resource schema test completed successfully")
+}
+
+func TestAlkiraServiceBluecat_segmentIdsMinItems(t *testing.T) {
+	resource := resourceAlkiraBluecat()
+
+	segmentIdsSchema, exists := resource.Schema["segment_ids"]
+	require.True(t, exists, "segment_ids schema field must exist")
+
+	// MinItems: 1 ensures Terraform rejects empty segment_ids at plan
+	// time rather than sending null to the API (which returns HTTP 500).
+	assert.Equal(t, 1, segmentIdsSchema.MinItems,
+		"segment_ids must enforce MinItems=1; the backend requires at least 1 segment")
 }
 
 func TestAlkiraServiceBluecat_validateLicenseType(t *testing.T) {
