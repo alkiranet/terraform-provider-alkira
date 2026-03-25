@@ -248,6 +248,66 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 								false),
 							Optional: true,
 						},
+						"instance_metadata": {
+							Description: "Per-segment metadata populated after provisioning." +
+								"If provisioning occurs out of band (e.g. via the Alkira portal), run " +
+								"`terraform apply -refresh-only` to sync this data into state.",
+							Type:     schema.TypeSet,
+							Set:      f5LBInstanceMetadataHash,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"f5_mgmt_public_ip": {
+										Description: "Management public IP of the instance.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"segment_id": {
+										Description: "Segment ID.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"route_domain_id": {
+										Description: "Route domain ID.",
+										Type:        schema.TypeInt,
+										Computed:    true,
+									},
+									"routing_type": {
+										Description: "Routing type.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"vlans": {
+										Description: "VLANs assigned to the instance for this segment.",
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"tunnels": {
+										Description: "Tunnel configurations for this segment.",
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"tunnel_protocol":      {Description: "Tunnel protocol (e.g. IPSEC, GRE).", Type: schema.TypeString, Computed: true},
+												"tunnel_uuid":          {Description: "Unique identifier of the tunnel.", Type: schema.TypeString, Computed: true},
+												"tunnel_id":            {Description: "Service tunnel ID.", Type: schema.TypeString, Computed: true},
+												"customer_tunnel_name": {Description: "Customer-side tunnel name.", Type: schema.TypeString, Computed: true},
+												"cxp_tunnel_name":      {Description: "CXP-side tunnel name.", Type: schema.TypeString, Computed: true},
+												"tunnel_internal_name": {Description: "Internal tunnel name.", Type: schema.TypeString, Computed: true},
+												"infra_node_name":      {Description: "Infrastructure node hosting the tunnel.", Type: schema.TypeString, Computed: true},
+												"customer_outer_ip":    {Description: "Customer-side outer (underlay) IP.", Type: schema.TypeString, Computed: true},
+												"cxp_outer_ip":         {Description: "CXP-side outer (underlay) IP.", Type: schema.TypeString, Computed: true},
+												"cxp_inner_ip":         {Description: "CXP-side inner (overlay) IP.", Type: schema.TypeString, Computed: true},
+												"customer_inner_ip":    {Description: "Customer-side inner (overlay) IP.", Type: schema.TypeString, Computed: true},
+												"lb_type":              {Description: "Load balancer type for this tunnel. Can be `ELB`, `ILB`, or both. If empty, ELB is assumed.", Type: schema.TypeString, Computed: true},
+												"bgp_enabled":          {Description: "True when the segment has BGP advertise options configured.", Type: schema.TypeBool, Computed: true},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
