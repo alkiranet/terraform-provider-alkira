@@ -252,7 +252,8 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 							Description: "Per-segment metadata populated after provisioning." +
 								"If provisioning occurs out of band (e.g. via the Alkira portal), run " +
 								"`terraform apply -refresh-only` to sync this data into state.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
+							Set:      f5LBInstanceMetadataHash,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

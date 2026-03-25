@@ -10,6 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// f5VServerInstanceMetadataHash computes a stable hash for instance_metadata entries
+// keyed on instance_id, which is the unique identifier per entry. This prevents
+// spurious diffs when the API returns instance metadata in a different order.
+var f5VServerInstanceMetadataHash = typeSetHash(func(m map[string]interface{}) string {
+	return fmt.Sprintf("%v", m["instance_id"])
+})
+
 func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource for managing F5 vServer endpoint. (**BETA**)",
@@ -117,7 +124,8 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 					"ILB instances populate: virtual_ip, route_domain_id, ecmp_pool_name. " +
 					"If provisioning occurs out of band (e.g. via the Alkira portal), run " +
 					"`terraform apply -refresh-only` to sync this data into state.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Set:      f5VServerInstanceMetadataHash,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

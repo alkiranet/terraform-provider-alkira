@@ -3,12 +3,20 @@ package alkira
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// f5LBInstanceMetadataHash computes a stable hash for instance_metadata entries
+// keyed on segment_id, which is the unique identifier per entry. This prevents
+// spurious diffs when the API returns segment metadata in a different order.
+var f5LBInstanceMetadataHash = typeSetHash(func(m map[string]interface{}) string {
+	return fmt.Sprintf("%v", m["segment_id"])
+})
 
 // expandF5Instances converts the input data to a slice of F5Instances structs.
 func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, error) {
