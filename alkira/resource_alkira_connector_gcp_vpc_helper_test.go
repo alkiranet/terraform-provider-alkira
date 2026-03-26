@@ -612,7 +612,7 @@ func TestExpandGcpRouting(t *testing.T) {
 		{
 			// no gcp_routing block at all, but vpc_subnet present.
 			// exportAllSubnets must be false when subnets are provided.
-			name: "no gcp_routing block with vpc_subnet present — must force false",
+			name:       "no gcp_routing block with vpc_subnet present — must force false",
 			gcpRouting: nil,
 			subnets: schema.NewSet(
 				func(i interface{}) int {
@@ -893,7 +893,7 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "export_all_subnets=false without vpc_subnet - valid (TPS will error)",
+			name: "export_all_subnets=false without vpc_subnet - invalid (validation error)",
 			config: map[string]interface{}{
 				"name":          "test-connector",
 				"cxp":           "us-west1",
@@ -910,7 +910,8 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 					},
 				},
 			},
-			expectError: false,
+			expectError:   true,
+			errorContains: "vpc_subnet must be specified when export_all_subnets is false",
 		},
 		{
 			name: "no gcp_routing with vpc_subnet - valid",
@@ -1045,25 +1046,30 @@ func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, client *alkir
 	}
 
 	routingCfg := routing[0].(map[string]interface{})
-	exportAll, ok := routingCfg["export_all_subnets"].(bool)
-	if !ok || !exportAll {
-		return nil
-	}
+	exportAll, exportAllOk := routingCfg["export_all_subnets"].(bool)
 
-	// If export_all_subnets is true, vpc_subnet must be empty
+	exportAllExplicitlySet := exportAllOk
+
 	vpcSubnets := d.Get("vpc_subnet")
-	if vpcSubnets == nil {
-		return nil
+	var vpcSubnetSet *schema.Set
+	if vpcSubnets != nil {
+		set, ok := vpcSubnets.(*schema.Set)
+		if ok {
+			vpcSubnetSet = set
+		}
 	}
+	hasVpcSubnets := vpcSubnetSet != nil && vpcSubnetSet.Len() > 0
 
-	vpcSubnetSet, ok := vpcSubnets.(*schema.Set)
-	if !ok {
-		return nil
-	}
-
-	if vpcSubnetSet.Len() > 0 {
+	// Case 1: export_all_subnets=true WITH vpc_subnet entries → error
+	if exportAll && hasVpcSubnets {
 		return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
 			"When exporting all subnets, specific vpc_subnet entries should not be provided")
+	}
+
+	// Case 2: export_all_subnets=false WITHOUT vpc_subnet entries → error if explicitly set
+	if exportAllOk && !exportAll && !hasVpcSubnets && exportAllExplicitlySet {
+		return fmt.Errorf("vpc_subnet must be specified when export_all_subnets is false. " +
+			"Either set export_all_subnets to true or provide vpc_subnet entries")
 	}
 
 	return nil

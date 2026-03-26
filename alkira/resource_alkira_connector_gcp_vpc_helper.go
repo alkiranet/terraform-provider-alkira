@@ -46,9 +46,14 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 	exportOptions.Prefixes = prefixes
 
 	// Subnet entries and exportAllSubnets are mutually exclusive.
-	// If specific subnets are provided, exportAllSubnets must be false.
+	// Subnets present → exportAllSubnets must be false.
+	// No subnets → exportAllSubnets must be true.
+	// This handles both Create and Update (RCA: state carried false into Update
+	// after vpc_subnet blocks were removed, causing API 400).
 	if len(prefixes) > 0 {
 		exportOptions.ExportAllSubnets = false
+	} else {
+		exportOptions.ExportAllSubnets = true
 	}
 
 	gcp := &alkira.ConnectorGcpVpcRouting{
