@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,13 +34,30 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				routing := gcpRouting.([]interface{})
 				if len(routing) > 0 {
 					routingCfg := routing[0].(map[string]interface{})
-					if exportAll, ok := routingCfg["export_all_subnets"].(bool); ok && exportAll {
-						if vpcSubnets, ok := d.GetOk("vpc_subnet"); ok {
-							if vpcSubnets.(*schema.Set).Len() > 0 {
-								return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
-									"When exporting all subnets, specific vpc_subnet entries should not be provided")
-							}
-						}
+					exportAll, _ := routingCfg["export_all_subnets"].(bool)
+
+					hasVpcSubnets := d.Get("vpc_subnet").(*schema.Set).Len() > 0
+
+					// Detect if export_all_subnets was explicitly written in config
+					// (as opposed to being computed from state)
+					exportAllExplicitlySet := false
+					rawConfig := d.GetRawConfig()
+					gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
+					if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
+						exportAllRaw := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
+						exportAllExplicitlySet = !exportAllRaw.IsNull()
+					}
+
+					// export_all_subnets=true WITH vpc_subnet entries is invalid
+					if exportAll && hasVpcSubnets {
+						return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
+							"When exporting all subnets, specific vpc_subnet entries should not be provided")
+					}
+
+					// export_all_subnets=false explicitly WITHOUT vpc_subnet entries is invalid
+					if exportAllExplicitlySet && !exportAll && !hasVpcSubnets {
+						return fmt.Errorf("vpc_subnet must be specified when export_all_subnets is false. " +
+							"Either set export_all_subnets to true or provide vpc_subnet entries")
 					}
 				}
 			}
