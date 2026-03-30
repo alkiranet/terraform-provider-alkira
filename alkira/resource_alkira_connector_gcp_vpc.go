@@ -34,7 +34,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				routing := gcpRouting.([]interface{})
 				if len(routing) > 0 {
 					routingCfg := routing[0].(map[string]interface{})
-					exportAll, _ := routingCfg["export_all_subnets"].(bool)
+					exportAll, ok := routingCfg["export_all_subnets"].(bool)
 
 					hasVpcSubnets := d.Get("vpc_subnet").(*schema.Set).Len() > 0
 
@@ -49,13 +49,13 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					}
 
 					// export_all_subnets=true WITH vpc_subnet entries is invalid
-					if exportAll && hasVpcSubnets {
+					if ok && exportAll && hasVpcSubnets {
 						return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
 							"When exporting all subnets, specific vpc_subnet entries should not be provided")
 					}
 
 					// export_all_subnets=false explicitly WITHOUT vpc_subnet entries is invalid
-					if exportAllExplicitlySet && !exportAll && !hasVpcSubnets {
+					if ok && exportAllExplicitlySet && !exportAll && !hasVpcSubnets {
 						return fmt.Errorf("vpc_subnet must be specified when export_all_subnets is false. " +
 							"Either set export_all_subnets to true or provide vpc_subnet entries")
 					}

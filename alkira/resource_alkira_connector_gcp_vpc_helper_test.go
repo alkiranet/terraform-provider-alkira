@@ -731,6 +731,31 @@ func TestExpandGcpRouting(t *testing.T) {
 			),
 			expectError: true,
 		},
+		{
+			// Regression test for AK-66113: When vpc_subnet blocks are removed from config,
+			// export_all_subnets=false is carried from state, but expandGcpRouting must
+			// force ExportAllSubnets=true when subnets are empty (else branch).
+			name: "regression: export_all_subnets=false with empty subnets — must force true",
+			gcpRouting: []interface{}{
+				map[string]interface{}{
+					"custom_prefix":      "ADVERTISE_DEFAULT_ROUTE",
+					"prefix_list_ids":    schema.NewSet(schema.HashInt, []interface{}{}),
+					"export_all_subnets": false, // Carried from state after vpc_subnet removal
+				},
+			},
+			subnets:     nil, // No subnets
+			expectError: false,
+			expected: &alkira.ConnectorGcpVpcRouting{
+				ExportOptions: alkira.ConnectorGcpVpcExportOptions{
+					ExportAllSubnets: true, // Forced to true by else branch
+					Prefixes:         []alkira.UserInputPrefixes{},
+				},
+				ImportOptions: alkira.ConnectorGcpVpcImportOptions{
+					RouteImportMode: "ADVERTISE_DEFAULT_ROUTE",
+					PrefixListIds:   nil,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1048,6 +1073,14 @@ func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, client *alkir
 	routingCfg := routing[0].(map[string]interface{})
 	exportAll, exportAllOk := routingCfg["export_all_subnets"].(bool)
 
+	// NOTE: The test helper cannot replicate CustomizeDiff's GetRawConfig() + IsNull()
+	// semantics for distinguishing "user explicitly wrote false" from "computed/state carried false".
+	// For a TypeBool Optional+Computed field, schema.ResourceData.Get() always returns a typed
+	// false (never nil), so exportAllOk is true whenever gcp_routing is present, regardless of
+	// whether the user actually wrote export_all_subnets in their HCL. The production CustomizeDiff
+	// correctly uses GetRawConfig() to detect explicit writes. This limitation means Case 2 below
+	// may fire in unit tests for configs where production CustomizeDiff would correctly stay silent.
+	// Full coverage of Case 2 requires acceptance tests with real ResourceDiff behavior.
 	exportAllExplicitlySet := exportAllOk
 
 	vpcSubnets := d.Get("vpc_subnet")
