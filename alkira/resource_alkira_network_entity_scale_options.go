@@ -141,7 +141,7 @@ func convertEntityIdToInt(entityId string) int {
 
 func resourceNetworkEntityScaleOptionsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
@@ -192,7 +192,7 @@ func resourceNetworkEntityScaleOptionsCreate(ctx context.Context, d *schema.Reso
 
 func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	networkEntityScaleOptions, provState, err := api.GetById(d.Id())
 	if err != nil {
@@ -245,7 +245,7 @@ func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.Resour
 
 func resourceNetworkEntityScaleOptionsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
@@ -294,7 +294,7 @@ func resourceNetworkEntityScaleOptionsUpdate(ctx context.Context, d *schema.Reso
 
 func resourceNetworkEntityScaleOptionsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	provState, err, valErr, provErr := api.Delete(d.Id())
 	if err != nil {
@@ -329,7 +329,7 @@ func resourceNetworkEntityScaleOptionsDelete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.ControllerScaleOptions, error) {
+func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.NetworkEntityScaleOptions, error) {
 	var segmentScaleOptions []alkira.SegmentScaleOptions
 	if v, ok := d.Get("segment_scale_options").([]any); ok {
 		for _, item := range v {
@@ -358,7 +358,7 @@ func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.C
 		}
 	}
 
-	networkEntityScaleOptions := &alkira.ControllerScaleOptions{
+	networkEntityScaleOptions := &alkira.NetworkEntityScaleOptions{
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
 		EntityId:            convertEntityIdToInt(d.Get("entity_id").(string)),
