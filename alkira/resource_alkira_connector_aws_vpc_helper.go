@@ -77,16 +77,15 @@ func setAwsVpcExportPrefixes(exportOptions interface{}, d *schema.ResourceData) 
 		}
 	}
 
-	// Only set non-empty fields to preserve config when field is not in config
+	// Only set non-empty export fields to preserve config when field is not in config
+	// overlay_subnets is always set (even if empty) because backend always returns it
 	if len(cidrList) > 0 {
 		d.Set("vpc_cidr", cidrList)
 	}
 	if len(subnetList) > 0 {
 		d.Set("vpc_subnet", subnetList)
 	}
-	if len(overlaySubnets) > 0 {
-		d.Set("overlay_subnets", overlaySubnets)
-	}
+	d.Set("overlay_subnets", overlaySubnets)
 }
 
 // setAwsVpcImportRouteTables sets vpc_route_table from ImportOptions
