@@ -78,4 +78,7 @@ resource "alkira_service_checkpoint" "test2" {
     segment_id = alkira_segment.test1.id
     zone_name  = "DEFAULT"
   }
+
+  # Billing tags cannot be deleted while referenced by services.
+  depends_on = [alkira_billing_tag.test1]
 }

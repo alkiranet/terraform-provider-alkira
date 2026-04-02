@@ -16,3 +16,4 @@ terraform.tfstate.*
 *.pem
 .env
 test/*
+.claude

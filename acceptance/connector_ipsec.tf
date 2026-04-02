@@ -59,4 +59,8 @@ resource "alkira_connector_ipsec" "test" {
     preshared_keys      = ["1234", "1235"]
     billing_tag_ids     = [alkira_billing_tag.test1.id]
   }
+
+  # Billing tags cannot be deleted while referenced by connectors.
+  # Explicitly declare the dependency to ensure correct destroy ordering.
+  depends_on = [alkira_billing_tag.test1]
 }
