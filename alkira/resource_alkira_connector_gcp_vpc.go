@@ -36,7 +36,10 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 					routingCfg := routing[0].(map[string]interface{})
 					exportAll, ok := routingCfg["export_all_subnets"].(bool)
 
-					hasVpcSubnets := d.Get("vpc_subnet").(*schema.Set).Len() > 0
+					var hasVpcSubnets bool
+					if v, ok := d.GetOk("vpc_subnet"); ok {
+						hasVpcSubnets = v.(*schema.Set).Len() > 0
+					}
 
 					// Detect if export_all_subnets was explicitly written in config
 					// (as opposed to being computed from state)
