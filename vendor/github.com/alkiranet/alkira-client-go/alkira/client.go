@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,7 +44,7 @@ type AlkiraClient struct {
 	TenantNetworkId      string
 	SerializationEnabled bool
 	serializationTimeout time.Duration
-	apiMutex             sync.Mutex
+	apiQueue             chan struct{}
 }
 
 type Session struct {
@@ -206,6 +205,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 		TenantNetworkId:      strconv.Itoa(tenantNetworkId),
 		SerializationEnabled: enableSerialization,
 		serializationTimeout: time.Duration(timeoutSeconds) * time.Second,
+		apiQueue:             make(chan struct{}, 1),
 	}
 
 	logf("DEBUG", "ALKIRA-API-SERIALIZATION-ENABLED: %v", client.SerializationEnabled)
@@ -394,6 +394,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		Validate:             validate,
 		SerializationEnabled: enableSerialization,
 		serializationTimeout: time.Duration(timeoutSeconds) * time.Second,
+		apiQueue:             make(chan struct{}, 1),
 	}
 
 	logf("DEBUG", "ALKIRA-API-SERIALIZATION-ENABLED: %v", client.SerializationEnabled)
@@ -485,43 +486,37 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 	return data, provisionState, nil
 }
 
-// executeWithMutex executes a function while holding the API mutex if serialization is enabled
-// Returns an error if the mutex cannot be acquired within the configured timeout
-func (ac *AlkiraClient) executeWithMutex(fn func() error) error {
+// executeWithQueue executes a function with serialization if enabled.
+// Requests wait indefinitely for their turn in the queue (the system is making
+// progress), but each request's execution is bounded by serializationTimeout
+// via context cancellation on the underlying HTTP request.
+// This prevents a slow request from causing timeouts for requests queued behind it.
+func (ac *AlkiraClient) executeWithQueue(request *retryablehttp.Request, fn func() error) error {
 	// If serialization is disabled, execute immediately
 	if !ac.SerializationEnabled {
 		return fn()
 	}
 
-	// Channel to signal mutex acquisition
-	mutexAcquired := make(chan struct{})
-	// Channel to signal that a timeout occurred before the mutex was acquired
-	timedOut := make(chan struct{})
+	// Wait for our turn — no timeout on queue wait.
+	ac.apiQueue <- struct{}{}
+	defer func() { <-ac.apiQueue }()
 
-	// Try to acquire the mutex in a goroutine
-	go func() {
-		ac.apiMutex.Lock()
-		select {
-		case <-timedOut:
-			// Timeout already fired — release the mutex immediately so it isn't leaked
-			ac.apiMutex.Unlock()
-		default:
-			close(mutexAcquired)
+	logf("DEBUG", "API queue slot acquired, executing request")
+
+	// Apply a per-request execution timeout via context cancellation.
+	// This ensures that when the timeout fires, the underlying HTTP request
+	// is cancelled — no goroutine leak or orphaned connection.
+	ctx, cancel := context.WithTimeout(context.Background(), ac.serializationTimeout)
+	defer cancel()
+	*request = *request.WithContext(ctx)
+
+	if err := fn(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("request execution timed out after %v: %w", ac.serializationTimeout, err)
 		}
-	}()
-
-	// Wait for either mutex acquisition or timeout
-	select {
-	case <-mutexAcquired:
-		// Mutex acquired successfully
-		defer ac.apiMutex.Unlock()
-		logf("DEBUG", "API mutex acquired, executing request")
-		return fn()
-	case <-time.After(ac.serializationTimeout):
-		// Timeout occurred — signal the goroutine to release the mutex if it acquires it late
-		close(timedOut)
-		return fmt.Errorf("failed to acquire API mutex within timeout (%v)", ac.serializationTimeout)
+		return err
 	}
+	return nil
 }
 
 // formatProvisionError formats the provision error message with detailed information if available
@@ -573,8 +568,8 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	// Execute the HTTP request with serialization if enabled
 	var response *http.Response
 	var err error
-	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+	queueErr := ac.executeWithQueue(request, func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
 		return err
 	})
 
@@ -583,8 +578,8 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 		defer func() { _ = response.Body.Close() }()
 	}
 
-	if mutexErr != nil {
-		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, mutexErr), nil, nil
+	if queueErr != nil {
+		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, queueErr), nil, nil
 	}
 
 	if err != nil {
@@ -697,8 +692,8 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	// Execute the HTTP request with serialization if enabled
 	var response *http.Response
 	var err error
-	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+	queueErr := ac.executeWithQueue(request, func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
 		return err
 	})
 
@@ -707,8 +702,8 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 		defer func() { _ = response.Body.Close() }()
 	}
 
-	if mutexErr != nil {
-		return "", fmt.Errorf("client-delete(%s): %w", requestId, mutexErr), nil, nil
+	if queueErr != nil {
+		return "", fmt.Errorf("client-delete(%s): %w", requestId, queueErr), nil, nil
 	}
 
 	if err != nil {
@@ -824,8 +819,8 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	// Execute the HTTP request with serialization if enabled
 	var response *http.Response
 	var err error
-	mutexErr := ac.executeWithMutex(func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after mutex release
+	queueErr := ac.executeWithQueue(request, func() error {
+		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
 		return err
 	})
 
@@ -834,8 +829,8 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 		defer func() { _ = response.Body.Close() }()
 	}
 
-	if mutexErr != nil {
-		return "", fmt.Errorf("client-update(%s): %w", requestId, mutexErr), nil, nil
+	if queueErr != nil {
+		return "", fmt.Errorf("client-update(%s): %w", requestId, queueErr), nil, nil
 	}
 
 	if err != nil {
