@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,10 +29,6 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 			if v, ok := cfg["custom_prefix"].(string); ok {
 				importOptions.RouteImportMode = v
 			}
-
-			if v, ok := cfg["export_all_subnets"].(bool); ok {
-				exportOptions.ExportAllSubnets = v
-			}
 		}
 	}
 
@@ -46,9 +41,16 @@ func expandGcpRouting(in []interface{}, subnets *schema.Set) (*alkira.ConnectorG
 	exportOptions.Prefixes = prefixes
 
 	// Subnet entries and exportAllSubnets are mutually exclusive.
-	// If specific subnets are provided, exportAllSubnets must be false.
+	// Subnets present → exportAllSubnets must be false.
+	// No subnets → exportAllSubnets must be true.
+	// Enforced bidirectionally: if subnets are present exportAllSubnets must be
+	// false; if absent it must be true. Without the else branch, a stale state
+	// value of false is sent to the API when vpc_subnet blocks are removed,
+	// causing a 400 error.
 	if len(prefixes) > 0 {
 		exportOptions.ExportAllSubnets = false
+	} else {
+		exportOptions.ExportAllSubnets = true
 	}
 
 	gcp := &alkira.ConnectorGcpVpcRouting{
@@ -148,25 +150,6 @@ func generateConnectorGcpVpcRequest(d *schema.ResourceData, m interface{}) (*alk
 	if err != nil {
 		log.Printf("[ERROR] failed to convert gcp routing")
 		return nil, err
-	}
-
-	// For Optional+Computed booleans, the SDK cannot distinguish between
-	// "user explicitly set false" and "user didn't set it" in the config
-	// map (both appear as false). Use GetRawConfig to check if the user
-	// actually wrote export_all_subnets in their HCL. If they didn't,
-	// default to true (export all subnets).
-	// This only applies during Create (d.Id() is empty). During Update,
-	// the plan already includes the correct state value for unset
-	// Computed fields, so overriding would silently change the value.
-	if d.Id() == "" {
-		rawConfig := d.GetRawConfig()
-		gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
-		if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
-			exportAll := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
-			if exportAll.IsNull() && len(gcpRouting.ExportOptions.Prefixes) == 0 {
-				gcpRouting.ExportOptions.ExportAllSubnets = true
-			}
-		}
 	}
 
 	//
