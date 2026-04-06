@@ -38,7 +38,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"application_id": {
 				Description: "Azure Application ID.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				WriteOnly:   true,
 			},
@@ -52,14 +52,14 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"secret_key": {
 				Description: "Azure Secret Key.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				WriteOnly:   true,
 			},
 			"tenant_id": {
 				Description: "Azure Tenant ID.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				WriteOnly:   true,
 			},
@@ -69,6 +69,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 					"default value is `AZURE`.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AK_AZURE_ENVIRONMENT",
 					nil),
@@ -171,9 +172,9 @@ func resourceCredentialAzureVnetRead(ctx context.Context, d *schema.ResourceData
 	// Set fields returned by API
 	d.Set("name", credential.Name)
 
-	// Set environment from SubType if available
-	if credential.SubType != "" {
-		d.Set("environment", credential.SubType)
+	// Set environment from PlainTextAttributes if available
+	if env, ok := credential.PlainTextAttributes["environment"]; ok && env != "" {
+		d.Set("environment", env)
 	}
 
 	// Note: Sensitive fields (secret_key, application_id, tenant_id, subscription_id)

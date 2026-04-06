@@ -216,10 +216,11 @@ type CredentialResponse struct {
 }
 
 type CredentialResponseDetail struct {
-	Id      string `json:"credentialId"`
-	Type    string `json:"credentialType"`
-	Name    string `json:"name"`
-	SubType string `json:"subType"`
+	Id                  string            `json:"credentialId"`
+	Type                string            `json:"credentialType"`
+	Name                string            `json:"name"`
+	SubType             string            `json:"subType"`
+	PlainTextAttributes map[string]string `json:"plainTextAttributes"`
 }
 
 type CredentialApiKey struct {
