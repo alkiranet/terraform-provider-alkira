@@ -835,6 +835,10 @@ func TestGcpVpcDataStructures(t *testing.T) {
 	})
 }
 
+// TestGcpVpcValidateExportAllSubnetsWithVpcSubnet tests the explicit-write
+// validation cases. State-transition cases (where export_all_subnets is
+// carried from state, not explicitly written) are covered by live tests
+// because unit tests cannot distinguish explicit writes from state values.
 func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 	resource := resourceAlkiraConnectorGcpVpc()
 
@@ -984,6 +988,19 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 			expectError: false,
 		},
 		{
+			name: "no gcp_routing and no vpc_subnet - valid",
+			config: map[string]interface{}{
+				"name":          "test-connector",
+				"cxp":           "us-west1",
+				"segment_id":    "1",
+				"size":          "SMALL",
+				"gcp_region":    "us-central1",
+				"gcp_vpc_name":  "test-vpc",
+				"credential_id": "cred-123",
+			},
+			expectError: false,
+		},
+		{
 			name: "export_all_subnets=true with multiple vpc_subnets - invalid",
 			config: map[string]interface{}{
 				"name":          "test-connector",
@@ -1053,13 +1070,10 @@ func TestGcpVpcValidateExportAllSubnetsWithVpcSubnet(t *testing.T) {
 	}
 }
 
-// validateExportAllSubnetsWithVpcSubnet extracts the validation logic
-// for testability. This mirrors the logic in CustomizeDiff.
-func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, client *alkira.AlkiraClient) error {
-	// This function contains the same logic as CustomizeDiff
-	// for validation of export_all_subnets and vpc_subnet mutual exclusion
-
-	// Get gcp_routing config
+// validateExportAllSubnetsWithVpcSubnet mirrors the validation logic in
+// validateExportAllSubnets (CustomizeDiff). Unit tests treat all values as
+// explicitly set; state-transition cases require live/acceptance tests.
+func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, _ *alkira.AlkiraClient) error {
 	gcpRouting := d.Get("gcp_routing")
 	if gcpRouting == nil {
 		return nil
@@ -1071,36 +1085,22 @@ func validateExportAllSubnetsWithVpcSubnet(d *schema.ResourceData, client *alkir
 	}
 
 	routingCfg := routing[0].(map[string]interface{})
-	exportAll, exportAllOk := routingCfg["export_all_subnets"].(bool)
-
-	// NOTE: The test helper cannot replicate CustomizeDiff's GetRawConfig() + IsNull()
-	// semantics for distinguishing "user explicitly wrote false" from "computed/state carried false".
-	// For a TypeBool Optional+Computed field, schema.ResourceData.Get() always returns a typed
-	// false (never nil), so exportAllOk is true whenever gcp_routing is present, regardless of
-	// whether the user actually wrote export_all_subnets in their HCL. The production CustomizeDiff
-	// correctly uses GetRawConfig() to detect explicit writes. This limitation means Case 2 below
-	// may fire in unit tests for configs where production CustomizeDiff would correctly stay silent.
-	// Full coverage of Case 2 requires acceptance tests with real ResourceDiff behavior.
-	exportAllExplicitlySet := exportAllOk
-
-	vpcSubnets := d.Get("vpc_subnet")
-	var vpcSubnetSet *schema.Set
-	if vpcSubnets != nil {
-		set, ok := vpcSubnets.(*schema.Set)
-		if ok {
-			vpcSubnetSet = set
-		}
+	exportAll, ok := routingCfg["export_all_subnets"].(bool)
+	if !ok {
+		return nil
 	}
-	hasVpcSubnets := vpcSubnetSet != nil && vpcSubnetSet.Len() > 0
 
-	// Case 1: export_all_subnets=true WITH vpc_subnet entries → error
+	var hasVpcSubnets bool
+	if v, ok := d.Get("vpc_subnet").(*schema.Set); ok && v != nil {
+		hasVpcSubnets = v.Len() > 0
+	}
+
 	if exportAll && hasVpcSubnets {
 		return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
 			"When exporting all subnets, specific vpc_subnet entries should not be provided")
 	}
 
-	// Case 2: export_all_subnets=false WITHOUT vpc_subnet entries → error if explicitly set
-	if exportAllOk && !exportAll && !hasVpcSubnets && exportAllExplicitlySet {
+	if !exportAll && !hasVpcSubnets {
 		return fmt.Errorf("vpc_subnet must be specified when export_all_subnets is false. " +
 			"Either set export_all_subnets to true or provide vpc_subnet entries")
 	}
