@@ -29,43 +29,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			// Validate export_all_subnets and vpc_subnet mutual exclusion
-			if gcpRouting, ok := d.GetOk("gcp_routing"); ok {
-				routing := gcpRouting.([]interface{})
-				if len(routing) > 0 {
-					routingCfg := routing[0].(map[string]interface{})
-					exportAll, ok := routingCfg["export_all_subnets"].(bool)
-
-					var hasVpcSubnets bool
-					if v, ok := d.GetOk("vpc_subnet"); ok {
-						hasVpcSubnets = v.(*schema.Set).Len() > 0
-					}
-
-					// Detect if export_all_subnets was explicitly written in config
-					// (as opposed to being computed from state)
-					exportAllExplicitlySet := false
-					rawConfig := d.GetRawConfig()
-					gcpRoutingRaw := rawConfig.GetAttr("gcp_routing")
-					if !gcpRoutingRaw.IsNull() && gcpRoutingRaw.IsKnown() && gcpRoutingRaw.LengthInt() > 0 {
-						exportAllRaw := gcpRoutingRaw.Index(cty.NumberIntVal(0)).GetAttr("export_all_subnets")
-						exportAllExplicitlySet = !exportAllRaw.IsNull()
-					}
-
-					// export_all_subnets=true WITH vpc_subnet entries is invalid
-					if ok && exportAll && hasVpcSubnets {
-						return fmt.Errorf("vpc_subnet cannot be specified when export_all_subnets is true. " +
-							"When exporting all subnets, specific vpc_subnet entries should not be provided")
-					}
-
-					// export_all_subnets=false explicitly WITHOUT vpc_subnet entries is invalid
-					if ok && exportAllExplicitlySet && !exportAll && !hasVpcSubnets {
-						return fmt.Errorf("vpc_subnet must be specified when export_all_subnets is false. " +
-							"Either set export_all_subnets to true or provide vpc_subnet entries")
-					}
-				}
-			}
-
-			return nil
+			return validateExportAllSubnets(d)
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceConnectorGcpVpcRead),
