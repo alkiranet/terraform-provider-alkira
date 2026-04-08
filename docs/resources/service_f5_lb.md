@@ -251,6 +251,40 @@ Optional:
 Read-Only:
 
 - `id` (Number) ID of the F5 load balancer instance.
+- `instance_metadata` (List of Object) Per-segment metadata populated after provisioning.If provisioning occurs out of band (e.g. via the Alkira portal), run `terraform apply -refresh-only` to sync this data into state. (see [below for nested schema](#nestedatt--instance--instance_metadata))
+
+<a id="nestedatt--instance--instance_metadata"></a>
+### Nested Schema for `instance.instance_metadata`
+
+Read-Only:
+
+- `f5_mgmt_public_ip` (String)
+- `route_domain_id` (Number)
+- `routing_type` (String)
+- `segment_id` (String)
+- `tunnels` (List of Object) (see [below for nested schema](#nestedobjatt--instance--instance_metadata--tunnels))
+- `vlans` (List of String)
+
+<a id="nestedobjatt--instance--instance_metadata--tunnels"></a>
+### Nested Schema for `instance.instance_metadata.tunnels`
+
+Read-Only:
+
+- `bgp_enabled` (Boolean)
+- `customer_inner_ip` (String)
+- `customer_outer_ip` (String)
+- `customer_tunnel_name` (String)
+- `cxp_inner_ip` (String)
+- `cxp_outer_ip` (String)
+- `cxp_tunnel_name` (String)
+- `infra_node_name` (String)
+- `lb_type` (String)
+- `tunnel_id` (String)
+- `tunnel_internal_name` (String)
+- `tunnel_protocol` (String)
+- `tunnel_uuid` (String)
+
+
 
 
 <a id="nestedblock--segment_options"></a>

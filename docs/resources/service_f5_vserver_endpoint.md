@@ -73,6 +73,22 @@ resource "alkira_service_f5_vserver_endpoint" "example-vserver-2" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `instance_metadata` (List of Object) Per-instance metadata populated after provisioning.ELB instances populate: elastic_ip, secondary_ip, vlan, route_domain_id, ecmp_pool_name. ILB instances populate: virtual_ip, route_domain_id, ecmp_pool_name. If provisioning occurs out of band (e.g. via the Alkira portal), run `terraform apply -refresh-only` to sync this data into state. (see [below for nested schema](#nestedatt--instance_metadata))
+- `provision_state` (String) The provisioning state of the resource.
+
+<a id="nestedatt--instance_metadata"></a>
+### Nested Schema for `instance_metadata`
+
+Read-Only:
+
+- `ecmp_pool_name` (String)
+- `elastic_ip` (String)
+- `instance_id` (String)
+- `route_domain_id` (Number)
+- `secondary_ip` (String)
+- `segment_id` (Number)
+- `virtual_ip` (String)
+- `vlan` (String)
 
 
 
