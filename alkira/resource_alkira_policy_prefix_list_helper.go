@@ -124,13 +124,20 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPref
 		return nil, err
 	}
 
-	// Check if the user explicitly set "prefixes" in their config (not
-	// just computed from state by Read). GetRawConfig returns the raw
-	// config value which is null for fields not explicitly set.
+	// Deprecated: accept "prefixes" from config for backward compat.
+	// Remove this block when "prefixes" is removed from schema.
+	var prefixes []string
+	var prefixDetailsMap map[string]*alkira.PolicyPrefixListDetails
+
+	usingDeprecated := false
 	rawConfig := d.GetRawConfig()
-	rawPrefixes := rawConfig.GetAttr("prefixes")
-	if !rawPrefixes.IsNull() && rawPrefixes.IsKnown() && rawPrefixes.LengthInt() > 0 {
-		return nil, fmt.Errorf("ERROR: Please use the new 'prefix' block to replace the old 'prefixes' field")
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		rawPrefixes := rawConfig.GetAttr("prefixes")
+		if !rawPrefixes.IsNull() && rawPrefixes.IsKnown() && rawPrefixes.LengthInt() > 0 {
+			usingDeprecated = true
+		}
+	} else if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
+		usingDeprecated = true
 	}
 
 	if usingDeprecated {
