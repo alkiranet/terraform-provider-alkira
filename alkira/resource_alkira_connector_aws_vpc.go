@@ -163,6 +163,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					"`vpc_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
@@ -172,6 +173,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					"is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"vpc_cidr"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -219,6 +221,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					},
 				},
 				Optional: true,
+				Computed: true,
 			},
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with the connector.",
@@ -229,6 +232,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "Overlay subnet.",
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
@@ -329,6 +333,14 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("description", connector.Description)
+
+	// Set routing configuration from API response
+	setAwsVpcRoutingOptions(connector, d)
+
+	// Set TGW attachments (reusing existing function)
+	if connector.TgwAttachments != nil && len(connector.TgwAttachments) > 0 {
+		setTgwAttachment(d, connector.TgwAttachments)
+	}
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
