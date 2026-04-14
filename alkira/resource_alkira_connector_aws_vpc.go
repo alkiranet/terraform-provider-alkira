@@ -164,7 +164,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					"`vpc_subnet` is not specified.",
 				Type:          schema.TypeList,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"vpc_subnet"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
@@ -174,7 +173,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					"is not specified.",
 				Type:          schema.TypeSet,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"vpc_cidr"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
