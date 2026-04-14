@@ -198,23 +198,23 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 // expandUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
 func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySubnets []interface{}) ([]alkira.InputPrefixes, error) {
 
-	if len(cidr) == 0 && subnets == nil {
-		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified")
-	}
+	hasCidr := len(cidr) > 0
+	hasSubnets := subnets != nil && subnets.Len() > 0
 
 	// Processing overlay_subnets
 	log.Printf("[DEBUG] Processing overlay_subnets %v", overlaySubnets)
 	overlaySubnetList := make([]alkira.InputPrefixes, len(overlaySubnets))
 
-	if len(overlaySubnets) > 0 {
-		for i, value := range overlaySubnets {
-			overlaySubnetList[i].Value = value.(string)
-			overlaySubnetList[i].Type = "OVERLAY_SUBNETS"
-		}
+	for i, value := range overlaySubnets {
+		overlaySubnetList[i].Value = value.(string)
+		overlaySubnetList[i].Type = "OVERLAY_SUBNETS"
 	}
 
-	// Processing vpc_cidr
-	if len(cidr) > 0 {
+	switch {
+	case hasCidr && hasSubnets:
+		return nil, fmt.Errorf("ERROR: \"vpc_cidr\" and \"vpc_subnet\" cannot both be specified")
+
+	case hasCidr:
 		log.Printf("[DEBUG] Processing vpc_cidr %v", cidr)
 		cidrList := make([]alkira.InputPrefixes, len(cidr))
 
@@ -223,34 +223,31 @@ func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySub
 			cidrList[i].Type = "CIDR"
 		}
 
-		cidrList = append(cidrList, overlaySubnetList...)
-		return cidrList, nil
-	}
+		return append(cidrList, overlaySubnetList...), nil
 
-	// Processing vpc_subnet
-	log.Printf("[DEBUG] Processing vpc_subnet")
-	if subnets == nil || subnets.Len() == 0 {
-		log.Printf("[DEBUG] Empty vpc_subnet")
-		return nil, fmt.Errorf("ERROR: Invalid vpc_subnet")
-	}
+	case hasSubnets:
+		log.Printf("[DEBUG] Processing vpc_subnet")
+		prefixes := make([]alkira.InputPrefixes, subnets.Len())
 
-	prefixes := make([]alkira.InputPrefixes, subnets.Len())
-	for i, subnet := range subnets.List() {
-		r := alkira.InputPrefixes{}
-		t := subnet.(map[string]interface{})
-		if v, ok := t["id"].(string); ok {
-			r.Id = v
-		}
-		if v, ok := t["cidr"].(string); ok {
-			r.Value = v
+		for i, subnet := range subnets.List() {
+			r := alkira.InputPrefixes{}
+			t := subnet.(map[string]interface{})
+			if v, ok := t["id"].(string); ok {
+				r.Id = v
+			}
+			if v, ok := t["cidr"].(string); ok {
+				r.Value = v
+			}
+
+			r.Type = "SUBNET"
+			prefixes[i] = r
 		}
 
-		r.Type = "SUBNET"
-		prefixes[i] = r
-	}
+		return append(prefixes, overlaySubnetList...), nil
 
-	prefixes = append(prefixes, overlaySubnetList...)
-	return prefixes, nil
+	default:
+		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified")
+	}
 }
 
 // expandAwsVpcTgwAttachments expand tgw_attachment of connector_aws_vpc
