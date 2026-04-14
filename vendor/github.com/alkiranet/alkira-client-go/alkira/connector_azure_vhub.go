@@ -16,7 +16,7 @@ type ConnectorVhubRouting struct {
 	ImportOptions *ConnectorVhubImportOptions `json:"importFromCXPOptions,omitempty"`
 }
 
-type ConnectorAzureVHub struct {
+type ConnectorAzureVhub struct {
 	// Request fields
 	Name         string                `json:"name"`
 	Description  string                `json:"description,omitempty"`
@@ -28,7 +28,7 @@ type ConnectorAzureVHub struct {
 	BillingTags  []int                 `json:"billingTags,omitempty"`
 	CredentialId string                `json:"credentialId"`
 	VirtualHubId string                `json:"virtualHubId"`
-	ScaleGroupId string                `json:"scaleGroupId"`
+	ScaleGroupId string                `json:"scaleGroupId,omitempty"`
 	VhubRouting  *ConnectorVhubRouting `json:"vhubRouting"`
 
 	// Response-only fields
@@ -44,8 +44,8 @@ type ConnectorAzureVHub struct {
 	ASN               int         `json:"asn,omitempty"`
 }
 
-func NewConnectorAzureVHub(ac *AlkiraClient) *AlkiraAPI[ConnectorAzureVHub] {
+func NewConnectorAzureVhub(ac *AlkiraClient) *AlkiraAPI[ConnectorAzureVhub] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/azure-vhub-connectors", ac.URI, ac.TenantNetworkId)
-	api := &AlkiraAPI[ConnectorAzureVHub]{ac, uri, true}
+	api := &AlkiraAPI[ConnectorAzureVhub]{ac, uri, true}
 	return api
 }
