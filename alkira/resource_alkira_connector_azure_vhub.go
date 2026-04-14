@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAzureVhub() *schema.Resource {
 		Description:   "Manage Azure VHUB Connector.",
 		CreateContext: resourceConnectorAzureVhubCreate,
 		ReadContext:   resourceConnectorAzureVhubRead,
-		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureVhubUpdate),
+		UpdateContext: resourceConnectorAzureVhubUpdate,
 		DeleteContext: resourceConnectorAzureVhubDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -93,11 +93,9 @@ func resourceAlkiraConnectorAzureVhub() *schema.Resource {
 				Computed:    true,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with " +
-					"the connector. Can only be set at create time and " +
-					"cannot be changed after provisioning.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"segment_id": {
 				Description: "The ID of the segment associated with the connector.",
@@ -340,7 +338,7 @@ func resourceConnectorAzureVhubDelete(ctx context.Context, d *schema.ResourceDat
 	api := alkira.NewConnectorAzureVhub(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	_, err, valErr, provErr := api.Delete(d.Id())
+	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		name, _ := d.GetOk("name")
@@ -361,7 +359,7 @@ func resourceConnectorAzureVhubDelete(ctx context.Context, d *schema.ResourceDat
 		}}
 	}
 
-	if client.Provision && provErr != nil {
+	if client.Provision && provState != "SUCCESS" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
