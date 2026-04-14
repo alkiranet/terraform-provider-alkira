@@ -28,7 +28,7 @@ type ConnectorAzureVhub struct {
 	BillingTags  []int                 `json:"billingTags,omitempty"`
 	CredentialId string                `json:"credentialId"`
 	VirtualHubId string                `json:"virtualHubId"`
-	ScaleGroupId string                `json:"scaleGroupId,omitempty"`
+	ScaleGroupId string                `json:"scaleGroupId"`
 	VhubRouting  *ConnectorVhubRouting `json:"vhubRouting"`
 
 	// Response-only fields
