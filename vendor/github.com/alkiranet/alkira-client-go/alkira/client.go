@@ -565,34 +565,36 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	// Execute the HTTP request with serialization if enabled
+	// Execute the HTTP request with serialization if enabled. The response
+	// body must be fully read inside the queue-held scope so the underlying
+	// TCP connection is not reused by another goroutine before this response
+	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var err error
+	var data []byte
+	var doErr, readErr error
 	queueErr := ac.executeWithQueue(request, func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
-		return err
+		response, doErr = ac.Client.Do(request)
+		if doErr != nil {
+			return doErr
+		}
+		defer func() { _ = response.Body.Close() }()
+		data, readErr = io.ReadAll(response.Body)
+		return readErr
 	})
 
-	// Ensure response body is closed on all paths after we use it
-	if response != nil && response.Body != nil {
-		defer func() { _ = response.Body.Close() }()
-	}
-
 	if queueErr != nil {
+		if doErr != nil {
+			return nil, "", fmt.Errorf("client-create(%s): failed to send request, %w", requestId, queueErr), nil, nil
+		}
+		if readErr != nil {
+			logf("ERROR", "client-create(%s): failed to read response body: %v", requestId, readErr)
+			return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %w", requestId, queueErr), nil, nil
+		}
 		return nil, "", fmt.Errorf("client-create(%s): %w", requestId, queueErr), nil, nil
 	}
 
-	if err != nil {
-		return nil, "", fmt.Errorf("client-create(%s): failed to send request, %w", requestId, err), nil, nil
-	}
 	logf("DEBUG", "client-create(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-create(%s): response headers: %v", requestId, response.Header)
-	data, err := io.ReadAll(response.Body)
-	if err != nil {
-		logf("ERROR", "client-create(%s): failed to read response body: %v", requestId, err)
-		return nil, "", fmt.Errorf("client-create(%s): failed to read response body: %w", requestId, err), nil, nil
-	}
-
 	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-create(%s): response body length: %d", requestId, len(data))
 
@@ -689,34 +691,36 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	// Execute the HTTP request with serialization if enabled
+	// Execute the HTTP request with serialization if enabled. The response
+	// body must be fully read inside the queue-held scope so the underlying
+	// TCP connection is not reused by another goroutine before this response
+	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var err error
+	var data []byte
+	var doErr, readErr error
 	queueErr := ac.executeWithQueue(request, func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
-		return err
+		response, doErr = ac.Client.Do(request)
+		if doErr != nil {
+			return doErr
+		}
+		defer func() { _ = response.Body.Close() }()
+		data, readErr = io.ReadAll(response.Body)
+		return readErr
 	})
 
-	// Ensure response body is closed on all paths after we use it
-	if response != nil && response.Body != nil {
-		defer func() { _ = response.Body.Close() }()
-	}
-
 	if queueErr != nil {
+		if doErr != nil {
+			return "", fmt.Errorf("client-delete(%s): failed to send request, %w", requestId, queueErr), nil, nil
+		}
+		if readErr != nil {
+			logf("ERROR", "client-delete(%s): failed to read response body: %v", requestId, readErr)
+			return "", fmt.Errorf("client-delete(%s): failed to read response body: %w", requestId, queueErr), nil, nil
+		}
 		return "", fmt.Errorf("client-delete(%s): %w", requestId, queueErr), nil, nil
 	}
 
-	if err != nil {
-		return "", fmt.Errorf("client-delete(%s): failed to send request, %w", requestId, err), nil, nil
-	}
 	logf("DEBUG", "client-delete(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-delete(%s): response headers: %v", requestId, response.Header)
-	data, err := io.ReadAll(response.Body)
-	if err != nil {
-		logf("ERROR", "client-delete(%s): failed to read response body: %v", requestId, err)
-		return "", fmt.Errorf("client-delete(%s): failed to read response body: %w", requestId, err), nil, nil
-	}
-
 	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-delete(%s): response body length: %d", requestId, len(data))
 
@@ -816,34 +820,36 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	request.Header.Set("Authorization", ac.Authorization)
 	request.Header.Set("x-ak-request-id", requestId)
 
-	// Execute the HTTP request with serialization if enabled
+	// Execute the HTTP request with serialization if enabled. The response
+	// body must be fully read inside the queue-held scope so the underlying
+	// TCP connection is not reused by another goroutine before this response
+	// is drained, which would manifest as "context canceled" during ReadAll.
 	var response *http.Response
-	var err error
+	var data []byte
+	var doErr, readErr error
 	queueErr := ac.executeWithQueue(request, func() error {
-		response, err = ac.Client.Do(request) //nolint:bodyclose // Body is closed after queue release
-		return err
+		response, doErr = ac.Client.Do(request)
+		if doErr != nil {
+			return doErr
+		}
+		defer func() { _ = response.Body.Close() }()
+		data, readErr = io.ReadAll(response.Body)
+		return readErr
 	})
 
-	// Ensure response body is closed on all paths after we use it
-	if response != nil && response.Body != nil {
-		defer func() { _ = response.Body.Close() }()
-	}
-
 	if queueErr != nil {
+		if doErr != nil {
+			return "", fmt.Errorf("client-update(%s): failed to send request, %w", requestId, queueErr), nil, nil
+		}
+		if readErr != nil {
+			logf("ERROR", "client-update(%s): failed to read response body: %v", requestId, readErr)
+			return "", fmt.Errorf("client-update(%s): failed to read response body: %w", requestId, queueErr), nil, nil
+		}
 		return "", fmt.Errorf("client-update(%s): %w", requestId, queueErr), nil, nil
 	}
 
-	if err != nil {
-		return "", fmt.Errorf("client-update(%s): failed to send request, %w", requestId, err), nil, nil
-	}
 	logf("DEBUG", "client-update(%s): received response with status: %d", requestId, response.StatusCode)
 	logf("DEBUG", "client-update(%s): response headers: %v", requestId, response.Header)
-	data, err := io.ReadAll(response.Body)
-	if err != nil {
-		logf("ERROR", "client-update(%s): failed to read response body: %v", requestId, err)
-		return "", fmt.Errorf("client-update(%s): failed to read response body: %w", requestId, err), nil, nil
-	}
-
 	logf("DEBUG", "client-update(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
 	logf("DEBUG", "client-update(%s): response body length: %d", requestId, len(data))
 
