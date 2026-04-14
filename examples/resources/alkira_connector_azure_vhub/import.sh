@@ -1,0 +1,1 @@
+terraform import alkira_connector_azure_vhub.example CONNECTOR_ID
