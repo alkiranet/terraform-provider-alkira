@@ -102,10 +102,13 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 				Computed:    true,
 			},
 			"prefixes": {
-				Description: "A list of prefixes. (**DEPRECATED**)",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of prefixes. " +
+					"**Deprecated:** Use `prefix` block instead.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Deprecated:    "Use the 'prefix' block instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"prefix"},
 			},
 			"prefix": {
 				Description: "Prefix with description. This new block should " +
@@ -242,10 +245,37 @@ func resourcePolicyPrefixListRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
 
-	// Set "prefix" block
-	setPrefix(d, list.Prefixes, list.PrefixDetails)
+	// Deprecated: populate "prefixes" when user's config uses the old field.
+	// Remove this block when "prefixes" is removed from schema.
+	usingDeprecatedField := false
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		rawPrefixes := rawConfig.GetAttr("prefixes")
+		if !rawPrefixes.IsNull() && rawPrefixes.IsKnown() && rawPrefixes.LengthInt() > 0 {
+			usingDeprecatedField = true
+		}
+	} else {
+		// Import/refresh — no raw config available, fall back to state
+		if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
+			usingDeprecatedField = true
+		}
+	}
 
-	// Set "prefix_ranges" block
+	if usingDeprecatedField {
+		if len(list.Prefixes) > 0 {
+			prefixes := make([]interface{}, len(list.Prefixes))
+			for i, p := range list.Prefixes {
+				prefixes[i] = p
+			}
+			d.Set("prefixes", schema.NewSet(schema.HashString, prefixes))
+		} else {
+			d.Set("prefixes", schema.NewSet(schema.HashString, nil))
+		}
+		d.Set("prefix", schema.NewSet(prefixHash, nil))
+	} else {
+		setPrefix(d, list.Prefixes, list.PrefixDetails)
+	}
+
 	setPrefixRanges(d, list.PrefixRanges)
 
 	// Set provision state
