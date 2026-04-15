@@ -10,7 +10,7 @@ resource "alkira_service_fortinet" "test1" {
   segment_ids                  = [alkira_segment.test1.id, alkira_segment.test2.id]
   size                         = "SMALL"
   tunnel_protocol              = "IPSEC"
-  version                      = "7.0.3"
+  version                      = "7.4.3"
 
   instances {
     name                  = "a-ins1"
