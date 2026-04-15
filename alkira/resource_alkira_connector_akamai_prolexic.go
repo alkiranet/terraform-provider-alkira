@@ -271,9 +271,6 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 	d.Set("size", connector.Size)
 	d.Set("description", connector.Description)
 
-	// akamai_bgp_authentication_key is WriteOnly and never returned
-	// by the API; it is maintained in the user's HCL configuration
-	// and not persisted to state.
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
