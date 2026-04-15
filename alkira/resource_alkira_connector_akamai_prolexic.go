@@ -368,6 +368,10 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
+	// Capture credential_id before the connector is deleted so we can
+	// clean up the implicit credential afterwards.
+	credentialId := d.Get("credential_id").(string)
+
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
@@ -378,6 +382,14 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 			return diag.FromErr(fmt.Errorf("%w alkira_connector_akamai_prolexic (name=%q id=%s)", err, nameStr, d.Id()))
 		}
 		return diag.FromErr(fmt.Errorf("%w alkira_connector_akamai_prolexic (id=%s)", err, d.Id()))
+	}
+
+	// Delete the implicit credential so it doesn't get orphaned on the tenant.
+	if credentialId != "" {
+		log.Printf("[INFO] Deleting credential-akamai-prolexic (id=%s)", credentialId)
+		if delErr := client.DeleteCredential(credentialId, alkira.CredentialTypeAkamaiProlexic); delErr != nil {
+			log.Printf("[WARN] Failed to delete credential %s: %v", credentialId, delErr)
+		}
 	}
 
 	d.SetId("")
@@ -428,20 +440,32 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		return nil, err
 	}
 
-	// Create implicit akamai-prolexic credential
-	log.Printf("[INFO] Creating credential-akamai-prolexic")
+	// Manage the implicit akamai-prolexic credential.
+	// On Create (credential_id is empty), create a new credential.
+	// On Update (credential_id already set), reuse the same credential_id
+	// and push any changes via UpdateCredential so we don't leak a new
+	// credential on every apply.
 	c := alkira.CredentialAkamaiProlexic{
 		BgpAuthenticationKey: bgpAuthKey,
 	}
 
 	client := m.(*alkira.AlkiraClient)
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
+	credentialId := d.Get("credential_id").(string)
 
-	if err != nil {
-		return nil, err
+	if credentialId == "" {
+		log.Printf("[INFO] Creating credential-akamai-prolexic")
+		newCredentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
+		if err != nil {
+			return nil, err
+		}
+		credentialId = newCredentialId
+		d.Set("credential_id", credentialId)
+	} else {
+		log.Printf("[INFO] Updating credential-akamai-prolexic (id=%s)", credentialId)
+		if err := client.UpdateCredential(credentialId, d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0); err != nil {
+			return nil, err
+		}
 	}
-
-	d.Set("credential_id", credentialId)
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
