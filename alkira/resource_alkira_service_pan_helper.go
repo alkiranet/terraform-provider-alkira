@@ -5,8 +5,29 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// getPanWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
+// for import/refresh where GetRawConfigAt is unavailable.
+func getPanWriteOnlyValue(d *schema.ResourceData, field string) string {
+	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	// Fallback for import/refresh
+	if v, ok := d.GetOk(field); ok {
+		return v.(string)
+	}
+
+	return ""
+}
 
 // UNUSED: Commented out to suppress linter warnings
 // type panZone struct {
@@ -21,8 +42,8 @@ func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPan{
-		Username:   d.Get("pan_username").(string),
-		Password:   d.Get("pan_password").(string),
+		Username:   getPanWriteOnlyValue(d, "pan_username"),
+		Password:   getPanWriteOnlyValue(d, "pan_password"),
 		LicenseKey: d.Get("pan_license_key").(string),
 	}
 	d.Set("pan_credential_name", credentialName)
@@ -46,8 +67,8 @@ func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 			credentialId := d.Get("pan_credential_id").(string)
 			credentialName := d.Get("pan_credential_name").(string)
 			credential := alkira.CredentialPan{
-				Username:   d.Get("pan_username").(string),
-				Password:   d.Get("pan_password").(string),
+				Username:   getPanWriteOnlyValue(d, "pan_username"),
+				Password:   getPanWriteOnlyValue(d, "pan_password"),
 				LicenseKey: d.Get("pan_license_key").(string),
 			}
 			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
@@ -84,8 +105,8 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPanRegistration{
-		RegistrationPinId:    d.Get("registration_pin_id").(string),
-		RegistrationPinValue: d.Get("registration_pin_value").(string),
+		RegistrationPinId:    getPanWriteOnlyValue(d, "registration_pin_id"),
+		RegistrationPinValue: getPanWriteOnlyValue(d, "registration_pin_value"),
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)

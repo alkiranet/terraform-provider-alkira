@@ -93,10 +93,10 @@ resource "alkira_service_pan" "test1" {
 - `management_segment_id` (Number) Management Segment ID.
 - `max_instance_count` (Number) Max number of Panorama instances for auto scale. Note: For Azure CXPs, this must equal `min_instance_count` as Azure does not support AutoScale.
 - `name` (String) Name of the PAN service.
-- `pan_password` (String) PAN Panorama password.
-- `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
-- `registration_pin_id` (String) PAN Registration PIN ID.
-- `registration_pin_value` (String) PAN Registration PIN Value.
+- `pan_password` (String, Sensitive) PAN Panorama password.
+- `pan_username` (String, Sensitive) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
+- `registration_pin_id` (String, Sensitive) PAN Registration PIN ID.
+- `registration_pin_value` (String, Sensitive) PAN Registration PIN Value.
 - `segment_ids` (Set of Number) IDs of segments associated with the service.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`.
 - `version` (String) The version of the PAN firewall. Please check Alkira Portal for all supported versions.

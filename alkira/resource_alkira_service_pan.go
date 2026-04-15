@@ -85,12 +85,16 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"pan_username": {
 				Description: "PAN Panorama username. For AWS, username should " +
 					"be `admin`. For AZURE, it should be `akadmin`.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"pan_license_key": {
 				Description: "PAN Licensing API Key.",
@@ -341,11 +345,15 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Registration PIN ID.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"registration_pin_value": {
 				Description: "PAN Registration PIN Value.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
 			},
 			"registration_pin_expiry": {
 				Description: "PAN Registration PIN Expiry. The date " +
