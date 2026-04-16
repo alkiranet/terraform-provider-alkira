@@ -224,8 +224,8 @@ func TestExpandUserInputPrefixes(t *testing.T) {
 			errorMsg:       "cannot both be specified",
 		},
 		{
-			name:           "empty cidr with valid subnets - subnet mode",
-			cidr:           []interface{}{},
+			name: "empty cidr with valid subnets - subnet mode",
+			cidr: []interface{}{},
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
@@ -297,8 +297,8 @@ func TestExpandUserInputPrefixes(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:           "empty cidr and empty subnets - should error",
-			cidr:           []interface{}{},
+			name: "empty cidr and empty subnets - should error",
+			cidr: []interface{}{},
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
@@ -321,8 +321,8 @@ func TestExpandUserInputPrefixes(t *testing.T) {
 			errorMsg:       "either",
 		},
 		{
-			name:           "subnets with overlay - combined payload",
-			cidr:           []interface{}{},
+			name: "subnets with overlay - combined payload",
+			cidr: []interface{}{},
 			subnets: schema.NewSet(
 				func(i interface{}) int {
 					m := i.(map[string]interface{})
