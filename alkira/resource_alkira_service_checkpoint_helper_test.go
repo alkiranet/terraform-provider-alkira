@@ -25,13 +25,13 @@ func TestCheckpointSegmentOptionsNil(t *testing.T) {
 
 func TestCheckpointInstanceInvalid(t *testing.T) {
 	//test nil Set
-	c, err := expandCheckpointInstances(nil, nil)
+	c, err := expandCheckpointInstances(nil, nil, nil)
 	require.Nil(t, c)
 	require.Error(t, err)
 
 	//test empty Set
 	s := newSetFromCheckpointResource(nil)
-	c, err = expandCheckpointInstances(s.List(), nil)
+	c, err = expandCheckpointInstances(nil, s.List(), nil)
 	require.Nil(t, c)
 	require.Error(t, err)
 }

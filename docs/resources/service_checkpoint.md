@@ -71,7 +71,7 @@ resource "alkira_service_checkpoint" "test" {
 - `management_server` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--management_server))
 - `max_instance_count` (Number) The maximum number of Checkpoint Firewall instances that should be deployed when auto-scale is enabled. Note that auto-scale is not supported with Checkpoint at this time. `max_instance_count` must be greater than or equal to `min_instance_count`. (**BETA**)
 - `name` (String) Name of the Checkpoint Firewall service.
-- `password` (String) The Checkpoint Firewall service password.
+- `password` (String, Sensitive) The Checkpoint Firewall service password.
 - `segment_id` (String) The ID of the segment associated with the service. Only one segment is supported.
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE`.
 - `version` (String) The version of the Checkpoint Firewall. Please check all supported versions from Alkira Portal.
@@ -98,7 +98,7 @@ resource "alkira_service_checkpoint" "test" {
 Required:
 
 - `name` (String) The name of the checkpoint instance.
-- `sic_key` (String) The checkpoint instance sic keys.
+- `sic_key` (String, Sensitive) The checkpoint instance sic keys.
 
 Optional:
 
@@ -123,10 +123,10 @@ Required:
 Optional:
 
 - `domain` (String) Management server domain.
-- `password` (String) The password of the management server.
+- `password` (String, Sensitive) The password of the management server.
 - `reachability` (String) Specifies whether the management server is publicly reachable or not. If the reachability is private then you need to provide the segment to be used to access the management server. Default value is `PUBLIC`.
 - `segment_id` (String) The ID of the segment to be used to access the management server.
-- `username` (String) The username of the management server.
+- `username` (String, Sensitive) The username of the management server.
 
 Read-Only:
 

@@ -5,15 +5,54 @@ import (
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// getCheckpointWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
+// for import/refresh where GetRawConfigAt is unavailable.
+func getCheckpointWriteOnlyValue(d *schema.ResourceData, field string) string {
+	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	if v, ok := d.GetOk(field); ok {
+		return v.(string)
+	}
+
+	return ""
+}
+
+// getNestedWriteOnlyValue reads a WriteOnly field from a nested TypeList block
+// via GetRawConfigAt with an indexed cty path.
+func getNestedWriteOnlyValue(d *schema.ResourceData, block string, index int, field string) string {
+	attrPath := cty.Path{
+		cty.GetAttrStep{Name: block},
+		cty.IndexStep{Key: cty.NumberIntVal(int64(index))},
+		cty.GetAttrStep{Name: field},
+	}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	return ""
+}
 
 // createCheckpointCredential create checkpoint service credential
 func createCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 	log.Printf("[INFO] Creating Checkpoint service credential")
 
 	credentialName := d.Get("name").(string) + "-" + randomNameSuffix()
-	credential := alkira.CredentialCheckPointFwService{AdminPassword: d.Get("password").(string)}
+	credential := alkira.CredentialCheckPointFwService{AdminPassword: getCheckpointWriteOnlyValue(d, "password")}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypeChkpFw, credential, 0)
 }
@@ -107,7 +146,7 @@ func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}
 	return mg, nil
 }
 
-func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.CheckpointInstance, error) {
+func expandCheckpointInstances(d *schema.ResourceData, in []interface{}, m interface{}) ([]alkira.CheckpointInstance, error) {
 
 	if in == nil || len(in) == 0 {
 		return nil, errors.New("ERROR: Invalid checkpoint firewall instance input")
@@ -120,16 +159,14 @@ func expandCheckpointInstances(in []interface{}, m interface{}) ([]alkira.Checkp
 		r := alkira.CheckpointInstance{}
 		instanceCfg := instance.(map[string]interface{})
 
-		var sicKey string
+		// Read sic_key from raw config (WriteOnly field not available via d.Get)
+		sicKey := getNestedWriteOnlyValue(d, "instance", i, "sic_key")
 
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
 		}
 		if v, ok := instanceCfg["name"].(string); ok {
 			r.Name = v
-		}
-		if v, ok := instanceCfg["sic_key"].(string); ok {
-			sicKey = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
@@ -272,7 +309,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	//
 	// Instances block
 	//
-	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
+	instances, err := expandCheckpointInstances(d, d.Get("instance").([]interface{}), m)
 
 	if err != nil {
 		return nil, err
