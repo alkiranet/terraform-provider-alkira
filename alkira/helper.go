@@ -74,11 +74,21 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 	return segmentOptions, nil
 }
 
+// alkiraManagementZoneName is the backend-injected management zone
+// that should be filtered from Terraform state to prevent perpetual
+// drift. The backend auto-creates this zone for all firewall services
+// but users never configure it in HCL.
+const alkiraManagementZoneName = "ALKIRA_MGMT_ZONE"
+
 func deflateSegmentOptions(c alkira.SegmentNameToZone) []map[string]interface{} {
 	var options []map[string]interface{}
 
 	for _, outerZoneToGroups := range c {
 		for zone, groups := range outerZoneToGroups.ZonesToGroups {
+			if zone == alkiraManagementZoneName {
+				log.Printf("[DEBUG] Filtering out backend-injected %s from segment_options", alkiraManagementZoneName)
+				continue
+			}
 			i := map[string]interface{}{
 				"segment_id": strconv.Itoa(outerZoneToGroups.SegmentId),
 				"zone_name":  zone,
