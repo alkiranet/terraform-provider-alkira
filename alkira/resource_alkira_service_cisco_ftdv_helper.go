@@ -2,14 +2,69 @@ package alkira
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFTDvInstance, error) {
+// updateCiscoFTDvCredential always updates the FMC credential because
+// username and password are WriteOnly and HasChanges cannot detect
+// changes (state is always null for WriteOnly fields).
+func updateCiscoFTDvCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating Cisco FTDv FMC credential")
+
+	credentialId := d.Get("credential_id").(string)
+	if credentialId == "" {
+		return errors.New("credential_id is empty when updating Cisco FTDv credential")
+	}
+
+	cred, err := c.GetCredentialById(credentialId)
+	if err != nil {
+		return fmt.Errorf("failed to get FTDv credential name for ID %s: %w", credentialId, err)
+	}
+
+	// FMC username/password are Sensitive (not WriteOnly — TypeSet limitation)
+	// so they are available in state via d.Get
+	fmcSet := d.Get("firepower_management_center").(*schema.Set)
+	var username, password string
+	if fmcSet != nil && fmcSet.Len() > 0 {
+		cfg := fmcSet.List()[0].(map[string]interface{})
+		username, _ = cfg["username"].(string)
+		password, _ = cfg["password"].(string)
+	}
+
+	credential := alkira.CredentialCiscoFtdv{
+		Username: username,
+		Password: password,
+	}
+
+	return c.UpdateCredential(credentialId, cred.Name, alkira.CredentialTypeCiscoFtdv, credential, 0)
+}
+
+// getCiscoFTDvNestedWriteOnlyValue reads a WriteOnly field from a nested TypeList block
+// via GetRawConfigAt with an indexed cty path.
+func getCiscoFTDvNestedWriteOnlyValue(d *schema.ResourceData, block string, index int, field string) string {
+	attrPath := cty.Path{
+		cty.GetAttrStep{Name: block},
+		cty.IndexStep{Key: cty.NumberIntVal(int64(index))},
+		cty.GetAttrStep{Name: field},
+	}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	return ""
+}
+
+func expandCiscoFTDvInstances(d *schema.ResourceData, in []interface{}, m interface{}) ([]alkira.CiscoFTDvInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) == 0 {
@@ -17,28 +72,24 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 		return nil, errors.New("ERROR: Invalid Cisco FTDv instance input")
 	}
 
-	var adminPassword string
-	var fmcRegistrationKey string
 	var ftdvNatId string
 
 	instances := make([]alkira.CiscoFTDvInstance, 0, len(in))
 
-	for _, instance := range in {
+	for i, instance := range in {
 
 		r := alkira.CiscoFTDvInstance{}
 		instanceCfg := instance.(map[string]interface{})
+
+		// Read WriteOnly fields from raw config
+		adminPassword := getCiscoFTDvNestedWriteOnlyValue(d, "instance", i, "admin_password")
+		fmcRegistrationKey := getCiscoFTDvNestedWriteOnlyValue(d, "instance", i, "fmc_registration_key")
 
 		if v, ok := instanceCfg["id"].(int); ok {
 			r.Id = v
 		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
 			r.Hostname = v
-		}
-		if v, ok := instanceCfg["admin_password"].(string); ok {
-			adminPassword = v
-		}
-		if v, ok := instanceCfg["fmc_registration_key"].(string); ok {
-			fmcRegistrationKey = v
 		}
 		if v, ok := instanceCfg["ftdv_nat_id"].(string); ok {
 			ftdvNatId = v
@@ -208,15 +259,13 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 		for _, ins := range c {
 			if cfg["id"].(int) == ins.Id || cfg["hostname"].(string) == ins.Hostname {
 				instance := map[string]interface{}{
-					"admin_password":       cfg["admin_password"].(string),
-					"credential_id":        ins.CredentialId,
-					"fmc_registration_key": cfg["fmc_registration_key"].(string),
-					"ftdv_nat_id":          cfg["ftdv_nat_id"].(string),
-					"hostname":             ins.Hostname,
-					"id":                   ins.Id,
-					"license_type":         ins.LicenseType,
-					"version":              ins.Version,
-					"enable_traffic":       ins.TrafficEnabled,
+					"credential_id":  ins.CredentialId,
+					"ftdv_nat_id":    cfg["ftdv_nat_id"].(string),
+					"hostname":       ins.Hostname,
+					"id":             ins.Id,
+					"license_type":   ins.LicenseType,
+					"version":        ins.Version,
+					"enable_traffic": ins.TrafficEnabled,
 				}
 				instances = append(instances, instance)
 				break
@@ -250,7 +299,6 @@ func setCiscoFTDvInstances(d *schema.ResourceData, c []alkira.CiscoFTDvInstance)
 			}
 
 			instances = append(instances, instance)
-			break
 		}
 	}
 

@@ -129,11 +129,13 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Description: "Firepower Management Center (FMC) username.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
 						},
 						"password": {
 							Description: "Firepower Management Center (FMC) password.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
 						},
 						"segment_id": {
 							Description: "ID of the segment accociated with the " +
@@ -192,11 +194,15 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 							Description: "Firepower Firewall Admin Password.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
+							WriteOnly:   true,
 						},
 						"fmc_registration_key": {
 							Description: "FMC Registration Key.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
+							WriteOnly:   true,
 						},
 						"ftdv_nat_id": {
 							Description: "FTDv NAT ID.",
@@ -351,6 +357,12 @@ func resourceServiceCiscoFTDvUpdate(ctx context.Context, d *schema.ResourceData,
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCiscoFTDv(m.(*alkira.AlkiraClient))
 
+	// Update FMC credential (WriteOnly — always update)
+	err := updateCiscoFTDvCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateServiceCiscoFTDvRequest(d, m)
 
@@ -472,7 +484,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 	//
 	// Instances
 	//
-	instances, err := expandCiscoFTDvInstances(d.Get("instance").([]interface{}), m)
+	instances, err := expandCiscoFTDvInstances(d, d.Get("instance").([]interface{}), m)
 
 	if err != nil {
 		return nil, err

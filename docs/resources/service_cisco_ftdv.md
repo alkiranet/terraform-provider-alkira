@@ -88,10 +88,10 @@ resource "alkira_service_cisco_ftdv" "example" {
 
 Required:
 
-- `password` (String) Firepower Management Center (FMC) password.
+- `password` (String, Sensitive) Firepower Management Center (FMC) password.
 - `segment_id` (String) ID of the segment accociated with the Firepower Management Center.
 - `server_ip` (String) IP address of the Firepower Management Center.
-- `username` (String) Firepower Management Center (FMC) username.
+- `username` (String, Sensitive) Firepower Management Center (FMC) username.
 
 Optional:
 
@@ -107,8 +107,8 @@ Read-Only:
 
 Required:
 
-- `admin_password` (String) Firepower Firewall Admin Password.
-- `fmc_registration_key` (String) FMC Registration Key.
+- `admin_password` (String, Sensitive) Firepower Firewall Admin Password.
+- `fmc_registration_key` (String, Sensitive) FMC Registration Key.
 - `hostname` (String) Hostname of the Firepower Firewall.
 - `license_type` (String) Cisco Firepower Firewall license type, either `BRING_YOUR_OWN` or `PAY_AS_YOU_GO`.
 - `version` (String) Cisco Firepower Firewall version. Please check Alkira Portal for all supported versions.
