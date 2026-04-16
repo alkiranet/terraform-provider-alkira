@@ -102,7 +102,7 @@ resource "alkira_service_infoblox" "test" {
 - `name` (String) Name of the Infoblox service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
-- `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
+- `shared_secret` (String, Sensitive) Shared Secret of the InfoBlox grid. This cannot be empty.
 
 ### Optional
 
@@ -133,8 +133,8 @@ Optional:
 Required:
 
 - `name` (String) Name of the grid master.
-- `password` (String) The Grid Master password.
-- `username` (String) The Grid Master user name.
+- `password` (String, Sensitive) The Grid Master password.
+- `username` (String, Sensitive) The Grid Master user name.
 
 Optional:
 
@@ -153,7 +153,7 @@ Required:
 
 - `hostname` (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
 - `model` (String) The model of the Infoblox instance.
-- `password` (String) The password associated with the infoblox instance.
+- `password` (String, Sensitive) The password associated with the infoblox instance.
 - `type` (String) The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.
 - `version` (String) The version of the Infoblox to be used. Please check Alkira Portal for all supported versions
 

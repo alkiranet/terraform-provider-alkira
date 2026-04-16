@@ -6,11 +6,50 @@ import (
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// getInfobloxWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
+// for import/refresh where GetRawConfigAt is unavailable.
+func getInfobloxWriteOnlyValue(d *schema.ResourceData, field string) string {
+	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	if v, ok := d.GetOk(field); ok {
+		return v.(string)
+	}
+
+	return ""
+}
+
+// getInfobloxNestedWriteOnlyValue reads a WriteOnly field from a nested TypeList block
+// via GetRawConfigAt with an indexed cty path.
+func getInfobloxNestedWriteOnlyValue(d *schema.ResourceData, block string, index int, field string) string {
+	attrPath := cty.Path{
+		cty.GetAttrStep{Name: block},
+		cty.IndexStep{Key: cty.NumberIntVal(int64(index))},
+		cty.GetAttrStep{Name: field},
+	}
+	val, diags := d.GetRawConfigAt(attrPath)
+
+	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
+		if strVal := val.AsString(); strVal != "" {
+			return strVal
+		}
+	}
+
+	return ""
+}
+
 // func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
-func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
+func expandInfobloxInstances(d *schema.ResourceData, in []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) == 0 {
@@ -21,7 +60,9 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 	for i, instance := range in {
 		var r alkira.InfobloxInstance
 		var nameWithSuffix string
-		var password string
+
+		// Read password from raw config (WriteOnly field)
+		password := getInfobloxNestedWriteOnlyValue(d, "instance", i, "password")
 
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
@@ -42,9 +83,6 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		}
 		if v, ok := instanceCfg["model"].(string); ok {
 			r.Model = v
-		}
-		if v, ok := instanceCfg["password"].(string); ok {
-			password = v
 		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
@@ -101,7 +139,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 	return m
 }
 
-func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
+func expandInfobloxGridMaster(d *schema.ResourceData, in []interface{}, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) > 1 || len(in) < 1 {
@@ -110,8 +148,10 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 
 	im := &alkira.InfobloxGridMaster{}
 
-	var username string
-	var password string
+	// Read WriteOnly fields from raw config
+	username := getInfobloxNestedWriteOnlyValue(d, "grid_master", 0, "username")
+	password := getInfobloxNestedWriteOnlyValue(d, "grid_master", 0, "password")
+
 	for _, option := range in {
 
 		cfg := option.(map[string]interface{})
@@ -120,12 +160,6 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 		}
 		if v, ok := cfg["ip"].(string); ok {
 			im.Ip = v
-		}
-		if v, ok := cfg["username"].(string); ok {
-			username = v
-		}
-		if v, ok := cfg["password"].(string); ok {
-			password = v
 		}
 		if v, ok := cfg["name"].(string); ok {
 			im.Name = v

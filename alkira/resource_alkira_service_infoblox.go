@@ -125,11 +125,15 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Description: "The Grid Master user name.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
+							WriteOnly:   true,
 						},
 						"password": {
 							Description: "The Grid Master password.",
 							Type:        schema.TypeString,
 							Required:    true,
+							Sensitive:   true,
+							WriteOnly:   true,
 						},
 						"credential_id": {
 							Description: "The credential ID of the Grid Master.",
@@ -178,8 +182,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"password": {
 							Description: "The password associated with the " +
 								"infoblox instance.",
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+							WriteOnly: true,
 						},
 						"type": {
 							Description: "The type of the Infoblox instance that " +
@@ -246,6 +252,8 @@ func resourceAlkiraInfoblox() *schema.Resource {
 					"This cannot be empty.",
 				Type:         schema.TypeString,
 				Required:     true,
+				Sensitive:    true,
+				WriteOnly:    true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"allow_list_id": {
@@ -438,7 +446,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
-	shared_secret := d.Get("shared_secret").(string)
+	shared_secret := getInfobloxWriteOnlyValue(d, "shared_secret")
 
 	var infobloxCredentialId string
 	var err error
@@ -458,14 +466,14 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	//Parse Grid Master
 	gmSet := d.Get("grid_master").([]interface{})
-	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
+	gridMaster, err := expandInfobloxGridMaster(d, gmSet, infobloxCredentialId, m)
 	if err != nil {
 		return nil, err
 	}
 
 	//Parse Instances
 	instanceList := d.Get("instance").([]interface{})
-	instances, err := expandInfobloxInstances(instanceList, m)
+	instances, err := expandInfobloxInstances(d, instanceList, m)
 	if err != nil {
 		return nil, err
 	}
