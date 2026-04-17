@@ -417,6 +417,12 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	// Update management server credential
+	err = updateCheckpointManagementServerCredential(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateCheckpointRequest(d, m)
 

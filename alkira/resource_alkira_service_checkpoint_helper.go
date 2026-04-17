@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -9,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// getCheckpointWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
-// for import/refresh where GetRawConfigAt is unavailable.
+// getCheckpointWriteOnlyValue reads a WriteOnly field from raw config.
+// WriteOnly fields are never stored in state, so d.GetOk() would always
+// return the zero value — only GetRawConfigAt can read the actual value.
 func getCheckpointWriteOnlyValue(d *schema.ResourceData, field string) string {
 	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
 	val, diags := d.GetRawConfigAt(attrPath)
@@ -19,10 +21,6 @@ func getCheckpointWriteOnlyValue(d *schema.ResourceData, field string) string {
 		if strVal := val.AsString(); strVal != "" {
 			return strVal
 		}
-	}
-
-	if v, ok := d.GetOk(field); ok {
-		return v.(string)
 	}
 
 	return ""
@@ -57,21 +55,71 @@ func createCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) 
 	return c.CreateCredential(credentialName, alkira.CredentialTypeChkpFw, credential, 0)
 }
 
-// updateCheckpointCredential update checkpoint service credential
+// updateCheckpointCredential always updates the checkpoint service
+// credential because password is WriteOnly and HasChanges cannot
+// detect changes (state is always null for WriteOnly fields).
 func updateCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	log.Printf("[INFO] Updating Checkpoint service credential")
 
-	if d.HasChanges("password") {
-		log.Printf("[INFO] Checkpoint service credential has changed")
-
-		credentialId, err := createCheckpointCredential(d, c)
-		if err != nil {
-			return err
-		}
-		d.Set("credential_id", credentialId)
+	credentialId := d.Get("credential_id").(string)
+	if credentialId == "" {
+		return errors.New("credential_id is empty when updating Checkpoint credential")
 	}
 
-	return nil
+	cred, err := c.GetCredentialById(credentialId)
+	if err != nil {
+		return fmt.Errorf("failed to get checkpoint credential name for ID %s: %w", credentialId, err)
+	}
+
+	credential := alkira.CredentialCheckPointFwService{
+		AdminPassword: getCheckpointWriteOnlyValue(d, "password"),
+	}
+
+	return c.UpdateCredential(credentialId, cred.Name, alkira.CredentialTypeChkpFw, credential, 0)
+}
+
+// updateCheckpointManagementServerCredential always updates the
+// management server credential because password is WriteOnly.
+func updateCheckpointManagementServerCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating Checkpoint management server credential")
+
+	// Read credential_id from management_server TypeSet in state
+	mgSet := d.Get("management_server").(*schema.Set)
+	if mgSet == nil || mgSet.Len() == 0 {
+		return nil
+	}
+
+	// management_server is validated to have exactly 1 element
+	mgList := mgSet.List()
+	cfg := mgList[0].(map[string]interface{})
+
+	configMode, _ := cfg["configuration_mode"].(string)
+	if configMode != "AUTOMATED" {
+		log.Printf("[INFO] Management server configuration_mode is %q, skipping credential update", configMode)
+		return nil
+	}
+
+	credentialId, _ := cfg["credential_id"].(string)
+	password, _ := cfg["password"].(string)
+
+	if credentialId == "" {
+		// No credential exists yet — create one (handles mode transition)
+		log.Printf("[INFO] management_server credential_id is empty, creating credential")
+		name := d.Get("name").(string)
+		manServerCredName := name + "-" + randomNameSuffix()
+		credential := &alkira.CredentialCheckPointFwManagementServer{Password: password}
+		_, err := c.CreateCredential(manServerCredName, alkira.CredentialTypeChkpFwManagement, credential, 0)
+		return err
+	}
+
+	cred, err := c.GetCredentialById(credentialId)
+	if err != nil {
+		return fmt.Errorf("failed to get management server credential name for ID %s: %w", credentialId, err)
+	}
+
+	credential := &alkira.CredentialCheckPointFwManagementServer{Password: password}
+
+	return c.UpdateCredential(credentialId, cred.Name, alkira.CredentialTypeChkpFwManagement, credential, 0)
 }
 
 func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
@@ -289,7 +337,6 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 			}
 
 			instances = append(instances, instance)
-			break
 		}
 	}
 
