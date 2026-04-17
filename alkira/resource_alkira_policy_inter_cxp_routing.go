@@ -18,7 +18,7 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 			"between CXP pairs within a segment.",
 		CreateContext: resourcePolicyInterCxpRouting,
 		ReadContext:   resourcePolicyInterCxpRoutingRead,
-		UpdateContext: warnOnFailedStateUpdate(resourcePolicyInterCxpRoutingUpdate),
+		UpdateContext: resourcePolicyInterCxpRoutingUpdate,
 		DeleteContext: resourcePolicyInterCxpRoutingDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -91,9 +91,9 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dest_cxps": {
-				Description: "Set of destination CXP names to which routes are redistributed. " +
+				Description: "List of destination CXP names to which routes are redistributed. " +
 					"Each CXP must carry the policy segment. A source CXP cannot also be a destination.",
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -144,10 +144,10 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 						"match_extended_community_list_ids": {
 							Description: "IDs of Extended Community Lists to match. " +
 								"Mutually exclusive with `match_group_ids`.",
-							Type:     schema.TypeSet,
-							MaxItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
+							Type:        schema.TypeSet,
+							MaxItems:    1,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
+							Optional:    true,
 						},
 						"match_as_path_list_ids": {
 							Description: "IDs of AS Path Lists to match.",
@@ -261,12 +261,7 @@ func resourcePolicyInterCxpRoutingRead(ctx context.Context, d *schema.ResourceDa
 		}}
 	}
 
-	// Only overwrite description if the API returned a value; the API
-	// may omit or null-out the field on read even though it was sent on
-	// create, which would cause a perpetual plan diff (BUG-1).
-	if policy.Description != "" {
-		d.Set("description", policy.Description)
-	}
+	d.Set("description", policy.Description)
 	d.Set("direction", policy.Direction)
 	d.Set("enabled", policy.Enabled)
 	d.Set("name", policy.Name)
@@ -395,7 +390,7 @@ func generatePolicyInterCxpRoutingRequest(d *schema.ResourceData, m interface{})
 		Enabled:     d.Get("enabled").(bool),
 		Segment:     segmentName,
 		SourceCxps:  convertTypeListToStringList(d.Get("source_cxps").([]interface{})),
-		DestCxps:    convertTypeSetToStringList(d.Get("dest_cxps").(*schema.Set)),
+		DestCxps:    convertTypeListToStringList(d.Get("dest_cxps").([]interface{})),
 		Rules:       rules,
 	}
 
