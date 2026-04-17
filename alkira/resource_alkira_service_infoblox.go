@@ -256,6 +256,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				WriteOnly:    true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
+			"shared_secret_credential_id": {
+				Description: "ID of the shared secret credential.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"allow_list_id": {
 				Description: "The ID of the `alkira_policy_prefix_list` to be used to whitelist prefixes for the service.",
 				Type:        schema.TypeInt,
@@ -352,6 +357,12 @@ func resourceInfobloxUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceInfoblox(m.(*alkira.AlkiraClient))
 
+	// Update all credentials (WriteOnly fields — always update)
+	err := updateInfobloxCredentials(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Construct request
 	request, err := generateInfobloxRequest(d, m)
 
@@ -443,25 +454,51 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	//Create Infoblox Service Credential
+	// Handle shared secret credential
 	name := d.Get("name").(string)
-	nameWithSuffix := name + randomNameSuffix()
-	shared_secret := getInfobloxWriteOnlyValue(d, "shared_secret")
+	sharedSecret := getInfobloxWriteOnlyValue(d, "shared_secret")
 
 	var infobloxCredentialId string
 	var err error
 
-	if shared_secret != "" {
-		infobloxCredentialId, err = client.CreateCredential(
-			nameWithSuffix,
-			alkira.CredentialTypeInfoblox,
-			&alkira.CredentialInfoblox{SharedSecret: shared_secret},
-			0,
-		)
+	// On Update, use existing credential ID; on Create, create new
+	existingCredId := d.Get("shared_secret_credential_id").(string)
 
-		if err != nil {
-			return nil, err
+	if sharedSecret != "" {
+		if existingCredId != "" {
+			// Update existing credential
+			cred, lookupErr := client.GetCredentialById(existingCredId)
+			if lookupErr != nil {
+				return nil, fmt.Errorf("failed to get shared secret credential name for ID %s: %w", existingCredId, lookupErr)
+			}
+			err = client.UpdateCredential(
+				existingCredId,
+				cred.Name,
+				alkira.CredentialTypeInfoblox,
+				&alkira.CredentialInfoblox{SharedSecret: sharedSecret},
+				0,
+			)
+			if err != nil {
+				return nil, err
+			}
+			infobloxCredentialId = existingCredId
+		} else {
+			// Create new credential
+			nameWithSuffix := name + randomNameSuffix()
+			infobloxCredentialId, err = client.CreateCredential(
+				nameWithSuffix,
+				alkira.CredentialTypeInfoblox,
+				&alkira.CredentialInfoblox{SharedSecret: sharedSecret},
+				0,
+			)
+			if err != nil {
+				return nil, err
+			}
+			d.Set("shared_secret_credential_id", infobloxCredentialId)
 		}
+	} else if existingCredId != "" {
+		// shared_secret not available (e.g., import/refresh fallback) — preserve existing ID
+		infobloxCredentialId = existingCredId
 	}
 
 	//Parse Grid Master

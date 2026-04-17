@@ -3,6 +3,7 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -10,8 +11,88 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// getInfobloxWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
-// for import/refresh where GetRawConfigAt is unavailable.
+// updateInfobloxGridMasterCredential always updates the grid master
+// credential because username and password are WriteOnly and HasChanges
+// cannot detect changes (state is always null for WriteOnly fields).
+func updateInfobloxGridMasterCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating Infoblox Grid Master Credential")
+
+	// Read credential_id from grid_master block in state
+	gmList := d.Get("grid_master").([]interface{})
+	if len(gmList) == 0 {
+		return nil
+	}
+	cfg := gmList[0].(map[string]interface{})
+	credentialId, ok := cfg["credential_id"].(string)
+	if !ok || credentialId == "" {
+		log.Printf("[INFO] grid_master credential_id is empty, skipping grid master credential update")
+		return nil
+	}
+
+	username := getInfobloxNestedWriteOnlyValue(d, "grid_master", 0, "username")
+	password := getInfobloxNestedWriteOnlyValue(d, "grid_master", 0, "password")
+
+	cred, err := c.GetCredentialById(credentialId)
+	if err != nil {
+		return fmt.Errorf("failed to get grid master credential name for ID %s: %w", credentialId, err)
+	}
+
+	credential := &alkira.CredentialInfobloxGridMaster{
+		Username: username,
+		Password: password,
+	}
+
+	return c.UpdateCredential(credentialId, cred.Name, alkira.CredentialTypeInfobloxGridMaster, credential, 0)
+}
+
+// updateInfobloxInstanceCredentials always updates all instance
+// credentials because password is WriteOnly and HasChanges cannot
+// detect changes (state is always null for WriteOnly fields).
+func updateInfobloxInstanceCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	log.Printf("[INFO] Updating Infoblox Instance Credentials")
+
+	instances := d.Get("instance").([]interface{})
+	for i, inst := range instances {
+		cfg := inst.(map[string]interface{})
+		credentialId, ok := cfg["credential_id"].(string)
+		if !ok || credentialId == "" {
+			continue
+		}
+
+		password := getInfobloxNestedWriteOnlyValue(d, "instance", i, "password")
+
+		cred, err := c.GetCredentialById(credentialId)
+		if err != nil {
+			return fmt.Errorf("failed to get instance credential name for ID %s: %w", credentialId, err)
+		}
+
+		credential := alkira.CredentialInfobloxInstance{
+			Password: password,
+		}
+
+		err = c.UpdateCredential(credentialId, cred.Name, alkira.CredentialTypeInfobloxInstance, credential, 0)
+		if err != nil {
+			return fmt.Errorf("failed to update instance credential %s: %w", credentialId, err)
+		}
+	}
+
+	return nil
+}
+
+// updateInfobloxCredentials updates all infoblox credentials on every apply.
+func updateInfobloxCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
+	if err := updateInfobloxGridMasterCredential(d, c); err != nil {
+		return err
+	}
+	if err := updateInfobloxInstanceCredentials(d, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+// getInfobloxWriteOnlyValue reads a WriteOnly field from raw config.
+// WriteOnly fields are never stored in state, so d.GetOk() would always
+// return the zero value — only GetRawConfigAt can read the actual value.
 func getInfobloxWriteOnlyValue(d *schema.ResourceData, field string) string {
 	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
 	val, diags := d.GetRawConfigAt(attrPath)
@@ -20,10 +101,6 @@ func getInfobloxWriteOnlyValue(d *schema.ResourceData, field string) string {
 		if strVal := val.AsString(); strVal != "" {
 			return strVal
 		}
-	}
-
-	if v, ok := d.GetOk(field); ok {
-		return v.(string)
 	}
 
 	return ""
@@ -251,4 +328,5 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("allow_list_id", in.AllowListId)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
+	d.Set("shared_secret_credential_id", in.GridMaster.SharedSecretCredentialId)
 }
