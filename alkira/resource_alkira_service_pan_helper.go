@@ -2,32 +2,12 @@ package alkira
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// getPanWriteOnlyValue reads a WriteOnly field from raw config with a d.Get() fallback
-// for import/refresh where GetRawConfigAt is unavailable.
-func getPanWriteOnlyValue(d *schema.ResourceData, field string) string {
-	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
-	val, diags := d.GetRawConfigAt(attrPath)
-
-	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
-		if strVal := val.AsString(); strVal != "" {
-			return strVal
-		}
-	}
-
-	// Fallback for import/refresh
-	if v, ok := d.GetOk(field); ok {
-		return v.(string)
-	}
-
-	return ""
-}
 
 // UNUSED: Commented out to suppress linter warnings
 // type panZone struct {
@@ -42,8 +22,8 @@ func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPan{
-		Username:   getPanWriteOnlyValue(d, "pan_username"),
-		Password:   getPanWriteOnlyValue(d, "pan_password"),
+		Username:   d.Get("pan_username").(string),
+		Password:   d.Get("pan_password").(string),
 		LicenseKey: d.Get("pan_license_key").(string),
 	}
 	d.Set("pan_credential_name", credentialName)
@@ -57,22 +37,22 @@ func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 	if d.HasChanges("pan_username", "pan_password", "pan_license_key") {
 		log.Printf("[INFO] PAN credential has changed")
 
-		if d.Get("pan_credential_id") == nil {
+		credentialId := d.Get("pan_credential_id").(string)
+		if credentialId == "" {
 			return errors.New("pan_credential_id is empty when updating PAN credential")
-		} else {
-			if d.Get("pan_credential_name") == nil || d.Get("pan_credential_name").(string) == "" {
-				return errors.New("pan_credential_name is empty when updating PAN credential")
-			}
-
-			credentialId := d.Get("pan_credential_id").(string)
-			credentialName := d.Get("pan_credential_name").(string)
-			credential := alkira.CredentialPan{
-				Username:   getPanWriteOnlyValue(d, "pan_username"),
-				Password:   getPanWriteOnlyValue(d, "pan_password"),
-				LicenseKey: d.Get("pan_license_key").(string),
-			}
-			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
 		}
+
+		credentialName := d.Get("pan_credential_name").(string)
+		if credentialName == "" {
+			return errors.New("pan_credential_name is empty when updating PAN credential")
+		}
+
+		credential := alkira.CredentialPan{
+			Username:   d.Get("pan_username").(string),
+			Password:   d.Get("pan_password").(string),
+			LicenseKey: d.Get("pan_license_key").(string),
+		}
+		return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
 	}
 
 	return nil
@@ -105,8 +85,8 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPanRegistration{
-		RegistrationPinId:    getPanWriteOnlyValue(d, "registration_pin_id"),
-		RegistrationPinValue: getPanWriteOnlyValue(d, "registration_pin_value"),
+		RegistrationPinId:    d.Get("registration_pin_id").(string),
+		RegistrationPinValue: d.Get("registration_pin_value").(string),
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanRegistration, credential, credentialExpiry)
@@ -120,27 +100,27 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 
 // Helper function for PAN Master Key Credential
 func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
-	log.Printf("[INFO] Creating PAN Master Key Credential %v", d.Get("master_key_expiry").(string))
-
 	if !d.Get("master_key_enabled").(bool) {
 		log.Printf("[INFO] PAN master key is not enabled, skip creating credential")
 		return "", nil
 	}
+
+	expiryStr := d.Get("master_key_expiry").(string)
+	if expiryStr == "" {
+		return "", fmt.Errorf("argument 'master_key_expiry' is required when master key is enabled")
+	}
+
+	log.Printf("[INFO] Creating PAN Master Key Credential with expiry %v", expiryStr)
 
 	credentialName := d.Get("name").(string) + randomNameSuffix()
 	credential := alkira.CredentialPanMasterKey{
 		MasterKey: d.Get("master_key").(string),
 	}
 
-	credentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
+	credentialExpiry, err := convertInputTimeToEpoch(expiryStr)
 
 	if err != nil {
 		log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
-		return "", err
-	}
-
-	if credentialExpiry == 0 {
-		log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
 		return "", err
 	}
 
@@ -160,7 +140,7 @@ func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient
 // - PAN Master Key Credential
 func createCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
-	// Create PAN credentail
+	// Create PAN credential
 	panCredentialId, err := createPanCredential(d, c)
 	if err != nil {
 		return err
@@ -187,7 +167,7 @@ func createCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
 func updateCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
-	// Update PAN credentail
+	// Update PAN credential
 	err := updatePanCredential(d, c)
 	if err != nil {
 		return err
@@ -518,7 +498,7 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance, m in
 
 	for _, ins := range c {
 
-		// locate the hidden credential from existing Terraform state
+		// Locate credentials from existing Terraform state (not returned by API)
 		var authKey string
 		var authCode string
 		var authExpiry string
@@ -529,6 +509,7 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance, m in
 				authKey = cfg["auth_key"].(string)
 				authCode = cfg["auth_code"].(string)
 				authExpiry = cfg["auth_expiry"].(string)
+				break
 			}
 		}
 

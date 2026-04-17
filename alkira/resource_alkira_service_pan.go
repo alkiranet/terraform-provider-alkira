@@ -86,15 +86,14 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				WriteOnly:   true,
 			},
 			"pan_username": {
 				Description: "PAN Panorama username. For AWS, username should " +
 					"be `admin`. For AZURE, it should be `akadmin`.",
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-				WriteOnly: true,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"admin", "akadmin"}, false),
 			},
 			"pan_license_key": {
 				Description: "PAN Licensing API Key.",
@@ -194,14 +193,16 @@ func resourceAlkiraServicePan() *schema.Resource {
 								"**IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. " +
 								"Auth keys generated using the Panorama web interface are NOT supported " +
 								"by Alkira and may cause provisioning to fail.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"auth_code": {
 							Description: "PAN instance auth code. Only required " +
 								"when `license_type` is `BRING_YOUR_OWN`.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"auth_expiry": {
 							Description: "PAN Auth Expiry. The date should be in " +
@@ -308,9 +309,11 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"master_key": {
-				Description: "Master Key for PAN instances.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "Master Key for PAN instances. " +
+					"Must be exactly 16 characters when `master_key_enabled` is `true`.",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"master_key_enabled": {
 				Description: "Enable Master Key for PAN instances or not. " +
@@ -346,14 +349,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				WriteOnly:   true,
 			},
 			"registration_pin_value": {
 				Description: "PAN Registration PIN Value.",
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
-				WriteOnly:   true,
 			},
 			"registration_pin_expiry": {
 				Description: "PAN Registration PIN Expiry. The date " +

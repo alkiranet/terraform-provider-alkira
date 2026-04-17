@@ -61,6 +61,23 @@ func TestAlkiraServicePanResourceSchema(t *testing.T) {
 	assert.NotNil(t, resource.DeleteContext, "Resource should have DeleteContext")
 	assert.NotNil(t, resource.Importer, "Resource should support import")
 	assert.NotNil(t, resource.CustomizeDiff, "Resource should have CustomizeDiff")
+
+	// Verify Sensitive on credential fields
+	for _, field := range []string{"pan_password", "registration_pin_id", "registration_pin_value", "master_key"} {
+		s := resource.Schema[field]
+		assert.True(t, s.Sensitive, "%s should be Sensitive", field)
+	}
+
+	// Verify Sensitive on nested instance credential fields
+	instanceElem := resource.Schema["instance"].Elem.(*schema.Resource)
+	for _, field := range []string{"auth_key", "auth_code"} {
+		s := instanceElem.Schema[field]
+		assert.True(t, s.Sensitive, "instance.%s should be Sensitive", field)
+	}
+
+	// Verify pan_username has ValidateFunc (not Sensitive — value constrained to admin/akadmin)
+	assert.False(t, panUsernameSchema.Sensitive, "pan_username should NOT be Sensitive")
+	assert.NotNil(t, panUsernameSchema.ValidateFunc, "pan_username should have ValidateFunc")
 }
 
 func TestAlkiraServicePanValidateBundle(t *testing.T) {
@@ -120,8 +137,33 @@ func TestAlkiraServicePanValidateBundle(t *testing.T) {
 	}
 }
 
+func TestAlkiraServicePanValidateUsername(t *testing.T) {
+	tests := []ValidationTestCase{
+		{Name: "Valid admin", Input: "admin", ExpectErr: false, ErrCount: 0},
+		{Name: "Valid akadmin", Input: "akadmin", ExpectErr: false, ErrCount: 0},
+		{Name: "Invalid root", Input: "root", ExpectErr: true, ErrCount: 1},
+		{Name: "Invalid empty", Input: "", ExpectErr: true, ErrCount: 1},
+		{Name: "Invalid uppercase", Input: "Admin", ExpectErr: true, ErrCount: 1},
+	}
+
+	resource := resourceAlkiraServicePan()
+	usernameSchema := resource.Schema["pan_username"]
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := usernameSchema.ValidateFunc(tt.Input, "pan_username")
+
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors for input %v", tt.ErrCount, tt.Input)
+			} else {
+				assert.Empty(t, errors, "Expected no errors for input %v", tt.Input)
+			}
+			assert.Empty(t, warnings, "Expected no warnings")
+		})
+	}
+}
+
 func TestAlkiraServicePanExpandPanInstances(t *testing.T) {
-	// Test the expandPanInstances helper function
 	instances := []interface{}{
 		map[string]interface{}{
 			"name":      "pan-instance-1",

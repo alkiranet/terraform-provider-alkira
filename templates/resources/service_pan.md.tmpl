@@ -1,0 +1,90 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Credentials
+
+This resource manages several types of credentials that are stored
+securely in the Alkira credentials vault. Credential values are
+**never returned by the API** and are marked as sensitive in
+Terraform output.
+
+### Service Credentials
+
+| Field | Sensitive | Notes |
+|-------|-----------|-------|
+| `pan_username` | No | Must be `admin` (AWS/GCP) or `akadmin` (Azure). |
+| `pan_password` | Yes | Minimum 8 characters, must contain uppercase, lowercase, and a digit. |
+| `pan_license_key` | No | Optional PAN licensing API key. |
+
+### Registration Credentials
+
+| Field | Sensitive | Notes |
+|-------|-----------|-------|
+| `registration_pin_id` | Yes | Required for PAN versions that support registration PIN. |
+| `registration_pin_value` | Yes | Required for PAN versions that support registration PIN. |
+| `registration_pin_expiry` | No | Optional expiry date in `YYYY-MM-DD` format. |
+
+### Master Key Credentials
+
+| Field | Sensitive | Notes |
+|-------|-----------|-------|
+| `master_key` | Yes | Must be exactly 16 characters. Only used when `master_key_enabled = true`. |
+| `master_key_expiry` | No | Required when `master_key_enabled = true`. Format: `YYYY-MM-DD`. |
+
+### Instance Credentials (`auth_key`, `auth_code`)
+
+Instance credentials (`auth_key` and `auth_code`) are **bootstrap-time
+secrets**. They are consumed once when the PAN firewall instance first
+provisions:
+
+- `auth_key` is a VM-series bootstrap auth key used for Panorama
+  registration. It is only needed when `panorama_enabled = true`.
+- `auth_code` is a license activation code used only when
+  `license_type = "BRING_YOUR_OWN"`.
+
+Once an instance is provisioned, these values are no longer used by the
+backend. **Changing `auth_key` or `auth_code` on an existing instance
+has no effect** -- the credential was already consumed during initial
+provisioning. To use a new key, remove the instance and add a new one.
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_service_pan/resource.tf" }}
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_pan.example SERVICE_ID
+```
+
+### Import Behavior
+
+Credential fields (`pan_username`, `pan_password`, `registration_pin_id`,
+`registration_pin_value`, `master_key`, `auth_key`, `auth_code`) are
+**not returned by the API**. After import, these fields will be empty in
+state and `terraform plan` will show a diff for each one.
+
+This is expected. Run `terraform apply` once after import to reconcile
+state with your configuration. The apply will update the PAN service
+credential (`pan_username`, `pan_password`, `pan_license_key`) in the
+Alkira credentials vault. Registration and master key credentials retain
+the values set at creation time and are not updated on apply.
+Subsequent plans will show no changes.
+
+For `pan_username`, use `admin` for AWS/GCP CXPs or `akadmin` for Azure CXPs.
+
+~> **Note:** Expiry fields (`registration_pin_expiry`, `master_key_expiry`,
+`auth_expiry`) are also not returned by the API. If your configuration
+includes these, they will show as additions on the first plan after import.
