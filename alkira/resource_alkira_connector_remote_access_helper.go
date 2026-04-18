@@ -200,7 +200,9 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 // setConnectorRemoteAccess
 func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d *schema.ResourceData, m interface{}) error {
 
-	d.Set("authentication_mode", connector.AuthenticationOptions.SupportedModes)
+	if len(connector.AuthenticationOptions.SupportedModes) > 0 {
+		d.Set("authentication_mode", connector.AuthenticationOptions.SupportedModes[0])
+	}
 
 	// Set ldap_settings block
 	if connector.AuthenticationOptions.LdapSettings != nil {
