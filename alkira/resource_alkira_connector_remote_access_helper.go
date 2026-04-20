@@ -200,6 +200,11 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 // setConnectorRemoteAccess
 func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d *schema.ResourceData, m interface{}) error {
 
+	if len(connector.AuthenticationOptions.SupportedModes) > 1 {
+		log.Printf("[WARN] connector-remote-access %q has %d authentication modes; only the first (%q) will be managed",
+			connector.Name, len(connector.AuthenticationOptions.SupportedModes),
+			connector.AuthenticationOptions.SupportedModes[0])
+	}
 	if len(connector.AuthenticationOptions.SupportedModes) > 0 {
 		d.Set("authentication_mode", connector.AuthenticationOptions.SupportedModes[0])
 	}
@@ -223,6 +228,9 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 	d.Set("name_server", connector.AdvancedOptions.NameServer)
 	d.Set("fallback_to_tcp", connector.AdvancedOptions.FallbackToTcp)
 	d.Set("concurrent_sessions_alert_threshold", connector.AdvancedOptions.MaxActiveUsersThreshold)
+	if len(connector.Arguments) == 0 {
+		return fmt.Errorf("API returned empty arguments for connector-remote-access %q", connector.Name)
+	}
 	d.Set("cxp", connector.Arguments[0].Cxp)
 	d.Set("billing_tag_ids", connector.Arguments[0].BillingTags)
 	d.Set("size", connector.Arguments[0].Size)
