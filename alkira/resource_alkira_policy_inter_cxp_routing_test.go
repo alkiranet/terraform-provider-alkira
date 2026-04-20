@@ -27,15 +27,15 @@ func TestInterCxpRouting_ValidateMatchAllExclusivity(t *testing.T) {
 	// Set a rule with match_all = true AND match_prefix_list_ids populated.
 	d.Set("rule", []interface{}{
 		map[string]interface{}{
-			"name":                   "bad-rule",
-			"action":                 "ALLOW",
-			"match_all":              true,
-			"match_prefix_list_ids":  []interface{}{42},
-			"match_community_list_ids": []interface{}{},
+			"name":                              "bad-rule",
+			"action":                            "ALLOW",
+			"match_all":                         true,
+			"match_prefix_list_ids":             []interface{}{42},
+			"match_community_list_ids":          []interface{}{},
 			"match_extended_community_list_ids": []interface{}{},
-			"match_as_path_list_ids": []interface{}{},
-			"match_segment_resource_ids": []interface{}{},
-			"match_group_ids": []interface{}{},
+			"match_as_path_list_ids":            []interface{}{},
+			"match_segment_resource_ids":        []interface{}{},
+			"match_group_ids":                   []interface{}{},
 		},
 	})
 
@@ -90,7 +90,7 @@ func TestInterCxpRouting_ValidateMutuallyExclusiveGroupsAndExtCommunity(t *testi
 			"name":                              "conflict-rule",
 			"action":                            "ALLOW",
 			"match_group_ids":                   []interface{}{1},
-			"match_extended_community_list_ids":  []interface{}{2},
+			"match_extended_community_list_ids": []interface{}{2},
 		},
 	})
 
@@ -106,9 +106,9 @@ func TestInterCxpRouting_ValidateDenyWithSetParams(t *testing.T) {
 
 	d.Set("rule", []interface{}{
 		map[string]interface{}{
-			"name":               "deny-with-set",
-			"action":             "DENY",
-			"match_all":          true,
+			"name":                "deny-with-set",
+			"action":              "DENY",
+			"match_all":           true,
 			"set_as_path_prepend": "100 100",
 		},
 	})
@@ -126,7 +126,7 @@ func TestInterCxpRouting_ValidateValidRule(t *testing.T) {
 	d.Set("rule", []interface{}{
 		map[string]interface{}{
 			"name":                  "allow-prefixes",
-			"action":               "ALLOW",
+			"action":                "ALLOW",
 			"match_prefix_list_ids": []interface{}{10},
 			"set_community":         "65512:20",
 		},
