@@ -144,10 +144,10 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 						"match_extended_community_list_ids": {
 							Description: "IDs of Extended Community Lists to match. " +
 								"Mutually exclusive with `match_group_ids`.",
-							Type:        schema.TypeSet,
-							MaxItems:    1,
-							Elem:        &schema.Schema{Type: schema.TypeInt},
-							Optional:    true,
+							Type:     schema.TypeSet,
+							MaxItems: 1,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+							Optional: true,
 						},
 						"match_as_path_list_ids": {
 							Description: "IDs of AS Path Lists to match.",
