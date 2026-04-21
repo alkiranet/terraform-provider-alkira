@@ -3,6 +3,7 @@ package alkira
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -86,13 +87,17 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interface{} {
 	var m []map[string]interface{}
 	for _, v := range c {
+		id, err := v.Id.Int64()
+		if err != nil {
+			log.Printf("[WARN] failed to convert infoblox instance id %q to int: %s", v.Id, err)
+		}
 		j := map[string]interface{}{
 			"anycast_enabled": v.AnyCastEnabled,
 			"hostname":        v.HostName,
 			"model":           v.Model,
 			"type":            v.Type,
 			"version":         v.Version,
-			"id":              v.Id,
+			"id":              int(id),
 			"credential_id":   v.CredentialId,
 		}
 		m = append(m, j)
@@ -203,6 +208,10 @@ func deflateInfobloxAnycast(ia alkira.InfobloxAnycast) []map[string]interface{} 
 }
 
 func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfoblox) {
+	if in == nil {
+		return
+	}
+	d.Set("name", in.Name)
 	d.Set("anycast", deflateInfobloxAnycast(in.AnyCast))
 	d.Set("billing_tag_ids", in.BillingTags)
 	d.Set("cxp", in.Cxp)
@@ -211,9 +220,7 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("grid_master", deflateInfobloxGridMaster(in.GridMaster))
 	d.Set("instance", deflateInfobloxInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
-	d.Set("segment_ids", in.Segments)
 	d.Set("service_group_name", in.ServiceGroupName)
-	d.Set("size", in.Size)
 	d.Set("allow_list_id", in.AllowListId)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
