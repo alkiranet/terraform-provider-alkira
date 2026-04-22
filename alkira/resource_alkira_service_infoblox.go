@@ -330,6 +330,13 @@ func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interfa
 
 	setAllInfobloxResourceFields(d, infoblox)
 
+	// Convert segment names from API to segment IDs for state
+	segmentIds, err := convertSegmentNamesToSegmentIds(infoblox.Segments, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("segment_ids", segmentIds)
+
 	// Set provision state
 	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)

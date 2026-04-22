@@ -227,15 +227,20 @@ func TestAlkiraServiceInfoblox_ReadNotFound(t *testing.T) {
 }
 
 func TestAlkiraServiceInfoblox_setServiceInfobloxFields(t *testing.T) {
+	r := resourceAlkiraInfoblox()
+	d := r.TestResourceData()
+
 	serviceInfoblox := &alkira.ServiceInfoblox{
-		Id:          json.Number("123"),
-		Name:        "test-infoblox-service",
-		Description: "Test Infoblox service",
-		Cxp:         "US-WEST",
-		Size:        "MEDIUM",
-		LicenseType: "test-license-type",
-		Segments:    []string{"segment1", "segment2"},
-		BillingTags: []int{10, 20},
+		Id:               json.Number("123"),
+		Name:             "test-infoblox-service",
+		Description:      "Test Infoblox service",
+		Cxp:              "US-WEST",
+		Size:             "MEDIUM",
+		LicenseType:      "BRING_YOUR_OWN",
+		Segments:         []string{"segment1", "segment2"},
+		BillingTags:      []int{10, 20},
+		ServiceGroupName: "test-group",
+		GlobalCidrListId: 42,
 		AnyCast: alkira.InfobloxAnycast{
 			Enabled: true,
 			Ips:     []string{"192.168.1.1", "192.168.1.2"},
@@ -243,34 +248,32 @@ func TestAlkiraServiceInfoblox_setServiceInfobloxFields(t *testing.T) {
 		Instances: []alkira.InfobloxInstance{
 			{
 				Name:         "infoblox-01",
+				HostName:     "infoblox-01.localdomain",
 				CredentialId: "test-credential",
-				Type:         "NIOS",
+				Type:         "MASTER",
+				Model:        "IB-1550",
+				Version:      "8.6.0",
 			},
-			{
-				Name:         "infoblox-02",
-				CredentialId: "test-credential-2",
-				Type:         "NIOS",
-			},
+		},
+		GridMaster: alkira.InfobloxGridMaster{
+			Name:                   "grid-master",
+			External:               false,
+			Ip:                     "10.0.0.1",
+			GridMasterCredentialId: "cred-gm",
 		},
 	}
 
-	// Test basic functionality - just verify struct can be created
-	assert.Equal(t, serviceInfoblox.Name, "test-infoblox-service")
-	assert.Equal(t, serviceInfoblox.Description, "Test Infoblox service")
-	assert.Equal(t, serviceInfoblox.Cxp, "US-WEST")
-	assert.Equal(t, serviceInfoblox.Size, "MEDIUM")
-	assert.Equal(t, serviceInfoblox.LicenseType, "test-license-type")
-	assert.Equal(t, []string{"segment1", "segment2"}, serviceInfoblox.Segments)
-	assert.Equal(t, []int{10, 20}, serviceInfoblox.BillingTags)
+	setAllInfobloxResourceFields(d, serviceInfoblox)
 
-	// Verify anycast configuration
-	assert.Equal(t, true, serviceInfoblox.AnyCast.Enabled)
-	assert.Equal(t, []string{"192.168.1.1", "192.168.1.2"}, serviceInfoblox.AnyCast.Ips)
+	// Verify name is set in state (the fix for AK-67145)
+	assert.Equal(t, "test-infoblox-service", d.Get("name").(string))
 
-	// Verify instances
-	assert.Len(t, serviceInfoblox.Instances, 2)
-	assert.Equal(t, "infoblox-01", serviceInfoblox.Instances[0].Name)
-	assert.Equal(t, "infoblox-02", serviceInfoblox.Instances[1].Name)
+	// Verify other fields are set correctly
+	assert.Equal(t, "Test Infoblox service", d.Get("description").(string))
+	assert.Equal(t, "US-WEST", d.Get("cxp").(string))
+	assert.Equal(t, "BRING_YOUR_OWN", d.Get("license_type").(string))
+	assert.Equal(t, "test-group", d.Get("service_group_name").(string))
+	assert.Equal(t, 42, d.Get("global_cidr_list_id").(int))
 }
 
 func TestAlkiraServiceInfoblox_validateInfobloxVersion(t *testing.T) {
