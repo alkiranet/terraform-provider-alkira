@@ -349,7 +349,7 @@ resource "alkira_policy_inter_cxp_routing" "segment_resource_match" {
 
 ### Required
 
-- `dest_cxps` (List of String) List of destination CXP names to which routes are redistributed. Each CXP must carry the policy segment. A source CXP cannot also be a destination.
+- `dest_cxps` (Set of String) Set of destination CXP names to which routes are redistributed. Each CXP must carry the policy segment. A source CXP cannot also be a destination.
 - `direction` (String) The direction of the policy. Only `OUTBOUND` is supported in Phase 1. Immutable after creation.
 - `enabled` (Boolean) Whether the inter-CXP routing policy is enabled.
 - `name` (String) The name of the inter-CXP routing policy. Must be unique within the tenant network.
