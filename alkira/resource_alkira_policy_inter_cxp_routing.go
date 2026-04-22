@@ -91,9 +91,9 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dest_cxps": {
-				Description: "List of destination CXP names to which routes are redistributed. " +
+				Description: "Set of destination CXP names to which routes are redistributed. " +
 					"Each CXP must carry the policy segment. A source CXP cannot also be a destination.",
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -261,7 +261,12 @@ func resourcePolicyInterCxpRoutingRead(ctx context.Context, d *schema.ResourceDa
 		}}
 	}
 
-	d.Set("description", policy.Description)
+	// Only overwrite description if the API returned a value; the API
+	// may omit or null-out the field on read even though it was sent on
+	// create, which would cause a perpetual plan diff (BUG-1).
+	if policy.Description != "" {
+		d.Set("description", policy.Description)
+	}
 	d.Set("direction", policy.Direction)
 	d.Set("enabled", policy.Enabled)
 	d.Set("name", policy.Name)
@@ -390,7 +395,7 @@ func generatePolicyInterCxpRoutingRequest(d *schema.ResourceData, m interface{})
 		Enabled:     d.Get("enabled").(bool),
 		Segment:     segmentName,
 		SourceCxps:  convertTypeListToStringList(d.Get("source_cxps").([]interface{})),
-		DestCxps:    convertTypeListToStringList(d.Get("dest_cxps").([]interface{})),
+		DestCxps:    convertTypeSetToStringList(d.Get("dest_cxps").(*schema.Set)),
 		Rules:       rules,
 	}
 
