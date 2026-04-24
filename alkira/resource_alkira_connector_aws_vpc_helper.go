@@ -39,10 +39,7 @@ func setAwsVpcRoutingOptions(connector *alkira.ConnectorAwsVpc, d *schema.Resour
 // setAwsVpcExportPrefixes sets export-related fields from ExportOptions
 func setAwsVpcExportPrefixes(exportOptions interface{}, d *schema.ResourceData) {
 	if exportOptions == nil {
-		log.Printf("[DEBUG] Export options is nil, clearing export prefixes")
-		d.Set("vpc_cidr", []interface{}{})
-		d.Set("vpc_subnet", []interface{}{})
-		d.Set("overlay_subnets", []interface{}{})
+		log.Printf("[DEBUG] Export options is nil, skipping export prefixes")
 		return
 	}
 
@@ -80,11 +77,16 @@ func setAwsVpcExportPrefixes(exportOptions interface{}, d *schema.ResourceData) 
 		}
 	}
 
-	// Always set all export fields because they are Computed
-	// Backend returns userInputPrefixes with type entries; empty set if none specified
-	d.Set("vpc_cidr", cidrList)
-	d.Set("vpc_subnet", subnetList)
-	d.Set("overlay_subnets", overlaySubnets)
+	// Only set non-empty fields to preserve config when field is not in config
+	if len(cidrList) > 0 {
+		d.Set("vpc_cidr", cidrList)
+	}
+	if len(subnetList) > 0 {
+		d.Set("vpc_subnet", subnetList)
+	}
+	if len(overlaySubnets) > 0 {
+		d.Set("overlay_subnets", overlaySubnets)
+	}
 }
 
 // setAwsVpcImportRouteTables sets vpc_route_table from ImportOptions
@@ -104,6 +106,10 @@ func setAwsVpcImportRouteTables(importOptions interface{}, d *schema.ResourceDat
 	var importOpts alkira.ImportOptions
 	if err := json.Unmarshal(importJSON, &importOpts); err != nil {
 		log.Printf("[ERROR] Failed to unmarshal ImportOptions: %v", err)
+		return
+	}
+
+	if len(importOpts.RouteTables) == 0 {
 		return
 	}
 
