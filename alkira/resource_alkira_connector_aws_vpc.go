@@ -219,7 +219,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 					},
 				},
 				Optional: true,
-				Computed: true,
 			},
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with the connector.",
@@ -230,7 +229,6 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Description: "Overlay subnet.",
 				Type:        schema.TypeList,
 				Optional:    true,
-				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
