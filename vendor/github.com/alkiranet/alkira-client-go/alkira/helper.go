@@ -21,8 +21,9 @@ type ZoneToGroups map[string][]string
 // OuterZoneToGroups is an object that includes a segment ID as an
 // identifier and a map of zone names to Groups
 type OuterZoneToGroups struct {
-	SegmentId     int          `json:"segmentId"`
-	ZonesToGroups ZoneToGroups `json:"zonesToGroups"`
+	SegmentId         int               `json:"segmentId"`
+	ZonesToGroups     ZoneToGroups      `json:"zonesToGroups"`
+	ZoneConfigOrigins map[string]string `json:"zoneConfigOrigins"`
 }
 
 // logf a simple log wrapper to log based on ENV var

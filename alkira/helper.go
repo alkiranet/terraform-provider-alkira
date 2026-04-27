@@ -79,6 +79,10 @@ func deflateSegmentOptions(c alkira.SegmentNameToZone) []map[string]interface{} 
 
 	for _, outerZoneToGroups := range c {
 		for zone, groups := range outerZoneToGroups.ZonesToGroups {
+			if outerZoneToGroups.ZoneConfigOrigins[zone] == "SYSTEM" {
+				log.Printf("[DEBUG] Filtering system-generated zone %s from segment_options", zone)
+				continue
+			}
 			i := map[string]interface{}{
 				"segment_id": strconv.Itoa(outerZoneToGroups.SegmentId),
 				"zone_name":  zone,
