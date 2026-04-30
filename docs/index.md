@@ -12,14 +12,57 @@ Lifecycle management of Alkira Cloud Services Exchange. For the
 provider, the following ENV variables are supported:
 
 * `ALKIRA_PORTAL`
-* `ALKIRA_USERNAME`
-* `ALKIRA_PASSWORD`
 * `ALKIRA_API_KEY`
+* `ALKIRA_USERNAME` (deprecated)
+* `ALKIRA_PASSWORD` (deprecated)
 * `ALKIRA_PROVISION`
 
 More detailed usage of those ENV variables will be described below. A
 typical provider configuration looks like this:
 
+```hcl
+provider "alkira" {
+  portal  = "your_tenant_name.portal.alkira.com"
+  api_key = "your_api_key"
+}
+```
+
+### AUTHENTICATION
+
+The recommended authentication method is using an Alkira API key,
+which can be managed from *Portal* -> *Settings* -> *User Management*.
+
+Once created, the API key can be used directly:
+
+```hcl
+provider "alkira" {
+  portal  = "your_tenant_name.portal.alkira.com"
+  api_key = "xxxxxxxxxx"
+}
+```
+
+Or use ENV variable `ALKIRA_API_KEY` (recommended for CI/CD systems):
+
+```hcl
+export ALKIRA_PORTAL="tenant.portal.alkira.com"
+export ALKIRA_API_KEY="xxxxxxxxxx"
+```
+
+Then initialize the provider without inline credentials:
+
+```hcl
+provider "alkira" {
+}
+```
+
+#### Legacy Authentication (Deprecated)
+
+~> **Deprecation Notice:** Username/password authentication is
+deprecated and will be removed in a future major release. Migrate to
+API key authentication.
+
+You can still authenticate using `username` and `password`, but this
+method will produce a deprecation warning:
 
 ```hcl
 provider "alkira" {
@@ -29,39 +72,7 @@ provider "alkira" {
 }
 ```
 
-### AUTHENTICATION
-
-There are two types of authentication method supported.
-
-First, you could use credentials via ENV variable `ALKIRA_USERNAME`
-and `ALKIRA_PASSWORD`, environment variables, representing your Alkira
-tenant portal URI, username and password, respectively. For example,
-
-```hcl
-export ALKIRA_PORTAL="tenant.portal.alkira.com"
-export ALKIRA_USERNAME=XXX
-export ALKIRA_PASSWORD=XXX
-```
-
-Then you could initialize the provider like this:
-
-```hcl
-provider "alkira" {
-}
-```
-
-Another method to authenticate is using Alkira API key, which could be
-managed from *Portal* -> *Settings* -> *User Management*. Once it's
-created, the API key could be used directly like this:
-
-```hcl
-provider "alkira" {
-  portal   = "your_tenant_name.portal.alkira.com"
-  api_key  = "xxxxxxxxxx"
-}
-```
-
-Or use ENV var `ALKIRA_API_KEY` (preferrable in CI/CD system).
+Or via environment variables `ALKIRA_USERNAME` and `ALKIRA_PASSWORD`.
 
 
 ### PROVISIONING
@@ -90,11 +101,10 @@ may take a much longer time to apply when provisioning is enabled.
 
 ### Optional
 
-- `api_key` (String) Your Alkira API key. If thie is not provided then `username` and `password` must have a value.
-- `password` (String) Your Tenant Password. If this is not provided then `api_key` must have a value.
+- `api_key` (String) Your Alkira API key. This is the recommended authentication method. API keys can be managed from Portal -> Settings -> User Management.
+- `password` (String, Deprecated) Your Tenant Password. If this is not provided then `api_key` must have a value.
 - `provision` (Boolean) With provision or not.
 - `serialization_enabled` (Boolean) Enable API serialization.
 - `serialization_timeout` (Number) API serialization timeout in seconds.
-- `username` (String) Your username. If this is not provided then `api_key` must have a value.
+- `username` (String, Deprecated) Your username. If this is not provided then `api_key` must have a value.
 - `validation` (Boolean) Asynchronous validations.
-

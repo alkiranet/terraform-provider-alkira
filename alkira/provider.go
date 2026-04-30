@@ -23,6 +23,7 @@ func Provider() *schema.Provider {
 					"`api_key` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Deprecated:  "Use `api_key` instead. Username/password authentication will be removed in a future major release.",
 				DefaultFunc: envDefaultFunc("ALKIRA_USERNAME"),
 			},
 			"password": {
@@ -30,11 +31,13 @@ func Provider() *schema.Provider {
 					"then `api_key` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Deprecated:  "Use `api_key` instead. Username/password authentication will be removed in a future major release.",
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
 			},
 			"api_key": {
-				Description: "Your Alkira API key. If thie is not provided " +
-					"then `username` and `password` must have a value.",
+				Description: "Your Alkira API key. This is the recommended " +
+					"authentication method. API keys can be managed from " +
+					"Portal -> Settings -> User Management.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: envDefaultFunc("ALKIRA_API_KEY"),
