@@ -102,9 +102,10 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				},
 			},
 			"instance": {
-				Description: "Juniper SSR Connector Instances",
+				Description: "Juniper SSR Connector Instances. Only one instance is supported per connector (HA is not supported on cloud).",
 				Type:        schema.TypeList,
 				MinItems:    1,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"registration_key": {
