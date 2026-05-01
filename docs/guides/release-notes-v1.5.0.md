@@ -103,6 +103,6 @@ Import now fails with a descriptive error on invalid resource IDs instead of sil
    - These diffs are benign. Run `terraform apply` once to stabilize state.
 
 5. **Known Issue — `alkira_service_checkpoint` and `alkira_service_cisco_ftdv`:**
-   - After upgrading, `terraform plan` may show the `management_server` (Checkpoint) or `firepower_management_center` (Cisco FTDv) block as changed on every plan. This is caused by credential fields being re-computed on each apply. The diff is cosmetic and does not change your infrastructure. A fix is planned for the next patch release.
+   - After upgrading, `terraform plan` may show the `management_server` (Checkpoint) or `firepower_management_center` (Cisco FTDv) block as changed on every plan. The diff is cosmetic and does not change your infrastructure. A fix is planned for the next patch release.
 
 6. **No Breaking Changes.** This release is backward-compatible. All state migrations are automatic.
