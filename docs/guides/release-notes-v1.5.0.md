@@ -28,7 +28,6 @@ Version 1.5.0 introduces new resources, F5 ILB support, and deprecates username/
 ## Enhancements
 
 - **Provider:** Username/password authentication is now deprecated. Use `api_key` instead. API keys can be managed from Portal > Settings > User Management.
-- **Aruba Edge Connector:** Added `scale_group_id` for scalegroup support.
 - **GCP VPC Connector:** Added `export_all_subnets` field to `gcp_routing` schema. The provider now automatically derives this value from `vpc_subnet` presence.
 - **AWS VPC Connector:** When `vpc_subnet` entries are specified, `exportAllSubnets` is now forced to `false` to prevent conflicting configuration.
 - **Juniper SD-WAN Connector:** Added `MaxItems: 1` constraint to the `instance` block.
@@ -75,7 +74,6 @@ Import now fails with a descriptive error on invalid resource IDs instead of sil
 
 ## Documentation
 
-- Rewrote provider authentication documentation to recommend API key as the primary method.
 - Added OUTBOUND NAT example to `policy_nat_rule` documentation.
 - Updated F5 vServer Endpoint SNAT description.
 - Fixed examples that referenced deprecated global CIDR lists.
@@ -95,7 +93,7 @@ Import now fails with a descriptive error on invalid resource IDs instead of sil
    - Run `terraform plan` after upgrading to verify no unexpected changes.
 
 3. **GCP VPC Connector:**
-   - Setting `export_all_subnets = false` without `vpc_subnet` blocks now produces a plan-time error. Either set `export_all_subnets = true` or add `vpc_subnet` blocks.
+   - Setting `export_all_subnets = false` without `vpc_subnet` blocks now produces a plan-time error. Either set `export_all_subnets = true` or add `vpc_subnet` blocks. This is not a breaking change — this configuration was already rejected by the API with a 400 error. The provider now catches it earlier at plan time.
 
 4. **One-Time State Refresh:**
    - Many Read function fixes in this release mean that fields previously missing from state will now correctly reflect API values. After upgrading, run `terraform plan` and expect one-time diffs on the following resources:
