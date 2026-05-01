@@ -29,7 +29,6 @@ Version 1.5.0 introduces new resources, F5 ILB support, and deprecates username/
 
 - **Provider:** Username/password authentication is now deprecated. Use `api_key` instead. API keys can be managed from Portal > Settings > User Management.
 - **GCP VPC Connector:** Added `export_all_subnets` field to `gcp_routing` schema. The provider now automatically derives this value from `vpc_subnet` presence.
-- **AWS VPC Connector:** When `vpc_subnet` entries are specified, `exportAllSubnets` is now forced to `false` to prevent conflicting configuration.
 - **Juniper SD-WAN Connector:** Added `MaxItems: 1` constraint to the `instance` block.
 - **F5 Load Balancer (`alkira_service_f5_lb`):** Added Internal Load Balancer (ILB) support with new fields `ilb_service_group_name`, `ilb_implicit_group_id`, `lb_type`, and `instance_metadata`.
 - **F5 vServer Endpoint:** Added ILB type support. `fqdn_prefix` and `port_ranges` are now optional (required only for ELB type).
@@ -59,7 +58,6 @@ Import now fails with a descriptive error on invalid resource IDs instead of sil
 ### State & Drift Fixes
 
 - **GCP VPC Connector:** Fixed `export_all_subnets` to prevent breaking diff on upgrade. Fixed `prefix_list_ids` reordering diffs by switching to `TypeSet` with automatic state migration. Fixed `userInputPrefixes` to send empty array instead of `null`. Fixed regression when removing all `vpc_subnet` blocks.
-- **AWS VPC Connector:** Fixed drift from backend-defaulted routing fields.
 - **PAN Service:** Fixed perpetual diff for `global_protect_segment_options`.
 - **Policy Prefix List:** Fixed deprecated `prefixes` field handling. Fixed spurious updates by switching to `TypeSet` with automatic state migration.
 - **IPsec Connector:** Fixed `segment_options` flatten to handle `interface{}` type correctly.
