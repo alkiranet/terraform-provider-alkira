@@ -17,9 +17,11 @@ Version 1.5.0 introduces three new resources, F5 Internal Load Balancer and Arub
 
 ## New Resources
 
-- **`alkira_service_bluecat`**: Bluecat DNS service with BDDS/Edge instance management, anycast configuration, and segment assignment.
-- **`alkira_connector_azure_vnet_third_party`**: Azure VNET Third Party Connector for connecting Azure VNETs via third-party appliances.
-- **`alkira_peering_gateway_azure_vnet_third_party_connector_attachment`**: Attachment management for VNET Third Party Connectors.
+- **`alkira_service_bluecat`**: Full lifecycle management of Bluecat DNS/DHCP services. Supports BDDS and Edge instance deployment with anycast IP configuration (including backup CXPs), segment-based assignment, DNS/DHCP service options, and automatic instance ordering. Instances can be managed with hostname-based identification, and the resource handles license credential provisioning automatically.
+
+- **`alkira_connector_azure_vnet_third_party`**: Enables connectivity to Azure VNETs through third-party network appliances. Supports static route prefix list configuration, segment assignment, and size-based scaling. Works in conjunction with the CXP Peering Gateway for third-party VNET integration.
+
+- **`alkira_peering_gateway_azure_vnet_third_party_connector_attachment`**: Manages the attachment between a CXP Peering Gateway and an Azure VNET for third-party connector use cases. Supports linking Azure VNET resources to peering gateways with state tracking.
 
 Corresponding data sources are also available for lookup by name or ID.
 
@@ -42,7 +44,7 @@ Corresponding data sources are also available for lookup by name or ID.
 
 - **F5 Load Balancer (`alkira_service_f5_lb`):** Added Internal Load Balancer (ILB) support. New fields: `ilb_service_group_name`, `ilb_implicit_group_id`, and `lb_type` in `segment_options`. Computed `instance_metadata` now includes tunnel and routing details.
 - **F5 vServer Endpoint (`alkira_service_f5_vserver_endpoint`):** Added ILB type support. New fields: `destination_endpoint_ip_addresses`, `destination_endpoint_port_ranges`, `instance_metadata`. The `fqdn_prefix` and `port_ranges` fields are now optional (required only for ELB type).
-- **Network Entity Scale Options:** Added `additional_tunnel_options_per_node` nested block. Removed deprecated `networkEntitySubType` field.
+- **Network Entity Scale Options:** Added `additional_tunnel_options_per_node` nested block.
 
 ### Peering
 
@@ -118,21 +120,15 @@ Corresponding data sources are also available for lookup by name or ID.
    - When `export_all_subnets` is not explicitly set, the provider automatically derives the correct value based on `vpc_subnet` presence.
 
 4. **One-Time State Refresh:**
-   - The first `terraform plan` after upgrade may show fields being populated for the following resources. This is expected — run `terraform apply` once to stabilize:
+   - Many Read function fixes in this release mean that fields previously missing from state will now correctly reflect API values. After upgrading, the first `terraform plan` may show one-time diffs on the following resources. These diffs are benign — run `terraform apply` once to stabilize state:
      - `alkira_service_pan`: `global_protect_segment_options`, `global_protect_enabled`, credential IDs
      - `alkira_peering_gateway_aws_tgw_attachment`: `type`, `peer_direct_connect_gateway_id`, `peer_allowed_prefixes`
      - `alkira_connector_versa_sdwan`: `version`
+     - `alkira_service_checkpoint`: `management_server` fields
+     - `alkira_service_cisco_ftdv`: `firepower_management_center` fields
+     - Resources for which import was fixed may also show one-time diffs as Read functions now populate previously missing fields.
 
-5. **Re-import Recommended:**
-   - If you previously imported any of the following resources and noticed missing fields, re-import them:
-     - `alkira_connector_gcp_vpc`
-     - `alkira_connector_ipsec`
-     - `alkira_connector_aruba_edge`
-     - `alkira_service_pan`
-     - `alkira_segment_resource_share`
-     - `alkira_policy_prefix_list`
-
-6. **No Breaking Changes.** This release is backward-compatible. All state migrations are automatic.
+5. **No Breaking Changes.** This release is backward-compatible. All state migrations are automatic.
 
 ---
 
