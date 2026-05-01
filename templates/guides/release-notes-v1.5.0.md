@@ -46,10 +46,7 @@ Version 1.5.0 introduces new resources, F5 ILB support, and deprecates username/
 Multiple fixes related to `terraform import` to properly populate all fields and improve error handling for the following resources:
 
 - `alkira_connector_gcp_vpc`
-- `alkira_connector_ipsec`
 - `alkira_service_pan`
-- `alkira_segment_resource_share`
-- `alkira_policy_prefix_list`
 - `alkira_service_checkpoint`
 - `alkira_service_cisco_ftdv`
 
@@ -60,13 +57,11 @@ Import now fails with a descriptive error on invalid resource IDs instead of sil
 - **GCP VPC Connector:** Fixed `export_all_subnets` to prevent breaking diff on upgrade. Fixed `prefix_list_ids` reordering diffs by switching to `TypeSet` with automatic state migration. Fixed `userInputPrefixes` to send empty array instead of `null`. Fixed regression when removing all `vpc_subnet` blocks.
 - **PAN Service:** Fixed perpetual diff for `global_protect_segment_options`.
 - **Policy Prefix List:** Fixed deprecated `prefixes` field handling. Fixed spurious updates by switching to `TypeSet` with automatic state migration.
-- **IPsec Connector:** Fixed `segment_options` flatten to handle `interface{}` type correctly.
 - **Cisco FTDv:** Read now populates `segment_ids` from API response.
 - **Versa SD-WAN Connector:** Fixed `version` field not being populated during Read.
 - **Probe TCP:** Fixed `network_entity_id` being set incorrectly.
 - **Aruba Edge Connector:** Fixed instance IDs not being saved to state. Fixed `credentialId` being reset when credential fields were updated.
 - **Peering Gateway TGW Attachment:** Fixed missing DXGW fields in Read. Fixed infinite loop and FAILED state handling during create.
-- **NAT Policy:** Fixed schema definition.
 
 ---
 
