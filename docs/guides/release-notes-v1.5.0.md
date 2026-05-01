@@ -35,7 +35,7 @@ Version 1.5.0 introduces new resources, F5 ILB support, and deprecates username/
 - **Network Entity Scale Options:** Added `additional_tunnel_options_per_node` nested block.
 - **CXP Peering Gateway:** Added computed `metadata` block. Data source now supports lookup by ID.
 - **IP Reservation:** The `prefix` field is now computed, supporting server-assigned values.
-- **Policy Prefix List:** The `prefixes` field is deprecated. Use `prefix` and `prefix_range` blocks instead.
+- **Policy Prefix List:** Improved backward compatibility for the `prefixes` field. Use `prefix` and `prefix_range` blocks for new configurations.
 
 ---
 
