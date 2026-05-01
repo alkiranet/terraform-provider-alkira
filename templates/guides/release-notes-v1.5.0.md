@@ -7,11 +7,11 @@ description: |-
 
 # Alkira Terraform Provider v1.5.0 Release Notes
 
-Release Date: 2026-04-28
+Release Date: 2026-05-01
 
 ## Overview
 
-Version 1.5.0 introduces three new resources, adds F5 Internal Load Balancer and Aruba Edge scalegroup support, and includes 30+ bug fixes across import, state drift, and connector reliability.
+Version 1.5.0 introduces three new resources, F5 Internal Load Balancer and Aruba Edge scalegroup support, deprecates username/password authentication in favor of API keys, and includes 30+ bug fixes across import, state drift, and connector reliability.
 
 ---
 
@@ -27,11 +27,16 @@ Corresponding data sources are also available for lookup by name or ID.
 
 ## Enhancements
 
+### Authentication
+
+- **Provider:** Username/password authentication is now deprecated. Use `api_key` instead. Existing username/password configurations will continue to work but will produce a deprecation warning. API keys can be managed from Portal > Settings > User Management.
+
 ### Connectors
 
 - **Aruba Edge Connector:** Added `scale_group_id` for scalegroup support.
 - **GCP VPC Connector:** Added `export_all_subnets` field to `gcp_routing` schema. The provider now automatically derives this value from `vpc_subnet` presence, preventing conflicting configurations.
 - **AWS VPC Connector:** When `vpc_subnet` entries are specified, `exportAllSubnets` is now forced to `false` to prevent conflicting configuration.
+- **Juniper SD-WAN Connector:** Added `MaxItems: 1` constraint to the `instance` block. Only one instance per connector is supported.
 
 ### Services
 
@@ -70,11 +75,13 @@ Corresponding data sources are also available for lookup by name or ID.
 - **Policy Prefix List:** Fixed deprecated `prefixes` field handling with backward compatibility. Fixed spurious updates by switching to `TypeSet` with automatic state migration.
 - **IPsec Connector:** Fixed `segment_options` flatten to handle `interface{}` type correctly.
 - **Cisco FTDv:** Read now populates `segment_ids` from API response.
+- **Versa SD-WAN Connector:** Fixed `version` field not being populated during Read due to a typo in the field key.
+- **Probe TCP:** Fixed `network_entity_id` being set as a pointer instead of a value.
 
 ### Connector & Resource Fixes
 
 - **Aruba Edge Connector:** Fixed instance IDs not being saved to state after apply. Fixed `credentialId` being incorrectly reset when credential fields were updated.
-- **Peering Gateway TGW Attachment:** Fixed missing DXGW fields in Read. Fixed infinite loop and FAILED state handling during create (now times out after 5 minutes with a clear error).
+- **Peering Gateway TGW Attachment:** Fixed missing DXGW fields in Read (`type`, `peer_direct_connect_gateway_id`, `peer_allowed_prefixes`). Fixed infinite loop and FAILED state handling during create (now times out after 5 minutes with a clear error).
 - **Credentials:** Fixed credential name prefix validation to avoid API validation errors.
 - **NAT Policy:** Fixed schema definition.
 
@@ -86,6 +93,7 @@ Corresponding data sources are also available for lookup by name or ID.
 
 ## Documentation
 
+- Rewrote provider authentication documentation to recommend API key as the primary method.
 - Updated Global CIDR List constraints documentation.
 - Added OUTBOUND NAT example to `policy_nat_rule` documentation.
 - Updated F5 vServer Endpoint SNAT description to indicate ILB with SNAT is allowed.
@@ -97,19 +105,25 @@ Corresponding data sources are also available for lookup by name or ID.
 
 ### From v1.4.4 to v1.5.0
 
-1. **Automatic State Migrations:**
+1. **Authentication:**
+   - If you use `username`/`password` in your provider configuration, you will see a deprecation warning. Migrate to `api_key` at your convenience. No immediate action required.
+
+2. **Automatic State Migrations:**
    - `alkira_connector_gcp_vpc`: `prefix_list_ids` migrated from `TypeList` to `TypeSet`.
    - `alkira_policy_prefix_list`: `prefix` and `prefix_range` migrated from `TypeList` to `TypeSet`.
-   - Run `terraform plan` after upgrading to verify no unexpected changes. A one-time diff on `alkira_policy_prefix_list` is possible if `description` fields were not consistently set; run `terraform apply` once to stabilize.
+   - Run `terraform plan` after upgrading to verify no unexpected changes.
 
-2. **GCP VPC Connector — `export_all_subnets` Validation:**
-   - Setting `export_all_subnets = false` without `vpc_subnet` blocks now produces a plan-time error. If you have this configuration, either set `export_all_subnets = true` or add `vpc_subnet` blocks.
+3. **GCP VPC Connector — `export_all_subnets` Validation:**
+   - Setting `export_all_subnets = false` without `vpc_subnet` blocks now produces a plan-time error. Either set `export_all_subnets = true` or add `vpc_subnet` blocks.
    - When `export_all_subnets` is not explicitly set, the provider automatically derives the correct value based on `vpc_subnet` presence.
 
-3. **PAN Service — State Refresh:**
-   - The first `terraform plan` after upgrade may show `global_protect_segment_options`, `global_protect_enabled`, and credential ID fields being populated. This is expected and resolves previous drift detection gaps.
+4. **One-Time State Refresh:**
+   - The first `terraform plan` after upgrade may show fields being populated for the following resources. This is expected — run `terraform apply` once to stabilize:
+     - `alkira_service_pan`: `global_protect_segment_options`, `global_protect_enabled`, credential IDs
+     - `alkira_peering_gateway_aws_tgw_attachment`: `type`, `peer_direct_connect_gateway_id`, `peer_allowed_prefixes`
+     - `alkira_connector_versa_sdwan`: `version`
 
-4. **Re-import Recommended:**
+5. **Re-import Recommended:**
    - If you previously imported any of the following resources and noticed missing fields, re-import them:
      - `alkira_connector_gcp_vpc`
      - `alkira_connector_ipsec`
@@ -118,7 +132,7 @@ Corresponding data sources are also available for lookup by name or ID.
      - `alkira_segment_resource_share`
      - `alkira_policy_prefix_list`
 
-5. **No Breaking Changes:** This release is backward-compatible. All state migrations are automatic.
+6. **No Breaking Changes.** This release is backward-compatible. All state migrations are automatic.
 
 ---
 
