@@ -23,8 +23,6 @@ Version 1.5.0 introduces new resources, F5 ILB support, and deprecates username/
 
 - **`alkira_peering_gateway_azure_vnet_third_party_connector_attachment`**: Manages the attachment between a CXP Peering Gateway and an Azure VNET for third-party connector use cases.
 
-Corresponding data sources are also available for lookup by name or ID.
-
 ---
 
 ## Enhancements
