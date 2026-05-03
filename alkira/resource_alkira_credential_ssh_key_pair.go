@@ -3,12 +3,9 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,7 +31,9 @@ func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 				Description: "Public key.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				WriteOnly:   true,
+				DefaultFunc: schema.EnvDefaultFunc(
+					"AK_SSH_PUBLIC_KEY",
+					nil),
 			},
 		},
 	}
@@ -43,13 +42,8 @@ func resourceAlkiraCredentialSshKeyPair() *schema.Resource {
 func resourceCredentialSshKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	publicKey, err := getSshKeyPairCredentialValue(d, "public_key", "AK_SSH_PUBLIC_KEY")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	c := alkira.CredentialKeyPair{
-		PublicKey: publicKey,
+		PublicKey: d.Get("public_key").(string),
 		Type:      "IMPORTED",
 	}
 
@@ -64,40 +58,18 @@ func resourceCredentialSshKeyPairCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceCredentialSshKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*alkira.AlkiraClient)
-
-	credential, err := client.GetCredentialById(d.Id())
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			d.SetId("")
-			return nil
-		}
-		return diag.FromErr(err)
-	}
-
-	d.Set("name", credential.Name)
-
-	// Note: public_key is NOT returned by the API for security reasons.
-	// The getSshKeyPairCredentialValue helper reads from config or AK_SSH_PUBLIC_KEY env var.
-	// Private keys are never returned by the API.
-
 	return nil
 }
 
 func resourceCredentialSshKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*alkira.AlkiraClient)
 
-	publicKey, err := getSshKeyPairCredentialValue(d, "public_key", "AK_SSH_PUBLIC_KEY")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	c := alkira.CredentialKeyPair{
-		PublicKey: publicKey,
+		PublicKey: d.Get("public_key").(string),
 		Type:      "IMPORTED",
 	}
 
-	err = client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeKeyPair, c, 0)
+	err := client.UpdateCredential(d.Id(), d.Get("name").(string), alkira.CredentialTypeKeyPair, c, 0)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -123,28 +95,4 @@ func resourceCredentialSshKeyPairDelete(ctx context.Context, d *schema.ResourceD
 
 	d.SetId("")
 	return nil
-}
-
-// getSshKeyPairCredentialValue gets a value from config or environment variable.
-// For WriteOnly fields, reads from raw config since values are not stored in state.
-func getSshKeyPairCredentialValue(d *schema.ResourceData, field string, envVar string) (string, error) {
-	// First try raw config (for WriteOnly fields)
-	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
-	val, diags := d.GetRawConfigAt(attrPath)
-
-	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
-		strVal := val.AsString()
-		if strVal != "" {
-			return strVal, nil
-		}
-	}
-
-	// Fall back to environment variable
-	envValue := os.Getenv(envVar)
-	if envValue != "" {
-		return envValue, nil
-	}
-
-	// Return empty string if not set (field is Optional)
-	return "", nil
 }
