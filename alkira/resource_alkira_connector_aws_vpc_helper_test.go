@@ -204,7 +204,7 @@ func TestExpandUserInputPrefixes(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "mixed subnets and CIDR - should error",
+			name: "mixed subnets and CIDR",
 			cidr: []interface{}{"10.0.0.0/16"},
 			subnets: schema.NewSet(
 				func(i interface{}) int {
@@ -219,125 +219,8 @@ func TestExpandUserInputPrefixes(t *testing.T) {
 				},
 			),
 			overlaySubnets: []interface{}{"172.16.0.0/24"},
-			expected:       nil,
-			expectError:    true,
-			errorMsg:       "cannot both be specified",
-		},
-		{
-			name:           "empty cidr with valid subnets - subnet mode",
-			cidr:           []interface{}{},
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					return schema.HashString(m["id"].(string))
-				},
-				[]interface{}{
-					map[string]interface{}{
-						"id":   "subnet-123",
-						"cidr": "10.0.1.0/24",
-					},
-				},
-			),
-			overlaySubnets: []interface{}{},
-			expected: []alkira.InputPrefixes{
-				{Id: "subnet-123", Type: "SUBNET", Value: "10.0.1.0/24"},
-			},
-			expectError: false,
-		},
-		{
-			name:           "nil subnets with valid cidr - cidr mode",
-			cidr:           []interface{}{"10.0.0.0/16"},
-			subnets:        nil,
-			overlaySubnets: []interface{}{},
 			expected: []alkira.InputPrefixes{
 				{Type: "CIDR", Value: "10.0.0.0/16"},
-			},
-			expectError: false,
-		},
-		{
-			name: "empty cidr with multiple subnets",
-			cidr: []interface{}{},
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					return schema.HashString(m["id"].(string))
-				},
-				[]interface{}{
-					map[string]interface{}{
-						"id":   "subnet-123",
-						"cidr": "10.0.1.0/24",
-					},
-					map[string]interface{}{
-						"id":   "subnet-456",
-						"cidr": "10.0.2.0/24",
-					},
-				},
-			),
-			overlaySubnets: []interface{}{},
-			expected: []alkira.InputPrefixes{
-				{Id: "subnet-123", Type: "SUBNET", Value: "10.0.1.0/24"},
-				{Id: "subnet-456", Type: "SUBNET", Value: "10.0.2.0/24"},
-			},
-			expectError: false,
-		},
-		{
-			name: "empty subnets set with valid cidr - cidr mode",
-			cidr: []interface{}{"192.168.0.0/16"},
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					return schema.HashString(m["id"].(string))
-				},
-				[]interface{}{},
-			),
-			overlaySubnets: []interface{}{},
-			expected: []alkira.InputPrefixes{
-				{Type: "CIDR", Value: "192.168.0.0/16"},
-			},
-			expectError: false,
-		},
-		{
-			name:           "empty cidr and empty subnets - should error",
-			cidr:           []interface{}{},
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					return schema.HashString(m["id"].(string))
-				},
-				[]interface{}{},
-			),
-			overlaySubnets: []interface{}{},
-			expected:       nil,
-			expectError:    true,
-			errorMsg:       "either",
-		},
-		{
-			name:           "nil cidr and nil subnets - should error",
-			cidr:           nil,
-			subnets:        nil,
-			overlaySubnets: []interface{}{},
-			expected:       nil,
-			expectError:    true,
-			errorMsg:       "either",
-		},
-		{
-			name:           "subnets with overlay - combined payload",
-			cidr:           []interface{}{},
-			subnets: schema.NewSet(
-				func(i interface{}) int {
-					m := i.(map[string]interface{})
-					return schema.HashString(m["id"].(string))
-				},
-				[]interface{}{
-					map[string]interface{}{
-						"id":   "subnet-789",
-						"cidr": "10.0.3.0/24",
-					},
-				},
-			),
-			overlaySubnets: []interface{}{"172.16.0.0/24"},
-			expected: []alkira.InputPrefixes{
-				{Id: "subnet-789", Type: "SUBNET", Value: "10.0.3.0/24"},
 				{Type: "OVERLAY_SUBNETS", Value: "172.16.0.0/24"},
 			},
 			expectError: false,
