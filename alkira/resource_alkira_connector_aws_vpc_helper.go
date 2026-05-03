@@ -1,124 +1,12 @@
 package alkira
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// setAwsVpcRoutingOptions sets the routing configuration fields from the API response
-func setAwsVpcRoutingOptions(connector *alkira.ConnectorAwsVpc, d *schema.ResourceData) {
-	if connector.VpcRouting == nil {
-		log.Printf("[DEBUG] VpcRouting is nil, skipping routing options")
-		return
-	}
-
-	// Unmarshal the interface{} to concrete types
-	routingJSON, err := json.Marshal(connector.VpcRouting)
-	if err != nil {
-		log.Printf("[ERROR] Failed to marshal VpcRouting: %v", err)
-		return
-	}
-
-	var routing alkira.ConnectorAwsVpcRouting
-	if err := json.Unmarshal(routingJSON, &routing); err != nil {
-		log.Printf("[ERROR] Failed to unmarshal VpcRouting: %v", err)
-		return
-	}
-
-	// Set export-related fields (vpc_cidr, vpc_subnet, overlay_subnets)
-	setAwsVpcExportPrefixes(routing.Export, d)
-
-	// Set import-related fields (vpc_route_table)
-	setAwsVpcImportRouteTables(routing.Import, d)
-}
-
-// setAwsVpcExportPrefixes sets export-related fields from ExportOptions
-func setAwsVpcExportPrefixes(exportOptions interface{}, d *schema.ResourceData) {
-	if exportOptions == nil {
-		log.Printf("[DEBUG] Export options is nil, clearing export prefixes")
-		d.Set("vpc_cidr", []interface{}{})
-		d.Set("vpc_subnet", []interface{}{})
-		d.Set("overlay_subnets", []interface{}{})
-		return
-	}
-
-	// Unmarshal the interface{} to ExportOptions
-	exportJSON, err := json.Marshal(exportOptions)
-	if err != nil {
-		log.Printf("[ERROR] Failed to marshal ExportOptions: %v", err)
-		return
-	}
-
-	var export alkira.ExportOptions
-	if err := json.Unmarshal(exportJSON, &export); err != nil {
-		log.Printf("[ERROR] Failed to unmarshal ExportOptions: %v", err)
-		return
-	}
-
-	var cidrList []string
-	var subnetList []interface{}
-	var overlaySubnets []string
-
-	for _, prefix := range export.Prefixes {
-		switch prefix.Type {
-		case "CIDR":
-			cidrList = append(cidrList, prefix.Value)
-		case "SUBNET":
-			subnet := map[string]interface{}{
-				"id":   prefix.Id,
-				"cidr": prefix.Value,
-			}
-			subnetList = append(subnetList, subnet)
-		case "OVERLAY_SUBNETS":
-			overlaySubnets = append(overlaySubnets, prefix.Value)
-		default:
-			log.Printf("[DEBUG] Unknown prefix type: %s", prefix.Type)
-		}
-	}
-
-	// Always set all export fields because they are Computed
-	// Backend returns userInputPrefixes with type entries; empty set if none specified
-	d.Set("vpc_cidr", cidrList)
-	d.Set("vpc_subnet", subnetList)
-	d.Set("overlay_subnets", overlaySubnets)
-}
-
-// setAwsVpcImportRouteTables sets vpc_route_table from ImportOptions
-func setAwsVpcImportRouteTables(importOptions interface{}, d *schema.ResourceData) {
-	if importOptions == nil {
-		log.Printf("[DEBUG] Import options is nil, skipping route tables")
-		return
-	}
-
-	// Unmarshal the interface{} to ImportOptions
-	importJSON, err := json.Marshal(importOptions)
-	if err != nil {
-		log.Printf("[ERROR] Failed to marshal ImportOptions: %v", err)
-		return
-	}
-
-	var importOpts alkira.ImportOptions
-	if err := json.Unmarshal(importJSON, &importOpts); err != nil {
-		log.Printf("[ERROR] Failed to unmarshal ImportOptions: %v", err)
-		return
-	}
-
-	routeTables := make([]interface{}, len(importOpts.RouteTables))
-	for i, rt := range importOpts.RouteTables {
-		routeTable := map[string]interface{}{
-			"id":              rt.Id,
-			"options":         rt.Mode,
-			"prefix_list_ids": rt.PrefixListIds,
-		}
-		routeTables[i] = routeTable
-	}
-
-	d.Set("vpc_route_table", routeTables)
-}
 
 // setTgwAttachment set tgw_attachment blocks
 func setTgwAttachment(d *schema.ResourceData, tgwAttachments []alkira.TgwAttachment) {
@@ -163,6 +51,7 @@ func setTgwAttachment(d *schema.ResourceData, tgwAttachments []alkira.TgwAttachm
 			}
 
 			attachments = append(attachments, attachment)
+			break
 		}
 	}
 
@@ -198,23 +87,23 @@ func expandAwsVpcRouteTables(in *schema.Set) []alkira.RouteTables {
 // expandUserInputPrefixes generate UserInputPrefixes used in AWS-VPC connector
 func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySubnets []interface{}) ([]alkira.InputPrefixes, error) {
 
-	hasCidr := len(cidr) > 0
-	hasSubnets := subnets != nil && subnets.Len() > 0
+	if len(cidr) == 0 && subnets == nil {
+		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified")
+	}
 
 	// Processing overlay_subnets
 	log.Printf("[DEBUG] Processing overlay_subnets %v", overlaySubnets)
 	overlaySubnetList := make([]alkira.InputPrefixes, len(overlaySubnets))
 
-	for i, value := range overlaySubnets {
-		overlaySubnetList[i].Value = value.(string)
-		overlaySubnetList[i].Type = "OVERLAY_SUBNETS"
+	if len(overlaySubnets) > 0 {
+		for i, value := range overlaySubnets {
+			overlaySubnetList[i].Value = value.(string)
+			overlaySubnetList[i].Type = "OVERLAY_SUBNETS"
+		}
 	}
 
-	switch {
-	case hasCidr && hasSubnets:
-		return nil, fmt.Errorf("ERROR: \"vpc_cidr\" and \"vpc_subnet\" cannot both be specified")
-
-	case hasCidr:
+	// Processing vpc_cidr
+	if len(cidr) > 0 {
 		log.Printf("[DEBUG] Processing vpc_cidr %v", cidr)
 		cidrList := make([]alkira.InputPrefixes, len(cidr))
 
@@ -223,31 +112,34 @@ func expandUserInputPrefixes(cidr []interface{}, subnets *schema.Set, overlaySub
 			cidrList[i].Type = "CIDR"
 		}
 
-		return append(cidrList, overlaySubnetList...), nil
+		cidrList = append(cidrList, overlaySubnetList...)
+		return cidrList, nil
+	}
 
-	case hasSubnets:
-		log.Printf("[DEBUG] Processing vpc_subnet")
-		prefixes := make([]alkira.InputPrefixes, subnets.Len())
+	// Processing vpc_subnet
+	log.Printf("[DEBUG] Processing vpc_subnet")
+	if subnets == nil || subnets.Len() == 0 {
+		log.Printf("[DEBUG] Empty vpc_subnet")
+		return nil, fmt.Errorf("ERROR: Invalid vpc_subnet")
+	}
 
-		for i, subnet := range subnets.List() {
-			r := alkira.InputPrefixes{}
-			t := subnet.(map[string]interface{})
-			if v, ok := t["id"].(string); ok {
-				r.Id = v
-			}
-			if v, ok := t["cidr"].(string); ok {
-				r.Value = v
-			}
-
-			r.Type = "SUBNET"
-			prefixes[i] = r
+	prefixes := make([]alkira.InputPrefixes, subnets.Len())
+	for i, subnet := range subnets.List() {
+		r := alkira.InputPrefixes{}
+		t := subnet.(map[string]interface{})
+		if v, ok := t["id"].(string); ok {
+			r.Id = v
+		}
+		if v, ok := t["cidr"].(string); ok {
+			r.Value = v
 		}
 
-		return append(prefixes, overlaySubnetList...), nil
-
-	default:
-		return nil, fmt.Errorf("ERROR: either \"vpc_subnet\" or \"vpc_cidr\" must be specified")
+		r.Type = "SUBNET"
+		prefixes[i] = r
 	}
+
+	prefixes = append(prefixes, overlaySubnetList...)
+	return prefixes, nil
 }
 
 // expandAwsVpcTgwAttachments expand tgw_attachment of connector_aws_vpc
