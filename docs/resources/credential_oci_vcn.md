@@ -36,11 +36,11 @@ resource "alkira_credential_oci_vcn" "example" {
 
 ### Required
 
-- `fingerprint` (String, Sensitive) Fingerprint of the API key of the user.
-- `key` (String, Sensitive) API key of the user.
+- `fingerprint` (String) Fingerprint of the API key of the user.
+- `key` (String) API key of the user.
 - `name` (String) Name of the credential.
-- `tenant_ocid` (String, Sensitive) OCID of the tenant.
-- `user_ocid` (String, Sensitive) OCID of the user.
+- `tenant_ocid` (String) OCID of the tenant.
+- `user_ocid` (String) OCID of the user.
 
 ### Read-Only
 
