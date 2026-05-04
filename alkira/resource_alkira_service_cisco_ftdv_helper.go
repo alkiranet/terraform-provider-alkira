@@ -82,19 +82,19 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 	return instances, nil
 }
 
-func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []string, alkira.CiscoFTDvManagementServer, error) {
+func expandCiscoFtdvManagementServer(in []interface{}, m interface{}) (string, []string, alkira.CiscoFTDvManagementServer, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	var credentialId string
 	var ipAllowList = []string{}
 	var managementServer = alkira.CiscoFTDvManagementServer{}
 
-	if in == nil || in.Len() != 1 {
+	if in == nil || len(in) != 1 {
 		log.Printf("[DEBUG] Invalid Cisco FTDv Management Server input.")
 		return credentialId, ipAllowList, managementServer, errors.New("ERROR: Invalid Cisco FTDv Management Server input")
 	}
 
-	for _, option := range in.List() {
+	for _, option := range in {
 		cfg := option.(map[string]interface{})
 
 		var username string

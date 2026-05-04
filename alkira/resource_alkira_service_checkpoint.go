@@ -122,7 +122,8 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"BRING_YOUR_OWN", "PAY_AS_YOU_GO"}, false),
 			},
 			"management_server": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
+				MaxItems:    1,
 				Required:    true,
 				Description: "",
 				Elem: &schema.Resource{

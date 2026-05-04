@@ -35,23 +35,23 @@ func updateCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) 
 	return nil
 }
 
-func expandCheckpointManagementServer(name string, in *schema.Set, m interface{}) (*alkira.CheckpointManagementServer, error) {
+func expandCheckpointManagementServer(name string, in []interface{}, m interface{}) (*alkira.CheckpointManagementServer, error) {
 
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || in.Len() > 1 {
+	if in == nil || len(in) > 1 {
 		log.Printf("[DEBUG] Invalid Checkpoint Firewall Management Server input")
 		return nil, errors.New("ERROR: Invalid checkpoint firewall management server input")
 	}
 
-	if in.Len() < 1 {
+	if len(in) < 1 {
 		return nil, nil
 	}
 
 	mg := &alkira.CheckpointManagementServer{}
 	var manServerPass string
 
-	for _, option := range in.List() {
+	for _, option := range in {
 		cfg := option.(map[string]interface{})
 		if v, ok := cfg["configuration_mode"].(string); ok {
 			mg.ConfigurationMode = v
@@ -263,7 +263,7 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
 
 	// Management Server block
-	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").(*schema.Set), m)
+	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").([]interface{}), m)
 
 	if err != nil {
 		return nil, err
