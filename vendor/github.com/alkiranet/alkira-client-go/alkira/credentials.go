@@ -120,7 +120,6 @@ type CredentialFortinet struct {
 	// rotate the password on deployed FortiGate instances. To change the password
 	// after provisioning, customers must update the FortiGate side independently
 	// and then update this field in Alkira to match.
-	// Gated behind feature flag RELEASE-SERVICE-FTNTFW-ALKIRA-ADMIN-PASSWORD.
 	AlkiraAdminPassword string `json:"alkiraAdminPassword,omitempty"`
 }
 
