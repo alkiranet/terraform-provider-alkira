@@ -112,9 +112,8 @@ type CredentialGcpVpc struct {
 }
 
 type CredentialFortinet struct {
-	UserName            string `json:"userName"`
-	Password            string `json:"password"`
-	AlkiraAdminPassword string `json:"alkiraAdminPassword,omitempty"`
+	UserName string `json:"userName"`
+	Password string `json:"password"`
 }
 
 type CredentialFortinetInstance struct {
