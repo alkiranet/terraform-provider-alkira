@@ -114,6 +114,13 @@ type CredentialGcpVpc struct {
 type CredentialFortinet struct {
 	UserName string `json:"userName"`
 	Password string `json:"password"`
+	// AlkiraAdminPassword is the customer-supplied alkira-admin password.
+	// Used to authenticate against the FortiGate during first-time provisioning.
+	// Once provisioned, this field is for record-keeping only — Alkira does not
+	// rotate the password on deployed FortiGate instances. To change the password
+	// after provisioning, customers must update the FortiGate side independently
+	// and then update this field in Alkira to match.
+	AlkiraAdminPassword string `json:"alkiraAdminPassword,omitempty"`
 }
 
 type CredentialFortinetInstance struct {

@@ -62,6 +62,17 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"alkira_admin_password": {
+				Description: "Customer-supplied alkira-admin password. " +
+					"Used to authenticate against the FortiGate during first-time provisioning. " +
+					"Once provisioned, this field is for record-keeping only — Alkira does not " +
+					"rotate the password on deployed FortiGate instances. To change the password " +
+					"after provisioning, update the FortiGate side independently, then update " +
+					"this field to match.",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
 				Type:        schema.TypeString,
