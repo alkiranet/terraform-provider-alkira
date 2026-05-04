@@ -325,7 +325,7 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("billing_tag_ids", service.BillingTags)
 	d.Set("credential_id", service.CredentialId)
 	d.Set("cxp", service.Cxp)
-	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service, m))
+	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service))
 	d.Set("global_cidr_list_id", service.GlobalCidrListId)
 	d.Set("instance", setCiscoFTDvInstances(d, service.Instances))
 	d.Set("max_instance_count", service.MaxInstanceCount)
