@@ -68,8 +68,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					"Once provisioned, this field is for record-keeping only — Alkira does not " +
 					"rotate the password on deployed FortiGate instances. To change the password " +
 					"after provisioning, update the FortiGate side independently, then update " +
-					"this field to match. " +
-					"Gated behind feature flag RELEASE-SERVICE-FTNTFW-ALKIRA-ADMIN-PASSWORD.",
+					"this field to match.",
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
