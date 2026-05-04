@@ -110,7 +110,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 			},
 			"firepower_management_center": {
 				Description: "The Firepower Management Center options.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
+				MaxItems:    1,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -325,7 +326,7 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("billing_tag_ids", service.BillingTags)
 	d.Set("credential_id", service.CredentialId)
 	d.Set("cxp", service.Cxp)
-	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service, m))
+	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(d, service, m))
 	d.Set("global_cidr_list_id", service.GlobalCidrListId)
 	d.Set("instance", setCiscoFTDvInstances(d, service.Instances))
 	d.Set("max_instance_count", service.MaxInstanceCount)
@@ -463,7 +464,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 	// credential_id and ip_allow_list is on top level of the service,
 	// but those fields should be part of the management_center.
 	//
-	credentialId, ipAllowList, managementServer, err := expandCiscoFtdvManagementServer(d.Get("firepower_management_center").(*schema.Set), m)
+	credentialId, ipAllowList, managementServer, err := expandCiscoFtdvManagementServer(d.Get("firepower_management_center").([]interface{}), m)
 
 	if err != nil {
 		return nil, err
