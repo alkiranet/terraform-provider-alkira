@@ -39,8 +39,7 @@ func TestCheckpointInstanceInvalid(t *testing.T) {
 func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	expected := initCheckpointTestManagementServer()
 
-	// Pass nil for meta since we're not testing segment conversion
-	m := deflateCheckpointManagementServer(expected, nil)
+	m := deflateCheckpointManagementServer(expected)
 
 	require.Equal(t, m[0]["configuration_mode"].(string), expected.ConfigurationMode)
 	require.Equal(t, m[0]["credential_id"].(string), expected.CredentialId)
@@ -48,9 +47,14 @@ func TestCheckpointDeflateManagementServerValid(t *testing.T) {
 	require.Equal(t, m[0]["global_cidr_list_id"].(int), expected.GlobalCidrListId)
 	require.Equal(t, convertTypeListToStringList(m[0]["ips"].([]interface{})), expected.Ips)
 	require.Equal(t, m[0]["reachability"].(string), expected.Reachability)
-	// segment_id is only set when meta is provided and segment name can be converted
 	require.Equal(t, m[0]["type"].(string), expected.Type)
 	require.Equal(t, m[0]["username"].(string), expected.UserName)
+	// segment_id and password are intentionally not written by deflate; they
+	// are preserved by the SDK from the user's prior state.
+	_, hasSegmentId := m[0]["segment_id"]
+	require.False(t, hasSegmentId)
+	_, hasPassword := m[0]["password"]
+	require.False(t, hasPassword)
 }
 
 func TestCheckpointDeflateSegmentOptionsValid(t *testing.T) {

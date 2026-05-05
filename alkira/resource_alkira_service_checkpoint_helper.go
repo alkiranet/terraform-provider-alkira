@@ -186,7 +186,7 @@ func expandCheckpointSegmentOptions(segmentName string, in *schema.Set, m interf
 
 }
 
-func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer, m interface{}) []map[string]interface{} {
+func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["configuration_mode"] = mg.ConfigurationMode
 	result["credential_id"] = mg.CredentialId
@@ -196,14 +196,6 @@ func deflateCheckpointManagementServer(mg alkira.CheckpointManagementServer, m i
 	result["reachability"] = mg.Reachability
 	result["type"] = mg.Type
 	result["username"] = mg.UserName
-
-	// Convert segment name to segment ID for import support
-	if mg.Segment != "" && m != nil {
-		segmentId, err := getSegmentIdByName(mg.Segment, m)
-		if err == nil {
-			result["segment_id"] = segmentId
-		}
-	}
 
 	return []map[string]interface{}{result}
 }

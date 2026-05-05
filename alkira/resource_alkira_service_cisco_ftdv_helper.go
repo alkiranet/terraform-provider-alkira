@@ -179,19 +179,23 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	return segmentOptions, nil
 }
 
-func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv, m interface{}) []map[string]interface{} {
+func deflateCiscoFTDvManagementServer(d *schema.ResourceData, service *alkira.ServiceCiscoFTDv) []map[string]interface{} {
 
 	result := make(map[string]interface{})
 
 	result["credential_id"] = service.CredentialId
 	result["ip_allow_list"] = service.IpAllowList
+	result["segment_id"] = strconv.Itoa(service.ManagementServer.SegmentId)
 	result["server_ip"] = service.ManagementServer.IPAddress
 
-	// Convert segment name to segment ID for import support
-	if service.ManagementServer.Segment != "" && m != nil {
-		segmentId, err := getSegmentIdByName(service.ManagementServer.Segment, m)
-		if err == nil {
-			result["segment_id"] = segmentId
+	// API doesn't return username or password. Carry forward whatever the
+	// user already declared so Terraform doesn't see them as drift.
+	if existing, ok := d.GetOk("firepower_management_center"); ok {
+		set := existing.(*schema.Set)
+		if set.Len() > 0 {
+			prior := set.List()[0].(map[string]interface{})
+			result["username"] = prior["username"]
+			result["password"] = prior["password"]
 		}
 	}
 

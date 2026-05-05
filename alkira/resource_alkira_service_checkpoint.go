@@ -381,7 +381,7 @@ func resourceCheckpointRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("instance", setCheckpointInstances(d, checkpoint.Instances))
 	d.Set("license_type", checkpoint.LicenseType)
 	if checkpoint.ManagementServer != nil {
-		d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer, m))
+		d.Set("management_server", deflateCheckpointManagementServer(*checkpoint.ManagementServer))
 	}
 	d.Set("max_instance_count", checkpoint.MaxInstanceCount)
 	d.Set("min_instance_count", checkpoint.MinInstanceCount)

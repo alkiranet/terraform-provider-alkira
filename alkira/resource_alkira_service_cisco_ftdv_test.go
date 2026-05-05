@@ -3,8 +3,10 @@ package alkira
 import (
 	"testing"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAlkiraServiceCiscoFTDv_resourceSchema(t *testing.T) {
@@ -69,11 +71,38 @@ func TestAlkiraServiceCiscoFTDv_validateName(t *testing.T) {
 	}
 }
 
-// UNUSED: Commented out to suppress linter warnings
-// // TEST HELPER
-// func serveServiceCiscoFTDv(t *testing.T, serviceCiscoFTDv *alkira.ServiceCiscoFTDv) *alkira.AlkiraClient {
-// 	return createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
-// 		json.NewEncoder(w).Encode(serviceCiscoFTDv)
-// 		w.Header().Set("Content-Type", "application/json")
-// 	})
-// }
+func TestCiscoFTDvDeflateManagementServer_PreservesUserPassFromState(t *testing.T) {
+	// API never returns username/password. Deflate must carry them forward
+	// from the user's prior state so terraform plan does not show drift on
+	// these Required fields after Read.
+	resourceSchema := resourceAlkiraServiceCiscoFTDv().Schema
+	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{})
+
+	prior := []interface{}{
+		map[string]interface{}{
+			"server_ip":  "192.168.1.1",
+			"username":   "admin",
+			"password":   "Secret123!",
+			"segment_id": "42",
+		},
+	}
+	require.NoError(t, d.Set("firepower_management_center", prior))
+
+	service := &alkira.ServiceCiscoFTDv{
+		CredentialId: "cred-abc",
+		IpAllowList:  []string{},
+		ManagementServer: alkira.CiscoFTDvManagementServer{
+			IPAddress: "192.168.1.1",
+			Segment:   "seg-name",
+			SegmentId: 42,
+		},
+	}
+
+	out := deflateCiscoFTDvManagementServer(d, service)
+	require.Len(t, out, 1)
+	assert.Equal(t, "cred-abc", out[0]["credential_id"])
+	assert.Equal(t, "192.168.1.1", out[0]["server_ip"])
+	assert.Equal(t, "42", out[0]["segment_id"])
+	assert.Equal(t, "admin", out[0]["username"])
+	assert.Equal(t, "Secret123!", out[0]["password"])
+}
