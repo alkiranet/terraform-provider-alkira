@@ -158,21 +158,21 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Required:    true,
 			},
 			"vpc_cidr": {
-				Description: "The list of CIDR attached to the target VPC for " +
-					"routing purpose. It could be only specified if " +
-					"`vpc_subnet` is not specified.",
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"vpc_subnet"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Description: "The list of CIDR attached to the target VPC " +
+					"for routing purpose. May be specified together with " +
+					"`vpc_subnet`; the only backend constraint is that a " +
+					"SUBNET prefix in `vpc_subnet` cannot be a subset of a " +
+					"CIDR prefix in `vpc_cidr` on the same connector.",
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"vpc_subnet": {
 				Description: "The list of subnets of the target VPC for " +
-					"routing purpose. It could only specified if `vpc_cidr` " +
-					"is not specified.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"vpc_cidr"},
+					"routing purpose. May be specified together with " +
+					"`vpc_cidr`.",
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -329,6 +329,11 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("description", connector.Description)
+
+	// Routing — system-generated entries (defaultRouting=true) are filtered.
+	setAwsVpcExportPrefixes(d, connector.VpcRouting.Export.Prefixes)
+	setAwsVpcImportRouteTables(d, connector.VpcRouting.Import.RouteTables)
+
 	// Get segment
 	numOfSegments := len(connector.Segments)
 

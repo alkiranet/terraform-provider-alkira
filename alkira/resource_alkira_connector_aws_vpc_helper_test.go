@@ -534,3 +534,209 @@ func TestAwsVpcDataStructures(t *testing.T) {
 		assert.Equal(t, "10.0.0.0/16", prefix.Value)
 	})
 }
+
+func awsVpcReadTestSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"vpc_cidr": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"vpc_subnet": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id":   {Type: schema.TypeString, Optional: true},
+						"cidr": {Type: schema.TypeString, Optional: true},
+					},
+				},
+			},
+			"overlay_subnets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"vpc_route_table": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {Type: schema.TypeString, Optional: true},
+						"prefix_list_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"options": {Type: schema.TypeString, Optional: true},
+					},
+				},
+			},
+		},
+	}
+}
+
+func TestSetAwsVpcExportPrefixes(t *testing.T) {
+	tr := true
+	fa := false
+
+	tests := []struct {
+		name              string
+		input             []alkira.InputPrefixes
+		expectedCidrs     []string
+		expectedSubnetIds []string
+		expectedOverlays  []string
+	}{
+		{
+			name: "all default-routing entries are filtered",
+			input: []alkira.InputPrefixes{
+				{Type: "CIDR", Value: "10.0.0.0/16", DefaultRouting: &tr},
+				{Type: "SUBNET", Id: "subnet-1", Value: "10.0.1.0/24", DefaultRouting: &tr},
+			},
+			expectedCidrs:     nil,
+			expectedSubnetIds: nil,
+			expectedOverlays:  nil,
+		},
+		{
+			name: "legacy connector (no defaultRouting) flows through unfiltered",
+			input: []alkira.InputPrefixes{
+				{Type: "CIDR", Value: "10.0.0.0/16"},
+				{Type: "SUBNET", Id: "subnet-1", Value: "10.0.1.0/24"},
+			},
+			expectedCidrs:     []string{"10.0.0.0/16"},
+			expectedSubnetIds: []string{"subnet-1"},
+			expectedOverlays:  nil,
+		},
+		{
+			name: "explicit defaultRouting=false flows through unfiltered",
+			input: []alkira.InputPrefixes{
+				{Type: "CIDR", Value: "10.0.0.0/16", DefaultRouting: &fa},
+				{Type: "OVERLAY_SUBNETS", Value: "172.16.0.0/24", DefaultRouting: &fa},
+			},
+			expectedCidrs:     []string{"10.0.0.0/16"},
+			expectedSubnetIds: nil,
+			expectedOverlays:  []string{"172.16.0.0/24"},
+		},
+		{
+			name: "mixed CIDR + SUBNET + OVERLAY_SUBNETS demux",
+			input: []alkira.InputPrefixes{
+				{Type: "CIDR", Value: "10.0.0.0/16"},
+				{Type: "SUBNET", Id: "subnet-1", Value: "10.0.1.0/24"},
+				{Type: "SUBNET", Id: "subnet-2", Value: "10.0.2.0/24"},
+				{Type: "OVERLAY_SUBNETS", Value: "172.16.0.0/24"},
+			},
+			expectedCidrs:     []string{"10.0.0.0/16"},
+			expectedSubnetIds: []string{"subnet-1", "subnet-2"},
+			expectedOverlays:  []string{"172.16.0.0/24"},
+		},
+		{
+			name: "mixed defaultRouting and user-provided entries",
+			input: []alkira.InputPrefixes{
+				{Type: "CIDR", Value: "10.0.0.0/16", DefaultRouting: &tr},
+				{Type: "CIDR", Value: "192.168.0.0/16"},
+				{Type: "SUBNET", Id: "subnet-default", Value: "10.0.1.0/24", DefaultRouting: &tr},
+				{Type: "SUBNET", Id: "subnet-user", Value: "192.168.1.0/24"},
+			},
+			expectedCidrs:     []string{"192.168.0.0/16"},
+			expectedSubnetIds: []string{"subnet-user"},
+			expectedOverlays:  nil,
+		},
+		{
+			name:              "empty input",
+			input:             []alkira.InputPrefixes{},
+			expectedCidrs:     nil,
+			expectedSubnetIds: nil,
+			expectedOverlays:  nil,
+		},
+	}
+
+	r := awsVpcReadTestSchema()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+
+			setAwsVpcExportPrefixes(d, tt.input)
+
+			cidrs := convertTypeListToStringList(d.Get("vpc_cidr").([]interface{}))
+			assert.Equal(t, tt.expectedCidrs, cidrs)
+
+			subnetSet := d.Get("vpc_subnet").(*schema.Set)
+			var subnetIds []string
+			for _, s := range subnetSet.List() {
+				m := s.(map[string]interface{})
+				subnetIds = append(subnetIds, m["id"].(string))
+			}
+			assert.ElementsMatch(t, tt.expectedSubnetIds, subnetIds)
+
+			overlays := convertTypeListToStringList(d.Get("overlay_subnets").([]interface{}))
+			assert.Equal(t, tt.expectedOverlays, overlays)
+		})
+	}
+}
+
+func TestSetAwsVpcImportRouteTables(t *testing.T) {
+	tr := true
+	fa := false
+
+	tests := []struct {
+		name        string
+		input       []alkira.RouteTables
+		expectedIds []string
+	}{
+		{
+			name: "all default-routing entries are filtered",
+			input: []alkira.RouteTables{
+				{Id: "rtb-default-1", Mode: "ADVERTISE_DEFAULT_ROUTE", DefaultRouting: &tr},
+				{Id: "rtb-default-2", Mode: "ADVERTISE_DEFAULT_ROUTE", DefaultRouting: &tr},
+			},
+			expectedIds: nil,
+		},
+		{
+			name: "legacy connector (no defaultRouting) flows through",
+			input: []alkira.RouteTables{
+				{Id: "rtb-legacy", Mode: "ADVERTISE_DEFAULT_ROUTE", PrefixListIds: []int{1, 2}},
+			},
+			expectedIds: []string{"rtb-legacy"},
+		},
+		{
+			name: "explicit defaultRouting=false flows through",
+			input: []alkira.RouteTables{
+				{Id: "rtb-user", Mode: "OVERRIDE_DEFAULT_ROUTE", DefaultRouting: &fa},
+			},
+			expectedIds: []string{"rtb-user"},
+		},
+		{
+			name: "mixed default and user entries",
+			input: []alkira.RouteTables{
+				{Id: "rtb-default", Mode: "ADVERTISE_DEFAULT_ROUTE", DefaultRouting: &tr},
+				{Id: "rtb-user", Mode: "ADVERTISE_CUSTOM_PREFIX", PrefixListIds: []int{42}},
+			},
+			expectedIds: []string{"rtb-user"},
+		},
+		{
+			name:        "empty input",
+			input:       []alkira.RouteTables{},
+			expectedIds: nil,
+		},
+	}
+
+	r := awsVpcReadTestSchema()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := r.TestResourceData()
+
+			setAwsVpcImportRouteTables(d, tt.input)
+
+			rtSet := d.Get("vpc_route_table").(*schema.Set)
+			var ids []string
+			for _, rt := range rtSet.List() {
+				m := rt.(map[string]interface{})
+				ids = append(ids, m["id"].(string))
+			}
+			assert.ElementsMatch(t, tt.expectedIds, ids)
+		})
+	}
+}

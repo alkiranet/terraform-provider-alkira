@@ -8,9 +8,10 @@ import (
 )
 
 type InputPrefixes struct {
-	Id    string `json:"id,omitempty"`
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Id             string `json:"id,omitempty"`
+	Type           string `json:"type"`
+	Value          string `json:"value"`
+	DefaultRouting *bool  `json:"defaultRouting,omitempty"`
 }
 
 type ExportOptions struct {
@@ -19,9 +20,10 @@ type ExportOptions struct {
 }
 
 type RouteTables struct {
-	Id            string `json:"id"`
-	PrefixListIds []int  `json:"prefixListIds"`
-	Mode          string `json:"routeImportMode"`
+	Id             string `json:"id"`
+	PrefixListIds  []int  `json:"prefixListIds"`
+	Mode           string `json:"routeImportMode"`
+	DefaultRouting *bool  `json:"defaultRouting,omitempty"`
 }
 
 type ImportOptions struct {
@@ -29,8 +31,8 @@ type ImportOptions struct {
 }
 
 type ConnectorAwsVpcRouting struct {
-	Export interface{} `json:"exportToCXPOptions"`
-	Import interface{} `json:"importFromCXPOptions"`
+	Export ExportOptions `json:"exportToCXPOptions"`
+	Import ImportOptions `json:"importFromCXPOptions"`
 }
 
 type TgwAttachment struct {
@@ -57,7 +59,7 @@ type ConnectorAwsVpc struct {
 	TgwAttachments                     []TgwAttachment `json:"tgwAttachments,omitempty"`
 	VpcId                              string          `json:"vpcId"`
 	VpcOwnerId                         string          `json:"vpcOwnerId"`
-	VpcRouting                         interface{}     `json:"vpcRouting"`
+	VpcRouting                         ConnectorAwsVpcRouting `json:"vpcRouting"`
 	TgwConnectEnabled                  bool            `json:"tgwConnectEnabled"`
 	ScaleGroupId                       string          `json:"scaleGroupId,omitempty"`
 	Description                        string          `json:"description,omitempty"`

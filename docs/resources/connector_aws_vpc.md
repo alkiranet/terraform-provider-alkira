@@ -13,10 +13,18 @@ This resource is usually used along with `terraform-provider-aws`.
 
 ## Routing Options
 
-Either `vpc_cidr` or `vpc_subnet` needs to be specified for routing
-purpose.  If `vpc_cidr` is provided, it will automatically select all
-associated subnets of the given VPC. Otherwise, you can select
-certain subnets by specifying `vpc_subnet`.
+`vpc_cidr` and `vpc_subnet` may be specified individually or together.
+If `vpc_cidr` is provided, it will automatically select all associated
+subnets of the given VPC. You can also select specific subnets by
+specifying `vpc_subnet`. The only backend constraint when both are
+present is that a SUBNET prefix in `vpc_subnet` cannot be a subset of a
+CIDR prefix in `vpc_cidr` on the same connector.
+
+If neither is specified, the Alkira backend will auto-populate default
+routing (export all VPC CIDRs and import all route tables with
+`ADVERTISE_DEFAULT_ROUTE`). The provider filters these system-generated
+entries out of Terraform state, so omitting the routing block in HCL
+does not produce a perpetual diff.
 
 `vpc_route_tables` can be used to adjust the routing options against
 the specified route tables. When `OVERRIDE_DEFAULT_ROUTE` is
@@ -27,6 +35,19 @@ must be routed to Alkira CXP.
 
 When `vpc_cidr` is used, `vpc_route_tables` should be also specified
 to ensure that the traffic is attracted to the CXP.
+
+### Legacy Connectors
+
+Connectors created before the backend started tagging system-generated
+routing with `defaultRouting: true` look identical to user-provided
+routing on the response. After upgrading the provider, a one-time
+refresh will pull the existing routing into Terraform state.
+
+If you do not have the routing block in your HCL, the next plan will
+show a diff for `vpc_cidr` / `vpc_subnet` / `vpc_route_table`. To clear
+it, add the routing block to your config so it matches what is in
+state. The apply that follows is idempotent — the backend generates no
+provisioning tasks because nothing actually changes.
 
 
 ## Tips
@@ -222,9 +243,9 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `scale_group_id` (String) The ID of the scale group associated with the connector.
 - `tgw_attachment` (Block List) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
 - `tgw_connect_enabled` (Boolean) When it's set to `true`, Alkira will use TGW Connect attachments to build connection to AWS Transit Gateway. Connect Attachments suppport GRE tunnel protocol for high performance and BGP for dynamic routing. This applies to all TGW attachments. This field can be set to `true` only if the VPC is in the same AWS region as the Alkira CXP it is being deployed onto.
-- `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.
+- `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. May be specified together with `vpc_subnet`; the only backend constraint is that a SUBNET prefix in `vpc_subnet` cannot be a subset of a CIDR prefix in `vpc_cidr` on the same connector.
 - `vpc_route_table` (Block Set) VPC route table (see [below for nested schema](#nestedblock--vpc_route_table))
-- `vpc_subnet` (Block Set) The list of subnets of the target VPC for routing purpose. It could only specified if `vpc_cidr` is not specified. (see [below for nested schema](#nestedblock--vpc_subnet))
+- `vpc_subnet` (Block Set) The list of subnets of the target VPC for routing purpose. May be specified together with `vpc_cidr`. (see [below for nested schema](#nestedblock--vpc_subnet))
 
 ### Read-Only
 

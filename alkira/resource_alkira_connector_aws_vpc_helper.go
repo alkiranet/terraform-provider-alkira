@@ -166,6 +166,57 @@ func expandAwsVpcTgwAttachments(in []interface{}) []alkira.TgwAttachment {
 	return attachments
 }
 
+// setAwsVpcExportPrefixes refreshes vpc_cidr, vpc_subnet, and overlay_subnets
+// from the API response. Entries tagged with defaultRouting=true are
+// system-generated and filtered out so they don't produce a perpetual diff.
+func setAwsVpcExportPrefixes(d *schema.ResourceData, prefixes []alkira.InputPrefixes) {
+	var cidrs []string
+	var subnets []interface{}
+	var overlaySubnets []string
+
+	for _, p := range prefixes {
+		if p.DefaultRouting != nil && *p.DefaultRouting {
+			continue
+		}
+
+		switch p.Type {
+		case "CIDR":
+			cidrs = append(cidrs, p.Value)
+		case "SUBNET":
+			subnets = append(subnets, map[string]interface{}{
+				"id":   p.Id,
+				"cidr": p.Value,
+			})
+		case "OVERLAY_SUBNETS":
+			overlaySubnets = append(overlaySubnets, p.Value)
+		}
+	}
+
+	d.Set("vpc_cidr", cidrs)
+	d.Set("vpc_subnet", subnets)
+	d.Set("overlay_subnets", overlaySubnets)
+}
+
+// setAwsVpcImportRouteTables refreshes vpc_route_table from the API response.
+// Entries tagged with defaultRouting=true are system-generated and filtered out.
+func setAwsVpcImportRouteTables(d *schema.ResourceData, tables []alkira.RouteTables) {
+	var routeTables []interface{}
+
+	for _, t := range tables {
+		if t.DefaultRouting != nil && *t.DefaultRouting {
+			continue
+		}
+
+		routeTables = append(routeTables, map[string]interface{}{
+			"id":              t.Id,
+			"prefix_list_ids": t.PrefixListIds,
+			"options":         t.Mode,
+		})
+	}
+
+	d.Set("vpc_route_table", routeTables)
+}
+
 // generateConnectorAwsVpcRequest generate request for connector_aws_vpc
 func generateConnectorAwsVpcRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorAwsVpc, error) {
 
