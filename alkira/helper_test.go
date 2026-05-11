@@ -455,6 +455,56 @@ func TestDeflateSegmentOptionsCanBeSetInTerraformState(t *testing.T) {
 	assert.True(t, foundUntrustZone, "untrust-zone should be in segment_options")
 }
 
+func TestDeflateSegmentOptionsFiltersManagementZone(t *testing.T) {
+	zonesToGroups := make(alkira.ZoneToGroups)
+	zonesToGroups["trust-zone"] = []string{"group1"}
+	zonesToGroups["ALKIRA_MGMT_ZONE"] = []string{}
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["segment1"] = alkira.OuterZoneToGroups{
+		SegmentId:     100,
+		ZonesToGroups: zonesToGroups,
+	}
+
+	result := deflateSegmentOptions(segmentOptions)
+
+	assert.Len(t, result, 1, "ALKIRA_MGMT_ZONE should be filtered out")
+	assert.Equal(t, "trust-zone", result[0]["zone_name"])
+	assert.Equal(t, "100", result[0]["segment_id"])
+}
+
+func TestDeflateSegmentOptionsFiltersManagementZoneMultipleSegments(t *testing.T) {
+	zones1 := make(alkira.ZoneToGroups)
+	zones1["trust-zone"] = []string{"group1"}
+	zones1["ALKIRA_MGMT_ZONE"] = []string{}
+
+	zones2 := make(alkira.ZoneToGroups)
+	zones2["untrust-zone"] = []string{"group2"}
+	zones2["ALKIRA_MGMT_ZONE"] = nil
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["seg1"] = alkira.OuterZoneToGroups{
+		SegmentId:     100,
+		ZonesToGroups: zones1,
+	}
+	segmentOptions["seg2"] = alkira.OuterZoneToGroups{
+		SegmentId:     200,
+		ZonesToGroups: zones2,
+	}
+
+	result := deflateSegmentOptions(segmentOptions)
+
+	assert.Len(t, result, 2, "Only non-mgmt zones should remain")
+
+	zoneNames := make(map[string]bool)
+	for _, opt := range result {
+		zoneNames[opt["zone_name"].(string)] = true
+	}
+	assert.True(t, zoneNames["trust-zone"])
+	assert.True(t, zoneNames["untrust-zone"])
+	assert.False(t, zoneNames["ALKIRA_MGMT_ZONE"])
+}
+
 func TestConvertInputTimeToEpoch(t *testing.T) {
 	tests := []struct {
 		name        string
