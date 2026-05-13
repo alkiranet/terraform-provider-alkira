@@ -344,7 +344,7 @@ func resourcePolicyInterCxpRoutingDelete(ctx context.Context, d *schema.Resource
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInterCxpRoutePolicy(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		name, _ := d.GetOk("name")
@@ -362,7 +362,7 @@ func resourcePolicyInterCxpRoutingDelete(ctx context.Context, d *schema.Resource
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

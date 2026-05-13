@@ -410,7 +410,7 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -433,7 +433,7 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId("")
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
