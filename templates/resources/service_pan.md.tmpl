@@ -1,0 +1,95 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Credentials
+
+The PAN service is backed by three separate entries in the Alkira credentials vault, all
+managed by this resource:
+
+- **PAN service credential** — `pan_username`, `pan_password`, `pan_license_key`. Updated
+  in the vault when these fields change. (`pan_password` and `pan_license_key` are
+  marked sensitive; `pan_username` is constrained to `admin` / `akadmin` and is not
+  considered secret.)
+- **PAN registration credential** — `registration_pin_id`, `registration_pin_value`,
+  `registration_pin_expiry`. Created with the resource; the provider does not update
+  this credential on subsequent applies.
+- **PAN master key credential** — `master_key`, `master_key_expiry`, gated by
+  `master_key_enabled`. Created with the resource; the provider does not update this
+  credential on subsequent applies.
+- **Per-instance bootstrap credential** — `instance.auth_key`, `instance.auth_code`,
+  `instance.auth_expiry` (one per `instance` block). Used by Panorama to authenticate
+  the firewall VM during license activation; consumed during PAN-OS bootstrap and not
+  returned by the API thereafter.
+
+`pan_username` is constrained to `admin` or `akadmin` (backend constraint), and the
+per-CXP rule is enforced at plan time:
+
+- Azure / Azure China CXPs require `pan_username = "akadmin"`.
+- AWS / AWS China / GCP CXPs require `pan_username = "admin"`.
+- Other CXP types (OCI, on-prem) accept either value.
+
+### Credential update semantics
+
+All three credential blocks above are **consumed at instance bootstrap only**. The
+Alkira backend pushes their values into the PAN VM during initial provisioning (via the
+PAN-bootstrap Ansible playbook); there is no in-place rotation flow.
+
+What this means in practice:
+
+- Editing `pan_username`, `pan_password`, or `pan_license_key` and running
+  `terraform apply` rotates the value in the Alkira credentials vault. It does **not**
+  reconfigure already-provisioned PAN devices. New autoscale-out instances will pick up
+  the latest value at their bootstrap; existing instances keep their original
+  credentials.
+- Editing `master_key`, `master_key_expiry`, `registration_pin_id`,
+  `registration_pin_value`, `registration_pin_expiry`, or any per-instance
+  `auth_key` / `auth_code` / `auth_expiry` and running `terraform apply` updates
+  Terraform state but does not touch the vault or the deployment. The provider emits
+  a `Warning` diagnostic on `apply` so the no-op is visible. (The warning fires at
+  apply time, not at plan — `terraform plan` will still report a normal-looking
+  diff before the no-op is detected.) To rotate any of these on a running deployment,
+  destroy and recreate the resource (or rotate out-of-band on the PAN device itself,
+  accepting that the vault and the device will then disagree).
+
+This is an architectural property of the Alkira platform, not a provider limitation.
+
+> **State file on disk is plaintext.** `Sensitive: true` only redacts CLI output. The
+> values above are still stored verbatim in `terraform.tfstate`. Use a backend with
+> encryption at rest and restrict access; do not commit state to source control.
+
+## Import Behavior
+
+Credential field values are write-only — the Alkira API never returns them. After
+`terraform import`, `terraform plan` shows a diff for every credential field because
+state has empty strings while configuration has the user-supplied values. Run
+`terraform apply` once to reconcile state:
+
+- The PAN service credential fields (`pan_username`, `pan_password`, `pan_license_key`)
+  are pushed back to the vault on apply (see "Credential update semantics" — vault only,
+  not the running device).
+- The registration and master-key credential fields are recorded in Terraform state but
+  no vault update is issued by the provider.
+
+Subsequent plans show no changes. The imported state for the vault-only and
+bootstrap-only fields is the configuration value, not whatever is actually in the vault
+or on the deployed PAN device — there is no read path that could verify them.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_service_pan/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}

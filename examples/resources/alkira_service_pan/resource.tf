@@ -1,3 +1,33 @@
+variable "pan_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "pan_registration_pin_id" {
+  type      = string
+  sensitive = true
+}
+
+variable "pan_registration_pin_value" {
+  type      = string
+  sensitive = true
+}
+
+variable "pan_master_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "pan_instance_auth_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "pan_instance_auth_code" {
+  type      = string
+  sensitive = true
+}
+
 resource "alkira_service_pan" "test1" {
   name                   = "PanFwTest"
   bundle                 = "VM_SERIES_BUNDLE_1"
@@ -16,19 +46,18 @@ resource "alkira_service_pan" "test1" {
   panorama_ip_addresses = ["172.16.0.8"]
   panorama_template     = "test"
 
-  #
-  # When panorama is enabled, username and password are required.
-  #
-  pan_password = "Ak12345678"
+  # PAN Panorama credentials. pan_username must be "admin" (AWS/GCP) or
+  # "akadmin" (Azure) per backend constraint.
+  pan_password = var.pan_password
   pan_username = "admin"
 
-  registration_pin_id     = "1234567890ABCDEF"
-  registration_pin_value  = "1234567890ABCDEF"
-  registration_pin_expiry = "2023-07-30"
+  registration_pin_id     = var.pan_registration_pin_id
+  registration_pin_value  = var.pan_registration_pin_value
+  registration_pin_expiry = "2030-07-30"
 
   master_key_enabled = true
-  master_key         = "1234567890ABCDEF"
-  master_key_expiry  = "2023-08-01"
+  master_key         = var.pan_master_key
+  master_key_expiry  = "2030-08-01"
 
   global_protect_segment_options {
     segment_id            = (alkira_segment.test1.id)
@@ -40,8 +69,8 @@ resource "alkira_service_pan" "test1" {
   # You can add more instance blocks. Make sure to change "max_instance_count".
   instance {
     name      = "tf-pan-instance-1"
-    auth_key  = "tenant-pan-auth-code"
-    auth_code = "tenant-pan-auth-code"
+    auth_key  = var.pan_instance_auth_key
+    auth_code = var.pan_instance_auth_code
     global_protect_segment_options {
       segment_id      = (alkira_segment.test1.id)
       portal_enabled  = true
@@ -62,4 +91,3 @@ resource "alkira_service_pan" "test1" {
     groups     = [alkira_group.group2.name]
   }
 }
-

@@ -37,6 +37,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			cxpAPI := alkira.NewInventoryCXP(client)
 			cxp, _, err := cxpAPI.GetByName(cxpName)
 
+			// Skip plan-time CXP rules on lookup failure; backend re-validates on apply.
 			if err != nil {
 				log.Printf("[WARNING] Unable to get CXP information for validation: %v", err)
 				return nil
@@ -46,6 +47,53 @@ func resourceAlkiraServicePan() *schema.Resource {
 				return fmt.Errorf("[ERROR] Azure does not support AutoScale for PAN firewalls. "+
 					"min_instance_count and max_instance_count must be equal. "+
 					"Current values: min_instance_count=%d, max_instance_count=%d", minCount, maxCount)
+			}
+
+			panUsername := d.Get("pan_username").(string)
+			switch cxp.Provider {
+			case "AZURE", "AZURECHINA":
+				if panUsername != "akadmin" {
+					return fmt.Errorf("pan_username must be \"akadmin\" on Azure CXPs (got %q)", panUsername)
+				}
+			case "AWS", "AWSCHINA", "GCP":
+				if panUsername != "admin" {
+					return fmt.Errorf("pan_username must be \"admin\" on AWS and GCP CXPs (got %q)", panUsername)
+				}
+			}
+
+			// Enforce master_key fields only on create or on a false→true transition.
+			// The API does not return master_key_expiry, so a post-import state of
+			// master_key_enabled=true with empty master_key_expiry is legitimate.
+			isCreate := d.Id() == ""
+			isEnabling := d.HasChange("master_key_enabled") && d.Get("master_key_enabled").(bool)
+			if (isCreate || isEnabling) && d.Get("master_key_enabled").(bool) {
+				if d.Get("master_key").(string) == "" {
+					return fmt.Errorf("master_key is required when master_key_enabled is true")
+				}
+				if d.Get("master_key_expiry").(string) == "" {
+					return fmt.Errorf("master_key_expiry is required when master_key_enabled is true")
+				}
+			}
+
+			// setPanInstances matches by (id, name) to carry bootstrap-only auth_*
+			// from prior state. Duplicate non-empty names corrupt that match;
+			// empty names are only blocked on create (legacy state may have them).
+			if rawInstances, ok := d.Get("instance").([]interface{}); ok && len(rawInstances) > 1 {
+				seen := make(map[string]int, len(rawInstances))
+				for i, raw := range rawInstances {
+					cfg, _ := raw.(map[string]interface{})
+					name, _ := cfg["name"].(string)
+					if name == "" {
+						if isCreate {
+							return fmt.Errorf("instance[%d].name must be set when more than one instance is declared", i)
+						}
+						continue
+					}
+					if prev, dup := seen[name]; dup {
+						return fmt.Errorf("instance[%d].name %q duplicates instance[%d].name", i, name, prev)
+					}
+					seen[name] = i
+				}
 			}
 
 			return nil
@@ -85,17 +133,21 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			"pan_username": {
-				Description: "PAN Panorama username. For AWS, username should " +
-					"be `admin`. For AZURE, it should be `akadmin`.",
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "PAN Panorama username. For AWS and GCP, username " +
+					"must be `admin`. For Azure, it must be `akadmin`. The " +
+					"per-CXP rule is enforced at plan time via `CustomizeDiff`.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"admin", "akadmin"}, false),
 			},
 			"pan_license_key": {
 				Description: "PAN Licensing API Key.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 			},
 			"pan_credential_id": {
 				Description: "ID of PAN credential.",
@@ -190,14 +242,16 @@ func resourceAlkiraServicePan() *schema.Resource {
 								"**IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. " +
 								"Auth keys generated using the Panorama web interface are NOT supported " +
 								"by Alkira and may cause provisioning to fail.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"auth_code": {
 							Description: "PAN instance auth code. Only required " +
 								"when `license_type` is `BRING_YOUR_OWN`.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"auth_expiry": {
 							Description: "PAN Auth Expiry. The date should be in " +
@@ -304,9 +358,12 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Required:    true,
 			},
 			"master_key": {
-				Description: "Master Key for PAN instances.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "Master Key for PAN instances. Consumed at " +
+					"instance bootstrap only; see resource overview for " +
+					"credential update semantics.",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"master_key_enabled": {
 				Description: "Enable Master Key for PAN instances or not. " +
@@ -341,11 +398,13 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "PAN Registration PIN ID.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			"registration_pin_value": {
 				Description: "PAN Registration PIN Value.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			"registration_pin_expiry": {
 				Description: "PAN Registration PIN Expiry. The date " +
@@ -567,28 +626,60 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	var diags diag.Diagnostics
+
+	// Warn on bootstrap-only credential changes — backend has no rotation flow.
+	bootstrapOnly := []string{
+		"master_key", "master_key_expiry",
+		"registration_pin_id", "registration_pin_value", "registration_pin_expiry",
+	}
+	for _, f := range bootstrapOnly {
+		if d.HasChange(f) {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "PAN credential field is bootstrap-only",
+				Detail: fmt.Sprintf("Change to %q will be saved to Terraform state but "+
+					"the Alkira backend does not push credential updates to "+
+					"already-provisioned PAN devices. To rotate, destroy and "+
+					"recreate the resource. See the resource docs for details.", f),
+			})
+			break
+		}
+	}
+	if d.HasChange("instance") {
+		oldI, newI := d.GetChange("instance")
+		if panInstanceAuthFieldsChanged(oldI, newI) {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "PAN instance auth fields are bootstrap-only",
+				Detail: "Changes to instance auth_key, auth_code, or auth_expiry " +
+					"are saved to Terraform state but are not propagated to " +
+					"already-provisioned PAN VMs. They take effect only at " +
+					"initial bootstrap. To rotate, destroy and recreate the resource.",
+			})
+		}
+	}
+
 	// Update all credentials
 	err := updateCredentials(d, client)
 	if err != nil {
-		return diag.FromErr(err)
+		return append(diags, diag.FromErr(err)...)
 	}
 
 	// Construct request
 	request, err := generateServicePanRequest(d, m)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return append(diags, diag.FromErr(err)...)
 	}
 
 	// UPDATE
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return append(diags, diag.FromErr(err)...)
 	}
 	if client.Validate && valErr != nil {
-
-		var diags diag.Diagnostics
 		readDiags := resourceServicePanRead(ctx, d, m)
 		if readDiags.HasError() {
 			diags = append(diags, readDiags...)
@@ -608,15 +699,15 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 		d.Set("provision_state", provState)
 
 		if provState == "FAILED" {
-			return diag.Diagnostics{{
+			return append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
-			}}
+			})
 		}
 	}
 
-	return resourceServicePanRead(ctx, d, m)
+	return append(diags, resourceServicePanRead(ctx, d, m)...)
 }
 
 func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

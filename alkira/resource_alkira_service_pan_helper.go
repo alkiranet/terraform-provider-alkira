@@ -15,6 +15,39 @@ import (
 // 	Groups  interface{}
 // }
 
+// panInstanceAuthFieldsChanged compares auth_key/auth_code/auth_expiry across
+// instance lists by index. TypeList preserves ordering.
+func panInstanceAuthFieldsChanged(oldI, newI interface{}) bool {
+	oldList, _ := oldI.([]interface{})
+	newList, _ := newI.([]interface{})
+	maxLen := len(oldList)
+	if len(newList) > maxLen {
+		maxLen = len(newList)
+	}
+	for i := 0; i < maxLen; i++ {
+		var o, n map[string]interface{}
+		if i < len(oldList) {
+			o, _ = oldList[i].(map[string]interface{})
+		}
+		if i < len(newList) {
+			n, _ = newList[i].(map[string]interface{})
+		}
+		for _, f := range []string{"auth_key", "auth_code", "auth_expiry"} {
+			var ov, nv string
+			if o != nil {
+				ov, _ = o[f].(string)
+			}
+			if n != nil {
+				nv, _ = n[f].(string)
+			}
+			if ov != nv {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Helper functions for PAN credentials
 func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
 	log.Printf("[INFO] Creating PAN Credential")
@@ -31,30 +64,27 @@ func createPanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string
 }
 
 func updatePanCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
-	log.Printf("[INFO] Updating PAN Credential")
-
-	if d.HasChanges("pan_username", "pan_password", "pan_license_key") {
-		log.Printf("[INFO] PAN credential has changed")
-
-		if d.Get("pan_credential_id") == nil {
-			return errors.New("pan_credential_id is empty when updating PAN credential")
-		} else {
-			if d.Get("pan_credential_name") == nil || d.Get("pan_credential_name").(string) == "" {
-				return errors.New("pan_credential_name is empty when updating PAN credential")
-			}
-
-			credentialId := d.Get("pan_credential_id").(string)
-			credentialName := d.Get("pan_credential_name").(string)
-			credential := alkira.CredentialPan{
-				Username:   d.Get("pan_username").(string),
-				Password:   d.Get("pan_password").(string),
-				LicenseKey: d.Get("pan_license_key").(string),
-			}
-			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
-		}
+	if !d.HasChanges("pan_username", "pan_password", "pan_license_key") {
+		return nil
 	}
 
-	return nil
+	log.Printf("[INFO] PAN credential has changed")
+
+	credentialId := d.Get("pan_credential_id").(string)
+	if credentialId == "" {
+		return errors.New("pan_credential_id is empty when updating PAN credential")
+	}
+	credentialName := d.Get("pan_credential_name").(string)
+	if credentialName == "" {
+		return errors.New("pan_credential_name is empty when updating PAN credential")
+	}
+
+	credential := alkira.CredentialPan{
+		Username:   d.Get("pan_username").(string),
+		Password:   d.Get("pan_password").(string),
+		LicenseKey: d.Get("pan_license_key").(string),
+	}
+	return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypePan, credential, 0)
 }
 
 // UNUSED: Commented out to suppress linter warnings
@@ -99,28 +129,27 @@ func createPanRegistrationCredential(d *schema.ResourceData, c *alkira.AlkiraCli
 
 // Helper function for PAN Master Key Credential
 func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (string, error) {
-	log.Printf("[INFO] Creating PAN Master Key Credential %v", d.Get("master_key_expiry").(string))
-
 	if !d.Get("master_key_enabled").(bool) {
 		log.Printf("[INFO] PAN master key is not enabled, skip creating credential")
 		return "", nil
 	}
 
-	credentialName := d.Get("name").(string) + randomNameSuffix()
-	credential := alkira.CredentialPanMasterKey{
-		MasterKey: d.Get("master_key").(string),
+	expiry := d.Get("master_key_expiry").(string)
+	log.Printf("[INFO] Creating PAN Master Key Credential %v", expiry)
+
+	if expiry == "" {
+		return "", errors.New("master_key_expiry is required when master_key_enabled is true")
 	}
 
-	credentialExpiry, err := convertInputTimeToEpoch(d.Get("master_key_expiry").(string))
-
+	credentialExpiry, err := convertInputTimeToEpoch(expiry)
 	if err != nil {
 		log.Printf("[ERROR] failed to parse 'master_key_expiry', %v", err)
 		return "", err
 	}
 
-	if credentialExpiry == 0 {
-		log.Printf("[ERROR] argument 'master_key_expiry' is required when master key was enabled.")
-		return "", err
+	credentialName := d.Get("name").(string) + randomNameSuffix()
+	credential := alkira.CredentialPanMasterKey{
+		MasterKey: d.Get("master_key").(string),
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypePanMasterKey, credential, credentialExpiry)
@@ -139,7 +168,7 @@ func createPanMasterKeyCredential(d *schema.ResourceData, c *alkira.AlkiraClient
 // - PAN Master Key Credential
 func createCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
-	// Create PAN credentail
+	// Create PAN credential
 	panCredentialId, err := createPanCredential(d, c)
 	if err != nil {
 		return err
@@ -166,7 +195,7 @@ func createCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
 func updateCredentials(d *schema.ResourceData, c *alkira.AlkiraClient) error {
 
-	// Update PAN credentail
+	// Update PAN credential
 	err := updatePanCredential(d, c)
 	if err != nil {
 		return err
@@ -502,12 +531,23 @@ func setPanInstances(d *schema.ResourceData, c []alkira.ServicePanInstance, m in
 		var authCode string
 		var authExpiry string
 
+		// Match by id when assigned; fall back to non-empty name (uniqueness
+		// guaranteed by CustomizeDiff) for the post-create read.
 		for _, value := range d.Get("instance").([]interface{}) {
 			cfg := value.(map[string]interface{})
-			if cfg["id"].(int) == ins.Id || cfg["name"].(string) == ins.Name {
+			cfgId := cfg["id"].(int)
+			cfgName := cfg["name"].(string)
+			matched := false
+			if cfgId != 0 && cfgId == ins.Id {
+				matched = true
+			} else if cfgId == 0 && cfgName != "" && cfgName == ins.Name {
+				matched = true
+			}
+			if matched {
 				authKey = cfg["auth_key"].(string)
 				authCode = cfg["auth_code"].(string)
 				authExpiry = cfg["auth_expiry"].(string)
+				break
 			}
 		}
 

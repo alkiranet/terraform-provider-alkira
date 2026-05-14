@@ -61,6 +61,106 @@ func TestAlkiraServicePanResourceSchema(t *testing.T) {
 	assert.NotNil(t, resource.DeleteContext, "Resource should have DeleteContext")
 	assert.NotNil(t, resource.Importer, "Resource should support import")
 	assert.NotNil(t, resource.CustomizeDiff, "Resource should have CustomizeDiff")
+
+	// Sensitive flags on credential fields (expiry dates are not secrets).
+	for _, field := range []string{
+		"pan_password",
+		"pan_license_key",
+		"registration_pin_id",
+		"registration_pin_value",
+		"master_key",
+	} {
+		assert.True(t, resource.Schema[field].Sensitive, "%s should be Sensitive", field)
+	}
+
+	instanceElem := resource.Schema["instance"].Elem.(*schema.Resource)
+	for _, field := range []string{"auth_key", "auth_code"} {
+		assert.True(t, instanceElem.Schema[field].Sensitive, "instance.%s should be Sensitive", field)
+	}
+	assert.False(t, instanceElem.Schema["auth_expiry"].Sensitive, "instance.auth_expiry should NOT be Sensitive")
+
+	assert.False(t, panUsernameSchema.Sensitive, "pan_username should NOT be Sensitive")
+	assert.NotNil(t, panUsernameSchema.ValidateFunc, "pan_username should have ValidateFunc")
+}
+
+func TestAlkiraServicePanValidateUsername(t *testing.T) {
+	tests := []ValidationTestCase{
+		{Name: "Valid admin", Input: "admin", ExpectErr: false, ErrCount: 0},
+		{Name: "Valid akadmin", Input: "akadmin", ExpectErr: false, ErrCount: 0},
+		{Name: "Invalid root", Input: "root", ExpectErr: true, ErrCount: 1},
+		{Name: "Invalid empty", Input: "", ExpectErr: true, ErrCount: 1},
+		{Name: "Invalid uppercase", Input: "Admin", ExpectErr: true, ErrCount: 1},
+	}
+
+	resource := resourceAlkiraServicePan()
+	usernameSchema := resource.Schema["pan_username"]
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			_, errors := usernameSchema.ValidateFunc(tt.Input, "pan_username")
+
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors for input %v", tt.ErrCount, tt.Input)
+			} else {
+				assert.Empty(t, errors, "Expected no errors for input %v", tt.Input)
+			}
+		})
+	}
+}
+
+func TestAlkiraServicePanInstanceAuthFieldsChanged(t *testing.T) {
+	tests := []struct {
+		name string
+		old  []interface{}
+		new  []interface{}
+		want bool
+	}{
+		{
+			name: "no change",
+			old: []interface{}{
+				map[string]interface{}{"auth_key": "k1", "auth_code": "c1", "auth_expiry": "2030-01-01"},
+			},
+			new: []interface{}{
+				map[string]interface{}{"auth_key": "k1", "auth_code": "c1", "auth_expiry": "2030-01-01"},
+			},
+			want: false,
+		},
+		{
+			name: "auth_key changed",
+			old: []interface{}{
+				map[string]interface{}{"auth_key": "k1", "auth_code": "c1"},
+			},
+			new: []interface{}{
+				map[string]interface{}{"auth_key": "k2", "auth_code": "c1"},
+			},
+			want: true,
+		},
+		{
+			name: "instance added",
+			old:  []interface{}{},
+			new: []interface{}{
+				map[string]interface{}{"auth_key": "k1"},
+			},
+			want: true,
+		},
+		{
+			name: "non-auth field changed",
+			old: []interface{}{
+				map[string]interface{}{"auth_key": "k1", "auth_code": "c1", "auth_expiry": "2030-01-01"},
+			},
+			new: []interface{}{
+				map[string]interface{}{"auth_key": "k1", "auth_code": "c1", "auth_expiry": "2030-01-01"},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := panInstanceAuthFieldsChanged(tt.old, tt.new)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestAlkiraServicePanValidateBundle(t *testing.T) {
@@ -186,6 +286,125 @@ func TestAlkiraServicePanSetPanInstances(t *testing.T) {
 	assert.Equal(t, "pan-instance-2", result[1]["name"])
 	assert.Equal(t, 2, result[1]["id"])
 	assert.Equal(t, "cred-2", result[1]["credential_id"])
+}
+
+// Auth_* are not returned by the API; setPanInstances must source them
+// from prior state via (id, name) matching.
+func TestAlkiraServicePanSetPanInstancesPreservesAuthFields(t *testing.T) {
+	r := resourceAlkiraServicePan()
+	mockClient := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	t.Run("post-create matches by name when cfg id is 0", func(t *testing.T) {
+		d := r.TestResourceData()
+		d.Set("instance", []interface{}{
+			map[string]interface{}{
+				"name":        "pan-instance-1",
+				"id":          0,
+				"auth_key":    "key-1",
+				"auth_code":   "code-1",
+				"auth_expiry": "2030-01-01",
+			},
+			map[string]interface{}{
+				"name":        "pan-instance-2",
+				"id":          0,
+				"auth_key":    "key-2",
+				"auth_code":   "code-2",
+				"auth_expiry": "2030-02-02",
+			},
+		})
+
+		api := []alkira.ServicePanInstance{
+			{Id: 101, Name: "pan-instance-1", CredentialId: "cred-1"},
+			{Id: 102, Name: "pan-instance-2", CredentialId: "cred-2"},
+		}
+
+		result := setPanInstances(d, api, mockClient)
+		require.Len(t, result, 2)
+		assert.Equal(t, "key-1", result[0]["auth_key"])
+		assert.Equal(t, "code-1", result[0]["auth_code"])
+		assert.Equal(t, "2030-01-01", result[0]["auth_expiry"])
+		assert.Equal(t, "key-2", result[1]["auth_key"])
+		assert.Equal(t, "code-2", result[1]["auth_code"])
+		assert.Equal(t, "2030-02-02", result[1]["auth_expiry"])
+	})
+
+	t.Run("post-refresh matches by id", func(t *testing.T) {
+		d := r.TestResourceData()
+		d.Set("instance", []interface{}{
+			map[string]interface{}{
+				"name":     "pan-instance-1",
+				"id":       101,
+				"auth_key": "key-1",
+			},
+		})
+
+		api := []alkira.ServicePanInstance{
+			{Id: 101, Name: "pan-instance-1", CredentialId: "cred-1"},
+		}
+
+		result := setPanInstances(d, api, mockClient)
+		require.Len(t, result, 1)
+		assert.Equal(t, "key-1", result[0]["auth_key"])
+	})
+
+	t.Run("no prior state yields empty auth fields", func(t *testing.T) {
+		d := r.TestResourceData()
+		api := []alkira.ServicePanInstance{
+			{Id: 101, Name: "pan-instance-1", CredentialId: "cred-1"},
+		}
+
+		result := setPanInstances(d, api, mockClient)
+		require.Len(t, result, 1)
+		assert.Equal(t, "", result[0]["auth_key"])
+	})
+}
+
+func TestAlkiraServicePanCreatePanMasterKeyCredential(t *testing.T) {
+	r := resourceAlkiraServicePan()
+
+	t.Run("disabled short-circuits without backend call", func(t *testing.T) {
+		client := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+			t.Errorf("unexpected backend call when master_key_enabled is false")
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		d := r.TestResourceData()
+		d.Set("master_key_enabled", false)
+
+		id, err := createPanMasterKeyCredential(d, client)
+		require.NoError(t, err)
+		assert.Empty(t, id, "credential ID should be empty when disabled")
+	})
+
+	t.Run("empty expiry rejected with clear error", func(t *testing.T) {
+		client := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+			t.Errorf("unexpected backend call when master_key_expiry is empty")
+		})
+		d := r.TestResourceData()
+		d.Set("name", "test-pan")
+		d.Set("master_key_enabled", true)
+		d.Set("master_key", "abcdef0123456789")
+		d.Set("master_key_expiry", "")
+
+		id, err := createPanMasterKeyCredential(d, client)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "master_key_expiry is required")
+		assert.Empty(t, id)
+	})
+}
+
+func TestAlkiraServicePanUpdatePanCredential(t *testing.T) {
+	r := resourceAlkiraServicePan()
+
+	t.Run("no change is a no-op", func(t *testing.T) {
+		client := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
+			t.Errorf("unexpected backend call when no credentials changed")
+		})
+		d := r.TestResourceData()
+		err := updatePanCredential(d, client)
+		assert.NoError(t, err)
+	})
 }
 
 func TestAlkiraServicePanCreatePanCredential(t *testing.T) {
