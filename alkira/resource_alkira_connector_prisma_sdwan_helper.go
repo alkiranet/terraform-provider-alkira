@@ -75,16 +75,16 @@ func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 }
 
 // expandPrismaSDWANVrfMappings expand Prisma SD-WAN VRF segment mapping
-func expandPrismaSDWANVrfMappings(in *schema.Set) []alkira.ConnectorPrismaSDWANVrfMapping {
+func expandPrismaSDWANVrfMappings(in *schema.Set) []alkira.ConnectorPrismaSDWANVRFMapping {
 
 	if in == nil || in.Len() == 0 {
 		log.Printf("[DEBUG] Empty target_segment")
-		return []alkira.ConnectorPrismaSDWANVrfMapping{}
+		return []alkira.ConnectorPrismaSDWANVRFMapping{}
 	}
 
-	mappings := make([]alkira.ConnectorPrismaSDWANVrfMapping, in.Len())
+	mappings := make([]alkira.ConnectorPrismaSDWANVRFMapping, in.Len())
 	for i, mapping := range in.List() {
-		r := alkira.ConnectorPrismaSDWANVrfMapping{}
+		r := alkira.ConnectorPrismaSDWANVRFMapping{}
 		t := mapping.(map[string]interface{})
 
 		if v, ok := t["advertise_on_prem_routes"].(bool); ok {
