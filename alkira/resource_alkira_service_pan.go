@@ -48,6 +48,23 @@ func resourceAlkiraServicePan() *schema.Resource {
 					"Current values: min_instance_count=%d, max_instance_count=%d", minCount, maxCount)
 			}
 
+			panoramaEnabled := d.Get("panorama_enabled").(bool)
+			scmEnabled := d.Get("scm_enabled").(bool)
+			routingType := d.Get("routing_type").(string)
+
+			if panoramaEnabled && scmEnabled {
+				return fmt.Errorf("[ERROR] panorama_enabled and scm_enabled are mutually exclusive")
+			}
+			if routingType == "advanced" && !scmEnabled {
+				return fmt.Errorf("[ERROR] routing_type=\"advanced\" requires scm_enabled=true")
+			}
+			if scmEnabled && routingType != "advanced" {
+				return fmt.Errorf("[ERROR] scm_enabled=true requires routing_type=\"advanced\"")
+			}
+			if !scmEnabled && d.Get("scm_folder").(string) != "" {
+				return fmt.Errorf("[ERROR] scm_folder requires scm_enabled=true")
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -297,6 +314,39 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Description: "Panorama Template or Panorama Template Stack.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			"scm_enabled": {
+				Description: "Enable Strata Cloud Manager (SCM) as the management " +
+					"plane. Mutually exclusive with `panorama_enabled`. When set, " +
+					"`license_type` must be `BRING_YOUR_OWN`, `routing_type` must " +
+					"be `advanced`, and PAN-OS `version` must be `10.2.3` or later. " +
+					"Immutable once the service is provisioned.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"scm_folder": {
+				Description: "SCM folder path for this firewall (e.g. " +
+					"`prod` or `prod/edge/site-a`). 1-4 segments separated " +
+					"by `/`; each segment may contain alphanumeric, hyphen, " +
+					"underscore, period, and space. Max total length 64. Only " +
+					"valid when `scm_enabled = true`. Immutable once the " +
+					"service is provisioned.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"routing_type": {
+				Description: "Routing type for the PAN firewall. Set to " +
+					"`advanced` to enable PAN-OS Advanced Routing (AR). " +
+					"Requires `scm_enabled = true`. Leave unset (or empty) " +
+					"for legacy Virtual Router. Immutable once the service " +
+					"is provisioned.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"", "advanced"}, false),
 			},
 			"management_segment_id": {
 				Description: "Management Segment ID.",
@@ -551,6 +601,14 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	if pan.PanoramaTemplate != nil {
 		d.Set("panorama_template", pan.PanoramaTemplate)
+	}
+
+	d.Set("scm_enabled", pan.ScmEnabled)
+	if pan.ScmFolder != nil {
+		d.Set("scm_folder", pan.ScmFolder)
+	}
+	if pan.RoutingType != nil {
+		d.Set("routing_type", pan.RoutingType)
 	}
 
 	// Set provision state
