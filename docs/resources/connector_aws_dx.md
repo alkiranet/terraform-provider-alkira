@@ -22,6 +22,9 @@ resource "alkira_connector_aws_dx" "test" {
   group           = alkira_group.example.name
   billing_tag_ids = [alkira_billing_tag.example.id]
 
+  # Required only when using tunnel scale options
+  # Supply /26 prefixes provided by Alkira.
+  loopback_prefixes = ["10.30.0.0/26"]
 
   instance {
     name          = "instance1"
@@ -74,6 +77,7 @@ resource "alkira_connector_aws_dx" "test" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `loopback_prefixes` (Set of String) A list of `/26` prefixes provided by Alkira and used to allocate loopback IPs across DX instances. Required only when using tunnel scale options. Without tunnel scale options, each instance accepts the required loopbacks correctly. Eg: `["10.30.0.0/26"]`
 - `scale_group_id` (String) The ID of the scale group associated with the connector.
 
 ### Read-Only
