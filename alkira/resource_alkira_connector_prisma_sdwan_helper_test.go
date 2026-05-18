@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -244,7 +245,7 @@ func TestSetPrismaSDWANInstances_MatchByHostName(t *testing.T) {
 			{
 				CredentialId: "cred-abc",
 				HostName:     "prisma-ion-1",
-				Id:           42,
+				Id:           json.Number("42"),
 				IonModel:     "ion-3102v",
 				Version:      "6.4.1",
 			},
@@ -287,7 +288,7 @@ func TestSetPrismaSDWANInstances_MatchById(t *testing.T) {
 			{
 				CredentialId: "cred-abc-updated",
 				HostName:     "prisma-ion-1-renamed",
-				Id:           42,
+				Id:           json.Number("42"),
 				IonModel:     "ion-3102v",
 				Version:      "6.5.0",
 			},
@@ -330,14 +331,14 @@ func TestSetPrismaSDWANInstances_NewInstanceFromAPI(t *testing.T) {
 			{
 				CredentialId: "cred-1",
 				HostName:     "prisma-ion-1",
-				Id:           10,
+				Id:           json.Number("10"),
 				IonModel:     "ion-3102v",
 				Version:      "6.4.1",
 			},
 			{
 				CredentialId: "cred-2",
 				HostName:     "prisma-ion-new",
-				Id:           20,
+				Id:           json.Number("20"),
 				IonModel:     "ion-3104v",
 				Version:      "6.5.0",
 			},

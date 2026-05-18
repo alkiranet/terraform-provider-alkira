@@ -62,10 +62,10 @@ func (ac *AlkiraClient) GetTenantNetworkId() (string, error) {
 	}
 
 	var result []TenantNetworkId
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return "", fmt.Errorf("GetTenantNetworkId: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("GetTenantNetworkId: failed to unmarshal: %w", err)
 	}
 
 	return strconv.Itoa(result[0].Id), nil
@@ -82,10 +82,10 @@ func (ac *AlkiraClient) GetTenantNetworkState() (string, error) {
 	}
 
 	var result TenantNetworkState
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return "", fmt.Errorf("GetTenantNetworkState: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("GetTenantNetworkState: failed to unmarshal: %w", err)
 	}
 
 	return result.State, nil
@@ -102,10 +102,10 @@ func (ac *AlkiraClient) GetTenantNetworkConnectorState(id string) (string, error
 	}
 
 	var result TenantNetworkConnectorState
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return "", fmt.Errorf("GetTenantNetworkConnectorState: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("GetTenantNetworkConnectorState: failed to unmarshal: %w", err)
 	}
 
 	return result.State, nil
@@ -122,10 +122,10 @@ func (ac *AlkiraClient) GetTenantNetworkServiceState(id string) (string, error) 
 	}
 
 	var result TenantNetworkServiceState
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return "", fmt.Errorf("GetTenantNetworkConnectorState: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("GetTenantNetworkConnectorState: failed to unmarshal: %w", err)
 	}
 
 	return result.State, nil
@@ -142,10 +142,10 @@ func (ac *AlkiraClient) GetTenantNetworkProvisionRequest(id string) (*TenantNetw
 	}
 
 	var result TenantNetworkProvisionRequest
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return nil, fmt.Errorf("GetTenantNetworkProvisionRequest: failed to unmarshal: %v", err)
+		return nil, fmt.Errorf("GetTenantNetworkProvisionRequest: failed to unmarshal: %w", err)
 	}
 
 	return &result, nil
@@ -162,10 +162,10 @@ func (ac *AlkiraClient) ProvisionTenantNetwork() (string, error) {
 	}
 
 	var result TenantNetworkState
-	err = json.Unmarshal([]byte(data), &result)
+	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		return "", fmt.Errorf("ProvisionTenantNetwork: failed to unmarshal: %v", err)
+		return "", fmt.Errorf("ProvisionTenantNetwork: failed to unmarshal: %w", err)
 	}
 
 	return result.State, nil

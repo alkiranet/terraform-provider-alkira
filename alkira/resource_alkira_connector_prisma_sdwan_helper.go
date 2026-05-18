@@ -1,6 +1,8 @@
 package alkira
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -23,7 +25,8 @@ func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 		config := inst.(map[string]interface{})
 
 		for _, info := range connector.Instances {
-			if config["id"].(int) == info.Id || config["host_name"].(string) == info.HostName {
+			id, _ := info.Id.Int64()
+			if config["id"].(int) == int(id) || config["host_name"].(string) == info.HostName {
 				instance := map[string]interface{}{
 					"credential_id": info.CredentialId,
 					"host_name":     info.HostName,
@@ -49,7 +52,8 @@ func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 		for _, inst := range d.Get("instances").([]interface{}) {
 			config := inst.(map[string]interface{})
 
-			if config["id"].(int) == info.Id || config["host_name"].(string) == info.HostName {
+			id, _ := info.Id.Int64()
+			if config["id"].(int) == int(id) || config["host_name"].(string) == info.HostName {
 				isNew = false
 				break
 			}
@@ -136,7 +140,7 @@ func expandPrismaSDWANInstances(in []interface{}) []alkira.ConnectorPrismaSDWANI
 			r.Version = v
 		}
 		if v, ok := t["id"].(int); ok {
-			r.Id = v
+			r.Id = json.Number(fmt.Sprintf("%d", v))
 		}
 
 		instances[i] = r

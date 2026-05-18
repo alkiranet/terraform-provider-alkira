@@ -183,7 +183,7 @@ func generateNumPrismaSDWANInstances(num int) []alkira.ConnectorPrismaSDWANInsta
 	var instances []alkira.ConnectorPrismaSDWANInstance
 	for i := 1; i <= num; i++ {
 		instances = append(instances, alkira.ConnectorPrismaSDWANInstance{
-			Id:           i,
+			Id:           json.Number(strconv.Itoa(i)),
 			CredentialId: "credentialId" + strconv.Itoa(i),
 			HostName:     "hostName" + strconv.Itoa(i),
 			IonModel:     "ion-3102v",
