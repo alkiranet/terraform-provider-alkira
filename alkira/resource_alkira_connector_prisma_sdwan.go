@@ -16,7 +16,7 @@ func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
 		Description:   "Manage Prisma SD-WAN Connector.",
 		CreateContext: resourceConnectorPrismaSDWANCreate,
 		ReadContext:   resourceConnectorPrismaSDWANRead,
-		UpdateContext: warnOnFailedStateUpdate(resourceConnectorPrismaSDWANUpdate),
+		UpdateContext: resourceConnectorPrismaSDWANUpdate,
 		DeleteContext: resourceConnectorPrismaSDWANDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -94,9 +94,8 @@ func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
 				Default:     true,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with " +
-					"the connector. Can only be set at create time and " +
-					"cannot be changed after provisioning.",
+				Description: "The ID of the scale group associated " +
+					"with the connector.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
