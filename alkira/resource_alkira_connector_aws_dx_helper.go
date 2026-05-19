@@ -147,16 +147,17 @@ func generateAwsDirectConnectRequest(d *schema.ResourceData, m interface{}) (*al
 
 	// Assemble request
 	connector := &alkira.ConnectorAwsDirectConnect{
-		Name:           d.Get("name").(string),
-		Description:    d.Get("description").(string),
-		Cxp:            d.Get("cxp").(string),
-		Enabled:        d.Get("enabled").(bool),
-		Group:          d.Get("group").(string),
-		TunnelProtocol: d.Get("tunnel_protocol").(string),
-		BillingTags:    convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
-		ScaleGroupId:   d.Get("scale_group_id").(string),
-		Size:           d.Get("size").(string),
-		Instances:      instances,
+		Name:             d.Get("name").(string),
+		Description:      d.Get("description").(string),
+		Cxp:              d.Get("cxp").(string),
+		Enabled:          d.Get("enabled").(bool),
+		Group:            d.Get("group").(string),
+		TunnelProtocol:   d.Get("tunnel_protocol").(string),
+		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
+		ScaleGroupId:     d.Get("scale_group_id").(string),
+		Size:             d.Get("size").(string),
+		LoopbackPrefixes: convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set)),
+		Instances:        instances,
 	}
 
 	return connector, nil
