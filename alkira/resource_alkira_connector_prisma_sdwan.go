@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
@@ -74,16 +75,17 @@ func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, or `5LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"tunnel_protocol": {
-				Description: "The tunnel protocol. It could be either `IPSEC`" +
+				Description: "The tunnel protocol. It could be either `IPSEC` " +
 					"or `GRE`. Default value is `IPSEC`.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "IPSEC",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "IPSEC",
+				ValidateFunc: validation.StringInSlice([]string{"IPSEC", "GRE"}, false),
 			},
 			"enabled": {
 				Description: "Is the connector enabled. Default is `true`.",

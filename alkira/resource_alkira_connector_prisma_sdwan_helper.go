@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// setPrismaSDWANInstances set instances block values, preserving
-// write-only fields from existing state since the API may not return them.
+// setPrismaSDWANInstances sets the instances block, merging API response
+// data with existing Terraform state to preserve block ordering.
 func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.ConnectorPrismaSDWAN) {
 	var instances []map[string]interface{}
 
@@ -30,7 +30,7 @@ func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 				instance := map[string]interface{}{
 					"credential_id": info.CredentialId,
 					"host_name":     info.HostName,
-					"id":            info.Id,
+					"id":            int(id),
 					"ion_model":     info.IonModel,
 					"version":       info.Version,
 				}
@@ -62,16 +62,16 @@ func setPrismaSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 		// If the instance is new, add it to the tail of the list,
 		// this will generate a diff
 		if isNew {
+			id, _ := info.Id.Int64()
 			instance := map[string]interface{}{
 				"credential_id": info.CredentialId,
 				"host_name":     info.HostName,
-				"id":            info.Id,
+				"id":            int(id),
 				"ion_model":     info.IonModel,
 				"version":       info.Version,
 			}
 
 			instances = append(instances, instance)
-			break
 		}
 	}
 
