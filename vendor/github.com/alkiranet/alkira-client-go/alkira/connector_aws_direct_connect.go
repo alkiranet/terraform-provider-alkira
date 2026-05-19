@@ -51,7 +51,7 @@ type ConnectorAwsDirectConnect struct {
 	Size             string                              `json:"size"`
 	ScaleGroupId     string                              `json:"scaleGroupId,omitempty"`
 	TunnelProtocol   string                              `json:"tunnelProtocol"`
-	LoopbackPrefixes []string                            `json:"loopbackPrefixes,omitempty"`
+	LoopbackPrefixes []string                            `json:"loopbackPrefixes"`
 	Instances        []ConnectorAwsDirectConnectInstance `json:"instances"`
 }
 
