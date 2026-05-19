@@ -40,6 +40,7 @@ const (
 	CredentialTypeApiKey                     CredentialType = "api-key"
 	CredentialTypeBluecatBDDSInstanceLicense CredentialType = "bluecat-bdds-instance-license"
 	CredentialTypeBluecatEdgeInstance        CredentialType = "bluecat-edge-instance"
+	CredentialTypePrismaSDWANInstance        CredentialType = "prisma-sdwan-connector-instance"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -133,6 +134,11 @@ type CredentialFortinetSdwanInstance struct {
 	LicenseKey  string `json:"licenseKey"`
 	Password    string `json:"password"`
 	Username    string `json:"userName"`
+}
+
+type CredentialPrismaSDWANInstance struct {
+	IonToken  string `json:"ionToken"`
+	IonSecret string `json:"ionSecret"`
 }
 
 type CredentialInfoblox struct {
