@@ -227,3 +227,67 @@ func TestAwsDirectConnectInstanceStateHandling(t *testing.T) {
 		assert.Equal(t, 200, instance2["id"])
 	})
 }
+
+func TestAwsDirectConnectLoopbackPrefixes(t *testing.T) {
+	t.Run("schema has loopback_prefixes as optional set of strings", func(t *testing.T) {
+		resourceSchema := resourceAlkiraConnectorAwsDx().Schema
+
+		field, exists := resourceSchema["loopback_prefixes"]
+		require.True(t, exists, "Schema must have 'loopback_prefixes' field")
+		require.NotNil(t, field)
+
+		assert.Equal(t, schema.TypeSet, field.Type, "loopback_prefixes should be a Set")
+		assert.True(t, field.Optional, "loopback_prefixes should be Optional")
+		assert.False(t, field.Required, "loopback_prefixes should not be Required")
+
+		elem, ok := field.Elem.(*schema.Schema)
+		require.True(t, ok, "loopback_prefixes Elem should be *schema.Schema")
+		assert.Equal(t, schema.TypeString, elem.Type, "loopback_prefixes elements should be String")
+	})
+
+	t.Run("loopback_prefixes state round-trip preserves all values", func(t *testing.T) {
+		resourceSchema := resourceAlkiraConnectorAwsDx().Schema
+		d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+			"name":              "test-connector",
+			"cxp":               "US-WEST",
+			"size":              "SMALL",
+			"tunnel_protocol":   "GRE",
+			"loopback_prefixes": []interface{}{"10.30.0.0/24", "10.31.0.0/24"},
+		})
+
+		got := convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set))
+		assert.ElementsMatch(t, []string{"10.30.0.0/24", "10.31.0.0/24"}, got)
+	})
+
+	t.Run("loopback_prefixes is empty when not set", func(t *testing.T) {
+		resourceSchema := resourceAlkiraConnectorAwsDx().Schema
+		d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+			"name":            "test-connector",
+			"cxp":             "US-WEST",
+			"size":            "SMALL",
+			"tunnel_protocol": "GRE",
+		})
+
+		got := convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set))
+		assert.Empty(t, got, "Unset loopback_prefixes should yield an empty list")
+	})
+
+	t.Run("d.Set with []string populates loopback_prefixes (import path)", func(t *testing.T) {
+		// Simulates what resourceConnectorAwsDxRead does during import:
+		// d.Set("loopback_prefixes", connector.LoopbackPrefixes) where
+		// LoopbackPrefixes is []string from the API client.
+		resourceSchema := resourceAlkiraConnectorAwsDx().Schema
+		d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+			"name":            "test-connector",
+			"cxp":             "US-WEST",
+			"size":            "SMALL",
+			"tunnel_protocol": "GRE",
+		})
+
+		apiResponse := []string{"10.30.0.0/24", "10.31.0.0/24"}
+		require.NoError(t, d.Set("loopback_prefixes", apiResponse))
+
+		got := convertTypeSetToStringList(d.Get("loopback_prefixes").(*schema.Set))
+		assert.ElementsMatch(t, apiResponse, got)
+	})
+}
