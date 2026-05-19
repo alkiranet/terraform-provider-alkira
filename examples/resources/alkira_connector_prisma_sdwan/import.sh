@@ -1,0 +1,1 @@
+terraform import alkira_connector_prisma_sdwan.example CONNECTOR_ID
