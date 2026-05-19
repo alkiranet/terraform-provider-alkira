@@ -40,18 +40,19 @@ type ConnectorAwsDirectConnectInstance struct {
 }
 
 type ConnectorAwsDirectConnect struct {
-	Id              json.Number                         `json:"id,omitempty"` // response only
-	Name            string                              `json:"name"`
-	Description     string                              `json:"description,omitempty"`
-	BillingTags     []int                               `json:"billingTags"`
-	Cxp             string                              `json:"cxp"`
-	Enabled         bool                                `json:"enabled"`
-	Group           string                              `json:"group,omitempty"`
-	ImplicitGroupId int                                 `json:"implicitGroupId,omitempty"` // response only
-	Size            string                              `json:"size"`
-	ScaleGroupId    string                              `json:"scaleGroupId,omitempty"`
-	TunnelProtocol  string                              `json:"tunnelProtocol"`
-	Instances       []ConnectorAwsDirectConnectInstance `json:"instances"`
+	Id               json.Number                         `json:"id,omitempty"` // response only
+	Name             string                              `json:"name"`
+	Description      string                              `json:"description,omitempty"`
+	BillingTags      []int                               `json:"billingTags"`
+	Cxp              string                              `json:"cxp"`
+	Enabled          bool                                `json:"enabled"`
+	Group            string                              `json:"group,omitempty"`
+	ImplicitGroupId  int                                 `json:"implicitGroupId,omitempty"` // response only
+	Size             string                              `json:"size"`
+	ScaleGroupId     string                              `json:"scaleGroupId,omitempty"`
+	TunnelProtocol   string                              `json:"tunnelProtocol"`
+	LoopbackPrefixes []string                            `json:"loopbackPrefixes"`
+	Instances        []ConnectorAwsDirectConnectInstance `json:"instances"`
 }
 
 // NewConnectorAwsDirectConnect new connector-aws-direct-connect

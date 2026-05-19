@@ -96,6 +96,18 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"loopback_prefixes": {
+				Description: "A list of `/26` prefixes provided by " +
+					"Alkira and used to allocate loopback IPs across " +
+					"DX instances. Required only when using tunnel " +
+					"scale options. Without tunnel scale options, " +
+					"each instance accepts the required loopbacks " +
+					"correctly. Eg: " +
+					`["10.30.0.0/26"]`,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"instance": {
 				Description: "AWS DirectConnect (DX) instance.",
 				Type:        schema.TypeList,
@@ -366,6 +378,7 @@ func resourceConnectorAwsDxRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("size", connector.Size)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
+	d.Set("loopback_prefixes", connector.LoopbackPrefixes)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("enabled", connector.Enabled)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
