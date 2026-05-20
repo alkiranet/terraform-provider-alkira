@@ -231,7 +231,7 @@ func TestExpandPrefixListPrefixes(t *testing.T) {
 				map[string]interface{}{"cidr": "10.0.0.0/8"},
 			},
 			expectedPrefixes:   []string{"192.168.1.0/24", "10.0.0.0/8"},
-			expectedDetailsLen: 0,
+			expectedDetailsLen: 2,
 		},
 		{
 			name: "prefixes with descriptions",

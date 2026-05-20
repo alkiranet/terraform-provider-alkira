@@ -88,7 +88,7 @@ func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPref
 			prefixMap := p.(map[string]interface{})
 			prefix := prefixMap["cidr"].(string)
 
-			if desc, ok := prefixMap["description"].(string); ok && desc != "" {
+			if desc, ok := prefixMap["description"].(string); ok {
 				details[prefix] = &alkira.PolicyPrefixListDetails{Description: desc}
 			}
 		}
