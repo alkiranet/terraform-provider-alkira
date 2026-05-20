@@ -1,0 +1,1 @@
+terraform import alkira_credential_prisma_sdwan.example credential-id
