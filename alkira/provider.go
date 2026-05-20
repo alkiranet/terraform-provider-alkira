@@ -103,6 +103,7 @@ func Provider() *schema.Provider {
 			"alkira_credential_azure_vnet":                                       resourceAlkiraCredentialAzureVnet(),
 			"alkira_credential_gcp_vpc":                                          resourceAlkiraCredentialGcpVpc(),
 			"alkira_credential_oci_vcn":                                          resourceAlkiraCredentialOciVcn(),
+			"alkira_credential_prisma_sdwan":                                     resourceAlkiraCredentialPrismaSDWAN(),
 			"alkira_credential_ssh_key_pair":                                     resourceAlkiraCredentialSshKeyPair(),
 			"alkira_service_f5_vserver_endpoint":                                 resourceAlkiraServiceF5vServerEndpoint(),
 			"alkira_flow_collector":                                              resourceAlkiraFlowCollector(),
