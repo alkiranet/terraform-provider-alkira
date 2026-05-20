@@ -75,10 +75,10 @@ resource "alkira_connector_prisma_sdwan" "test1" {
 
 Required:
 
-- `credential_id` (String) The credential ID for the instance.
-- `host_name` (String) The host name of the Prisma SD-WAN instance.
-- `ion_model` (String) The ION model of the Prisma SD-WAN instance. Please check Alkira Portal for all supported models.
-- `version` (String) The version of the Prisma SD-WAN instance. Please check Alkira Portal for all supported versions.
+- `credential_id` (String) The credential ID for the instance. Cannot be changed after provisioning.
+- `host_name` (String) The host name of the Prisma SD-WAN instance. Cannot be changed after provisioning.
+- `ion_model` (String) The ION model of the Prisma SD-WAN instance. Cannot be changed after provisioning. Please check Alkira Portal for all supported models.
+- `version` (String) The version of the Prisma SD-WAN instance. Cannot be changed after provisioning. Please check Alkira Portal for all supported versions.
 
 Read-Only:
 
