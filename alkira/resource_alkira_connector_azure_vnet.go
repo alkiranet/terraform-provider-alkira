@@ -261,9 +261,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 					"when `connection_mode` is `VNET_PEERING`. This field cannot be updated " +
 					"once the connector has been provisioned. The ASN cannot be value that " +
 					"is [restricted by Azure]" +
-					"(https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
+					"(https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp). " +
+					"If omitted, the backend assigns one (the existing Azure VGW's ASN if " +
+					"present, otherwise a default), which the provider reads back into state.",
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with the connector.",
