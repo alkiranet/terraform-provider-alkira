@@ -625,7 +625,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -648,7 +648,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
