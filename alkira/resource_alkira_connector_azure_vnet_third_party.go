@@ -69,6 +69,17 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"scale_group_id": {
+				Description: "The ID of a scale group to place this " +
+					"connector on. A scale group is a set of " +
+					"dedicated CXP nodes used to isolate a connector " +
+					"or distribute many connectors for performance. " +
+					"Typically available only on high-capacity CXPs " +
+					"(10Gb and above). Can only be set at create " +
+					"time and cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"azure_vnet_third_party_connector_attachment_id": {
 				Description: "The ID of the Azure VNET Third Party Connector Attachment.",
 				Type:        schema.TypeInt,
@@ -173,6 +184,7 @@ func resourceConnectorAzureVnetThirdPartyRead(ctx context.Context, d *schema.Res
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("size", connector.Size)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("azure_vnet_third_party_connector_attachment_id", connector.AzureVnetThirdPartyConnectorAttachmentId)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 
@@ -301,6 +313,7 @@ func generateConnectorAzureVnetThirdPartyRequest(d *schema.ResourceData, m inter
 		Group:                                    d.Get("group").(string),
 		Segments:                                 []string{segmentName},
 		Size:                                     d.Get("size").(string),
+		ScaleGroupId:                             d.Get("scale_group_id").(string),
 		AzureVnetThirdPartyConnectorAttachmentId: d.Get("azure_vnet_third_party_connector_attachment_id").(int),
 		BillingTags:                              billingTags,
 		StaticRoutes:                             staticRoutes,
