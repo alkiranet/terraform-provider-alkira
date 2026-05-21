@@ -345,7 +345,7 @@ func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewF5vServerEndpoint(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -368,7 +368,7 @@ func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Check provision state
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

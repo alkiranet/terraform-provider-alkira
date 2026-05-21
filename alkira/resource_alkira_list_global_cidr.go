@@ -208,7 +208,7 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewGlobalCidrList(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -231,7 +231,7 @@ func resourceListGlobalCidrDelete(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId("")
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
