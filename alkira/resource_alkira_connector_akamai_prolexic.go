@@ -369,7 +369,7 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	// clean up the implicit credential afterwards.
 	credentialId := d.Get("credential_id").(string)
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -400,7 +400,7 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
