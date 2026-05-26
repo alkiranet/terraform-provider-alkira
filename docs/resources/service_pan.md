@@ -89,20 +89,6 @@ instead of Panorama. SCM mode requires `license_type = "BRING_YOUR_OWN"`,
 `scm_enabled` is mutually exclusive with `panorama_enabled`.
 
 ```terraform
-#
-# PAN FW service managed via Strata Cloud Manager (SCM) with PAN-OS
-# Advanced Routing (AR).
-#
-# Required when scm_enabled = true:
-#   - license_type    = "BRING_YOUR_OWN"   (PAYG not supported with SCM)
-#   - routing_type    = "advanced"
-#   - version         >= "10.2.3"
-#   - registration_pin_id / registration_pin_value
-#
-# Mutually exclusive: scm_enabled and panorama_enabled cannot both be true.
-# panorama_template / panorama_device_group / panorama_ip_addresses are
-# NOT used in SCM mode.
-#
 resource "alkira_service_pan" "scm_example" {
   name                  = "pan-scm-example"
   cxp                   = "US-WEST"
