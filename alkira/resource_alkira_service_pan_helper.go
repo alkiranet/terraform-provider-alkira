@@ -479,6 +479,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaIpAddresses:         panoramaIpAddresses,
 		PanoramaTemplate:            &panoramaTemplate,
 		RegistrationCredentialId:    d.Get("pan_registration_credential_id").(string),
+		ScmEnabled:                  d.Get("scm_enabled").(bool),
 		SegmentOptions:              segmentOptions,
 		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),
@@ -486,6 +487,15 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		Type:                        d.Get("type").(string),
 		Version:                     d.Get("version").(string),
 		Description:                 d.Get("description").(string),
+	}
+
+	if v, ok := d.GetOk("scm_folder"); ok {
+		s := v.(string)
+		service.ScmFolder = &s
+	}
+	if v, ok := d.GetOk("routing_type"); ok {
+		s := v.(string)
+		service.RoutingType = &s
 	}
 
 	return service, nil
