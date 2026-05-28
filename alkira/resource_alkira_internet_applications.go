@@ -183,16 +183,16 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Description: "The type of the target, one of " +
-								"`IP` or `ILB_NAME`.",
+								"`IP`, `ILB_NAME` or `INTERNAL_DNS`.",
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice(
-								[]string{"IP", "ILB_NAME"}, false),
+								[]string{"IP", "ILB_NAME", "INTERNAL_DNS"}, false),
 						},
 						"value": {
-							Description: "IFA ILB name or private IP.",
+							Description: "IFA ILB name or private IP. Not required when `type` is `INTERNAL_DNS`.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 						},
 						"port_ranges": {
 							Description: "list of ports or port ranges. " +
@@ -202,6 +202,12 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 							Type:     schema.TypeList,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
+						},
+						"policy_fqdn_list_id": {
+							Description: "The ID of the policy FQDN list. " +
+								"Only applicable when `type` is `INTERNAL_DNS`.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -334,9 +340,10 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 	for _, target := range app.Targets {
 		i := map[string]interface{}{
-			"type":        target.Type,
-			"value":       target.Value,
-			"port_ranges": target.PortRanges,
+			"type":                target.Type,
+			"value":               target.Value,
+			"port_ranges":         target.PortRanges,
+			"policy_fqdn_list_id": target.PolicyFqdnListId,
 		}
 		targets = append(targets, i)
 	}
