@@ -7,6 +7,8 @@ resource "alkira_connector_aws_dx" "test" {
   group           = alkira_group.example.name
   billing_tag_ids = [alkira_billing_tag.example.id]
 
+  # Required when scaling DX horizontally with multiple instances.
+  loopback_prefixes = ["10.30.0.0/24"]
 
   instance {
     name          = "instance1"
