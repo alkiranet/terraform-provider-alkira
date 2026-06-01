@@ -27,7 +27,7 @@ This resource needs to work with one of the following connector resources so far
 
 ## Example Usage
 
-This example assumes that `alkira_connector_aws_vpc.test` was created separately.
+This example assumes that `alkira_connector_aws_vpc.test` and `alkira_connector_aws_vpc.test2` were created separately.
 
 ```terraform
 resource "alkira_internet_application" "test" {
@@ -42,6 +42,21 @@ resource "alkira_internet_application" "test" {
     type        = "IP"
     value       = "192.168.1.1"
     port_ranges = ["1200"]
+  }
+}
+
+resource "alkira_internet_application" "test_internal_dns" {
+  name           = "test-ifa-internal-dns"
+  connector_id   = alkira_connector_aws_vpc.test2.id
+  connector_type = "AWS_VPC"
+  fqdn_prefix    = "tfexample-dns"
+  segment_id     = alkira_segment.seg1.id
+  size           = "SMALL"
+
+  target {
+    type                = "INTERNAL_DNS"
+    policy_fqdn_list_id = alkira_list_policy_fqdn.test.id
+    port_ranges         = ["1200"]
   }
 }
 ```
@@ -83,8 +98,12 @@ resource "alkira_internet_application" "test" {
 Required:
 
 - `port_ranges` (List of String) list of ports or port ranges. Values can be mixed i.e. `["20", "100-200"]`. Value ["-1"] means any port.
-- `type` (String) The type of the target, one of `IP` or `ILB_NAME`.
-- `value` (String) IFA ILB name or private IP.
+- `type` (String) The type of the target, one of `IP`, `ILB_NAME` or `INTERNAL_DNS`.
+
+Optional:
+
+- `policy_fqdn_list_id` (Number) The ID of the policy FQDN list. Only applicable when `type` is `INTERNAL_DNS`.
+- `value` (String) IFA ILB name or private IP. Not required when `type` is `INTERNAL_DNS`.
 
 
 <a id="nestedblock--source_nat_ip_pool"></a>
