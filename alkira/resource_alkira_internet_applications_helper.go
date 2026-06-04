@@ -51,6 +51,9 @@ func expandInternetApplicationTargets(in *schema.Set) []alkira.InternetApplicati
 		if v, ok := content["port_ranges"].([]interface{}); ok {
 			r.PortRanges = convertTypeListToStringList(v)
 		}
+		if v, ok := content["policy_fqdn_list_id"].(int); ok {
+			r.PolicyFqdnListId = v
+		}
 		targets[i] = r
 	}
 
