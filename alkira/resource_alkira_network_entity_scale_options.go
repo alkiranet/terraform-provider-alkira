@@ -83,6 +83,30 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
+						"additional_tunnel_options_per_node": {
+							Description: "Additional tunnel options per node configuration.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Description: "The ID of the tunnel option.",
+										Type:        schema.TypeInt,
+										Required:    true,
+									},
+									"label": {
+										Description: "The label for the tunnel option.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"enabled": {
+										Description: "Whether this tunnel is enabled.",
+										Type:        schema.TypeBool,
+										Optional:    true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -117,7 +141,7 @@ func convertEntityIdToInt(entityId string) int {
 
 func resourceNetworkEntityScaleOptionsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
@@ -168,7 +192,7 @@ func resourceNetworkEntityScaleOptionsCreate(ctx context.Context, d *schema.Reso
 
 func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	networkEntityScaleOptions, provState, err := api.GetById(d.Id())
 	if err != nil {
@@ -184,18 +208,28 @@ func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.Resour
 	d.Set("entity_id", strconv.Itoa(networkEntityScaleOptions.EntityId))
 	d.Set("entity_type", networkEntityScaleOptions.EntityType)
 	d.Set("network_entity_id", networkEntityScaleOptions.NetworkEntityId)
-	d.Set("network_entity_sub_type", networkEntityScaleOptions.NetworkEntitySubType)
 	d.Set("network_entity_type", networkEntityScaleOptions.NetworkEntityType)
 	d.Set("doc_state", networkEntityScaleOptions.DocState)
 	d.Set("last_config_updated_at", networkEntityScaleOptions.LastConfigUpdatedAt)
 
 	var segmentScaleOptions []map[string]any
 	for _, sso := range networkEntityScaleOptions.SegmentScaleOptions {
+		// Process additional_tunnel_options_per_node from API response
+		var additionalTunnelOptions []map[string]any
+		for _, tunnelOpt := range sso.AdditionalTunnelOptionsPerNode {
+			additionalTunnelOptions = append(additionalTunnelOptions, map[string]any{
+				"id":      tunnelOpt.Id,
+				"label":   tunnelOpt.Label,
+				"enabled": tunnelOpt.Enabled,
+			})
+		}
+
 		ssoMap := map[string]any{
-			"additional_tunnels_per_node": sso.AdditionalTunnelsPerNode,
-			"additional_nodes":            sso.AdditionalNodes,
-			"segment_id":                  sso.SegmentId,
-			"zone_name":                   sso.ZoneName,
+			"additional_tunnels_per_node":        sso.AdditionalTunnelsPerNode,
+			"additional_nodes":                   sso.AdditionalNodes,
+			"segment_id":                         sso.SegmentId,
+			"zone_name":                          sso.ZoneName,
+			"additional_tunnel_options_per_node": additionalTunnelOptions,
 		}
 		segmentScaleOptions = append(segmentScaleOptions, ssoMap)
 	}
@@ -210,7 +244,7 @@ func resourceNetworkEntityScaleOptionsRead(ctx context.Context, d *schema.Resour
 
 func resourceNetworkEntityScaleOptionsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	request, err := generateNetworkEntityScaleOptionsRequest(d)
 	if err != nil {
@@ -259,11 +293,17 @@ func resourceNetworkEntityScaleOptionsUpdate(ctx context.Context, d *schema.Reso
 
 func resourceNetworkEntityScaleOptionsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	client := m.(*alkira.AlkiraClient)
-	api := alkira.NewControllerScaleOptions(client)
+	api := alkira.NewNetworkEntityScaleOptions(client)
 
 	provState, err, valErr, provErr := api.Delete(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_network_entity_scale_options (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_network_entity_scale_options (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
@@ -288,21 +328,36 @@ func resourceNetworkEntityScaleOptionsDelete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.ControllerScaleOptions, error) {
+func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.NetworkEntityScaleOptions, error) {
 	var segmentScaleOptions []alkira.SegmentScaleOptions
 	if v, ok := d.Get("segment_scale_options").([]any); ok {
 		for _, item := range v {
 			ssoMap := item.(map[string]any)
+
+			// Process additional_tunnel_options_per_node if present
+			var additionalTunnelOptions []alkira.AdditionalTunnelOptionsPerNode
+			if tunnelOpts, ok := ssoMap["additional_tunnel_options_per_node"].([]any); ok {
+				for _, tunnelOpt := range tunnelOpts {
+					tunnelOptMap := tunnelOpt.(map[string]any)
+					additionalTunnelOptions = append(additionalTunnelOptions, alkira.AdditionalTunnelOptionsPerNode{
+						Id:      tunnelOptMap["id"].(int),
+						Label:   tunnelOptMap["label"].(string),
+						Enabled: tunnelOptMap["enabled"].(bool),
+					})
+				}
+			}
+
 			segmentScaleOptions = append(segmentScaleOptions, alkira.SegmentScaleOptions{
-				AdditionalTunnelsPerNode: ssoMap["additional_tunnels_per_node"].(int),
-				AdditionalNodes:          ssoMap["additional_nodes"].(int),
-				SegmentId:                ssoMap["segment_id"].(int),
-				ZoneName:                 ssoMap["zone_name"].(string),
+				AdditionalTunnelsPerNode:       ssoMap["additional_tunnels_per_node"].(int),
+				AdditionalNodes:                ssoMap["additional_nodes"].(int),
+				SegmentId:                      ssoMap["segment_id"].(int),
+				ZoneName:                       ssoMap["zone_name"].(string),
+				AdditionalTunnelOptionsPerNode: additionalTunnelOptions,
 			})
 		}
 	}
 
-	networkEntityScaleOptions := &alkira.ControllerScaleOptions{
+	networkEntityScaleOptions := &alkira.NetworkEntityScaleOptions{
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
 		EntityId:            convertEntityIdToInt(d.Get("entity_id").(string)),

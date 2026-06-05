@@ -15,8 +15,8 @@ resource "alkira_policy_rule" "basic" {
 resource "alkira_policy_rule" "advanced" {
   name                  = "advanced-service-rule"
   description           = "Advanced policy rule with service chaining"
-  src_prefix_list_id    = alkira_list_global_cidr.internal_networks.id
-  dst_prefix_list_id    = alkira_list_global_cidr.dmz_networks.id
+  src_prefix_list_id    = alkira_policy_prefix_list.internal_networks.id
+  dst_prefix_list_id    = alkira_policy_prefix_list.dmz_networks.id
   dscp                  = "any"
   protocol              = "tcp"
   src_ports             = ["any"]

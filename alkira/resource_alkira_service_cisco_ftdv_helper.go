@@ -82,19 +82,19 @@ func expandCiscoFTDvInstances(in []interface{}, m interface{}) ([]alkira.CiscoFT
 	return instances, nil
 }
 
-func expandCiscoFtdvManagementServer(in *schema.Set, m interface{}) (string, []string, alkira.CiscoFTDvManagementServer, error) {
+func expandCiscoFtdvManagementServer(in []interface{}, m interface{}) (string, []string, alkira.CiscoFTDvManagementServer, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	var credentialId string
 	var ipAllowList = []string{}
 	var managementServer = alkira.CiscoFTDvManagementServer{}
 
-	if in == nil || in.Len() != 1 {
+	if in == nil || len(in) != 1 {
 		log.Printf("[DEBUG] Invalid Cisco FTDv Management Server input.")
 		return credentialId, ipAllowList, managementServer, errors.New("ERROR: Invalid Cisco FTDv Management Server input")
 	}
 
-	for _, option := range in.List() {
+	for _, option := range in {
 		cfg := option.(map[string]interface{})
 
 		var username string
@@ -179,17 +179,35 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 	return segmentOptions, nil
 }
 
-func deflateCiscoFTDvManagementServer(service *alkira.ServiceCiscoFTDv) []map[string]interface{} {
+func deflateCiscoFTDvManagementServer(d *schema.ResourceData, service *alkira.ServiceCiscoFTDv, m interface{}) []map[string]interface{} {
 
-	m := make(map[string]interface{})
+	result := make(map[string]interface{})
 
-	m["credential_id"] = service.CredentialId
-	m["ip_allow_list"] = service.IpAllowList
-	m["segment_id"] = service.ManagementServer.SegmentId
-	m["segment_name"] = service.ManagementServer.Segment
-	m["server_ip"] = service.ManagementServer.IPAddress
+	result["credential_id"] = service.CredentialId
+	result["ip_allow_list"] = service.IpAllowList
+	result["server_ip"] = service.ManagementServer.IPAddress
 
-	return []map[string]interface{}{m}
+	// Convert segment name to segment ID for import support
+	if service.ManagementServer.Segment != "" && m != nil {
+		segmentId, err := getSegmentIdByName(service.ManagementServer.Segment, m)
+		if err == nil {
+			result["segment_id"] = segmentId
+		}
+	}
+
+	// API doesn't return username or password. Carry forward from prior state.
+	if d != nil {
+		if existing, ok := d.GetOk("firepower_management_center"); ok {
+			prior := existing.([]interface{})
+			if len(prior) > 0 {
+				p := prior[0].(map[string]interface{})
+				result["username"] = p["username"]
+				result["password"] = p["password"]
+			}
+		}
+	}
+
+	return []map[string]interface{}{result}
 }
 
 // setCiscoFTDvInstances

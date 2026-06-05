@@ -89,6 +89,7 @@ Optional:
 
 - `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
 - `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
+- `scale_group_id` (String) The ID of the scale group associated with the connector.
 
 
 <a id="nestedblock--instances"></a>
@@ -104,6 +105,7 @@ Required:
 
 Read-Only:
 
+- `credential_id` (String) The credential ID for the instance.
 - `id` (Number) The ID of the endpoint.
 
 ## Import

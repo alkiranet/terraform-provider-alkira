@@ -1,0 +1,1 @@
+terraform import alkira_peering_gateway_azure_vnet_third_party_connector_attachment.example 123

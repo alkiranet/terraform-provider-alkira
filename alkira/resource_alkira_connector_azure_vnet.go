@@ -261,9 +261,12 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 					"when `connection_mode` is `VNET_PEERING`. This field cannot be updated " +
 					"once the connector has been provisioned. The ASN cannot be value that " +
 					"is [restricted by Azure]" +
-					"(https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).",
+					"(https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp). " +
+					"If omitted, the backend assigns one (the existing Azure VGW's ASN if " +
+					"present, otherwise a default), which the provider reads back into state.",
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with the connector.",
@@ -468,7 +471,13 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_connector_azure_vnet (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_connector_azure_vnet (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")

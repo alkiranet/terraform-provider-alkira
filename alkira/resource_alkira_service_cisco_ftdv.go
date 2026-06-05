@@ -110,7 +110,8 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 			},
 			"firepower_management_center": {
 				Description: "The Firepower Management Center options.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
+				MaxItems:    1,
 				Required:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -315,16 +316,23 @@ func resourceServiceCiscoFTDvRead(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
+	// Convert segment names to segment IDs
+	segmentIds, err := convertSegmentNamesToSegmentIds(service.Segments, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.Set("auto_scale", service.AutoScale)
 	d.Set("billing_tag_ids", service.BillingTags)
 	d.Set("credential_id", service.CredentialId)
 	d.Set("cxp", service.Cxp)
-	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(service))
+	d.Set("firepower_management_center", deflateCiscoFTDvManagementServer(d, service, m))
 	d.Set("global_cidr_list_id", service.GlobalCidrListId)
 	d.Set("instance", setCiscoFTDvInstances(d, service.Instances))
 	d.Set("max_instance_count", service.MaxInstanceCount)
 	d.Set("min_instance_count", service.MinInstanceCount)
 	d.Set("name", service.Name)
+	d.Set("segment_ids", segmentIds)
 	d.Set("segment_options", deflateSegmentOptions(service.SegmentOptions))
 	d.Set("size", service.Size)
 	d.Set("tunnel_protocol", service.TunnelProtocol)
@@ -402,7 +410,13 @@ func resourceServiceCiscoFTDvDelete(ctx context.Context, d *schema.ResourceData,
 	provState, err, valErr, provErr := api.Delete((d.Id()))
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_service_cisco_ftdv (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_service_cisco_ftdv (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
@@ -450,7 +464,7 @@ func generateServiceCiscoFTDvRequest(d *schema.ResourceData, m interface{}) (*al
 	// credential_id and ip_allow_list is on top level of the service,
 	// but those fields should be part of the management_center.
 	//
-	credentialId, ipAllowList, managementServer, err := expandCiscoFtdvManagementServer(d.Get("firepower_management_center").(*schema.Set), m)
+	credentialId, ipAllowList, managementServer, err := expandCiscoFtdvManagementServer(d.Get("firepower_management_center").([]interface{}), m)
 
 	if err != nil {
 		return nil, err

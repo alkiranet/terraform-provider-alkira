@@ -1,0 +1,1 @@
+terraform import alkira_service_zscaler.example SERVICE_ID

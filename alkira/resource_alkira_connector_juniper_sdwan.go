@@ -102,9 +102,10 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				},
 			},
 			"instance": {
-				Description: "Juniper SSR Connector Instances",
+				Description: "Juniper SSR Connector Instance. Only one instance is supported per connector.",
 				Type:        schema.TypeList,
 				MinItems:    1,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"registration_key": {
@@ -373,7 +374,13 @@ func resourceConnectorJuniperSdwanDelete(ctx context.Context, d *schema.Resource
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_connector_juniper_sdwan (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_connector_juniper_sdwan (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")

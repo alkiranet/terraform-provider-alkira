@@ -509,9 +509,10 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.Set("billing_tag_ids", pan.BillingTagIds)
 	d.Set("bundle", pan.Bundle)
-	d.Set("credential_id", pan.CredentialId)
 	d.Set("cxp", pan.CXP)
-	d.Set("instance", setPanInstances(d, pan.Instances))
+	d.Set("global_protect_enabled", pan.GlobalProtectEnabled)
+	d.Set("global_protect_segment_options", flattenGlobalProtectSegmentOptions(pan.GlobalProtectSegmentOptions, m))
+	d.Set("instance", setPanInstances(d, pan.Instances, m))
 	d.Set("license_type", pan.LicenseType)
 	d.Set("license_sub_type", pan.SubLicenseType)
 	d.Set("management_segment_id", pan.ManagementSegmentId)
@@ -520,6 +521,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("min_instance_count", pan.MinInstanceCount)
 	d.Set("name", pan.Name)
 	d.Set("panorama_enabled", pan.PanoramaEnabled)
+	d.Set("panorama_ip_addresses", pan.PanoramaIpAddresses)
 	d.Set("segment_ids", pan.SegmentIds)
 	d.Set("segment_options", deflateSegmentOptions(pan.SegmentOptions))
 	d.Set("size", pan.Size)
@@ -527,6 +529,11 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 	d.Set("type", pan.Type)
 	d.Set("version", pan.Version)
 	d.Set("description", pan.Description)
+
+	// Set credential IDs (computed fields)
+	d.Set("pan_credential_id", pan.CredentialId)
+	d.Set("pan_registration_credential_id", pan.RegistrationCredentialId)
+	d.Set("pan_master_key_credential_id", pan.MasterKeyCredentialId)
 
 	if pan.PanoramaDeviceGroup != nil {
 		d.Set("panorama_device_group", pan.PanoramaDeviceGroup)
@@ -612,7 +619,13 @@ func resourceServicePanDelete(ctx context.Context, d *schema.ResourceData, m int
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_service_pan (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_service_pan (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")

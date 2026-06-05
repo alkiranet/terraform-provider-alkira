@@ -1,7 +1,6 @@
 package alkira
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -14,12 +13,10 @@ func setPrefixRanges(d *schema.ResourceData, r []alkira.PolicyPrefixListRange) {
 
 	for _, rng := range r {
 		prefixRange := map[string]interface{}{
-			"prefix": rng.Prefix,
-			"le":     rng.Le,
-			"ge":     rng.Ge,
-		}
-		if rng.Description != "" {
-			prefixRange["description"] = rng.Description
+			"prefix":      rng.Prefix,
+			"le":          rng.Le,
+			"ge":          rng.Ge,
+			"description": rng.Description,
 		}
 		set.Add(prefixRange)
 	}
@@ -91,7 +88,7 @@ func buildPrefixDetailsMap(d *schema.ResourceData) map[string]*alkira.PolicyPref
 			prefixMap := p.(map[string]interface{})
 			prefix := prefixMap["cidr"].(string)
 
-			if desc, ok := prefixMap["description"].(string); ok && desc != "" {
+			if desc, ok := prefixMap["description"].(string); ok {
 				details[prefix] = &alkira.PolicyPrefixListDetails{Description: desc}
 			}
 		}
@@ -104,11 +101,13 @@ func setPrefix(d *schema.ResourceData, prefixes []string, details map[string]*al
 	set := schema.NewSet(prefixHash, nil)
 
 	for _, p := range prefixes {
-		prefixEntry := map[string]interface{}{
-			"cidr": p,
+		desc := ""
+		if details[p] != nil {
+			desc = details[p].Description
 		}
-		if details[p] != nil && details[p].Description != "" {
-			prefixEntry["description"] = details[p].Description
+		prefixEntry := map[string]interface{}{
+			"cidr":        p,
+			"description": desc,
 		}
 		set.Add(prefixEntry)
 	}
@@ -125,11 +124,27 @@ func generatePolicyPrefixListRequest(d *schema.ResourceData) (*alkira.PolicyPref
 		return nil, err
 	}
 
-	if d.Get("prefixes").(*schema.Set).Len() > 0 {
-		return nil, fmt.Errorf("ERROR: Please use the new 'prefix' block to replace the old 'prefixes' field")
+	// Deprecated: accept "prefixes" from config for backward compat.
+	// Remove this block when "prefixes" is removed from schema.
+	var prefixes []string
+	var prefixDetailsMap map[string]*alkira.PolicyPrefixListDetails
+
+	usingDeprecated := false
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		rawPrefixes := rawConfig.GetAttr("prefixes")
+		if !rawPrefixes.IsNull() && rawPrefixes.IsKnown() && rawPrefixes.LengthInt() > 0 {
+			usingDeprecated = true
+		}
+	} else if v, ok := d.GetOk("prefixes"); ok && v.(*schema.Set).Len() > 0 {
+		usingDeprecated = true
 	}
 
-	prefixes, prefixDetailsMap := expandPrefixListPrefixes(d)
+	if usingDeprecated {
+		prefixes = convertTypeSetToStringList(d.Get("prefixes").(*schema.Set))
+	} else {
+		prefixes, prefixDetailsMap = expandPrefixListPrefixes(d)
+	}
 
 	list := &alkira.PolicyPrefixList{
 		Description:   d.Get("description").(string),

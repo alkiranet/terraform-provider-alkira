@@ -201,6 +201,11 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with the connector.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -296,6 +301,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("version", connector.Version)
 	d.Set("enabled", connector.Enabled)
 	d.Set("description", connector.Description)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 
 	// Set provision state
 	if client.Provision && provState != "" {
@@ -368,7 +374,13 @@ func resourceConnectorArubaEdgeDelete(ctx context.Context, d *schema.ResourceDat
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_connector_aruba_edge (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_connector_aruba_edge (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
@@ -426,5 +438,6 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 		Version:              d.Get("version").(string),
 		Enabled:              d.Get("enabled").(bool),
 		Description:          d.Get("description").(string),
+		ScaleGroupId:         d.Get("scale_group_id").(string),
 	}, nil
 }

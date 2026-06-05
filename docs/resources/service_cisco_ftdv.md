@@ -135,3 +135,11 @@ Required:
 Optional:
 
 - `groups` (List of String) The list of Groups associated with the zone.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_cisco_ftdv.example SERVICE_ID
+```

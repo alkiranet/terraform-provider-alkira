@@ -13,6 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// boolPtr returns a pointer to the given bool value
+// Helper function for test assertions that require bool pointers
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 // UNUSED: Commented out to suppress linter warnings
 // func assertStrEquals(t *testing.T, str1, str2 string) {
 // 	if str1 != str2 {
@@ -353,6 +359,150 @@ func TestDeflateSegmentOptionsHandlesNilGroups(t *testing.T) {
 			assert.Nil(t, groups)
 		}
 	}
+}
+
+func TestDeflateSegmentOptionsCanBeSetInTerraformState(t *testing.T) {
+	// 1. deflateSegmentOptions returns data with string segment_id
+	// 2. d.Set() successfully stores the data (no type mismatch error)
+	// 3. segment_options is populated in Terraform state (not empty)
+
+	// Create schema matching resource_alkira_service_pan.go
+	resourceSchema := map[string]*schema.Schema{
+		"segment_options": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"segment_id": {
+						Type:     schema.TypeString, // Expects string
+						Required: true,
+					},
+					"zone_name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"groups": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
+				},
+			},
+		},
+	}
+
+	// Create ResourceData (simulates Terraform state)
+	r := &schema.Resource{Schema: resourceSchema}
+	d := r.TestResourceData()
+
+	// Simulate API response (as returned by api.GetById)
+	zonesToGroups := make(alkira.ZoneToGroups)
+	zonesToGroups["trust-zone"] = []string{"group1", "group2"}
+	zonesToGroups["untrust-zone"] = []string{"group3"}
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["Corporate-Segment"] = alkira.OuterZoneToGroups{
+		SegmentId:     1331, // API returns int
+		ZonesToGroups: zonesToGroups,
+	}
+
+	// Call deflateSegmentOptions (with fix: converts int to string)
+	deflatedOptions := deflateSegmentOptions(segmentOptions)
+
+	// Attempt d.Set() - this is where the bug would cause failure
+	err := d.Set("segment_options", deflatedOptions)
+
+	// d.Set() should succeed without error
+	assert.NoError(t, err, "d.Set() should succeed with string segment_id")
+
+	//  Data should be stored in state
+	stored := d.Get("segment_options")
+	require.NotNil(t, stored, "segment_options should be stored in state")
+
+	// Should be a non-empty Set
+	set, ok := stored.(*schema.Set)
+	require.True(t, ok, "segment_options should be a Set")
+	assert.Equal(t, 2, set.Len(), "segment_options should contain 2 zones")
+
+	// Verify zone data is correct
+	foundTrustZone := false
+	foundUntrustZone := false
+
+	for _, item := range set.List() {
+		m, ok := item.(map[string]interface{})
+		require.True(t, ok, "Set item should be a map")
+
+		segmentId := m["segment_id"]
+		zoneName := m["zone_name"]
+		groups := m["groups"]
+
+		// Verify segment_id is string
+		assert.IsType(t, "", segmentId, "segment_id must be string type")
+		assert.Equal(t, "1331", segmentId, "segment_id value should be '1331'")
+
+		// Verify zones
+		switch zoneName {
+		case "trust-zone":
+			foundTrustZone = true
+			assert.Equal(t, []interface{}{"group1", "group2"}, groups)
+		case "untrust-zone":
+			foundUntrustZone = true
+			assert.Equal(t, []interface{}{"group3"}, groups)
+		}
+	}
+
+	assert.True(t, foundTrustZone, "trust-zone should be in segment_options")
+	assert.True(t, foundUntrustZone, "untrust-zone should be in segment_options")
+}
+
+func TestDeflateSegmentOptionsFiltersManagementZone(t *testing.T) {
+	zonesToGroups := make(alkira.ZoneToGroups)
+	zonesToGroups["trust-zone"] = []string{"group1"}
+	zonesToGroups["ALKIRA_MGMT_ZONE"] = []string{}
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["segment1"] = alkira.OuterZoneToGroups{
+		SegmentId:     100,
+		ZonesToGroups: zonesToGroups,
+	}
+
+	result := deflateSegmentOptions(segmentOptions)
+
+	assert.Len(t, result, 1, "ALKIRA_MGMT_ZONE should be filtered out")
+	assert.Equal(t, "trust-zone", result[0]["zone_name"])
+	assert.Equal(t, "100", result[0]["segment_id"])
+}
+
+func TestDeflateSegmentOptionsFiltersManagementZoneMultipleSegments(t *testing.T) {
+	zones1 := make(alkira.ZoneToGroups)
+	zones1["trust-zone"] = []string{"group1"}
+	zones1["ALKIRA_MGMT_ZONE"] = []string{}
+
+	zones2 := make(alkira.ZoneToGroups)
+	zones2["untrust-zone"] = []string{"group2"}
+	zones2["ALKIRA_MGMT_ZONE"] = nil
+
+	segmentOptions := make(alkira.SegmentNameToZone)
+	segmentOptions["seg1"] = alkira.OuterZoneToGroups{
+		SegmentId:     100,
+		ZonesToGroups: zones1,
+	}
+	segmentOptions["seg2"] = alkira.OuterZoneToGroups{
+		SegmentId:     200,
+		ZonesToGroups: zones2,
+	}
+
+	result := deflateSegmentOptions(segmentOptions)
+
+	assert.Len(t, result, 2, "Only non-mgmt zones should remain")
+
+	zoneNames := make(map[string]bool)
+	for _, opt := range result {
+		zoneNames[opt["zone_name"].(string)] = true
+	}
+	assert.True(t, zoneNames["trust-zone"])
+	assert.True(t, zoneNames["untrust-zone"])
+	assert.False(t, zoneNames["ALKIRA_MGMT_ZONE"])
 }
 
 func TestConvertInputTimeToEpoch(t *testing.T) {

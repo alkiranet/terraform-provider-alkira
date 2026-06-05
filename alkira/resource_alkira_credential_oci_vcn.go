@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -105,7 +106,13 @@ func resourceCredentialOciVcnDelete(ctx context.Context, d *schema.ResourceData,
 	err := client.DeleteCredential(d.Id(), alkira.CredentialTypeOciVcn)
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_credential_oci_vcn (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_credential_oci_vcn (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")

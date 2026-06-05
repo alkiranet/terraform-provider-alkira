@@ -10,6 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// f5VServerInstanceMetadataHash computes a stable hash for instance_metadata entries
+// keyed on instance_id, which is the unique identifier per entry. This prevents
+// spurious diffs when the API returns instance metadata in a different order.
+var f5VServerInstanceMetadataHash = typeSetHash(func(m map[string]interface{}) string {
+	return fmt.Sprintf("%v", m["instance_id"])
+})
+
 func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource for managing F5 vServer endpoint. (**BETA**)",
@@ -52,10 +59,10 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			},
 			"type": {
 				Description: "The type of endpoint." +
-					" Only `ELB` is supported for now.",
+					" Can be `ELB` or `ILB`.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ELB"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ELB", "ILB"}, false),
 			},
 			"segment_id": {
 				Description: "ID of the segment associated with" +
@@ -64,9 +71,9 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"fqdn_prefix": {
-				Description: "The FQDN prefix of the endpoint.",
+				Description: "The FQDN prefix of the endpoint. Required when type is `ELB`",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			"protocol": {
 				Description: "The portocol used for the endpoint." +
@@ -78,17 +85,92 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 			"port_ranges": {
 				Description: "An array of ports or port ranges." +
 					" Values can be mixed i.e. ['20', '100-200']." +
-					" An array with only the value '-1' means any port.",
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ELB`",
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snat": {
 				Description: "SNAT for the endpoint." +
-					" Only `AUTOMAP` or `NONE` is supported for now.",
+					" Can be `AUTOMAP` or `NONE`.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AUTOMAP", "NONE"}, false),
+			},
+			"destination_endpoint_port_ranges": {
+				Description: "An array of ports or port ranges." +
+					" Values can be mixed i.e. ['20', '100-200']." +
+					" An array with only the value '-1' means any port." +
+					" Required when type is `ILB` and snat is `NONE`",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"destination_endpoint_ip_addresses": {
+				Description: "An array of ip addresses. Required when type is `ILB` and snat is `NONE`",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"provision_state": {
+				Description: "The provisioning state of the resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"instance_metadata": {
+				Description: "Per-instance metadata populated after provisioning." +
+					"ELB instances populate: elastic_ip, secondary_ip, vlan, route_domain_id, ecmp_pool_name. " +
+					"ILB instances populate: virtual_ip, route_domain_id, ecmp_pool_name. " +
+					"If provisioning occurs out of band (e.g. via the Alkira portal), run " +
+					"`terraform apply -refresh-only` to sync this data into state.",
+				Type:     schema.TypeSet,
+				Set:      f5VServerInstanceMetadataHash,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_id": {
+							Description: "F5 service instance ID.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elastic_ip": {
+							Description: "Elastic IP address assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"secondary_ip": {
+							Description: "Secondary IP address assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"virtual_ip": {
+							Description: "Virtual IP address assigned to the instance. Populated for ILB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"vlan": {
+							Description: "VLAN assigned to the instance. Populated for ELB type only.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"ecmp_pool_name": {
+							Description: "ECMP pool name assigned to the instance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"route_domain_id": {
+							Description: "Route domain ID assigned to the instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+						"segment_id": {
+							Description: "Segment ID associated with the instance.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -173,6 +255,24 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("segment_id", segmentId)
 
+	// Set post-provisioning instance metadata
+	if f5.Metadata != nil && f5.Metadata.InstanceToMetadata != nil {
+		var metadataList []map[string]interface{}
+		for instanceId, m := range f5.Metadata.InstanceToMetadata {
+			metadataList = append(metadataList, map[string]interface{}{
+				"instance_id":     instanceId,
+				"elastic_ip":      m.ElasticIp,
+				"secondary_ip":    m.SecondaryIp,
+				"virtual_ip":      m.VirtualIp,
+				"vlan":            m.Vlan,
+				"ecmp_pool_name":  m.EcmpPoolName,
+				"route_domain_id": int(m.RouteDomainId),
+				"segment_id":      int(m.SegmentId),
+			})
+		}
+		d.Set("instance_metadata", metadataList)
+	}
+
 	// Set provision state
 	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)
@@ -238,7 +338,13 @@ func resourceF5vServerEndpointDelete(ctx context.Context, d *schema.ResourceData
 	provState, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		// Terraform may not print "with <resource address>" for destroys of objects
+		// that are no longer in configuration, so include identifying context here.
+		name, _ := d.GetOk("name")
+		if nameStr, ok := name.(string); ok && nameStr != "" {
+			return diag.FromErr(fmt.Errorf("%w alkira_service_f5_vserver_endpoint (name=%q id=%s)", err, nameStr, d.Id()))
+		}
+		return diag.FromErr(fmt.Errorf("%w alkira_service_f5_vserver_endpoint (id=%s)", err, d.Id()))
 	}
 
 	d.SetId("")
@@ -280,6 +386,21 @@ func generateRequestF5vServerEndpoint(d *schema.ResourceData, m interface{}) (*a
 		Protocol:             d.Get("protocol").(string),
 		PortRanges:           convertTypeSetToStringList(d.Get("port_ranges").(*schema.Set)),
 		Snat:                 d.Get("snat").(string),
+	}
+
+	destinationEndpointPortRanges, ok1 := d.Get("destination_endpoint_port_ranges").(*schema.Set)
+	hasDEPortRanges := ok1 && destinationEndpointPortRanges.Len() > 0
+	destinationEndpointIpAddresses, ok2 := d.Get("destination_endpoint_ip_addresses").(*schema.Set)
+	hasDEIpAddresses := ok2 && destinationEndpointIpAddresses.Len() > 0
+
+	if hasDEPortRanges || hasDEIpAddresses {
+		request.DestinationEndpoints = &alkira.F5VServerDestinationEndpoints{}
+	}
+	if hasDEPortRanges {
+		request.DestinationEndpoints.PortRanges = convertTypeSetToStringList(destinationEndpointPortRanges)
+	}
+	if hasDEIpAddresses {
+		request.DestinationEndpoints.IpAddresses = convertTypeSetToStringList(destinationEndpointIpAddresses)
 	}
 
 	return request, nil

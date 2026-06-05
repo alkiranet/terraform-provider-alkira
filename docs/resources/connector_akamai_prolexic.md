@@ -112,3 +112,5 @@ Required:
 - `akamai_overlay_tunnel_ip` (String) The overlay IP of the GRE tunnel on the Alkira side.
 - `alkira_overlay_tunnel_ip` (String) The overlay IP of the GRE tunnel on the Alkira side.
 - `ran_tunnel_ip` (String) The underlay tunnel IP on the Akamai side to be used to configure tunnels between the Alkira CXP and the Akamai Prolexic service. A RAN (Routed Access Network) is the unit of availability for the Route GRE 3.0 service.
+
+

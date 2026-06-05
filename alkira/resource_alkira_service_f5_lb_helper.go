@@ -3,12 +3,20 @@ package alkira
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// f5LBInstanceMetadataHash computes a stable hash for instance_metadata entries
+// keyed on segment_id, which is the unique identifier per entry. This prevents
+// spurious diffs when the API returns segment metadata in a different order.
+var f5LBInstanceMetadataHash = typeSetHash(func(m map[string]interface{}) string {
+	return fmt.Sprintf("%v", m["segment_id"])
+})
 
 // expandF5Instances converts the input data to a slice of F5Instances structs.
 func expandF5Instances(in []interface{}, m interface{}) ([]alkira.F5Instance, error) {
@@ -143,6 +151,10 @@ func expandF5SegmentOptions(in *schema.Set, m interface{}) (alkira.F5SegmentOpti
 			subOption.ElbBgpOptions = bgpOptions
 		}
 
+		if lbType, ok := cfg["lb_type"]; ok {
+			subOption.LbType = convertTypeSetToStringList(lbType.(*schema.Set))
+		}
+
 		segmentOptions[segmentName] = subOption
 	}
 
@@ -173,6 +185,10 @@ func setF5SegmentOptions(in alkira.F5SegmentOption, m interface{}) ([]map[string
 
 		if subOption.ElbBgpOptions != nil {
 			option["elb_bgp_options_advertise_to_cxp_prefix_list_id"] = subOption.ElbBgpOptions.AdvertiseToCXPPrefixListId
+		}
+
+		if subOption.LbType != nil {
+			option["lb_type"] = subOption.LbType
 		}
 
 		segmentOptions = append(segmentOptions, option)
@@ -211,11 +227,52 @@ func setF5Instances(d *schema.ResourceData, ins []alkira.F5Instance) []map[strin
 			"f5_username":                f5Username,
 			"f5_password":                f5Password,
 			"availability_zone":          in.AvailabilityZone,
+			"instance_metadata":          flattenF5LBInstanceMetadata(in.Metadata),
 		}
 
 		instances = append(instances, instance)
 	}
 	return instances
+}
+
+func flattenF5LBInstanceMetadata(m *alkira.F5LBServiceInstanceMetadata) []map[string]interface{} {
+	if m == nil || m.SegmentToMetadata == nil {
+		return nil
+	}
+	var result []map[string]interface{}
+	for segId, seg := range m.SegmentToMetadata {
+		var tunnels []map[string]interface{}
+		for _, t := range seg.Tunnels {
+			bgpEnabled := false
+			if t.BgpEnabled != nil {
+				bgpEnabled = *t.BgpEnabled
+			}
+			tunnels = append(tunnels, map[string]interface{}{
+				"tunnel_protocol":      t.TunnelProtocol,
+				"tunnel_uuid":          t.TunnelUUID,
+				"tunnel_id":            t.TunnelId,
+				"customer_tunnel_name": t.CustomerTunnelName,
+				"cxp_tunnel_name":      t.CxpTunnelName,
+				"tunnel_internal_name": t.TunnelInternalName,
+				"infra_node_name":      t.InfraNodeName,
+				"customer_outer_ip":    t.CustomerOuterIp,
+				"cxp_outer_ip":         t.CxpOuterIp,
+				"cxp_inner_ip":         t.CxpInnerIp,
+				"customer_inner_ip":    t.CustomerInnerIp,
+				"lb_type":              t.LbType,
+				"bgp_enabled":          bgpEnabled,
+			})
+		}
+		result = append(result, map[string]interface{}{
+			"f5_mgmt_public_ip": seg.F5MgmtPublicIp,
+			"segment_id":        segId,
+			"route_domain_id":   int(seg.RouteDomainId),
+			"routing_type":      seg.RoutingType,
+			"vlans":             seg.Vlans,
+			"tunnels":           tunnels,
+		})
+	}
+	return result
 }
 
 // generateRequestF5Lb generates the request payload for creating an F5 Load Balancer service.
@@ -241,17 +298,18 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 	}
 
 	service := &alkira.ServiceF5Lb{
-		Name:             d.Get("name").(string),
-		Description:      d.Get("description").(string),
-		Cxp:              d.Get("cxp").(string),
-		Size:             d.Get("size").(string),
-		ServiceGroupName: d.Get("service_group_name").(string),
-		Segments:         segmentNames,
-		BillingTags:      billingTagIds,
-		Instances:        instances,
-		SegmentOptions:   segmentOptions,
-		PrefixListId:     d.Get("prefix_list_id").(int),
-		GlobalCidrListId: d.Get("global_cidr_list_id").(int),
+		Name:                d.Get("name").(string),
+		Description:         d.Get("description").(string),
+		Cxp:                 d.Get("cxp").(string),
+		Size:                d.Get("size").(string),
+		ServiceGroupName:    d.Get("service_group_name").(string),
+		IlbServiceGroupName: d.Get("ilb_service_group_name").(string),
+		Segments:            segmentNames,
+		BillingTags:         billingTagIds,
+		Instances:           instances,
+		SegmentOptions:      segmentOptions,
+		PrefixListId:        d.Get("prefix_list_id").(int),
+		GlobalCidrListId:    d.Get("global_cidr_list_id").(int),
 	}
 	return service, nil
 }

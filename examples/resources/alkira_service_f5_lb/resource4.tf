@@ -9,7 +9,6 @@ resource "alkira_service_f5_lb" "example-lb" {
     license_type        = "BRING_YOUR_OWN"
     name                = "example-lb-instance-1"
     version             = "17.1.1.1-0.0.2"
-    deployment_option   = "TWO_BOOT_LOCATION"
     f5_registration_key = "key"
     f5_username         = "admin"
     f5_password         = "verysecretpassword"

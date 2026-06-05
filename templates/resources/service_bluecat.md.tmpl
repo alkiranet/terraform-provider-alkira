@@ -1,0 +1,70 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+## ANYCAST
+
+When Anycast is configured for Bluecat services, Alkira automatically 
+generates system-managed routing policies(`alkira_policy_routes`) and 
+prefix lists(`alkira_policy_prefix_list`). These resources are essential 
+for proper Anycast functionality and have specific lifecycle and 
+scope characteristics. These system generated resources use the prefix 
+`ALK-SYSTEM-GENERATED-BLUECAT`.
+
+These route policies and prefix lists cannot be deleted or modified
+directly, their lifecycle is bound by the Bluecat services that are
+configured on the network and their anycast configuration
+
+Anycast configuration operates at the service level, not the instance level:
+`bdds_anycast` is applied to all BDDS instances in the service and
+`edge_anycast` is applied to all EDGE instances. If anycast is configured for 
+BDDS instances it must be configured for EDGE instances also and vice versa.
+
+## Instances
+
+Bluecat services support flexible instance configurations.
+There can be BDDS instances only services, 
+EDGE instances only services or a
+hybrid scenario with both BDDS and EDGE instances.
+
+
+## Example Usage
+
+The example uses resource `alkira_segment` and
+`alkira_list_global_cidr`.
+
+This is a minimal example with only BDDS instance and no anycast
+
+{{ tffile "examples/resources/alkira_service_bluecat/minimal.tf" }}
+
+You can configure `bdds_anycast` for the above BDDS instance similar to the following example
+
+{{ tffile "examples/resources/alkira_service_bluecat/bdds-only.tf" }}
+
+Similar configuration can be created for a service with only EDGE instances.
+
+{{ tffile "examples/resources/alkira_service_bluecat/edge-only.tf" }}
+
+You can a create a hybrid configuration with both BDDS and EDGE instances with anycast enabled.
+
+{{ tffile "examples/resources/alkira_service_bluecat/hybrid-deployment.tf" }}
+
+The following is a sample production deployment.
+
+{{ tffile "examples/resources/alkira_service_bluecat/production-deployment.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
