@@ -16,7 +16,7 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 		Description:   "F5 Load Balancer Service. (**BETA**)",
 		CreateContext: resourceF5LoadBalancerCreate,
 		ReadContext:   resourceF5LoadBalancerRead,
-		UpdateContext: resourceF5LoadBalancerUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceF5LoadBalancerUpdate),
 		DeleteContext: resourceF5LoadBalancerDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

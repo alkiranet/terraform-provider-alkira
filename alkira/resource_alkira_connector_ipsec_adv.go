@@ -16,7 +16,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 		Description:   "Manage Advanced IPSec Connector. (**BETA**)",
 		CreateContext: resourceConnectorIPSecAdvCreate,
 		ReadContext:   resourceConnectorIPSecAdvRead,
-		UpdateContext: resourceConnectorIPSecAdvUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorIPSecAdvUpdate),
 		DeleteContext: resourceConnectorIPSecAdvDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

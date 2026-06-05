@@ -16,7 +16,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 		Description:   "Manage checkpoint services",
 		CreateContext: resourceCheckpoint,
 		ReadContext:   resourceCheckpointRead,
-		UpdateContext: resourceCheckpointUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceCheckpointUpdate),
 		DeleteContext: resourceCheckpointDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

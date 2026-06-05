@@ -17,7 +17,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 
 		CreateContext: resourceServiceCiscoFTDvCreate,
 		ReadContext:   resourceServiceCiscoFTDvRead,
-		UpdateContext: resourceServiceCiscoFTDvUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceServiceCiscoFTDvUpdate),
 		DeleteContext: resourceServiceCiscoFTDvDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

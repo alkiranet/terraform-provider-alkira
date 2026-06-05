@@ -14,7 +14,7 @@ func resourceAlkiraConnectorIpsecTunnelProfile() *schema.Resource {
 		Description:   "Manages IPSec Tunnel Profile.",
 		CreateContext: resourceConnectorIpsecTunnelProfile,
 		ReadContext:   resourceConnectorIpsecTunnelProfileRead,
-		UpdateContext: resourceConnectorIpsecTunnelProfileUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorIpsecTunnelProfileUpdate),
 		DeleteContext: resourceConnectorIpsecTunnelProfileDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
