@@ -9,6 +9,7 @@ import (
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -711,6 +712,148 @@ func TestImportWithReadValidation(t *testing.T) {
 				assert.NotNil(t, result, "Expected resource data to be returned")
 				assert.Len(t, result, 1, "Expected exactly one resource data")
 				assert.Equal(t, resourceData, result[0], "Expected the same resource data object")
+			}
+		})
+	}
+}
+
+func TestWarnOnFailedStateUpdate(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"provision_state": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+	}
+
+	// newResourceData builds a ResourceData with prior state and a diff,
+	// mirroring what the SDK hands to UpdateContext during apply. When the
+	// prior provision_state is FAILED, the diff carries the FAILED->SUCCESS
+	// change forced by each resource's CustomizeDiff.
+	newResourceData := func(t *testing.T, provisionState string, configChanged bool) *schema.ResourceData {
+		state := &terraform.InstanceState{
+			ID: "1",
+			Attributes: map[string]string{
+				"name":            "old-name",
+				"provision_state": provisionState,
+			},
+		}
+
+		diffAttrs := map[string]*terraform.ResourceAttrDiff{}
+		if configChanged {
+			diffAttrs["name"] = &terraform.ResourceAttrDiff{
+				Old: "old-name",
+				New: "new-name",
+			}
+		}
+		if provisionState == "FAILED" {
+			diffAttrs["provision_state"] = &terraform.ResourceAttrDiff{
+				Old: "FAILED",
+				New: "SUCCESS",
+			}
+		}
+
+		d, err := schema.InternalMap(testSchema).Data(state,
+			&terraform.InstanceDiff{Attributes: diffAttrs})
+		require.NoError(t, err)
+		return d
+	}
+
+	tests := []struct {
+		name           string
+		provision      bool
+		provisionState string
+		configChanged  bool
+		updateDiags    diag.Diagnostics
+		expectWarning  bool
+	}{
+		{
+			name:           "warns on FAILED state with config changes",
+			provision:      true,
+			provisionState: "FAILED",
+			configChanged:  true,
+			expectWarning:  true,
+		},
+		{
+			name:           "no warning on retry-only re-apply (no config changes)",
+			provision:      true,
+			provisionState: "FAILED",
+			configChanged:  false,
+			expectWarning:  false,
+		},
+		{
+			name:           "no warning on healthy resource",
+			provision:      true,
+			provisionState: "SUCCESS",
+			configChanged:  true,
+			expectWarning:  false,
+		},
+		{
+			name:           "no warning when provision mode is off",
+			provision:      false,
+			provisionState: "FAILED",
+			configChanged:  true,
+			expectWarning:  false,
+		},
+		{
+			name:           "warning suppressed when update errors",
+			provision:      true,
+			provisionState: "FAILED",
+			configChanged:  true,
+			updateDiags: diag.Diagnostics{{
+				Severity: diag.Error,
+				Summary:  "UPDATE FAILED",
+			}},
+			expectWarning: false,
+		},
+		{
+			name:           "warning appended to update's own warnings",
+			provision:      true,
+			provisionState: "FAILED",
+			configChanged:  true,
+			updateDiags: diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "PROVISION (UPDATE) FAILED",
+			}},
+			expectWarning: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := newResourceData(t, tt.provisionState, tt.configChanged)
+			client := &alkira.AlkiraClient{Provision: tt.provision}
+
+			updateCalled := false
+			update := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				updateCalled = true
+				return tt.updateDiags
+			}
+
+			diags := warnOnFailedStateUpdate(update)(context.Background(), d, client)
+
+			// The wrapped update must always run - the warning never
+			// blocks the request.
+			assert.True(t, updateCalled, "wrapped update should always be invoked")
+
+			warningCount := 0
+			for _, diagnostic := range diags {
+				if diagnostic.Summary == "CONFIGURATION CHANGES SKIPPED" {
+					warningCount++
+					assert.Equal(t, diag.Warning, diagnostic.Severity)
+				}
+			}
+
+			if tt.expectWarning {
+				assert.Equal(t, 1, warningCount, "expected the skip warning to be emitted")
+				// The update's own diagnostics must be preserved.
+				assert.Len(t, diags, len(tt.updateDiags)+1)
+			} else {
+				assert.Zero(t, warningCount, "expected no skip warning")
+				assert.Len(t, diags, len(tt.updateDiags))
 			}
 		})
 	}

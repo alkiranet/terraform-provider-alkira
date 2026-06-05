@@ -16,7 +16,7 @@ func resourceAlkiraConnectorInternetExit() *schema.Resource {
 		Description:   "Manage Internet Exit Connector.",
 		CreateContext: resourceConnectorInternetExitCreate,
 		ReadContext:   resourceConnectorInternetExitRead,
-		UpdateContext: resourceConnectorInternetExitUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorInternetExitUpdate),
 		DeleteContext: resourceConnectorInternetExitDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

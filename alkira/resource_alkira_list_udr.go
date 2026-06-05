@@ -16,7 +16,7 @@ func resourceAlkiraListUdr() *schema.Resource {
 		Description:   "User Defined Routes (UDR) list.",
 		CreateContext: resourceListUdr,
 		ReadContext:   resourceListUdrRead,
-		UpdateContext: resourceListUdrUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListUdrUpdate),
 		DeleteContext: resourceListUdrDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

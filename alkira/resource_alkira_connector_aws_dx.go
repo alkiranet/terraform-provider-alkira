@@ -17,7 +17,7 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 
 		CreateContext: resourceConnectorAwsDxCreate,
 		ReadContext:   resourceConnectorAwsDxRead,
-		UpdateContext: resourceConnectorAwsDxUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAwsDxUpdate),
 		DeleteContext: resourceConnectorAwsDxDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 		Description:   "Manage Azure VNET Connector.",
 		CreateContext: resourceConnectorAzureVnetCreate,
 		ReadContext:   resourceConnectorAzureVnetRead,
-		UpdateContext: resourceConnectorAzureVnetUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureVnetUpdate),
 		DeleteContext: resourceConnectorAzureVnetDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

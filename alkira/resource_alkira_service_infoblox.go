@@ -16,7 +16,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 		Description:   "Provide Infoblox service resource (**BETA**).",
 		CreateContext: resourceInfoblox,
 		ReadContext:   resourceInfobloxRead,
-		UpdateContext: resourceInfobloxUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceInfobloxUpdate),
 		DeleteContext: resourceInfobloxDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
