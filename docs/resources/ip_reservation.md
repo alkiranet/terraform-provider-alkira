@@ -13,7 +13,8 @@ Provide IP Reservation resource.
 ## Example Usage
 
 ```terraform
-# With an explicit prefix
+# A /30 reservation with an explicit prefix.
+# For a /30, both first_ip_assignment and node_id are required.
 resource "alkira_ip_reservation" "explicit_prefix" {
   name                = "test"
   type                = "OVERLAY"
@@ -26,12 +27,28 @@ resource "alkira_ip_reservation" "explicit_prefix" {
   cxp                 = "US-WEST"
 }
 
-# Without a prefix — the backend assigns it based on prefix_type and prefix_len
+# A /30 reservation without an explicit prefix — the backend assigns it based
+# on prefix_type and prefix_len. A /30 still requires first_ip_assignment and
+# node_id even when the backend assigns the prefix.
 resource "alkira_ip_reservation" "backend_assigned_prefix" {
-  name           = "test-backend"
+  name                = "test-backend"
+  type                = "OVERLAY"
+  prefix_type         = "APIPA"
+  prefix_len          = 30
+  first_ip_assignment = "CUSTOMER"
+  node_id             = "d70503d2-1a99-4084-8aae-8268e2764365"
+  scale_group_id      = "99a6f3db-02d5-4189-8b0a-352eaeda2e10"
+  segment_id          = alkira_segment.test.id
+  cxp                 = "US-WEST"
+}
+
+# A single-IP (/32) reservation. first_ip_assignment only governs which IP of a
+# /30 pair is assigned, so it is omitted here.
+resource "alkira_ip_reservation" "single_ip" {
+  name           = "test-single-ip"
   type           = "OVERLAY"
-  prefix_type    = "APIPA"
-  prefix_len     = 30
+  prefix         = "10.1.0.10/32"
+  prefix_type    = "SEGMENT"
   scale_group_id = "99a6f3db-02d5-4189-8b0a-352eaeda2e10"
   segment_id     = alkira_segment.test.id
   cxp            = "US-WEST"
@@ -52,7 +69,7 @@ resource "alkira_ip_reservation" "backend_assigned_prefix" {
 
 ### Optional
 
-- `first_ip_assignment` (String) The value could be either `CUSTOMER` or `CXP`. This is required when `prefix_len` is `30` or the `prefix` is a `/30`. This field determines which IP from the given or the computed `/30` prefix is assigned to the customer end of the tunnel and which IP is assigned to the CXP end of the tunnel.
+- `first_ip_assignment` (String) The value could be either `CUSTOMER` or `CXP`. This is required when `prefix_len` is `30` or the `prefix` is a `/30`. This field determines which IP from the given or the computed `/30` prefix is assigned to the customer end of the tunnel and which IP is assigned to the CXP end of the tunnel. The backend retains this value once set, so it cannot be cleared by removing it from the configuration; omitting it defers to the value stored by the backend.
 - `node_id` (String) The ID of the node that the IP Reservation is assigned to. This must be provided when the given or computed `prefix` is `/30`. When the `prefix` is `/32`then this field determines whether the IP address will be assigned to the customer end or the CXP end.
 - `prefix` (String) The IP Prefix of the IP Reservation. If this is specified, both `prefix_type` and `prefix_len` will be ignored.
 - `prefix_len` (Number) The IP Prefix length of the IP Reservation.
