@@ -51,7 +51,7 @@ resource "alkira_policy_nat" "example" {
 
 ### Required
 
-- `included_group_ids` (Set of Number) Defines the scope for the policy. Connectors associated with groups defined here is where this policy would be applied.
+- `included_group_ids` (Set of Number) Defines the scope for the policy. Connectors associated with the groups defined here are where this policy is applied. This field accepts group IDs only (not connector IDs); for a connector that is not associated with any user-defined group, use the connector's implicit group ID.
 - `name` (String) The name of the policy.
 - `nat_rule_ids` (List of Number) The list of NAT rules to be applied by the policy.
 - `segment_id` (String) IDs of the segment that will define the policyscope.
@@ -62,10 +62,9 @@ resource "alkira_policy_nat" "example" {
 - `allow_overlapping_translated_source_addresses` (Boolean) Allow overlapping translated source address. Default value is `false`. (**BETA**)
 - `category` (String) The category of NAT policy. The vaule could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy.
-- `excluded_group_ids` (Set of Number) Excludes given associated connector from `included_groups`. Implicit group of a branch or on-premise connector for which a user defined group is used in `included_groups` can be used here.
+- `excluded_group_ids` (Set of Number) Excludes connectors from the scope defined by `included_group_ids`. This field accepts group IDs only (not connector IDs). The implicit group ID of a branch or on-premise connector whose user-defined group is listed in `included_group_ids` can be used here.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-
+- `provision_state` (String) The provisioning state of the resource.
