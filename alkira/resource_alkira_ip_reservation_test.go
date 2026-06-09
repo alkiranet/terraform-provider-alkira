@@ -116,6 +116,13 @@ func TestAlkiraIpReservation_resourceSchema(t *testing.T) {
 		assert.Equal(t, schema.TypeString, provStateSchema.Type, "Provision state should be string type")
 	}
 
+	// customer_end_ip: Optional+Computed (user may set, backend may compute)
+	customerEndIpSchema := resource.Schema["customer_end_ip"]
+	require.NotNil(t, customerEndIpSchema, "customer_end_ip field must exist in schema")
+	assert.Equal(t, schema.TypeString, customerEndIpSchema.Type)
+	assert.True(t, customerEndIpSchema.Optional, "customer_end_ip should be optional")
+	assert.True(t, customerEndIpSchema.Computed, "customer_end_ip should be computed")
+
 	// Test that resource has all required CRUD functions
 	assert.NotNil(t, resource.CreateContext, "Resource should have CreateContext")
 	assert.NotNil(t, resource.ReadContext, "Resource should have ReadContext")
@@ -462,6 +469,7 @@ func buildIpReservationRequest(d *schema.ResourceData) *alkira.IPReservation {
 		Cxp:               getStringFromResourceData(d, "cxp"),
 		ScaleGroupId:      getStringFromResourceData(d, "scale_group_id"),
 		Segment:           getStringFromResourceData(d, "segment_id"),
+		CustomerEndIp:     getStringFromResourceData(d, "customer_end_ip"),
 	}
 }
 
@@ -583,4 +591,42 @@ func TestIpReservationFieldSpelling(t *testing.T) {
 		assert.True(t, hasCorrect, "Schema must use correct spelling")
 		assert.False(t, hasIncorrect, "Schema must NOT have typo version")
 	})
+}
+
+func TestAlkiraIpReservation_buildRequestWithCustomerEndIp(t *testing.T) {
+	r := resourceAlkiraIpReservation()
+	d := r.TestResourceData()
+
+	d.Set("name", "with-customer-end-ip")
+	d.Set("type", "OVERLAY")
+	d.Set("prefix", "169.254.100.0/30")
+	d.Set("prefix_type", "APIPA")
+	d.Set("first_ip_assignment", "CUSTOMER")
+	d.Set("customer_end_ip", "169.254.100.1")
+	d.Set("cxp", "US-WEST")
+	d.Set("scale_group_id", "sg-123")
+	d.Set("segment_id", "seg-123")
+
+	request := buildIpReservationRequest(d)
+
+	require.Equal(t, "169.254.100.1", request.CustomerEndIp)
+	require.Equal(t, "169.254.100.0/30", request.Prefix)
+}
+
+func TestAlkiraIpReservation_readPopulatesCustomerEndIp(t *testing.T) {
+	mockIpReservation := &alkira.IPReservation{
+		Id:            "123",
+		Name:          "test",
+		Type:          "OVERLAY",
+		Prefix:        "169.254.100.0/30",
+		Segment:       "seg-123",
+		CustomerEndIp: "169.254.100.1",
+	}
+
+	client := createMockAlkiraClient(t, createIpReservationMockHandler(mockIpReservation, http.StatusOK))
+	api := alkira.NewIPReservation(client)
+
+	got, _, err := api.GetById("123")
+	assert.NoError(t, err)
+	assert.Equal(t, "169.254.100.1", got.CustomerEndIp)
 }
