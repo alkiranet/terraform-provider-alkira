@@ -38,3 +38,18 @@ resource "alkira_ip_reservation" "single_ip" {
   segment_id     = alkira_segment.test.id
   cxp            = "US-WEST"
 }
+
+# A /30 reservation with an explicit customer_end_ip. Skip backend computation
+# and pin the customer-end IP directly. The value must fall within the prefix.
+resource "alkira_ip_reservation" "explicit_customer_end_ip" {
+  name                = "test-explicit-customer-ip"
+  type                = "OVERLAY"
+  prefix              = "169.254.201.0/30"
+  prefix_type         = "APIPA"
+  first_ip_assignment = "CUSTOMER"
+  customer_end_ip     = "169.254.201.1"
+  node_id             = "d70503d2-1a99-4084-8aae-8268e2764365"
+  scale_group_id      = "99a6f3db-02d5-4189-8b0a-352eaeda2e10"
+  segment_id          = alkira_segment.test.id
+  cxp                 = "US-WEST"
+}
