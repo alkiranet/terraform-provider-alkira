@@ -93,6 +93,16 @@ func resourceAlkiraIpReservation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"customer_end_ip": {
+				Description: "The IPv4 address to assign to the customer end of " +
+					"the tunnel. Optional: if omitted, the backend computes the " +
+					"value from `first_ip_assignment` (for `/30` prefixes) or " +
+					"`node_id` (for `/32` prefixes). If supplied, it must be a " +
+					"valid IPv4 address that falls within the resolved `prefix`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cxp": {
 				Description: "The CXP of the IP Reservation.",
 				Type:        schema.TypeString,
@@ -143,6 +153,7 @@ func resourceIpReservation(ctx context.Context, d *schema.ResourceData, m interf
 		Cxp:               d.Get("cxp").(string),
 		ScaleGroupId:      d.Get("scale_group_id").(string),
 		Segment:           segmentName,
+		CustomerEndIp:     d.Get("customer_end_ip").(string),
 	}
 
 	// Send create request
@@ -214,6 +225,7 @@ func resourceIpReservationRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("node_id", reservation.NodeId)
 	d.Set("cxp", reservation.Cxp)
 	d.Set("scale_group_id", reservation.ScaleGroupId)
+	d.Set("customer_end_ip", reservation.CustomerEndIp)
 
 	// Set segment
 	segmentId, err := getSegmentIdByName(reservation.Segment, m)
@@ -256,6 +268,7 @@ func resourceIpReservationUpdate(ctx context.Context, d *schema.ResourceData, m 
 		Cxp:               d.Get("cxp").(string),
 		ScaleGroupId:      d.Get("scale_group_id").(string),
 		Segment:           segmentName,
+		CustomerEndIp:     d.Get("customer_end_ip").(string),
 	}
 
 	// Send update request
