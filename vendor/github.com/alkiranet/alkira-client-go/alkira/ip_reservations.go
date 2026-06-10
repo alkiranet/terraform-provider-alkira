@@ -18,6 +18,7 @@ type IPReservation struct {
 	Cxp               string `json:"cxp"`
 	ScaleGroupId      string `json:"scaleGroupId"`
 	Segment           string `json:"segment"`
+	CustomerEndIp     string `json:"customerEndIp,omitempty"`
 }
 
 func NewIPReservation(ac *AlkiraClient) *AlkiraAPI[IPReservation] {
