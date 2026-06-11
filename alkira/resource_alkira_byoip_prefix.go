@@ -14,7 +14,7 @@ func resourceAlkiraByoipPrefix() *schema.Resource {
 		Description:   "Manage BYOIP Prefix.",
 		CreateContext: resourceByoipPrefix,
 		ReadContext:   resourceByoipPrefixRead,
-		UpdateContext: resourceByoipPrefixUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceByoipPrefixUpdate),
 		DeleteContext: resourceByoipPrefixDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

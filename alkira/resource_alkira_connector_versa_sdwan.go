@@ -15,7 +15,7 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 		Description:   "Manage Versa SD-WAN Connector. (**BETA**)",
 		CreateContext: resourceConnectorVersaSdwanCreate,
 		ReadContext:   resourceConnectorVersaSdwanRead,
-		UpdateContext: resourceConnectorVersaSdwanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorVersaSdwanUpdate),
 		DeleteContext: resourceConnectorVersaSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

@@ -18,7 +18,7 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 
 		CreateContext: resourceConnectorGcpVpcCreate,
 		ReadContext:   resourceConnectorGcpVpcRead,
-		UpdateContext: resourceConnectorGcpVpcUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorGcpVpcUpdate),
 		DeleteContext: resourceConnectorGcpVpcDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

@@ -16,7 +16,7 @@ func resourceAlkiraServiceZscaler() *schema.Resource {
 		Description:   "Manage Zscaler firewall service.",
 		CreateContext: resourceZscaler,
 		ReadContext:   resourceZscalerRead,
-		UpdateContext: resourceZscalerUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceZscalerUpdate),
 		DeleteContext: resourceZscalerDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

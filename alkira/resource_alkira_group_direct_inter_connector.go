@@ -16,7 +16,7 @@ func resourceAlkiraDirectInterConnectorGroup() *schema.Resource {
 		Description:   "Provide direct inter-connector group resource.",
 		CreateContext: resourceDirectInterConnectorGroup,
 		ReadContext:   resourceDirectInterConnectorGroupRead,
-		UpdateContext: resourceDirectInterConnectorGroupUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceDirectInterConnectorGroupUpdate),
 		DeleteContext: resourceDirectInterConnectorGroupDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
