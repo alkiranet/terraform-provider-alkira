@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAzureVhub() *schema.Resource {
 		Description:   "Manage Azure VHUB Connector.",
 		CreateContext: resourceConnectorAzureVhubCreate,
 		ReadContext:   resourceConnectorAzureVhubRead,
-		UpdateContext: resourceConnectorAzureVhubUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureVhubUpdate),
 		DeleteContext: resourceConnectorAzureVhubDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
