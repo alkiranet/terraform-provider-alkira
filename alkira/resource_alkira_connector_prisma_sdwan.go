@@ -16,7 +16,7 @@ func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
 		Description:   "Manage Prisma SD-WAN Connector.",
 		CreateContext: resourceConnectorPrismaSDWANCreate,
 		ReadContext:   resourceConnectorPrismaSDWANRead,
-		UpdateContext: resourceConnectorPrismaSDWANUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorPrismaSDWANUpdate),
 		DeleteContext: resourceConnectorPrismaSDWANDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
