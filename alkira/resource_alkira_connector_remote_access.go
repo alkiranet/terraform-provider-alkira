@@ -14,7 +14,7 @@ func resourceAlkiraConnectorRemoteAccess() *schema.Resource {
 		Description:   "Provide Connector Remote Access resource.",
 		CreateContext: resourceConnectorRemoteAccess,
 		ReadContext:   resourceConnectorRemoteAccessRead,
-		UpdateContext: resourceConnectorRemoteAccessUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorRemoteAccessUpdate),
 		DeleteContext: resourceConnectorRemoteAccessDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

@@ -16,7 +16,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 		Description:   "Provide IP Reservation resource.",
 		CreateContext: resourceIpReservation,
 		ReadContext:   resourceIpReservationRead,
-		UpdateContext: resourceIpReservationUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceIpReservationUpdate),
 		DeleteContext: resourceIpReservationDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

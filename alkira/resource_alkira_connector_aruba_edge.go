@@ -17,7 +17,7 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 
 		CreateContext: resourceConnectorArubaEdgeCreate,
 		ReadContext:   resourceConnectorArubaEdgeRead,
-		UpdateContext: resourceConnectorArubaEdgeUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorArubaEdgeUpdate),
 		DeleteContext: resourceConnectorArubaEdgeDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
