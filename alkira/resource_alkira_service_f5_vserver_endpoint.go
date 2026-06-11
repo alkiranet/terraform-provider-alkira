@@ -22,7 +22,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 		Description:   "Resource for managing F5 vServer endpoint. (**BETA**)",
 		CreateContext: resourceF5vServerEndpointCreate,
 		ReadContext:   resourceF5vServerEndpointRead,
-		UpdateContext: resourceF5vServerEndpointUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceF5vServerEndpointUpdate),
 		DeleteContext: resourceF5vServerEndpointDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

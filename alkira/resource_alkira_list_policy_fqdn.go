@@ -15,7 +15,7 @@ func resourceAlkiraListPolicyFqdn() *schema.Resource {
 		Description:   "Policy FQDN list.",
 		CreateContext: resourceListPolicyFqdn,
 		ReadContext:   resourceListPolicyFqdnRead,
-		UpdateContext: resourceListPolicyFqdnUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListPolicyFqdnUpdate),
 		DeleteContext: resourceListPolicyFqdnDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

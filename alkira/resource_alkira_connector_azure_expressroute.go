@@ -17,7 +17,7 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 
 		CreateContext: resourceConnectorAzureExpressRouteCreate,
 		ReadContext:   resourceConnectorAzureExpressRouteRead,
-		UpdateContext: resourceConnectorAzureExpressRouteUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureExpressRouteUpdate),
 		DeleteContext: resourceConnectorAzureExpressRouteDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

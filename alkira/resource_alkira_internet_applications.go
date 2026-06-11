@@ -20,7 +20,7 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 			"and attach it to an `alkira_policy`.",
 		CreateContext: resourceInternetApplicationCreate,
 		ReadContext:   resourceInternetApplicationRead,
-		UpdateContext: resourceInternetApplicationUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceInternetApplicationUpdate),
 		DeleteContext: resourceInternetApplicationDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

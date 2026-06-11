@@ -17,7 +17,7 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 		Description:   "Manage Cisco SD-WAN Connector.",
 		CreateContext: resourceConnectorCiscoSdwanCreate,
 		ReadContext:   resourceConnectorCiscoSdwanRead,
-		UpdateContext: resourceConnectorCiscoSdwanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorCiscoSdwanUpdate),
 		DeleteContext: resourceConnectorCiscoSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

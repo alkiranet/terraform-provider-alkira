@@ -17,7 +17,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 		Description:   "Manage Fortinet firewall.",
 		CreateContext: resourceFortinetCreate,
 		ReadContext:   resourceFortinetRead,
-		UpdateContext: resourceFortinetUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceFortinetUpdate),
 		DeleteContext: resourceFortinetDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

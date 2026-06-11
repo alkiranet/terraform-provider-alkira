@@ -15,7 +15,7 @@ func resourceAlkiraGroup() *schema.Resource {
 		Description:   "Provide group resource.",
 		CreateContext: resourceGroup,
 		ReadContext:   resourceGroupRead,
-		UpdateContext: resourceGroupUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceGroupUpdate),
 		DeleteContext: resourceGroupDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
