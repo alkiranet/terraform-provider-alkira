@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAwsTgw() *schema.Resource {
 		Description:   "Manage AWS TGW Connector.",
 		CreateContext: resourceConnectorAwsTgwCreate,
 		ReadContext:   resourceConnectorAwsTgwRead,
-		UpdateContext: resourceConnectorAwsTgwUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAwsTgwUpdate),
 		DeleteContext: resourceConnectorAwsTgwDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

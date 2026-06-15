@@ -14,7 +14,7 @@ func resourceAlkiraSegment() *schema.Resource {
 		Description:   "Manages segment.",
 		CreateContext: resourceSegment,
 		ReadContext:   resourceSegmentRead,
-		UpdateContext: resourceSegmentUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceSegmentUpdate),
 		DeleteContext: resourceSegmentDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

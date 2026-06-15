@@ -16,7 +16,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 		Description:   "Provide Bluecat service resource (**BETA**).",
 		CreateContext: resourceBluecat,
 		ReadContext:   resourceBluecatRead,
-		UpdateContext: resourceBluecatUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceBluecatUpdate),
 		DeleteContext: resourceBluecatDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

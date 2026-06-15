@@ -18,7 +18,7 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 			"CSX and a selected scope with custom rules",
 		CreateContext: resourcePolicyRouting,
 		ReadContext:   resourcePolicyRoutingRead,
-		UpdateContext: resourcePolicyRoutingUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyRoutingUpdate),
 		DeleteContext: resourcePolicyRoutingDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
