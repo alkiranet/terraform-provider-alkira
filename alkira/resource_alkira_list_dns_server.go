@@ -15,7 +15,7 @@ func resourceAlkiraListDnsServer() *schema.Resource {
 		Description:   "A list of DNS servers.",
 		CreateContext: resourceListDnsServer,
 		ReadContext:   resourceListDnsServerRead,
-		UpdateContext: resourceListDnsServerUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListDnsServerUpdate),
 		DeleteContext: resourceListDnsServerDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

@@ -18,7 +18,7 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 			"between CXP pairs within a segment.",
 		CreateContext: resourcePolicyInterCxpRouting,
 		ReadContext:   resourcePolicyInterCxpRoutingRead,
-		UpdateContext: resourcePolicyInterCxpRoutingUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyInterCxpRoutingUpdate),
 		DeleteContext: resourcePolicyInterCxpRoutingDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

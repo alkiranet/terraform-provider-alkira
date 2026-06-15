@@ -14,7 +14,7 @@ func resourceAlkiraPolicyRuleList() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePolicyRuleList,
 		ReadContext:   resourcePolicyRuleListRead,
-		UpdateContext: resourcePolicyRuleListUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyRuleListUpdate),
 		DeleteContext: resourcePolicyRuleListDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

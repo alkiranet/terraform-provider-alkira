@@ -19,7 +19,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"`pan_password` are required.",
 		CreateContext: resourceServicePanCreate,
 		ReadContext:   resourceServicePanRead,
-		UpdateContext: resourceServicePanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceServicePanUpdate),
 		DeleteContext: resourceServicePanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

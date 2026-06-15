@@ -17,7 +17,7 @@ func resourceAlkiraListCommunity() *schema.Resource {
 			"a list when any of the values match.",
 		CreateContext: resourceListCommunity,
 		ReadContext:   resourceListCommunityRead,
-		UpdateContext: resourceListCommunityUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListCommunityUpdate),
 		DeleteContext: resourceListCommunityDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
