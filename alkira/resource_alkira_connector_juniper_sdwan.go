@@ -15,7 +15,7 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 		Description:   "Manage Juniper SD-WAN Connector. (**BETA**)",
 		CreateContext: resourceConnectorJuniperSdwanCreate,
 		ReadContext:   resourceConnectorJuniperSdwanRead,
-		UpdateContext: resourceConnectorJuniperSdwanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorJuniperSdwanUpdate),
 		DeleteContext: resourceConnectorJuniperSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
 			client := m.(*alkira.AlkiraClient)

@@ -16,7 +16,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Description:   "Provide AWS VPC Connector resource.",
 		CreateContext: resourceConnectorAwsVpcCreate,
 		ReadContext:   resourceConnectorAwsVpcRead,
-		UpdateContext: resourceConnectorAwsVpcUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAwsVpcUpdate),
 		DeleteContext: resourceConnectorAwsVpcDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
