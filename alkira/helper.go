@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -306,5 +307,41 @@ func typeSetHash(keyExtractor func(map[string]interface{}) string) schema.Schema
 		m := v.(map[string]interface{})
 		fmt.Fprintf(&buf, "%s-", keyExtractor(m))
 		return schema.HashString(buf.String())
+	}
+}
+
+// warnOnFailedStateUpdate wraps a resource's UpdateContextFunc and emits a
+// non-fatal warning when an update carrying config changes is applied
+// against a resource in FAILED provision state. In that case, the backend
+// skips the config update and re-provisions the previously saved config
+// (the retry-by-reapply mechanism), so the requested changes are not saved.
+func warnOnFailedStateUpdate(update schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		client := m.(*alkira.AlkiraClient)
+
+		// Compute the condition up front for clarity. HasChangesExcept
+		// filters out the retry-only diff forced by CustomizeDiff.
+		oldState, _ := d.GetChange("provision_state")
+
+		warn := client.Provision &&
+			oldState == "FAILED" &&
+			d.HasChangesExcept("provision_state")
+
+		diags := update(ctx, d, m)
+
+		// Suppress the warning if the update itself failed - the
+		// skip message would be misleading in that case.
+		if warn && !diags.HasError() {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "CONFIGURATION CHANGES SKIPPED",
+				Detail: "Resource was in FAILED provision state; the backend " +
+					"re-provisions the previously saved configuration and skips " +
+					"configuration changes until the resource recovers. See the " +
+					"PROVISIONING section in the provider documentation.",
+			})
+		}
+
+		return diags
 	}
 }

@@ -15,7 +15,7 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 		Description:   "Manage Azure VNET Third Party Connector.",
 		CreateContext: resourceConnectorAzureVnetThirdPartyCreate,
 		ReadContext:   resourceConnectorAzureVnetThirdPartyRead,
-		UpdateContext: resourceConnectorAzureVnetThirdPartyUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAzureVnetThirdPartyUpdate),
 		DeleteContext: resourceConnectorAzureVnetThirdPartyDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

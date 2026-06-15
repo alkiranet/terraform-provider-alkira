@@ -23,7 +23,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"Akamai Representative.",
 		CreateContext: resourceConnectorAkamaiProlexicCreate,
 		ReadContext:   resourceConnectorAkamaiProlexicRead,
-		UpdateContext: resourceConnectorAkamaiProlexicUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAkamaiProlexicUpdate),
 		DeleteContext: resourceConnectorAkamaiProlexicDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

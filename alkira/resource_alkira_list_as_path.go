@@ -17,7 +17,7 @@ func resourceAlkiraListAsPath() *schema.Resource {
 			"included within the AS-PATH of the route.",
 		CreateContext: resourceListAsPath,
 		ReadContext:   resourceListAsPathRead,
-		UpdateContext: resourceListAsPathUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListAsPathUpdate),
 		DeleteContext: resourceListAsPathDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

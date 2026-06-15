@@ -17,7 +17,7 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 
 		CreateContext: resourceConnectorGcpInterconnectCreate,
 		ReadContext:   resourceConnectorGcpInterconnectRead,
-		UpdateContext: resourceConnectorGcpInterconnectUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorGcpInterconnectUpdate),
 		DeleteContext: resourceConnectorGcpInterconnectDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
