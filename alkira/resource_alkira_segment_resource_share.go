@@ -18,7 +18,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			"in a segment and Resource End-B in another segment.",
 		CreateContext: resourceSegmentResourceShare,
 		ReadContext:   resourceSegmentResourceShareRead,
-		UpdateContext: resourceSegmentResourceShareUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceSegmentResourceShareUpdate),
 		DeleteContext: resourceSegmentResourceShareDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

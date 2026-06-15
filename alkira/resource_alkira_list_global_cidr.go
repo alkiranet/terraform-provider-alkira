@@ -15,7 +15,7 @@ func resourceAlkiraListGlobalCidr() *schema.Resource {
 		Description:   "A list of CIDRs to be used for services.",
 		CreateContext: resourceListGlobalCidr,
 		ReadContext:   resourceListGlobalCidrRead,
-		UpdateContext: resourceListGlobalCidrUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceListGlobalCidrUpdate),
 		DeleteContext: resourceListGlobalCidrDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

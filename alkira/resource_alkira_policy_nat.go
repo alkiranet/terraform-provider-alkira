@@ -16,8 +16,19 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 		Description:   "Manage NAT policy.",
 		CreateContext: resourcePolicyNat,
 		ReadContext:   resourcePolicyNatRead,
-		UpdateContext: resourcePolicyNatUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyNatUpdate),
 		DeleteContext: resourcePolicyNatDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("provision_state")
+
+			if client.Provision && old == "FAILED" {
+				d.SetNew("provision_state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourcePolicyNatRead),
 		},
