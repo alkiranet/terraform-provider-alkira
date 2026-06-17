@@ -117,7 +117,6 @@ Read-Only:
 
 Required:
 
-- `customer_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the customer end of the tunnel.
 - `cxp_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the CXP end of the tunnel.
 - `cxp_end_public_ip_reservation_id` (String) The public IP reservation ID of the CXP end of the tunnel.
 - `preshared_key` (String) The pre-shared key of the tunnel.
@@ -126,6 +125,7 @@ Optional:
 
 - `advanced_options` (Block List, Max: 1) Advanced options for the IPSec gateway. (see [below for nested schema](#nestedblock--gateway--tunnel--advanced_options))
 - `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel. Optional override for when the IP does not fit into the ranges available with an IP reservation. Must be a bare IPv4 address (no subnet mask). When set, the customer-end overlay IP reservation on the Alkira side must be /32 and the value must not overlap segment IP blocks, link-local, multicast, broadcast, or loopback ranges. When omitted, the value is computed by the backend from the reservation.
+- `customer_end_overlay_ip_reservation_id` (String) The overlay IP reservation ID of the customer end of the tunnel. Mutually exclusive with `customer_end_overlay_ip` — supply exactly one. When this is set, the backend computes the customer-end overlay IP from the reservation. When this is omitted and `customer_end_overlay_ip` is set, the customer end uses the override IP and the cxp-end overlay reservation must be /32.
 - `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`). `advanced_options` block is required when this is used.
 
 Read-Only:

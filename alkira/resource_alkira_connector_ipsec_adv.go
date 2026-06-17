@@ -274,13 +274,14 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 											"ID of the customer end of the tunnel. " +
 											"Mutually exclusive with " +
 											"`customer_end_overlay_ip` — supply " +
-											"one or the other. When both are " +
-											"supplied, the reservation wins and the " +
-											"override is silently dropped. When this " +
-											"is omitted and `customer_end_overlay_ip` " +
-											"is set, the customer end of the tunnel " +
-											"uses the override IP and the cxp-end " +
-											"overlay reservation must be /32.",
+											"exactly one. When this is set, the " +
+											"backend computes the customer-end " +
+											"overlay IP from the reservation. When " +
+											"this is omitted and " +
+											"`customer_end_overlay_ip` is set, the " +
+											"customer end uses the override IP and " +
+											"the cxp-end overlay reservation must " +
+											"be /32.",
 										Type:     schema.TypeString,
 										Optional: true,
 									},
