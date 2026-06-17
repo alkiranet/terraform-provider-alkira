@@ -67,10 +67,10 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 						return fmt.Errorf(
 							"tunnel customer_end_overlay_ip and " +
 								"customer_end_overlay_ip_reservation_id are " +
-								"mutually exclusive — supply one or the other. " +
-								"When customer_end_overlay_ip is set the cxp-end " +
-								"overlay reservation must be /32; otherwise use " +
-								"customer_end_overlay_ip_reservation_id.")
+								"mutually exclusive — supply one or the other " +
+								"(when customer_end_overlay_ip is set the " +
+								"cxp-end overlay reservation must be /32; " +
+								"otherwise use customer_end_overlay_ip_reservation_id)")
 					}
 				}
 			}
