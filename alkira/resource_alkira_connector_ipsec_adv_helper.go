@@ -56,7 +56,9 @@ func expandConnectorAdvIPSecTunnel(in []interface{}) []*alkira.ConnectorAdvIPSec
 		config := t.(map[string]interface{})
 		r := alkira.ConnectorAdvIPSecTunnel{}
 
-		r.CustomerEnd.OverlayIp = config["customer_end_overlay_ip"].(string)
+		if v, ok := config["customer_end_overlay_ip"].(string); ok {
+			r.CustomerEnd.OverlayIp = v
+		}
 		r.CustomerEnd.OverlayIpReservationId = config["customer_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.OverlayIpReservationId = config["cxp_end_overlay_ip_reservation_id"].(string)
 		r.CxpEnd.PublicIpReservationId = config["cxp_end_public_ip_reservation_id"].(string)
