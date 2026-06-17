@@ -223,9 +223,18 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									},
 									"customer_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
-											"ID of the customer end of the tunnel.",
+											"ID of the customer end of the tunnel. " +
+											"Mutually exclusive with " +
+											"`customer_end_overlay_ip` — supply " +
+											"one or the other. When both are " +
+											"supplied, the reservation wins and the " +
+											"override is silently dropped. When this " +
+											"is omitted and `customer_end_overlay_ip` " +
+											"is set, the customer end of the tunnel " +
+											"uses the override IP and the cxp-end " +
+											"overlay reservation must be /32.",
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"cxp_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
