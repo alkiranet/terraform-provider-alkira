@@ -26,8 +26,10 @@ resource "alkira_connector_ipsec_adv" "test" {
 }
 
 # Override the customer-end overlay IP for cases where the IP does not
-# fit into the ranges available with the IP reservation. When set, the
-# customer-end overlay reservation MUST be a /32 reservation.
+# fit into the ranges available with the IP reservation. Mutually
+# exclusive with customer_end_overlay_ip_reservation_id — supply exactly
+# one. When customer_end_overlay_ip is set, the cxp-end overlay
+# reservation must be /32.
 resource "alkira_connector_ipsec_adv" "test_with_overlay_ip_override" {
   name       = "test-overlay-ip-override"
   segment_id = alkira_segment.test.id
@@ -48,10 +50,9 @@ resource "alkira_connector_ipsec_adv" "test_with_overlay_ip_override" {
     tunnel {
       preshared_key = "1234"
 
-      customer_end_overlay_ip                = "10.20.30.40"
-      customer_end_overlay_ip_reservation_id = "151e8723-xxxx-4d6d-be90-xxxxxxxxxxxx"
-      cxp_end_overlay_ip_reservation_id      = "151e8723-xxxx-4d6d-be90-xxxxxxxxxxxx"
-      cxp_end_public_ip_reservation_id       = "f9f05b7a-xxxx-48eb-93e2-xxxxxxxxxxxx"
+      customer_end_overlay_ip           = "10.20.30.40"
+      cxp_end_overlay_ip_reservation_id = "151e8723-xxxx-4d6d-be90-xxxxxxxxxxxx"
+      cxp_end_public_ip_reservation_id  = "f9f05b7a-xxxx-48eb-93e2-xxxxxxxxxxxx"
     }
   }
 }
