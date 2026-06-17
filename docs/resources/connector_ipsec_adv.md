@@ -125,11 +125,11 @@ Required:
 Optional:
 
 - `advanced_options` (Block List, Max: 1) Advanced options for the IPSec gateway. (see [below for nested schema](#nestedblock--gateway--tunnel--advanced_options))
+- `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel. Optional override for when the IP does not fit into the ranges available with an IP reservation. Must be a bare IPv4 address (no subnet mask). When set, the customer-end overlay IP reservation on the Alkira side must be /32 and the value must not overlap segment IP blocks, link-local, multicast, broadcast, or loopback ranges. When omitted, the value is computed by the backend from the reservation.
 - `profile_id` (Number) The ID of the IPSec Tunnel Profile (`connector_ipsec_tunnel_profile`). `advanced_options` block is required when this is used.
 
 Read-Only:
 
-- `customer_end_overlay_ip` (String) The overlay IP address of the customer end of the tunnel.
 - `id` (String) The ID of the tunnel.
 - `number` (Number) The number of the tunnel.
 

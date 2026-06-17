@@ -203,8 +203,22 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									},
 									"customer_end_overlay_ip": {
 										Description: "The overlay IP address of " +
-											"the customer end of the tunnel.",
+											"the customer end of the tunnel. " +
+											"Optional override for when the IP " +
+											"does not fit into the ranges " +
+											"available with an IP reservation. " +
+											"Must be a bare IPv4 address (no " +
+											"subnet mask). When set, the " +
+											"customer-end overlay IP reservation " +
+											"on the Alkira side must be /32 and " +
+											"the value must not overlap segment " +
+											"IP blocks, link-local, multicast, " +
+											"broadcast, or loopback ranges. " +
+											"When omitted, the value is " +
+											"computed by the backend from the " +
+											"reservation.",
 										Type:     schema.TypeString,
+										Optional: true,
 										Computed: true,
 									},
 									"customer_end_overlay_ip_reservation_id": {
