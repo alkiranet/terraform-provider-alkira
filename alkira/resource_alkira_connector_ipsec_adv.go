@@ -27,6 +27,54 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Mutual exclusivity: a tunnel block must not set both
+			// customer_end_overlay_ip and customer_end_overlay_ip_reservation_id
+			// in the user-written config. The backend silently drops the override
+			// when the reservation id is also supplied (TPS toTunnel mirrors the
+			// reservation's customerEndIp into overlayIp), which is confusing
+			// authoring. Enforce in CustomizeDiff so terraform plan fails fast.
+			//
+			// We walk the raw config (not d.Get) because customer_end_overlay_ip
+			// is Optional+Computed: on subsequent plans for a reservation-only
+			// resource, d.Get would return the backend-populated value alongside
+			// the user-set reservation id and produce a false positive.
+			rawConfig := d.GetRawConfig()
+			if !rawConfig.IsKnown() || rawConfig.IsNull() {
+				return nil
+			}
+			gateways := rawConfig.GetAttr("gateway")
+			if gateways.IsNull() || !gateways.IsKnown() {
+				return nil
+			}
+			for gwIt := gateways.ElementIterator(); gwIt.Next(); {
+				_, gwElem := gwIt.Element()
+				tunnels := gwElem.GetAttr("tunnel")
+				if tunnels.IsNull() || !tunnels.IsKnown() {
+					continue
+				}
+				for tIt := tunnels.ElementIterator(); tIt.Next(); {
+					_, tElem := tIt.Element()
+
+					overlayIp := tElem.GetAttr("customer_end_overlay_ip")
+					overlayResId := tElem.GetAttr("customer_end_overlay_ip_reservation_id")
+					if !overlayIp.IsKnown() || overlayIp.IsNull() {
+						continue
+					}
+					if !overlayResId.IsKnown() || overlayResId.IsNull() {
+						continue
+					}
+					if overlayIp.AsString() != "" && overlayResId.AsString() != "" {
+						return fmt.Errorf(
+							"tunnel customer_end_overlay_ip and " +
+								"customer_end_overlay_ip_reservation_id are " +
+								"mutually exclusive — supply one or the other. " +
+								"When customer_end_overlay_ip is set the cxp-end " +
+								"overlay reservation must be /32; otherwise use " +
+								"customer_end_overlay_ip_reservation_id.")
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
