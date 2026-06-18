@@ -27,6 +27,54 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Mutual exclusivity: a tunnel block must not set both
+			// customer_end_overlay_ip and customer_end_overlay_ip_reservation_id
+			// in the user-written config. The backend silently drops the override
+			// when the reservation id is also supplied (TPS toTunnel mirrors the
+			// reservation's customerEndIp into overlayIp), which is confusing
+			// authoring. Enforce in CustomizeDiff so terraform plan fails fast.
+			//
+			// We walk the raw config (not d.Get) because customer_end_overlay_ip
+			// is Optional+Computed: on subsequent plans for a reservation-only
+			// resource, d.Get would return the backend-populated value alongside
+			// the user-set reservation id and produce a false positive.
+			rawConfig := d.GetRawConfig()
+			if !rawConfig.IsKnown() || rawConfig.IsNull() {
+				return nil
+			}
+			gateways := rawConfig.GetAttr("gateway")
+			if gateways.IsNull() || !gateways.IsKnown() {
+				return nil
+			}
+			for gwIt := gateways.ElementIterator(); gwIt.Next(); {
+				_, gwElem := gwIt.Element()
+				tunnels := gwElem.GetAttr("tunnel")
+				if tunnels.IsNull() || !tunnels.IsKnown() {
+					continue
+				}
+				for tIt := tunnels.ElementIterator(); tIt.Next(); {
+					_, tElem := tIt.Element()
+
+					overlayIp := tElem.GetAttr("customer_end_overlay_ip")
+					overlayResId := tElem.GetAttr("customer_end_overlay_ip_reservation_id")
+					if !overlayIp.IsKnown() || overlayIp.IsNull() {
+						continue
+					}
+					if !overlayResId.IsKnown() || overlayResId.IsNull() {
+						continue
+					}
+					if overlayIp.AsString() != "" && overlayResId.AsString() != "" {
+						return fmt.Errorf(
+							"tunnel customer_end_overlay_ip and " +
+								"customer_end_overlay_ip_reservation_id are " +
+								"mutually exclusive — supply one or the other " +
+								"(when customer_end_overlay_ip is set the " +
+								"cxp-end overlay reservation must be /32; " +
+								"otherwise use customer_end_overlay_ip_reservation_id)")
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -203,15 +251,39 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 									},
 									"customer_end_overlay_ip": {
 										Description: "The overlay IP address of " +
-											"the customer end of the tunnel.",
+											"the customer end of the tunnel. " +
+											"Optional override for when the IP " +
+											"does not fit into the ranges " +
+											"available with an IP reservation. " +
+											"Must be a bare IPv4 address (no " +
+											"subnet mask). When set, the " +
+											"customer-end overlay IP reservation " +
+											"on the Alkira side must be /32 and " +
+											"the value must not overlap segment " +
+											"IP blocks, link-local, multicast, " +
+											"broadcast, or loopback ranges. " +
+											"When omitted, the value is " +
+											"computed by the backend from the " +
+											"reservation.",
 										Type:     schema.TypeString,
+										Optional: true,
 										Computed: true,
 									},
 									"customer_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
-											"ID of the customer end of the tunnel.",
+											"ID of the customer end of the tunnel. " +
+											"Mutually exclusive with " +
+											"`customer_end_overlay_ip` — supply " +
+											"exactly one. When this is set, the " +
+											"backend computes the customer-end " +
+											"overlay IP from the reservation. When " +
+											"this is omitted and " +
+											"`customer_end_overlay_ip` is set, the " +
+											"customer end uses the override IP and " +
+											"the cxp-end overlay reservation must " +
+											"be /32.",
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"cxp_end_overlay_ip_reservation_id": {
 										Description: "The overlay IP reservation " +
