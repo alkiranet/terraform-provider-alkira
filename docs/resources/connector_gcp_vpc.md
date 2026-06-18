@@ -111,7 +111,7 @@ resource "alkira_connector_gcp_vpc" "gcp_subnet" {
 - `gcp_project_id` (String) GCP Project ID.
 - `gcp_routing` (Block List) GCP Routing describes the routes that are to be imported to the VPC from the CXP. This essentially controls how traffic is routed between the CXP and the VPC. When routing option is not provided, the traffic exiting the VPC will be sent to the CXP (i.e a default route to CXP will be added to all route tables on that VPC) (see [below for nested schema](#nestedblock--gcp_routing))
 - `group` (String) The group of the connector.
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
+- `scale_group_id` (String) The ID of a scale group to place this connector on. A scale group is a set of dedicated CXP nodes used to isolate a connector or distribute many connectors for performance. Typically available only on high-capacity CXPs (10Gb and above). Can only be set at create time and cannot be changed after provisioning.
 - `vpc_subnet` (Block Set) The list of subnets of the target GCP VPC for routing purpose. Given connector supports multiple prefixes per subnet, each prefix under a subnet will be a new entry. (see [below for nested schema](#nestedblock--vpc_subnet))
 
 ### Read-Only
