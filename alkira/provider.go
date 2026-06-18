@@ -59,10 +59,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
 			},
 			"serialization_enabled": {
-				Description: "Enable API serialization. Enabled by default; set " +
-					"this to `false` in the provider configuration to disable it. " +
-					"The `ALKIRA_API_SERIALIZATION_ENABLED` environment variable " +
-					"overrides the default and can be set to `true` or `false`.",
+				Description: "Enable API serialization. Enabled by default.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: boolEnvDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED", true),
