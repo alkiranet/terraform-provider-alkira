@@ -1,8 +1,10 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -57,11 +59,13 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
 			},
 			"serialization_enabled": {
-				Description: "Enable API serialization.",
+				Description: "Enable API serialization. Enabled by default; set " +
+					"this to `false` in the provider configuration to disable it. " +
+					"The `ALKIRA_API_SERIALIZATION_ENABLED` environment variable " +
+					"overrides the default and can be set to `true` or `false`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				DefaultFunc: envDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED"),
+				DefaultFunc: boolEnvDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED", true),
 			},
 			"serialization_timeout": {
 				Description: "API serialization timeout in seconds.",
@@ -203,6 +207,26 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 		}
 
 		return nil, nil
+	}
+}
+
+// boolEnvDefaultFunc resolves a boolean schema default from an environment
+// variable, falling back to dv when the variable is unset. When set, the value
+// is parsed with strconv.ParseBool so the variable can both enable ("true",
+// "1") and disable ("false", "0") the attribute.
+func boolEnvDefaultFunc(k string, dv bool) schema.SchemaDefaultFunc {
+	return func() (interface{}, error) {
+		v := os.Getenv(k)
+		if v == "" {
+			return dv, nil
+		}
+
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid boolean value %q for %s: %w", v, k, err)
+		}
+
+		return parsed, nil
 	}
 }
 
