@@ -219,7 +219,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `overlay_subnets` (List of String) Overlay subnet.
-- `scale_group_id` (String) The ID of a scale group to place this connector on. A scale group is a set of dedicated CXP nodes used to isolate a connector or distribute many connectors for performance. Typically available only on high-capacity CXPs (10Gb and above). Can only be set at create time and cannot be changed after provisioning.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tgw_attachment` (Block List) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
 - `tgw_connect_enabled` (Boolean) When it's set to `true`, Alkira will use TGW Connect attachments to build connection to AWS Transit Gateway. Connect Attachments suppport GRE tunnel protocol for high performance and BGP for dynamic routing. This applies to all TGW attachments. This field can be set to `true` only if the VPC is in the same AWS region as the Alkira CXP it is being deployed onto.
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.

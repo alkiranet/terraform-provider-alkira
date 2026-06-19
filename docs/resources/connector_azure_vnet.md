@@ -141,7 +141,7 @@ resource "alkira_connector_azure_vnet" "peering" {
 - `peering_gateway_cxp_id` (Number) The ID of the CXP peering gateway associated with the connector.
 - `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default value is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.
-- `scale_group_id` (String) The ID of a scale group to place this connector on. A scale group is a set of dedicated CXP nodes used to isolate a connector or distribute many connectors for performance. Typically available only on high-capacity CXPs (10Gb and above). Can only be set at create time and cannot be changed after provisioning.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `service_tags` (List of String) list of service tags from Azure. Providing a service tag here would result in service tag route configuration on VNET route table, so that the traffic toward the service would directly steer towards those services, and would not go via Alkira network.
 - `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 - `vnet_cidr` (Block Set) Configure routing options on specified VNET CIDR. (see [below for nested schema](#nestedblock--vnet_cidr))

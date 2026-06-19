@@ -68,7 +68,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `scale_group_id` (String) The ID of a scale group to place this connector on. A scale group is a set of dedicated CXP nodes used to isolate a connector or distribute many connectors for performance. Typically available only on high-capacity CXPs (10Gb and above). Can only be set at create time and cannot be changed after provisioning.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tunnel_protocol` (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
 
 ### Read-Only

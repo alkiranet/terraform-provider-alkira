@@ -54,7 +54,7 @@ resource "alkira_connector_azure_vnet_third_party" "example" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
-- `scale_group_id` (String) The ID of a scale group to place this connector on. A scale group is a set of dedicated CXP nodes used to isolate a connector or distribute many connectors for performance. Typically available only on high-capacity CXPs (10Gb and above). Can only be set at create time and cannot be changed after provisioning.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 
 ### Read-Only
 

@@ -353,13 +353,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"scale_group_id": {
-				Description: "The ID of a scale group to place this " +
-					"connector on. A scale group is a set of " +
-					"dedicated CXP nodes used to isolate a connector " +
-					"or distribute many connectors for performance. " +
-					"Typically available only on high-capacity CXPs " +
-					"(10Gb and above). Can only be set at create " +
-					"time and cannot be changed after provisioning.",
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
