@@ -13,7 +13,7 @@ type IPReservation struct {
 	Prefix            string `json:"prefix"`
 	PrefixLen         int    `json:"prefixLen"`
 	PrefixType        string `json:"prefixType"`
-	FirstIpAssignedTo string `json:"firstIpAssignedTo"`
+	FirstIpAssignedTo string `json:"firstIpAssignedTo,omitempty"`
 	NodeId            string `json:"nodeId"`
 	Cxp               string `json:"cxp"`
 	ScaleGroupId      string `json:"scaleGroupId"`
