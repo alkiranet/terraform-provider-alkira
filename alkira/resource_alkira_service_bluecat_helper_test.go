@@ -506,8 +506,30 @@ func TestExpandBluecatAnycast(t *testing.T) {
 				},
 				[]interface{}{
 					map[string]interface{}{
-						"ips":         []interface{}{"192.168.1.10", "192.168.1.11"},
-						"backup_cxps": []interface{}{"cxp1", "cxp2"},
+						"ips":         schema.NewSet(schema.HashString, []interface{}{"192.168.1.10", "192.168.1.11"}),
+						"backup_cxps": schema.NewSet(schema.HashString, []interface{}{"cxp1", "cxp2"}),
+					},
+				},
+			),
+			expected: &alkira.BluecatAnycast{
+				Ips:        []string{"192.168.1.10", "192.168.1.11"},
+				BackupCxps: []string{"cxp1", "cxp2"},
+			},
+			expectError: false,
+		},
+		{
+			// IPs are now a TypeSet, so a reordered config must expand to
+			// the same set of values. This is the AK-69549 regression guard:
+			// order from the API must not produce a spurious diff.
+			name: "reordered ips expand to same set",
+			input: schema.NewSet(
+				func(i interface{}) int {
+					return schema.HashString("test")
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"ips":         schema.NewSet(schema.HashString, []interface{}{"192.168.1.11", "192.168.1.10"}),
+						"backup_cxps": schema.NewSet(schema.HashString, []interface{}{"cxp2", "cxp1"}),
 					},
 				},
 			),
@@ -546,7 +568,10 @@ func TestExpandBluecatAnycast(t *testing.T) {
 				}
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
+				// ips/backup_cxps are TypeSet now; compare without
+				// regard to order.
+				assert.ElementsMatch(t, tt.expected.Ips, result.Ips)
+				assert.ElementsMatch(t, tt.expected.BackupCxps, result.BackupCxps)
 			}
 		})
 	}
