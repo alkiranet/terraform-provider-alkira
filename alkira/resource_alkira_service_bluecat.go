@@ -32,6 +32,14 @@ func resourceAlkiraBluecat() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceBluecatV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceBluecatStateUpgradeV0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
 				Type:     schema.TypeSet,

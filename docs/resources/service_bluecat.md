@@ -386,8 +386,8 @@ Read-Only:
 
 Optional:
 
-- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `backup_cxps` (Set of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
+- `ips` (Set of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 
 <a id="nestedblock--edge_anycast"></a>
@@ -395,8 +395,8 @@ Optional:
 
 Optional:
 
-- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `backup_cxps` (Set of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
+- `ips` (Set of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 ## Import
 
