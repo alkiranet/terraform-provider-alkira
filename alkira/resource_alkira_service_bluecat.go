@@ -32,6 +32,14 @@ func resourceAlkiraBluecat() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceBluecatV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceBluecatStateUpgradeV0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
 				Type:        schema.TypeSet,
@@ -43,7 +51,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -53,7 +61,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 								"have a configured Bluecat service in order to take advantage of " +
 								"this feature. It is NOT required that the `backup_cxps` should have " +
 								"a configured Bluecat service before it can be designated as a backup.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -70,7 +78,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -80,7 +88,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 								"have a configured Bluecat service in order to take advantage of " +
 								"this feature. It is NOT required that the `backup_cxps` should have " +
 								"a configured Bluecat service before it can be designated as a backup.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
