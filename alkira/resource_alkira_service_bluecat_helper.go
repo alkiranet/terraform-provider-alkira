@@ -209,11 +209,11 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
-		if v, ok := cfg["ips"].([]interface{}); ok {
-			anycast.Ips = convertTypeListToStringList(v)
+		if v, ok := cfg["ips"].(*schema.Set); ok {
+			anycast.Ips = convertTypeSetToStringList(v)
 		}
-		if v, ok := cfg["backup_cxps"].([]interface{}); ok {
-			anycast.BackupCxps = convertTypeListToStringList(v)
+		if v, ok := cfg["backup_cxps"].(*schema.Set); ok {
+			anycast.BackupCxps = convertTypeSetToStringList(v)
 		}
 	}
 	return anycast, nil
