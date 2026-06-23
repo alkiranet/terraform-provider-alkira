@@ -79,6 +79,7 @@ resource "alkira_internet_application" "test_internal_dns" {
 - `bi_directional_az` (String) Bi-directional IFA AZ. The value could be either `AZ0` or `AZ1`
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `byoip_id` (Number) BYOIP ID.
+- `description` (String) The description of the internet application.
 - `ilb_credential_id` (String) The credential ID of AWS account for `target` This field can only be used when `connector_type` is `AWS_VPC` and `target`'s `type` is `ILB_NAME`.
 - `inbound_connector_id` (String) Inbound connector ID.
 - `inbound_connector_type` (String) This field defines how the internet application to be opened up to the public. Value `DEFAULT` means that the native cloud internet connector is used. In this case, Alkira takes care of creating this inbound internet connector implicitly. When value `AKAMAI_PROLEXIC` is used it means that the inbound traffic is through `alkira_connector_akamai_prolexic`. You need to create and configure that connector and use it with the internet application.
