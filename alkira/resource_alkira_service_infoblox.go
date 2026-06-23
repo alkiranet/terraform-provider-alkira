@@ -171,22 +171,42 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required: true,
 						},
 						"model": {
-							Description: "The model of the Infoblox instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The model of the Infoblox instance. " +
+								"Not used for `NIOS-X` platform instances.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"password": {
 							Description: "The password associated with the " +
-								"infoblox instance.",
+								"infoblox instance. Not used for `NIOS-X` " +
+								"platform instances.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+						},
+						"platform_type": {
+							Description: "The platform type of the Infoblox " +
+								"instance. The value could be `NIOS` or " +
+								"`NIOS-X`. When not specified, it defaults to " +
+								"`NIOS`.",
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"NIOS", "NIOS-X"}, false),
+						},
+						"join_token": {
+							Description: "The join token used to register a " +
+								"`NIOS-X` platform instance. Only used for " +
+								"`NIOS-X` platform instances.",
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"type": {
 							Description: "The type of the Infoblox instance that " +
 								"is to be provisioned. The value could be `MASTER`, " +
 								"`MASTER_CANDIDATE` and `MEMBER`.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
 						},
@@ -218,6 +238,16 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"size": {
+				Description: "The size of the service, one of `SMALL`, " +
+					"`MEDIUM` or `LARGE`. Used for `NIOS-X` image sizing. " +
+					"When not specified, it defaults to `SMALL`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE"}, false),
 			},
 			"service_group_name": {
 				Description: "The name of the service group to be associated " +
@@ -502,6 +532,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Name:             name,
 		Segments:         segmentNames,
 		ServiceGroupName: d.Get("service_group_name").(string),
+		Size:             d.Get("size").(string),
 		AllowListId:      d.Get("allow_list_id").(int),
 	}, nil
 }

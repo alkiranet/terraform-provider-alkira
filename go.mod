@@ -62,3 +62,5 @@ require (
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 )
+
+replace github.com/alkiranet/alkira-client-go => ../alkira-client-go

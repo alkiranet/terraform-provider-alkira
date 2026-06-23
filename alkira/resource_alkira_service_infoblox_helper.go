@@ -23,6 +23,7 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		var r alkira.InfobloxInstance
 		var nameWithSuffix string
 		var password string
+		var joinToken string
 
 		instanceCfg := instance.(map[string]interface{})
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
@@ -47,6 +48,12 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		if v, ok := instanceCfg["password"].(string); ok {
 			password = v
 		}
+		if v, ok := instanceCfg["platform_type"].(string); ok {
+			r.PlatformType = v
+		}
+		if v, ok := instanceCfg["join_token"].(string); ok {
+			joinToken = v
+		}
 		if v, ok := instanceCfg["type"].(string); ok {
 			r.Type = v
 		}
@@ -55,14 +62,25 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
 			if v == "" {
-				credentialInstance := alkira.CredentialInfobloxInstance{
-					Password: password,
-				}
+				var credentialId string
+				var err error
 
-				credentialId, err := client.CreateCredential(
+				// TEST-INTERIM (overload): both NIOS and NIOS-X use an INFOBLOX_INSTANCE
+				// credential. For NIOS-X the join token is carried in the password field,
+				// so the e2e test can run before the genuine INFOBLOX_JOIN_TOKEN credential
+				// type lands in credentials-java/credentials-client. The orchestrator resolves
+				// it from the instance credential's password. Switch to
+				// CredentialTypeInfobloxJoinToken{JoinToken: joinToken} once that chain ships.
+				secret := password
+				if r.PlatformType == "NIOS-X" {
+					secret = joinToken
+				}
+				credentialId, err = client.CreateCredential(
 					nameWithSuffix,
 					alkira.CredentialTypeInfobloxInstance,
-					credentialInstance,
+					alkira.CredentialInfobloxInstance{
+						Password: secret,
+					},
 					0,
 				)
 
@@ -95,6 +113,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"anycast_enabled": v.AnyCastEnabled,
 			"hostname":        v.HostName,
 			"model":           v.Model,
+			"platform_type":   v.PlatformType,
 			"type":            v.Type,
 			"version":         v.Version,
 			"id":              int(id),
@@ -221,6 +240,7 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("instance", deflateInfobloxInstances(in.Instances))
 	d.Set("license_type", in.LicenseType)
 	d.Set("service_group_name", in.ServiceGroupName)
+	d.Set("size", in.Size)
 	d.Set("allow_list_id", in.AllowListId)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
