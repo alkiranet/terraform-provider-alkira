@@ -208,9 +208,11 @@ func resourceAlkiraConnectorGcpVpc() *schema.Resource {
 				Default:  64522,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}

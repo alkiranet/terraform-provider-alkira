@@ -68,6 +68,7 @@ resource "alkira_connector_aruba_edge" "test1" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Whether the connector is enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tunnel_protocol` (String) The tunnel protocol to be used. IPSEC and GRE are the only valid options. IPSEC can only be used with azure. GRE can only be used with AWS. IPSEC is the default selection.
 
 ### Read-Only
@@ -89,7 +90,6 @@ Optional:
 
 - `advertise_default_route` (Boolean) Enables or disables access to the internet when traffic arrives via this connector. The default value is `false`.
 - `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud. The default value is False.
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
 
 
 <a id="nestedblock--instances"></a>
