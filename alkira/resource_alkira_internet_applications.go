@@ -359,7 +359,18 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 		}}
 	}
 
-	setInternetApplicationFields(d, app)
+	d.Set("billing_tag_ids", app.BillingTags)
+	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
+	d.Set("byoip_id", app.ByoipId)
+	d.Set("connector_id", app.ConnectorId)
+	d.Set("connector_type", app.ConnectorType)
+	d.Set("description", app.Description)
+	d.Set("fqdn_prefix", app.FqdnPrefix)
+	d.Set("name", app.Name)
+	d.Set("internet_protocol", app.InternetProtocol)
+	d.Set("public_ips", app.PublicIps)
+	d.Set("size", app.Size)
+	d.Set("ilb_credential_id", app.IlbCredentialId)
 
 	// Segment
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
