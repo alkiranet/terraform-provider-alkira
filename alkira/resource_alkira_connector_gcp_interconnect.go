@@ -205,7 +205,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with " +
-					"the connector.",
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
