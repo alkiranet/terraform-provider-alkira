@@ -78,7 +78,7 @@ resource "alkira_connector_aws_dx" "test" {
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
 - `loopback_prefixes` (Set of String) A list of `/26` prefixes provided by Alkira and used to allocate loopback IPs across DX instances. Required only when using tunnel scale options. Without tunnel scale options, each instance accepts the required loopbacks correctly. Eg: `["10.30.0.0/26"]`
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 
 ### Read-Only
 
