@@ -135,7 +135,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Whether the connector is enabled. Default value is `true`.
 - `group` (String) The group of the connector.
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 
 ### Read-Only
 
