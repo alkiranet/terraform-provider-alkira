@@ -472,7 +472,7 @@ resource "alkira_connector_ipsec" "multi_site_advanced" {
 - `group` (String) The group of the connector. (see resource `alkira_group`)
 - `policy_options` (Block Set) Policy options, both `on_prem_prefix_list_ids` and `cxp_prefix_list_ids` must be provided if `vpn_mode` is `POLICY_BASED`. (see [below for nested schema](#nestedblock--policy_options))
 - `routing_options` (Block Set) Routing options, type is `STATIC`, `DYNAMIC`, or`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED` (see [below for nested schema](#nestedblock--routing_options))
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `segment_options` (Block Set) Additional options for each segment associated with the connector. (see [below for nested schema](#nestedblock--segment_options))
 
 ### Read-Only
