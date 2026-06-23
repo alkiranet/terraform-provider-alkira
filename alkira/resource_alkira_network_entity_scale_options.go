@@ -18,8 +18,19 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 		Description:   "Scale Options are flexible configurations that elevate the capacity and performance characteristics of your network resource (any connector or a service) on Alkira's platform based on your specific needs. For example, you are experiencing traffic congestion with any of your exiting branch connectors, that too only on a particular segment, you can choose to define the scale options to add extra capacity to that connector on that segment. This can be done by specifying additional tunnels or additional nodes to the existing connector. \nScale options are made available only in certain scenarios when the existing connector or service is not meeting the required needs. \nUnderstanding scale options is crucial for planning and optimizing your network architecture on Alkira's platform. Choosing the right scale option ensures that your resources can handle the expected load.",
 		CreateContext: resourceNetworkEntityScaleOptionsCreate,
 		ReadContext:   resourceNetworkEntityScaleOptionsRead,
-		UpdateContext: resourceNetworkEntityScaleOptionsUpdate,
+		UpdateContext: warnOnFailedScaleOptionsUpdate(resourceNetworkEntityScaleOptionsUpdate),
 		DeleteContext: resourceNetworkEntityScaleOptionsDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			client := m.(*alkira.AlkiraClient)
+
+			old, _ := d.GetChange("state")
+
+			if client.Provision && old == "FAILED" {
+				d.SetNew("state", "SUCCESS")
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceNetworkEntityScaleOptionsRead),
 		},
@@ -367,4 +378,45 @@ func generateNetworkEntityScaleOptionsRequest(d *schema.ResourceData) (*alkira.N
 	}
 
 	return networkEntityScaleOptions, nil
+}
+
+// warnOnFailedScaleOptionsUpdate wraps the scale-options UpdateContextFunc and
+// emits a non-fatal warning when an update carrying config changes is applied
+// against a resource in FAILED provision state. In that case, the backend
+// (NetworkEntityScaleOptionsServiceImpl extends AbstractNetworkCRUDService)
+// skips the config update and re-provisions the previously saved config (the
+// retry-by-reapply mechanism), so the requested changes are not saved.
+//
+// This mirrors the generic warnOnFailedStateUpdate helper, but this resource
+// stores its provision state in the "state" field rather than
+// "provision_state", so it needs its own wrapper keyed on "state".
+func warnOnFailedScaleOptionsUpdate(update schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		client := m.(*alkira.AlkiraClient)
+
+		// Compute the condition up front for clarity. HasChangesExcept
+		// filters out the retry-only diff forced by CustomizeDiff.
+		oldState, _ := d.GetChange("state")
+
+		warn := client.Provision &&
+			oldState == "FAILED" &&
+			d.HasChangesExcept("state")
+
+		diags := update(ctx, d, m)
+
+		// Suppress the warning if the update itself failed - the
+		// skip message would be misleading in that case.
+		if warn && !diags.HasError() {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "CONFIGURATION CHANGES SKIPPED",
+				Detail: "Resource was in FAILED provision state; the backend " +
+					"re-provisions the previously saved configuration and skips " +
+					"configuration changes until the resource recovers. See the " +
+					"PROVISIONING section in the provider documentation.",
+			})
+		}
+
+		return diags
+	}
 }
