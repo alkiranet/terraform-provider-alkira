@@ -36,15 +36,15 @@ resource "alkira_credential_azure_vnet" "test" {
 
 ### Required
 
-- `application_id` (String, Sensitive) Azure Application ID.
+- `application_id` (String) Azure Application ID.
 - `name` (String) The name of the credential.
-- `secret_key` (String, Sensitive) Azure Secret Key.
-- `tenant_id` (String, Sensitive) Azure Tenant ID.
+- `secret_key` (String) Azure Secret Key.
+- `tenant_id` (String) Azure Tenant ID.
 
 ### Optional
 
 - `environment` (String) Azure environment can be `AZURE`, `AZURE_CHINA` or `AZURE_US_GOVERNMENT`. The default value is `AZURE`.
-- `subscription_id` (String, Sensitive) Azure subscription ID.
+- `subscription_id` (String) Azure subscription ID.
 
 ### Read-Only
 
