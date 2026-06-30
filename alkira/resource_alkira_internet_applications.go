@@ -68,6 +68,11 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"description": {
+				Description: "The description of the internet application.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			"fqdn_prefix": {
 				Description: "User provided FQDN prefix that will be " +
 					"published on AWS Route 53.",
@@ -300,6 +305,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("byoip_id", app.ByoipId)
 	d.Set("connector_id", app.ConnectorId)
 	d.Set("connector_type", app.ConnectorType)
+	d.Set("description", app.Description)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
 	d.Set("name", app.Name)
 	d.Set("internet_protocol", app.InternetProtocol)
@@ -472,6 +478,7 @@ func generateInternetApplicationRequest(d *schema.ResourceData, m interface{}) (
 		ByoipId:                       d.Get("byoip_id").(int),
 		ConnectorId:                   d.Get("connector_id").(int),
 		ConnectorType:                 d.Get("connector_type").(string),
+		Description:                   d.Get("description").(string),
 		FqdnPrefix:                    d.Get("fqdn_prefix").(string),
 		InboundConnectorId:            d.Get("inbound_connector_id").(string),
 		InboundConnectorType:          d.Get("inbound_connector_type").(string),
