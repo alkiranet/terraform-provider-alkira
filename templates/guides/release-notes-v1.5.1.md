@@ -15,9 +15,11 @@ Version 1.5.1 adds the Azure Virtual Hub connector and an inter-CXP routing poli
 
 ## New Resources
 
-- **`alkira_connector_azure_vhub`**: Connects an Azure Virtual Hub (vWAN) to the Alkira CXP. Supports segment assignment and size-based scaling. A matching data source is available for lookups by name or ID.
+~> **Beta:** The resources below are released as beta features and are available on request until the full release. Contact Alkira to have them enabled for your tenant.
 
-- **`alkira_policy_inter_cxp_routing`**: Manages inter-CXP route policies. Supports AS-path filtering and prepending, community and extended-community tagging, prefix / group / segment-resource matching, composite match conditions, and drop-all rules.
+- **`alkira_connector_azure_vhub`** (Beta): Connects an Azure Virtual Hub (vWAN) to the Alkira CXP. Supports segment assignment and size-based scaling. A matching data source is available for lookups by name or ID.
+
+- **`alkira_policy_inter_cxp_routing`** (Beta): Manages inter-CXP route policies. Supports AS-path filtering and prepending, community and extended-community tagging, prefix / group / segment-resource matching, composite match conditions, and drop-all rules.
 
 ---
 
