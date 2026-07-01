@@ -70,17 +70,21 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 			},
 			"included_group_ids": {
 				Description: "Defines the scope for the policy. Connectors " +
-					"associated with groups defined here is where this policy " +
-					"would be applied.",
+					"associated with the groups defined here are where this " +
+					"policy is applied. This field accepts group IDs only " +
+					"(not connector IDs); for a connector that is not " +
+					"associated with any user-defined group, use the " +
+					"connector's implicit group ID.",
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Required: true,
 			},
 			"excluded_group_ids": {
-				Description: "Excludes given associated connector from " +
-					"`included_groups`. Implicit group of a branch or on-premise " +
-					"connector for which a user defined group is used in " +
-					"`included_groups` can be used here.",
+				Description: "Excludes connectors from the scope defined by " +
+					"`included_group_ids`. This field accepts group IDs only " +
+					"(not connector IDs). The implicit group ID of a branch or " +
+					"on-premise connector whose user-defined group is listed in " +
+					"`included_group_ids` can be used here.",
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
