@@ -6,7 +6,9 @@ resource "alkira_service_infoblox" "test" {
   segment_ids         = [alkira_segment.test1.id]
   service_group_name  = "serviceGroupName"
   shared_secret       = "thisisanewsecredet"
+  size                = "SMALL" # drives NIOS-X instance sizing; NIOS instances ignore it
 
+  # NIOS instance (grid-managed appliance): model + member-role type required.
   instance {
     anycast_enabled = false
     hostname        = "hostname.localdomain"
@@ -14,6 +16,16 @@ resource "alkira_service_infoblox" "test" {
     password        = "password1234"
     type            = "MASTER_CANDIDATE"
     version         = "8.5.2"
+  }
+
+  # NIOS-X instance (SaaS-managed): platform = NIOS-X, registered via a join token.
+  # No model / member-role type. One service may mix NIOS and NIOS-X instances.
+  instance {
+    anycast_enabled = false
+    hostname        = "niosx1.localdomain"
+    platform        = "NIOS-X"
+    version         = "4.0.1"
+    join_token      = "eyJ0b2tlbiI6ImV4YW1wbGUifQ"
   }
 
 
