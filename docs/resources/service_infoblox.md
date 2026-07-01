@@ -82,7 +82,7 @@ resource "alkira_service_infoblox" "test" {
     hostname        = "niosx1.localdomain"
     platform        = "NIOS-X"
     version         = "4.0.1"
-    join_token      = "eyJ0b2tlbiI6ImV4YW1wbGUifQ"
+    join_token      = "REPLACE_WITH_JOIN_TOKEN"
   }
 
 
