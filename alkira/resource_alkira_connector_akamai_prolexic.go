@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -57,16 +55,9 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Required:    true,
 			},
 			"akamai_bgp_authentication_key": {
-				Description: "The Akamai BGP Authentication Key. " +
-					"It could also be set by environment variable " +
-					"`AK_AKAMAI_BGP_AUTHENTICATION_KEY`. This value is " +
-					"stored as a credential in the Alkira backend and " +
-					"is never returned by the API, so it is not " +
-					"persisted in Terraform state.",
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-				WriteOnly: true,
+				Description: "The Akamai BGP Authentication Key.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"byoip_options": {
 				Description: "BYOIP options.",
@@ -262,7 +253,6 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 
 	d.Set("akamai_bgp_asn", connector.AkamaiBgpAsn)
 	d.Set("billing_tag_ids", connector.BillingTags)
-	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
@@ -270,7 +260,6 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 	d.Set("name", connector.Name)
 	d.Set("size", connector.Size)
 	d.Set("description", connector.Description)
-
 
 	// Get segment
 	numOfSegments := len(connector.Segments)
@@ -365,10 +354,6 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorAkamaiProlexic(m.(*alkira.AlkiraClient))
 
-	// Capture credential_id before the connector is deleted so we can
-	// clean up the implicit credential afterwards.
-	credentialId := d.Get("credential_id").(string)
-
 	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
@@ -379,14 +364,6 @@ func resourceConnectorAkamaiProlexicDelete(ctx context.Context, d *schema.Resour
 			return diag.FromErr(fmt.Errorf("%w alkira_connector_akamai_prolexic (name=%q id=%s)", err, nameStr, d.Id()))
 		}
 		return diag.FromErr(fmt.Errorf("%w alkira_connector_akamai_prolexic (id=%s)", err, d.Id()))
-	}
-
-	// Delete the implicit credential so it doesn't get orphaned on the tenant.
-	if credentialId != "" {
-		log.Printf("[INFO] Deleting credential-akamai-prolexic (id=%s)", credentialId)
-		if delErr := client.DeleteCredential(credentialId, alkira.CredentialTypeAkamaiProlexic); delErr != nil {
-			log.Printf("[WARN] Failed to delete credential %s: %v", credentialId, delErr)
-		}
 	}
 
 	d.SetId("")
@@ -424,45 +401,20 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		return nil, err
 	}
 
-	// Read the BGP authentication key. The field is WriteOnly so it
-	// is not persisted in state; pull it from raw config with an env
-	// var fallback.
-	bgpAuthKey, err := getAkamaiProlexicCredentialValue(
-		d,
-		"akamai_bgp_authentication_key",
-		"AK_AKAMAI_BGP_AUTHENTICATION_KEY",
-		true,
-	)
+	// Create implicit akamai-prolexic credential
+	log.Printf("[INFO] Creating credential-akamai-prolexic")
+	c := alkira.CredentialAkamaiProlexic{
+		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),
+	}
+
+	client := m.(*alkira.AlkiraClient)
+	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
+
 	if err != nil {
 		return nil, err
 	}
 
-	// Manage the implicit akamai-prolexic credential.
-	// On Create (credential_id is empty), create a new credential.
-	// On Update (credential_id already set), reuse the same credential_id
-	// and push any changes via UpdateCredential so we don't leak a new
-	// credential on every apply.
-	c := alkira.CredentialAkamaiProlexic{
-		BgpAuthenticationKey: bgpAuthKey,
-	}
-
-	client := m.(*alkira.AlkiraClient)
-	credentialId := d.Get("credential_id").(string)
-
-	if credentialId == "" {
-		log.Printf("[INFO] Creating credential-akamai-prolexic")
-		newCredentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
-		if err != nil {
-			return nil, err
-		}
-		credentialId = newCredentialId
-		d.Set("credential_id", credentialId)
-	} else {
-		log.Printf("[INFO] Updating credential-akamai-prolexic (id=%s)", credentialId)
-		if err := client.UpdateCredential(credentialId, d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0); err != nil {
-			return nil, err
-		}
-	}
+	d.Set("credential_id", credentialId)
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),
@@ -480,28 +432,4 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 	}
 
 	return connector, nil
-}
-
-// getAkamaiProlexicCredentialValue reads a credential value for the
-// Akamai Prolexic connector. WriteOnly fields are not persisted in
-// state, so the value is pulled from raw config first and falls back
-// to the given environment variable.
-func getAkamaiProlexicCredentialValue(d *schema.ResourceData, field string, envVar string, required bool) (string, error) {
-	attrPath := cty.Path{cty.GetAttrStep{Name: field}}
-	val, diags := d.GetRawConfigAt(attrPath)
-
-	if !diags.HasError() && !val.IsNull() && val.IsKnown() && val.Type() == cty.String {
-		if s := val.AsString(); s != "" {
-			return s, nil
-		}
-	}
-
-	if v := os.Getenv(envVar); v != "" {
-		return v, nil
-	}
-
-	if required {
-		return "", fmt.Errorf("required field '%s' is not set in configuration and environment variable '%s' is not set", field, envVar)
-	}
-	return "", nil
 }
