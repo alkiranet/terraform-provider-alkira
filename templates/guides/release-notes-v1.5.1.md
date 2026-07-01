@@ -26,7 +26,7 @@ Version 1.5.1 adds the Azure Virtual Hub connector and an inter-CXP routing poli
 - **Provider:** API serialization is now enabled by default. The `serialization_enabled` attribute now defaults to `true` (previously `false`), and can be controlled with the `ALKIRA_API_SERIALIZATION_ENABLED` environment variable (which now parses both `true` and `false`). Explicit configuration always takes precedence. See Upgrade Instructions.
 - **Internet Application (`alkira_internet_application`):** Added an optional `description` field.
 - **AWS Direct Connect Connector (`alkira_connector_aws_dx`):** Added `loopback_prefixes` for loopback IP allocation across Direct Connect instances with tunnel scale options.
-- **Provisioning:** Resources now emit a non-fatal `CONFIGURATION CHANGES SKIPPED` warning on update when the resource is in a `FAILED` provision state. In that state the backend re-provisions the previously saved configuration and skips configuration changes until the resource recovers. This includes `alkira_network_entity_scale_options`.
+- **Provisioning:** Resources now emit a non-fatal `CONFIGURATION CHANGES SKIPPED` warning on update when the resource is in a `FAILED` provision state. In that state the backend re-provisions the previously saved configuration and skips configuration changes until the resource recovers.
 
 ---
 
