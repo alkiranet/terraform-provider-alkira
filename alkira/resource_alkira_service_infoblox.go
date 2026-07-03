@@ -478,10 +478,22 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
 
+	// NIOS-X-only service: no Alkira-hosted grid, so grid-master / shared-secret
+	// credentials must not be created or referenced (TPS rejects them).
+	instanceSet := d.Get("instance").([]interface{})
+	niosxOnly := len(instanceSet) > 0
+	for _, i := range instanceSet {
+		cfg := i.(map[string]interface{})
+		if p, _ := cfg["platform"].(string); p != "NIOS-X" {
+			niosxOnly = false
+			break
+		}
+	}
+
 	var infobloxCredentialId string
 	var err error
 
-	if shared_secret != "" {
+	if shared_secret != "" && !niosxOnly {
 		infobloxCredentialId, err = client.CreateCredential(
 			nameWithSuffix,
 			alkira.CredentialTypeInfoblox,
@@ -496,9 +508,21 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	//Parse Grid Master
 	gmSet := d.Get("grid_master").([]interface{})
-	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
-	if err != nil {
-		return nil, err
+	var gridMaster *alkira.InfobloxGridMaster
+	if niosxOnly {
+		// Send name/external only — no ip and no credential ids; TPS rejects a
+		// NIOS-X-only service whose gridMaster carries any of those.
+		gridMaster = &alkira.InfobloxGridMaster{}
+		if len(gmSet) == 1 {
+			cfg := gmSet[0].(map[string]interface{})
+			gridMaster.Name, _ = cfg["name"].(string)
+			gridMaster.External, _ = cfg["external"].(bool)
+		}
+	} else {
+		gridMaster, err = expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//Parse Instances
