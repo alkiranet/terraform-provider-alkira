@@ -68,6 +68,9 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 				// NIOS-X uses a dedicated INFOBLOX_JOIN_TOKEN credential (join token in the
 				// #cloud-config user-data); NIOS uses an INFOBLOX_INSTANCE credential (admin password).
 				if r.Platform == "NIOS-X" {
+					if joinToken == "" {
+						return nil, fmt.Errorf("ERROR: 'join_token' is required for NIOS-X instance %q", r.HostName)
+					}
 					credentialId, err = client.CreateCredential(
 						nameWithSuffix,
 						alkira.CredentialTypeInfobloxJoinToken,
@@ -131,11 +134,17 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string, m interface{}) (*alkira.InfobloxGridMaster, error) {
 	client := m.(*alkira.AlkiraClient)
 
-	if in == nil || len(in) > 1 || len(in) < 1 {
-		return nil, fmt.Errorf("ERROR: Exactly one object allowed in grid master options")
+	if len(in) > 1 {
+		return nil, fmt.Errorf("ERROR: at most one grid_master object allowed")
 	}
 
 	im := &alkira.InfobloxGridMaster{}
+
+	// Only a NIOS-X-only service may omit grid_master, and generateInfobloxRequest handles
+	// that case before calling here — reaching this with no block means NIOS instances exist.
+	if len(in) == 0 {
+		return nil, fmt.Errorf("ERROR: grid_master is required unless all instances are platform NIOS-X")
+	}
 
 	var username string
 	var password string
@@ -239,12 +248,55 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("cxp", in.Cxp)
 	d.Set("description", in.Description)
 	d.Set("global_cidr_list_id", in.GlobalCidrListId)
-	d.Set("grid_master", deflateInfobloxGridMaster(in.GridMaster))
-	d.Set("instance", deflateInfobloxInstances(in.Instances))
+	d.Set("grid_master", preserveInfobloxGridMasterSecrets(d, deflateInfobloxGridMaster(in.GridMaster), in.GridMaster))
+	d.Set("instance", preserveInfobloxInstanceSecrets(d, deflateInfobloxInstances(in.Instances)))
 	d.Set("license_type", in.LicenseType)
 	d.Set("service_group_name", in.ServiceGroupName)
 	d.Set("size", in.Size)
 	d.Set("allow_list_id", in.AllowListId)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
+}
+
+// The API never returns the write-only secrets (instance join_token/password, grid_master
+// username/password). Rewriting state without them stores "" while the config holds the real
+// value, so every plan shows an in-place change and every apply re-triggers a provisioning
+// run. Preserve them from the prior state (which mirrors the config after apply).
+func preserveInfobloxInstanceSecrets(d *schema.ResourceData, instances []map[string]interface{}) []map[string]interface{} {
+	prior := map[string]map[string]interface{}{}
+	if v, ok := d.Get("instance").([]interface{}); ok {
+		for _, p := range v {
+			if pm, ok := p.(map[string]interface{}); ok {
+				if hn, ok := pm["hostname"].(string); ok && hn != "" {
+					prior[hn] = pm
+				}
+			}
+		}
+	}
+	for _, j := range instances {
+		if hn, ok := j["hostname"].(string); ok {
+			if pm, ok := prior[hn]; ok {
+				j["join_token"] = pm["join_token"]
+				j["password"] = pm["password"]
+			}
+		}
+	}
+	return instances
+}
+
+func preserveInfobloxGridMasterSecrets(d *schema.ResourceData, gridMaster []map[string]interface{}, api alkira.InfobloxGridMaster) []map[string]interface{} {
+	prior, _ := d.Get("grid_master").([]interface{})
+	// NIOS-X-only service: the API returns an empty gridMaster and the config carries no
+	// grid_master block — keep state empty, else refresh adds a phantom block that every
+	// subsequent plan shows as a removal.
+	if len(prior) == 0 && api.Name == "" && api.Ip == "" && api.GridMasterCredentialId == "" {
+		return []map[string]interface{}{}
+	}
+	if len(prior) == 1 && len(gridMaster) == 1 {
+		if pm, ok := prior[0].(map[string]interface{}); ok {
+			gridMaster[0]["username"] = pm["username"]
+			gridMaster[0]["password"] = pm["password"]
+		}
+	}
+	return gridMaster
 }

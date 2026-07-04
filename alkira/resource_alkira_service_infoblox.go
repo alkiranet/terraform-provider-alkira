@@ -97,9 +97,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			"grid_master": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Description: "Defines the properties of the Infoblox grid " +
-					"master.",
+					"master. Required for `NIOS` instances; **omit for a " +
+					"`NIOS-X`-only service** (the server rejects gridMaster " +
+					"for NIOS-X-only).",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external": {
@@ -143,7 +145,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				Description: "The properties pertaining to each individual " +
-					"instance of the Infoblox service.",
+					"instance of the Infoblox service. When adding instances to " +
+					"an existing service, **append them at the end of the list** — " +
+					"inserting before existing entries shifts list indexes and " +
+					"makes the plan re-map existing instances.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"anycast_enabled": {
@@ -196,7 +201,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"join_token": {
 							Description: "The join token used to register a " +
 								"`NIOS-X` platform instance. Only used for " +
-								"`NIOS-X` platform instances.",
+								"`NIOS-X` platform instances. The token is " +
+								"injected at instance launch; changing it after " +
+								"the instance is provisioned has no effect on " +
+								"the running instance.",
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -273,10 +281,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Computed: true,
 			},
 			"shared_secret": {
-				Description: "Shared Secret of the InfoBlox grid. " +
-					"This cannot be empty.",
+				Description: "Shared Secret of the InfoBlox grid. Required for " +
+					"`NIOS`; **omit for a `NIOS-X`-only service** (the server " +
+					"rejects shared secret for NIOS-X-only).",
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"allow_list_id": {
