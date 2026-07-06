@@ -18,12 +18,12 @@ resource "alkira_service_infoblox" "test" {
     version         = "8.5.2"
   }
 
-  # NIOS-X instance (SaaS-managed): platform = NIOS-X, registered via a join token.
-  # No model / member-role type. One service may mix NIOS and NIOS-X instances.
+  # NIOS-X instance (SaaS-managed): platform = NIOS_X, registered via a join token.
+  # No model / member-role type. One service may mix NIOS and NIOS_X instances.
   instance {
     anycast_enabled = false
     hostname        = "niosx1.localdomain"
-    platform        = "NIOS-X"
+    platform        = "NIOS_X"
     version         = "4.0.1"
     join_token      = "REPLACE_WITH_JOIN_TOKEN"
   }

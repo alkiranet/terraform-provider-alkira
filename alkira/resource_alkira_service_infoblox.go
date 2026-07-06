@@ -27,6 +27,51 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Hostnames are the keys used to match instances across list reorders
+			// (id/credential_id remap in expandInfobloxInstances) — duplicates make
+			// that lookup unreliable, so reject them at plan time.
+			if err := validateInfobloxInstanceHostnames(d.Get("instance").([]interface{})); err != nil {
+				return err
+			}
+
+			// The server rejects a platform change after provisioning (both directions);
+			// surface it at plan time instead of a confusing apply-time 400. Matched by
+			// hostname, not list position. (CustomizeDiff, not ForceNew — ForceNew on an
+			// instance attribute would replace the whole service.)
+			if d.Id() != "" && d.HasChange("instance") {
+				oldRaw, newRaw := d.GetChange("instance")
+				oldPlatform := make(map[string]string)
+				for _, o := range oldRaw.([]interface{}) {
+					cfg, ok := o.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					hostname, _ := cfg["hostname"].(string)
+					platform, _ := cfg["platform"].(string)
+					if platform == "" {
+						platform = "NIOS"
+					}
+					if hostname != "" {
+						oldPlatform[hostname] = platform
+					}
+				}
+				for _, n := range newRaw.([]interface{}) {
+					cfg, ok := n.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					hostname, _ := cfg["hostname"].(string)
+					platform, _ := cfg["platform"].(string)
+					if platform == "" {
+						platform = "NIOS"
+					}
+					if prev, exists := oldPlatform[hostname]; exists && prev != platform {
+						return fmt.Errorf("instance %q: 'platform' cannot be changed after the service is provisioned (was %q, now %q)",
+							hostname, prev, platform)
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -100,7 +145,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Optional: true,
 				Description: "Defines the properties of the Infoblox grid " +
 					"master. Required for `NIOS` instances; **omit for a " +
-					"`NIOS-X`-only service** (the server rejects gridMaster " +
+					"`NIOS_X`-only service** (the server rejects gridMaster " +
 					"for NIOS-X-only).",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -177,13 +222,13 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						},
 						"model": {
 							Description: "The model of the Infoblox instance. " +
-								"Not used for `NIOS-X` platform instances.",
+								"Not used for `NIOS_X` platform instances.",
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"password": {
 							Description: "The password associated with the " +
-								"infoblox instance. Not used for `NIOS-X` " +
+								"infoblox instance. Not used for `NIOS_X` " +
 								"platform instances.",
 							Type:     schema.TypeString,
 							Optional: true,
@@ -191,17 +236,18 @@ func resourceAlkiraInfoblox() *schema.Resource {
 						"platform": {
 							Description: "The platform type of the Infoblox " +
 								"instance. The value could be `NIOS` or " +
-								"`NIOS-X`. When not specified, it defaults to " +
-								"`NIOS`.",
+								"`NIOS_X`. When not specified, it defaults to " +
+								"`NIOS`. Immutable once the service is provisioned " +
+								"(enforced at plan time).",
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"NIOS", "NIOS-X"}, false),
+								"NIOS", "NIOS_X"}, false),
 						},
 						"join_token": {
 							Description: "The join token used to register a " +
-								"`NIOS-X` platform instance. Only used for " +
-								"`NIOS-X` platform instances. The token is " +
+								"`NIOS_X` platform instance. Only used for " +
+								"`NIOS_X` platform instances. The token is " +
 								"injected at instance launch; changing it after " +
 								"the instance is provisioned has no effect on " +
 								"the running instance.",
@@ -249,7 +295,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the service, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE` or `2LARGE`. Used for `NIOS-X` image sizing " +
+					"`MEDIUM`, `LARGE` or `2LARGE`. Used for `NIOS_X` image sizing " +
 					"(`NIOS` instances derive size from the model and ignore it). " +
 					"When not specified, it defaults to `SMALL`.",
 				Type:     schema.TypeString,
@@ -282,7 +328,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			"shared_secret": {
 				Description: "Shared Secret of the InfoBlox grid. Required for " +
-					"`NIOS`; **omit for a `NIOS-X`-only service** (the server " +
+					"`NIOS`; **omit for a `NIOS_X`-only service** (the server " +
 					"rejects shared secret for NIOS-X-only).",
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -493,7 +539,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	niosxOnly := len(instanceSet) > 0
 	for _, i := range instanceSet {
 		cfg := i.(map[string]interface{})
-		if p, _ := cfg["platform"].(string); p != "NIOS-X" {
+		if p, _ := cfg["platform"].(string); p != "NIOS_X" {
 			niosxOnly = false
 			break
 		}
@@ -535,8 +581,12 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	}
 
 	//Parse Instances
+	// Old state is needed to remap id/credential_id by hostname — Terraform's
+	// positional TypeList diff shifts them onto the wrong element when an
+	// instance is inserted/removed mid-list.
+	oldInstanceListRaw, _ := d.GetChange("instance")
 	instanceList := d.Get("instance").([]interface{})
-	instances, err := expandInfobloxInstances(instanceList, m)
+	instances, err := expandInfobloxInstances(instanceList, oldInstanceListRaw.([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

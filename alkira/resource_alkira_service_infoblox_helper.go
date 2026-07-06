@@ -10,12 +10,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// func expandInfobloxInstances(in *schema.Set, m interface{}) ([]alkira.InfobloxInstance, error) {
-func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
+func expandInfobloxInstances(in []interface{}, oldInstances []interface{}, m interface{}) ([]alkira.InfobloxInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if in == nil || len(in) == 0 {
 		return nil, fmt.Errorf("ERROR: Infoblox instances cannot be nil or empty")
+	}
+
+	// Build hostname -> id/credential_id maps from old state. When an instance is
+	// inserted or removed in the middle of a TypeList, Terraform's positional diff
+	// shifts id/credential_id values to the wrong element — the request then tells
+	// the API to delete the wrong instance (observed live: removing the middle
+	// instance destroyed the tail one). Matching by hostname keeps each existing
+	// instance bound to its own ids regardless of list position (same fix as Bluecat).
+	oldIdByHostname := make(map[string]int)
+	oldCredentialIdByHostname := make(map[string]string)
+	oldCredentialIdOwner := make(map[string]string)
+	for _, old := range oldInstances {
+		cfg, ok := old.(map[string]interface{})
+		if !ok {
+			log.Printf("[WARN] Infoblox: skipping malformed instance entry in old state: %v", old)
+			continue
+		}
+		hostname, _ := cfg["hostname"].(string)
+		if hostname == "" {
+			continue
+		}
+		if id, ok := cfg["id"].(int); ok && id != 0 {
+			oldIdByHostname[hostname] = id
+		}
+		if cid, ok := cfg["credential_id"].(string); ok && cid != "" {
+			oldCredentialIdByHostname[hostname] = cid
+			oldCredentialIdOwner[cid] = hostname
+		}
 	}
 
 	instances := make([]alkira.InfobloxInstance, len(in))
@@ -29,11 +56,6 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 		if v, ok := instanceCfg["anycast_enabled"].(bool); ok {
 			r.AnyCastEnabled = v
 		}
-		if v, ok := instanceCfg["id"].(int); ok {
-			if v != 0 {
-				r.Id = json.Number(strconv.Itoa(v))
-			}
-		}
 		if v, ok := instanceCfg["hostname"].(string); ok {
 			//Note: Name is required but not used in the API. So rather than make our user input an
 			//extra field that we just ignore anyway r.Name is set to hostname and the credential
@@ -41,6 +63,11 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 			r.Name = v
 			r.HostName = v
 			nameWithSuffix = v + randomNameSuffix()
+		}
+		// id by hostname from old state — never trust the positionally-diffed value.
+		// Not found => new instance, id stays unset.
+		if id, found := oldIdByHostname[r.HostName]; found {
+			r.Id = json.Number(strconv.Itoa(id))
 		}
 		if v, ok := instanceCfg["model"].(string); ok {
 			r.Model = v
@@ -61,15 +88,26 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 			r.Version = v
 		}
 		if v, ok := instanceCfg["credential_id"].(string); ok {
+			// credential_id by hostname from old state — same positional-shift hazard as id.
+			if cid, found := oldCredentialIdByHostname[r.HostName]; found {
+				v = cid
+			} else if v != "" && oldCredentialIdOwner[v] != "" {
+				// A new instance whose list position previously belonged to another instance
+				// inherits that instance's credential_id from the positional diff. Never reuse
+				// it — mint a fresh credential for the new instance.
+				log.Printf("[WARN] Infoblox: new instance %q inherited credential_id of instance %q from its list position; creating a fresh credential",
+					r.HostName, oldCredentialIdOwner[v])
+				v = ""
+			}
 			if v == "" {
 				var credentialId string
 				var err error
 
 				// NIOS-X uses a dedicated INFOBLOX_JOIN_TOKEN credential (join token in the
 				// #cloud-config user-data); NIOS uses an INFOBLOX_INSTANCE credential (admin password).
-				if r.Platform == "NIOS-X" {
+				if r.Platform == "NIOS_X" {
 					if joinToken == "" {
-						return nil, fmt.Errorf("ERROR: 'join_token' is required for NIOS-X instance %q", r.HostName)
+						return nil, fmt.Errorf("ERROR: 'join_token' is required for NIOS_X instance %q", r.HostName)
 					}
 					credentialId, err = client.CreateCredential(
 						nameWithSuffix,
@@ -108,6 +146,32 @@ func expandInfobloxInstances(in []interface{}, m interface{}) ([]alkira.Infoblox
 	return instances, nil
 }
 
+// validateInfobloxInstanceHostnames returns an error if any two instances share a
+// hostname. Hostnames are the unique keys used to match instances across list
+// reorders (id/credential_id remap in expandInfobloxInstances); duplicates make
+// that lookup unreliable. Same guard as Bluecat's validateBluecatInstanceHostnames.
+func validateInfobloxInstanceHostnames(instances []interface{}) error {
+	seen := make(map[string]int, len(instances))
+	for i, inst := range instances {
+		cfg, ok := inst.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		hostname, _ := cfg["hostname"].(string)
+		if hostname == "" {
+			continue
+		}
+		if prev, exists := seen[hostname]; exists {
+			return fmt.Errorf(
+				"instance[%d] and instance[%d] both use hostname %q; hostnames must be unique across all instances",
+				prev, i, hostname,
+			)
+		}
+		seen[hostname] = i
+	}
+	return nil
+}
+
 func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interface{} {
 	var m []map[string]interface{}
 	for _, v := range c {
@@ -143,7 +207,7 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 	// Only a NIOS-X-only service may omit grid_master, and generateInfobloxRequest handles
 	// that case before calling here — reaching this with no block means NIOS instances exist.
 	if len(in) == 0 {
-		return nil, fmt.Errorf("ERROR: grid_master is required unless all instances are platform NIOS-X")
+		return nil, fmt.Errorf("ERROR: grid_master is required unless all instances are platform NIOS_X")
 	}
 
 	var username string
