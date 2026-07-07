@@ -1,8 +1,10 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -57,11 +59,10 @@ func Provider() *schema.Provider {
 				DefaultFunc: envDefaultFunc("ALKIRA_ASYNC_VAL"),
 			},
 			"serialization_enabled": {
-				Description: "Enable API serialization.",
+				Description: "Enable API serialization. Enabled by default.",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				DefaultFunc: envDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED"),
+				DefaultFunc: boolEnvDefaultFunc("ALKIRA_API_SERIALIZATION_ENABLED", true),
 			},
 			"serialization_timeout": {
 				Description: "API serialization timeout in seconds.",
@@ -81,6 +82,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_aws_dx":                                            resourceAlkiraConnectorAwsDx(),
 			"alkira_connector_aws_tgw":                                           resourceAlkiraConnectorAwsTgw(),
 			"alkira_connector_aws_vpc":                                           resourceAlkiraConnectorAwsVpc(),
+			"alkira_connector_azure_vhub":                                        resourceAlkiraConnectorAzureVhub(),
 			"alkira_connector_azure_vnet":                                        resourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_azure_vnet_third_party":                            resourceAlkiraConnectorAzureVnetThirdParty(),
 			"alkira_connector_azure_expressroute":                                resourceAlkiraConnectorAzureExpressRoute(),
@@ -124,6 +126,7 @@ func Provider() *schema.Provider {
 			"alkira_policy_nat":                                                  resourceAlkiraPolicyNat(),
 			"alkira_policy_nat_rule":                                             resourceAlkiraPolicyNatRule(),
 			"alkira_policy_prefix_list":                                          resourceAlkiraPolicyPrefixList(),
+			"alkira_policy_inter_cxp_routing":                                    resourceAlkiraPolicyInterCxpRouting(),
 			"alkira_policy_routing":                                              resourceAlkiraPolicyRouting(),
 			"alkira_policy_rule":                                                 resourceAlkiraPolicyRule(),
 			"alkira_policy_rule_list":                                            resourceAlkiraPolicyRuleList(),
@@ -153,6 +156,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_aws_tgw":                  dataSourceAlkiraConnectorAwsTgw(),
 			"alkira_connector_aws_vpc":                  dataSourceAlkiraConnectorAwsVpc(),
 			"alkira_connector_azure_expressroute":       dataSourceAlkiraConnectorAzureExpressRoute(),
+			"alkira_connector_azure_vhub":               dataSourceAlkiraConnectorAzureVhub(),
 			"alkira_connector_azure_vnet":               dataSourceAlkiraConnectorAzureVnet(),
 			"alkira_connector_azure_vnet_third_party":   dataSourceAlkiraConnectorAzureVnetThirdParty(),
 			"alkira_connector_cisco_sdwan":              dataSourceAlkiraConnectorCiscoSdwan(),
@@ -197,6 +201,26 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 		}
 
 		return nil, nil
+	}
+}
+
+// boolEnvDefaultFunc resolves a boolean schema default from an environment
+// variable, falling back to dv when the variable is unset. When set, the value
+// is parsed with strconv.ParseBool so the variable can both enable ("true",
+// "1") and disable ("false", "0") the attribute.
+func boolEnvDefaultFunc(k string, dv bool) schema.SchemaDefaultFunc {
+	return func() (interface{}, error) {
+		v := os.Getenv(k)
+		if v == "" {
+			return dv, nil
+		}
+
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid boolean value %q for %s: %w", v, k, err)
+		}
+
+		return parsed, nil
 	}
 }
 

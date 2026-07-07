@@ -16,7 +16,7 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 		Description:   "Provide AWS VPC Connector resource.",
 		CreateContext: resourceConnectorAwsVpcCreate,
 		ReadContext:   resourceConnectorAwsVpcRead,
-		UpdateContext: resourceConnectorAwsVpcUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAwsVpcUpdate),
 		DeleteContext: resourceConnectorAwsVpcDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -329,7 +329,6 @@ func resourceConnectorAwsVpcRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("tgw_connect_enabled", connector.TgwConnectEnabled)
 	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("description", connector.Description)
-
 	// Get segment
 	numOfSegments := len(connector.Segments)
 

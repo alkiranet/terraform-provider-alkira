@@ -16,7 +16,7 @@ func resourceAlkiraInfoblox() *schema.Resource {
 		Description:   "Provide Infoblox service resource (**BETA**).",
 		CreateContext: resourceInfoblox,
 		ReadContext:   resourceInfobloxRead,
-		UpdateContext: resourceInfobloxUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceInfobloxUpdate),
 		DeleteContext: resourceInfobloxDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -329,6 +329,13 @@ func resourceInfobloxRead(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	setAllInfobloxResourceFields(d, infoblox)
+
+	// Convert segment names from API to segment IDs for state
+	segmentIds, err := convertSegmentNamesToSegmentIds(infoblox.Segments, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("segment_ids", segmentIds)
 
 	// Set provision state
 	if client.Provision && provState != "" {

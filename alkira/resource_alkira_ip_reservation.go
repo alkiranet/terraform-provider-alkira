@@ -16,7 +16,7 @@ func resourceAlkiraIpReservation() *schema.Resource {
 		Description:   "Provide IP Reservation resource.",
 		CreateContext: resourceIpReservation,
 		ReadContext:   resourceIpReservationRead,
-		UpdateContext: resourceIpReservationUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceIpReservationUpdate),
 		DeleteContext: resourceIpReservationDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -74,9 +74,13 @@ func resourceAlkiraIpReservation() *schema.Resource {
 					"`prefix` is a `/30`. This field determines which IP from " +
 					"the given or the computed `/30` prefix is assigned to the " +
 					"customer end of the tunnel and which IP is assigned to the " +
-					"CXP end of the tunnel.",
+					"CXP end of the tunnel. The backend retains this value once " +
+					"set, so it cannot be cleared by removing it from the " +
+					"configuration; omitting it defers to the value stored by " +
+					"the backend.",
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"CUSTOMER", "CXP"}, false),
 			},

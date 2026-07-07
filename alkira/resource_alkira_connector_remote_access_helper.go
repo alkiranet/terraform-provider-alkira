@@ -176,7 +176,8 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 	for _, option := range segmentOptions {
 
 		if len(option.UserGroupMappings) != 1 ||
-			len(option.UserGroupMappings[0].CxpToSubnetsMapping) != 1 {
+			len(option.UserGroupMappings[0].CxpToSubnetsMapping) != 1 ||
+			len(option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets) == 0 {
 			log.Printf("[ERROR] Invalid SegmentOptions in connector-remote-access")
 			continue
 		}
@@ -187,7 +188,7 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 			"split_tunneling": option.UserGroupMappings[0].SplitTunneling,
 			"prefix_list_id":  option.UserGroupMappings[0].PrefixListId,
 			"billing_tag_id":  option.UserGroupMappings[0].BillingTag,
-			"subnet":          option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets,
+			"subnet":          option.UserGroupMappings[0].CxpToSubnetsMapping[0].Subnets[0],
 		}
 
 		authorizations = append(authorizations, auth)
@@ -199,7 +200,14 @@ func setAuthorization(d *schema.ResourceData, segmentOptions []alkira.ConnectorR
 // setConnectorRemoteAccess
 func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d *schema.ResourceData, m interface{}) error {
 
-	d.Set("authentication_mode", connector.AuthenticationOptions.SupportedModes)
+	if len(connector.AuthenticationOptions.SupportedModes) > 1 {
+		log.Printf("[WARN] connector-remote-access %q has %d authentication modes; only the first (%q) will be managed",
+			connector.Name, len(connector.AuthenticationOptions.SupportedModes),
+			connector.AuthenticationOptions.SupportedModes[0])
+	}
+	if len(connector.AuthenticationOptions.SupportedModes) > 0 {
+		d.Set("authentication_mode", connector.AuthenticationOptions.SupportedModes[0])
+	}
 
 	// Set ldap_settings block
 	if connector.AuthenticationOptions.LdapSettings != nil {
@@ -220,6 +228,9 @@ func setConnectorRemoteAccess(connector *alkira.ConnectorRemoteAccessTemplate, d
 	d.Set("name_server", connector.AdvancedOptions.NameServer)
 	d.Set("fallback_to_tcp", connector.AdvancedOptions.FallbackToTcp)
 	d.Set("concurrent_sessions_alert_threshold", connector.AdvancedOptions.MaxActiveUsersThreshold)
+	if len(connector.Arguments) == 0 {
+		return fmt.Errorf("API returned empty arguments for connector-remote-access %q", connector.Name)
+	}
 	d.Set("cxp", connector.Arguments[0].Cxp)
 	d.Set("billing_tag_ids", connector.Arguments[0].BillingTags)
 	d.Set("size", connector.Arguments[0].Size)

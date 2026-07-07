@@ -15,7 +15,7 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 		Description:   "Manage VMWARE SD-WAN Connector.",
 		CreateContext: resourceConnectorVmwareSdwanCreate,
 		ReadContext:   resourceConnectorVmwareSdwanRead,
-		UpdateContext: resourceConnectorVmwareSdwanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorVmwareSdwanUpdate),
 		DeleteContext: resourceConnectorVmwareSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -271,11 +271,11 @@ func resourceConnectorVmwareSdwanRead(ctx context.Context, d *schema.ResourceDat
 
 	for _, m := range connector.VmWareSdWanVRFMappings {
 		mapping := map[string]interface{}{
-			"advertise_on_prem_routes":   m.AdvertiseOnPremRoutes,
-			"advertise_default_route":    !m.DisableInternetExit,
-			"gateway_bgp_asn":            m.GatewayBgpAsn,
-			"segment_id":                 m.SegmentId,
-			"vmware_sdwang_segment_name": m.VmWareSdWanSegmentName,
+			"advertise_on_prem_routes":  m.AdvertiseOnPremRoutes,
+			"advertise_default_route":   !m.DisableInternetExit,
+			"gateway_bgp_asn":           m.GatewayBgpAsn,
+			"segment_id":                m.SegmentId,
+			"vmware_sdwan_segment_name": m.VmWareSdWanSegmentName,
 		}
 		mappings = append(mappings, mapping)
 	}

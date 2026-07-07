@@ -16,7 +16,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 		Description:   "Manage Fortinet SD-WAN Connector. (**BETA**)",
 		CreateContext: resourceConnectorFortinetSdwanCreate,
 		ReadContext:   resourceConnectorFortinetSdwanRead,
-		UpdateContext: resourceConnectorFortinetSdwanUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorFortinetSdwanUpdate),
 		DeleteContext: resourceConnectorFortinetSdwanDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)

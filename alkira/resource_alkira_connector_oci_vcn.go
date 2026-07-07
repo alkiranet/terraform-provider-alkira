@@ -16,7 +16,7 @@ func resourceAlkiraConnectorOciVcn() *schema.Resource {
 		Description:   "Manage Oracle Cloud (OCI) Virtual Computing Network (VCN) Cloud Connector.",
 		CreateContext: resourceConnectorOciVcnCreate,
 		ReadContext:   resourceConnectorOciVcnRead,
-		UpdateContext: resourceConnectorOciVcnUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorOciVcnUpdate),
 		DeleteContext: resourceConnectorOciVcnDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -273,6 +273,9 @@ func resourceConnectorOciVcnRead(ctx context.Context, d *schema.ResourceData, m 
 	} else {
 		return diag.FromErr(fmt.Errorf("failed to find segment"))
 	}
+
+	// Set vcn_cidr, vcn_subnet, vcn_route_table
+	setConnectorOciVcnRouting(d, connector.VcnRouting)
 
 	// Set provision state
 	if client.Provision && provState != "" {

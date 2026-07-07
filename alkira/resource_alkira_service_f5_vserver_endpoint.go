@@ -22,7 +22,7 @@ func resourceAlkiraServiceF5vServerEndpoint() *schema.Resource {
 		Description:   "Resource for managing F5 vServer endpoint. (**BETA**)",
 		CreateContext: resourceF5vServerEndpointCreate,
 		ReadContext:   resourceF5vServerEndpointRead,
-		UpdateContext: resourceF5vServerEndpointUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceF5vServerEndpointUpdate),
 		DeleteContext: resourceF5vServerEndpointDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -247,6 +247,16 @@ func resourceF5vServerEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("snat", f5.Snat)
 	d.Set("f5_service_id", f5.F5ServiceId)
 	d.Set("f5_service_instance_ids", f5.F5ServiceInstanceIds)
+
+	// Set destination endpoint fields if present
+	if f5.DestinationEndpoints != nil {
+		if f5.DestinationEndpoints.PortRanges != nil {
+			d.Set("destination_endpoint_port_ranges", f5.DestinationEndpoints.PortRanges)
+		}
+		if f5.DestinationEndpoints.IpAddresses != nil {
+			d.Set("destination_endpoint_ip_addresses", f5.DestinationEndpoints.IpAddresses)
+		}
+	}
 
 	segmentId, err := getSegmentIdByName(f5.Segment, m)
 

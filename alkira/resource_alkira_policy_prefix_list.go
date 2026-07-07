@@ -60,7 +60,7 @@ func resourceAlkiraPolicyPrefixList() *schema.Resource {
 		Description:   "Manage policy prefix list.",
 		CreateContext: resourcePolicyPrefixList,
 		ReadContext:   resourcePolicyPrefixListRead,
-		UpdateContext: resourcePolicyPrefixListUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyPrefixListUpdate),
 		DeleteContext: resourcePolicyPrefixListDelete,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

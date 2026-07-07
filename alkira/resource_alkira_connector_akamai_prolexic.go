@@ -21,7 +21,7 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 			"Akamai Representative.",
 		CreateContext: resourceConnectorAkamaiProlexicCreate,
 		ReadContext:   resourceConnectorAkamaiProlexicRead,
-		UpdateContext: resourceConnectorAkamaiProlexicUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourceConnectorAkamaiProlexicUpdate),
 		DeleteContext: resourceConnectorAkamaiProlexicDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
@@ -285,6 +285,9 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 		options = append(options, i)
 	}
 	d.Set("byoip_options", options)
+
+	setConnectorAkamaiTunnelConfiguration(d, connector.OverlayConfiguration)
+
 	// Set provision state
 	if client.Provision && provState != "" {
 		d.Set("provision_state", provState)

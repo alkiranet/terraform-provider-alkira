@@ -19,7 +19,7 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 			"control the network traffic.",
 		CreateContext: resourcePolicyRule,
 		ReadContext:   resourcePolicyRuleRead,
-		UpdateContext: resourcePolicyRuleUpdate,
+		UpdateContext: warnOnFailedStateUpdate(resourcePolicyRuleUpdate),
 		DeleteContext: resourcePolicyRuleDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
 			client := m.(*alkira.AlkiraClient)
