@@ -183,7 +183,7 @@ func deflateInfobloxInstances(c []alkira.InfobloxInstance) []map[string]interfac
 			"anycast_enabled": v.AnyCastEnabled,
 			"hostname":        v.HostName,
 			"model":           v.Model,
-			"platform":   v.Platform,
+			"platform":        v.Platform,
 			"type":            v.Type,
 			"version":         v.Version,
 			"id":              int(id),

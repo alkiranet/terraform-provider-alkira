@@ -1,5 +1,5 @@
 ---
-page_title: "alkira_service_infoblox Resource - alkira"
+page_title: "alkira_service_infoblox Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
   Provide Infoblox service resource (BETA).
