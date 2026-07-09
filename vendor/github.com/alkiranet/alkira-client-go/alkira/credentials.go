@@ -27,6 +27,7 @@ const (
 	CredentialTypeInfoblox                   CredentialType = "infoblox"
 	CredentialTypeInfobloxGridMaster         CredentialType = "infoblox-grid-master"
 	CredentialTypeInfobloxInstance           CredentialType = "infoblox-instance"
+	CredentialTypeInfobloxJoinToken          CredentialType = "infoblox-join-token"
 	CredentialTypeKeyPair                    CredentialType = "keypair"
 	CredentialTypeLdap                       CredentialType = "ldap"
 	CredentialTypeOciVcn                     CredentialType = "ocivcn"
@@ -152,6 +153,10 @@ type CredentialInfobloxInstance struct {
 type CredentialInfobloxGridMaster struct {
 	Username string `json:"userName"`
 	Password string `json:"password"`
+}
+
+type CredentialInfobloxJoinToken struct {
+	JoinToken string `json:"joinToken"`
 }
 
 type CredentialBluecatBDDSInstanceLicense struct {
