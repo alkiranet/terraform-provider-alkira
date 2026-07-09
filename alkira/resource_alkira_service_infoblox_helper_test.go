@@ -43,6 +43,7 @@ func TestDeflateInfobloxInstances(t *testing.T) {
 					"anycast_enabled": true,
 					"hostname":        "infoblox-1.example.com",
 					"model":           "IB-1550",
+					"platform":        "",
 					"type":            "GRID_MASTER",
 					"version":         "8.6.0",
 					"id":              123,
@@ -77,6 +78,7 @@ func TestDeflateInfobloxInstances(t *testing.T) {
 					"anycast_enabled": true,
 					"hostname":        "infoblox-1.example.com",
 					"model":           "IB-1550",
+					"platform":        "",
 					"type":            "GRID_MASTER",
 					"version":         "8.6.0",
 					"id":              123,
@@ -86,6 +88,7 @@ func TestDeflateInfobloxInstances(t *testing.T) {
 					"anycast_enabled": false,
 					"hostname":        "infoblox-2.example.com",
 					"model":           "IB-1552",
+					"platform":        "",
 					"type":            "GRID_MEMBER",
 					"version":         "8.6.0",
 					"id":              124,
@@ -439,4 +442,43 @@ func TestInfobloxErrorHandling(t *testing.T) {
 		}
 		assert.Equal(t, 1, len(validInput)) // Should pass validation
 	})
+}
+
+// Removing a middle instance shifts id/credential_id positionally onto the wrong
+// element (finding F6: the tail instance got destroyed instead of the removed one).
+// expandInfobloxInstances must re-map both by hostname from old state.
+func TestExpandInfobloxInstances_ReorderKeepsIdsByHostname(t *testing.T) {
+	mockClient := &alkira.AlkiraClient{}
+
+	oldInstances := []interface{}{
+		map[string]interface{}{"id": 1, "hostname": "nx1.localdomain", "credential_id": "cred-1"},
+		map[string]interface{}{"id": 2, "hostname": "nx2.localdomain", "credential_id": "cred-2"},
+		map[string]interface{}{"id": 3, "hostname": "nx3.localdomain", "credential_id": "cred-3"},
+	}
+
+	// nx2 removed: Terraform's positional diff hands nx3 the old slot-2 values.
+	newInstances := []interface{}{
+		map[string]interface{}{"id": 1, "hostname": "nx1.localdomain", "credential_id": "cred-1", "platform": "NIOS_X"},
+		map[string]interface{}{"id": 2, "hostname": "nx3.localdomain", "credential_id": "cred-2", "platform": "NIOS_X"},
+	}
+
+	result, err := expandInfobloxInstances(newInstances, oldInstances, mockClient)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, json.Number("1"), result[0].Id)
+	assert.Equal(t, "cred-1", result[0].CredentialId)
+	assert.Equal(t, json.Number("3"), result[1].Id, "nx3 must keep id=3 despite the positional shift")
+	assert.Equal(t, "cred-3", result[1].CredentialId, "nx3 must keep its own credential")
+}
+
+func TestValidateInfobloxInstanceHostnames(t *testing.T) {
+	assert.NoError(t, validateInfobloxInstanceHostnames([]interface{}{}))
+	assert.NoError(t, validateInfobloxInstanceHostnames([]interface{}{
+		map[string]interface{}{"hostname": "a.localdomain"},
+		map[string]interface{}{"hostname": "b.localdomain"},
+	}))
+	assert.Error(t, validateInfobloxInstanceHostnames([]interface{}{
+		map[string]interface{}{"hostname": "a.localdomain"},
+		map[string]interface{}{"hostname": "a.localdomain"},
+	}))
 }
