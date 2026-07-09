@@ -27,6 +27,51 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Hostnames are the keys used to match instances across list reorders
+			// (id/credential_id remap in expandInfobloxInstances) — duplicates make
+			// that lookup unreliable, so reject them at plan time.
+			if err := validateInfobloxInstanceHostnames(d.Get("instance").([]interface{})); err != nil {
+				return err
+			}
+
+			// The server rejects a platform change after provisioning (both directions);
+			// surface it at plan time instead of a confusing apply-time 400. Matched by
+			// hostname, not list position. (CustomizeDiff, not ForceNew — ForceNew on an
+			// instance attribute would replace the whole service.)
+			if d.Id() != "" && d.HasChange("instance") {
+				oldRaw, newRaw := d.GetChange("instance")
+				oldPlatform := make(map[string]string)
+				for _, o := range oldRaw.([]interface{}) {
+					cfg, ok := o.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					hostname, _ := cfg["hostname"].(string)
+					platform, _ := cfg["platform"].(string)
+					if platform == "" {
+						platform = "NIOS"
+					}
+					if hostname != "" {
+						oldPlatform[hostname] = platform
+					}
+				}
+				for _, n := range newRaw.([]interface{}) {
+					cfg, ok := n.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					hostname, _ := cfg["hostname"].(string)
+					platform, _ := cfg["platform"].(string)
+					if platform == "" {
+						platform = "NIOS"
+					}
+					if prev, exists := oldPlatform[hostname]; exists && prev != platform {
+						return fmt.Errorf("instance %q: 'platform' cannot be changed after the service is provisioned (was %q, now %q)",
+							hostname, prev, platform)
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -97,9 +142,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 			},
 			"grid_master": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Description: "Defines the properties of the Infoblox grid " +
-					"master.",
+					"master. Required for `NIOS` instances; **omit for a " +
+					"`NIOS_X`-only service** (the server rejects gridMaster " +
+					"for NIOS-X-only).",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external": {
@@ -143,7 +190,10 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				Description: "The properties pertaining to each individual " +
-					"instance of the Infoblox service.",
+					"instance of the Infoblox service. When adding instances to " +
+					"an existing service, **append them at the end of the list** — " +
+					"inserting before existing entries shifts list indexes and " +
+					"makes the plan re-map existing instances.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"anycast_enabled": {
@@ -171,22 +221,46 @@ func resourceAlkiraInfoblox() *schema.Resource {
 							Required: true,
 						},
 						"model": {
-							Description: "The model of the Infoblox instance.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "The model of the Infoblox instance. " +
+								"Not used for `NIOS_X` platform instances.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"password": {
 							Description: "The password associated with the " +
-								"infoblox instance.",
+								"infoblox instance. Not used for `NIOS_X` " +
+								"platform instances.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+						},
+						"platform": {
+							Description: "The platform type of the Infoblox " +
+								"instance. The value could be `NIOS` or " +
+								"`NIOS_X`. When not specified, it defaults to " +
+								"`NIOS`. Immutable once the service is provisioned " +
+								"(enforced at plan time).",
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"NIOS", "NIOS_X"}, false),
+						},
+						"join_token": {
+							Description: "The join token used to register a " +
+								"`NIOS_X` platform instance. Only used for " +
+								"`NIOS_X` platform instances. The token is " +
+								"injected at instance launch; changing it after " +
+								"the instance is provisioned has no effect on " +
+								"the running instance.",
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"type": {
 							Description: "The type of the Infoblox instance that " +
 								"is to be provisioned. The value could be `MASTER`, " +
 								"`MASTER_CANDIDATE` and `MEMBER`.",
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"MASTER", "MASTER_CANDIDATE", "MEMBER"}, false),
 						},
@@ -219,6 +293,17 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"size": {
+				Description: "The size of the service, one of `SMALL`, " +
+					"`MEDIUM`, `LARGE` or `2LARGE`. Used for `NIOS_X` image sizing " +
+					"(`NIOS` instances derive size from the model and ignore it). " +
+					"When not specified, it defaults to `SMALL`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"SMALL", "MEDIUM", "LARGE", "2LARGE"}, false),
+			},
 			"service_group_name": {
 				Description: "The name of the service group to be associated " +
 					"with the service. A service group represents the " +
@@ -242,10 +327,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Computed: true,
 			},
 			"shared_secret": {
-				Description: "Shared Secret of the InfoBlox grid. " +
-					"This cannot be empty.",
+				Description: "Shared Secret of the InfoBlox grid. Required for " +
+					"`NIOS`; **omit for a `NIOS_X`-only service** (the server " +
+					"rejects shared secret for NIOS-X-only).",
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"allow_list_id": {
@@ -447,10 +533,22 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	nameWithSuffix := name + randomNameSuffix()
 	shared_secret := d.Get("shared_secret").(string)
 
+	// NIOS-X-only service: no Alkira-hosted grid, so grid-master / shared-secret
+	// credentials must not be created or referenced (TPS rejects them).
+	instanceSet := d.Get("instance").([]interface{})
+	niosxOnly := len(instanceSet) > 0
+	for _, i := range instanceSet {
+		cfg := i.(map[string]interface{})
+		if p, _ := cfg["platform"].(string); p != "NIOS_X" {
+			niosxOnly = false
+			break
+		}
+	}
+
 	var infobloxCredentialId string
 	var err error
 
-	if shared_secret != "" {
+	if shared_secret != "" && !niosxOnly {
 		infobloxCredentialId, err = client.CreateCredential(
 			nameWithSuffix,
 			alkira.CredentialTypeInfoblox,
@@ -465,14 +563,30 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	//Parse Grid Master
 	gmSet := d.Get("grid_master").([]interface{})
-	gridMaster, err := expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
-	if err != nil {
-		return nil, err
+	var gridMaster *alkira.InfobloxGridMaster
+	if niosxOnly {
+		// Send name/external only — no ip and no credential ids; TPS rejects a
+		// NIOS-X-only service whose gridMaster carries any of those.
+		gridMaster = &alkira.InfobloxGridMaster{}
+		if len(gmSet) == 1 {
+			cfg := gmSet[0].(map[string]interface{})
+			gridMaster.Name, _ = cfg["name"].(string)
+			gridMaster.External, _ = cfg["external"].(bool)
+		}
+	} else {
+		gridMaster, err = expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//Parse Instances
+	// Old state is needed to remap id/credential_id by hostname — Terraform's
+	// positional TypeList diff shifts them onto the wrong element when an
+	// instance is inserted/removed mid-list.
+	oldInstanceListRaw, _ := d.GetChange("instance")
 	instanceList := d.Get("instance").([]interface{})
-	instances, err := expandInfobloxInstances(instanceList, m)
+	instances, err := expandInfobloxInstances(instanceList, oldInstanceListRaw.([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}
@@ -502,6 +616,7 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		Name:             name,
 		Segments:         segmentNames,
 		ServiceGroupName: d.Get("service_group_name").(string),
+		Size:             d.Get("size").(string),
 		AllowListId:      d.Get("allow_list_id").(int),
 	}, nil
 }
