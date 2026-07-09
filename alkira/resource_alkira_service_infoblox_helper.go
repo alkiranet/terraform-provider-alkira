@@ -316,6 +316,7 @@ func setAllInfobloxResourceFields(d *schema.ResourceData, in *alkira.ServiceInfo
 	d.Set("instance", preserveInfobloxInstanceSecrets(d, deflateInfobloxInstances(in.Instances)))
 	d.Set("license_type", in.LicenseType)
 	d.Set("service_group_name", in.ServiceGroupName)
+	d.Set("size", in.Size)
 	d.Set("allow_list_id", in.AllowListId)
 	d.Set("service_group_id", in.ServiceGroupId)
 	d.Set("service_group_implicit_group_id", in.ServiceGroupImplicitGroupId)
