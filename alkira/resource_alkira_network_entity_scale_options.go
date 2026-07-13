@@ -29,6 +29,10 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 				d.SetNew("state", "SUCCESS")
 			}
 
+			if err := validateAdditionalTunnelsPerNodeMatchesTunnelOptions(d.Get("segment_scale_options").([]interface{})); err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -138,6 +142,36 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 			},
 		},
 	}
+}
+
+// validateAdditionalTunnelsPerNodeMatchesTunnelOptions enforces that, when
+// additional_tunnel_options_per_node (labels) are set, additional_tunnels_per_node
+// equals the label count. The API derives additional_tunnels_per_node from the
+// number of labels, so a differing value - including the zero value produced when
+// the field is omitted - would diverge from the API-stored value and drift on
+// every plan (AK-70045). Failing here surfaces a clear plan-time error instead.
+func validateAdditionalTunnelsPerNodeMatchesTunnelOptions(segmentScaleOptions []interface{}) error {
+	for i, raw := range segmentScaleOptions {
+		sso, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		labels, _ := sso["additional_tunnel_options_per_node"].([]interface{})
+		if len(labels) == 0 {
+			continue
+		}
+
+		tunnelsPerNode, _ := sso["additional_tunnels_per_node"].(int)
+		if tunnelsPerNode != len(labels) {
+			return fmt.Errorf(
+				"segment_scale_options[%d]: additional_tunnels_per_node (%d) must equal "+
+					"the number of additional_tunnel_options_per_node (%d)",
+				i, tunnelsPerNode, len(labels))
+		}
+	}
+
+	return nil
 }
 
 // convertEntityIdToInt converts entity_id string to int
