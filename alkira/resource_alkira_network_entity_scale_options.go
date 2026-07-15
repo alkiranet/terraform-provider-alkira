@@ -29,6 +29,10 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 				d.SetNew("state", "SUCCESS")
 			}
 
+			if err := validateAdditionalTunnelsPerNodeMatchesTunnelOptions(d.Get("segment_scale_options").([]any)); err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
