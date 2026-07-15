@@ -29,6 +29,10 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 				d.SetNew("state", "SUCCESS")
 			}
 
+			if err := validateAdditionalTunnelsPerNodeMatchesTunnelOptions(d.Get("segment_scale_options").([]any)); err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -75,7 +79,7 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"additional_tunnels_per_node": {
-							Description: "Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.",
+							Description: "Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option. When `additional_tunnel_options_per_node` (labels) are configured, this must equal the number of labels — the API derives it from the label count.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
@@ -138,6 +142,36 @@ func resourceAlkiraNetworkEntityScaleOptions() *schema.Resource {
 			},
 		},
 	}
+}
+
+// validateAdditionalTunnelsPerNodeMatchesTunnelOptions enforces that, when
+// additional_tunnel_options_per_node (labels) are set, additional_tunnels_per_node
+// equals the label count. The API derives additional_tunnels_per_node from the
+// number of labels, so a differing value - including the zero value produced when
+// the field is omitted - would diverge from the API-stored value and drift on
+// every plan. Failing here surfaces a clear plan-time error instead.
+func validateAdditionalTunnelsPerNodeMatchesTunnelOptions(segmentScaleOptions []any) error {
+	for i, raw := range segmentScaleOptions {
+		sso, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		labels, _ := sso["additional_tunnel_options_per_node"].([]any)
+		if len(labels) == 0 {
+			continue
+		}
+
+		tunnelsPerNode, _ := sso["additional_tunnels_per_node"].(int)
+		if tunnelsPerNode != len(labels) {
+			return fmt.Errorf(
+				"segment_scale_options[%d]: additional_tunnels_per_node (%d) must equal "+
+					"the number of additional_tunnel_options_per_node (%d)",
+				i, tunnelsPerNode, len(labels))
+		}
+	}
+
+	return nil
 }
 
 // convertEntityIdToInt converts entity_id string to int
