@@ -28,6 +28,13 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// allow_list is only supported on Cisco Catalyst 8000V (cat8k)
+			// connectors. Fail fast at plan time for other types.
+			if d.Get("allow_list").(*schema.Set).Len() > 0 && d.Get("type").(string) != "CAT8000V" {
+				return fmt.Errorf("[ERROR] `allow_list` is only supported on Cisco "+
+					"Catalyst 8000V (CAT8000V) connectors; `type` is %q", d.Get("type").(string))
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -201,6 +208,17 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or IP " +
+					"addresses. Only supported on Cisco Catalyst 8000V " +
+					"(`CAT8000V`) connectors.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 		},
 	}
 }
@@ -286,6 +304,7 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("type", connector.Type)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("description", connector.Description)
+	d.Set("allow_list", connector.AllowList)
 
 	// Set vedge
 	setVedge(d, connector)
@@ -432,6 +451,7 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 		Version:              d.Get("version").(string),
 		TunnelProtocol:       d.Get("tunnel_protocol").(string),
 		Description:          d.Get("description").(string),
+		AllowList:            convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 	}
 
 	return connector, nil
