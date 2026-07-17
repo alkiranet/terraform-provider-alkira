@@ -39,6 +39,7 @@ type ConnectorCiscoSdwan struct {
 	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"`
 	Enabled              bool                       `json:"enabled"`
 	Description          string                     `json:"description,omitempty"`
+	AllowList            []string                   `json:"allowList,omitempty"`
 }
 
 // NewConnectorCiscoSdwan initialize a new connector
