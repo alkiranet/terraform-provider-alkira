@@ -48,6 +48,7 @@ resource "alkira_connector_cisco_sdwan" "test" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. Only supported on Cisco Catalyst 8000V (`CAT8000V`) connectors.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
