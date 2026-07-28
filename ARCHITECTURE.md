@@ -50,7 +50,7 @@ Provider-level configuration (in `provider "alkira" {}`):
 
 **Outgoing:**
 - `alkira-client-go` — the only path to the backend. The provider itself contains no raw HTTP; every CRUD goes through `AlkiraClient` / `AlkiraAPI[T]`.
-- Via the client, everything hits the customer's **portal API** (`https://<tenant>.portal.alkira.com/api/...`), which is fronted by **web-apigw** and served largely by **tenant-provisioning-service (TPS)** and peer backend services.
+- Via the client, everything hits the customer's **portal API** (`https://<tenant>.portal.alkira.com/api/...`), which is served by the **Alkira Backend Services**.
 
 ```
 customer HCL
@@ -59,14 +59,14 @@ terraform CLI  --gRPC plugin protocol-->  terraform-provider-alkira
                                                  |
                                           alkira-client-go
                                                  |  HTTPS (api-key / basic auth)
-                                <tenant>.portal.alkira.com/api  (web-apigw)
+                                <tenant>.portal.alkira.com/api
                                                  |
-                                  TPS + backend services (provisioning engine)
+                                  Alkira Backend Services
 ```
 
 ## 5. Data Ownership
 
-- **Owns no data.** The Alkira backend (TPS + tenant DBs) is the source of truth for all resource configuration; Terraform state (customer-side, in their backend of choice) is a cache of it.
+- **Owns no data.** The Alkira Backend Services are the source of truth for all resource configuration; Terraform state (customer-side, in their backend of choice) is a cache of it.
 - Drift is resolved at `plan`/`refresh` time by reading live resources back through the client (`GetById` uses `includeMarkedForDeletion=true`).
 - Resources carry a computed `provision_state` attribute (SUCCESS/FAILED/…) reflecting the last provisioning outcome — this is state *about* the backend, stored in the customer's tfstate.
 - No databases, no Kafka, no persistent storage of any kind in this repo.
@@ -93,7 +93,7 @@ terraform CLI  --gRPC plugin protocol-->  terraform-provider-alkira
 | Issue | Observable symptom |
 |---|---|
 | **Schema drift / perpetual diff** | `terraform plan` shows changes on every run with no config edits — usually API returning fields in a different shape/order than stored, or a new backend field not handled in the `set` helpers. |
-| **ForceNew surprise** | Plan shows `-/+ destroy and then create replacement` for a field the customer thought was updatable. Per repo convention, ForceNew is added *only* when TPS silently overwrites the field — mistakes here are release blockers. |
+| **ForceNew surprise** | Plan shows `-/+ destroy and then create replacement` for a field the customer thought was updatable. Per repo convention, ForceNew is added *only* when the backend silently overwrites the field — mistakes here are release blockers. |
 | **API incompatibility after backend release** | Apply fails with 4xx/unmarshal errors: backend added a required field, changed an enum, or renamed a property that the pinned client-go version doesn't know about. |
 | **Provision-vs-apply mismatch** | With `provision = false`, apply succeeds but nothing changes on the network until someone provisions from the portal; customers report "terraform said OK but the connector is down." With `provision = true`, applies block up to 240 min waiting on the provision request and fail with `provision request <id> failed/timed out`. |
 | **`provision_state = FAILED` in state** | Resource exists in Alkira config DB but provisioning failed; next plan shows the computed field flapping. |
@@ -111,10 +111,10 @@ Customer reports "terraform apply fails" or "drift detected":
    - HTTP 4xx on CRUD → payload/schema mismatch or RBAC/auth → compare the DEBUG-logged JSON body against the current backend API contract.
    - Unmarshal error → backend response shape changed; likely needs a client-go fix.
    - `provision request ... failed` → backend provisioning failure, not a provider bug → pivot to backend.
-4. **Backend side**: search **Coralogix** (production env) for web-apigw ACCESS logs and TPS logs by tenant + timestamp + URI (e.g. `/tenantnetworks/<id>/awsvpcconnectors`). The provision request ID from step 2 is the join key into TPS provisioning logs.
+4. **Backend side**: search **Coralogix** (production env) for Alkira Backend Services access and provisioning logs by tenant + timestamp + URI (e.g. `/tenantnetworks/<id>/awsvpcconnectors`). The provision request ID from step 2 is the join key into the backend provisioning logs.
 5. **Drift reports**: run `terraform plan -refresh-only`; diff the API GET response (DEBUG log) against tfstate. Perpetual diffs almost always live in a resource's `set*` helper or a missing `Computed`/`DiffSuppress`.
 6. **Regression suspicion**: check the release notes / changelog between the customer's previous and current provider version (the `review-terraform-release-notes` skill audits exactly this: schema, ForceNew, defaults, client bump). Downgrade-pin the provider as mitigation.
-7. **ForceNew/destroy plans**: never let a customer apply until confirmed intended; check whether the field is genuinely immutable in TPS (`ConnectorServiceImpl` silent-overwrite check).
+7. **ForceNew/destroy plans**: never let a customer apply until confirmed intended; check whether the field is genuinely immutable on the backend (silent-overwrite check).
 
 ## 10. Ownership Boundaries
 
@@ -125,13 +125,11 @@ Customer reports "terraform apply fails" or "drift detected":
 
 **Does not own:**
 - The HTTP client, auth, retry, serialization, and provision-wait mechanics — that is **alkira-client-go**.
-- The API contract or provisioning behavior — that is **web-apigw** (routing/RBAC) and **tenant-provisioning-service** and friends.
+- The API contract or provisioning behavior — that is the **Alkira Backend Services**.
 - Customer Terraform state storage or their pipeline tooling.
 
 **Neighboring repos:**
 - `alkira-client-go` — sibling library, versioned in lockstep-ish; nearly every provider feature needs a client change first.
-- `tenant-provisioning-service` (TPS) — serves most of the REST endpoints the provider consumes; source of provisioning semantics.
-- `web-apigw` — API gateway / RBAC in front of TPS; auth and routing failures surface here.
 
 ## 11. Glossary
 
