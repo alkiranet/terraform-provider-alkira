@@ -200,7 +200,6 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Required
 
-- `aws_account_id` (String) AWS Account ID.
 - `aws_region` (String) AWS Region where VPC resides.
 - `credential_id` (String) ID of resource `credential_aws_vpc`.
 - `cxp` (String) The CXP where the connector should be provisioned.
@@ -211,6 +210,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Optional
 
+- `aws_account_id` (String) AWS Account ID. If not provided, it will be automatically detected from the VPC.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `direct_inter_vpc_communication_enabled` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
