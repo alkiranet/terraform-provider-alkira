@@ -35,6 +35,14 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or IP " +
+					"addresses. When set, only these sources can reach the " +
+					"management interface of the connector instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"aruba_edge_vrf_mapping": {
 				Description: "The connector will accept multiple segments as a " +
 					"part of VRF mappings.",
@@ -290,6 +298,7 @@ func resourceConnectorArubaEdgeRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
+	d.Set("allow_list", connector.AllowList)
 	d.Set("aruba_edge_vrf_mapping", arubaEdgeMappings)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("boost_mode", connector.BoostMode)
@@ -428,6 +437,7 @@ func generateConnectorArubaEdgeRequest(d *schema.ResourceData, m interface{}) (*
 	}
 
 	return &alkira.ConnectorArubaEdge{
+		AllowList:            convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		ArubaEdgeVrfMappings: vrfMappings,
 		BillingTags:          convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		BoostMode:            d.Get("boost_mode").(bool),
