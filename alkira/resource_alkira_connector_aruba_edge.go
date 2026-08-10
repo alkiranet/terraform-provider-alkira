@@ -41,7 +41,10 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 					"management interface of the connector instances.",
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
 			},
 			"aruba_edge_vrf_mapping": {
 				Description: "The connector will accept multiple segments as a " +
