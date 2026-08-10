@@ -8,6 +8,7 @@ import (
 )
 
 type ServicePan struct {
+	AllowList                   []string                             `json:"allowList,omitempty"`
 	BillingTagIds               []int                                `json:"billingTags"`
 	Bundle                      string                               `json:"bundle,omitempty"`
 	CXP                         string                               `json:"cxp"`

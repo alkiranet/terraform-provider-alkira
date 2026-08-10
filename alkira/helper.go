@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -344,4 +345,34 @@ func warnOnFailedStateUpdate(update schema.UpdateContextFunc) schema.UpdateConte
 
 		return diags
 	}
+}
+
+// validateIPv4CidrOrIP validates that a string is a valid IPv4 address
+// or IPv4 CIDR. IPv6 is rejected.
+func validateIPv4CidrOrIP(i interface{}, k string) ([]string, []error) {
+	v, ok := i.(string)
+	if !ok {
+		return nil, []error{fmt.Errorf("expected type of %q to be string", k)}
+	}
+
+	if strings.Contains(v, ":") {
+		return nil, []error{fmt.Errorf("%q must be an IPv4 address or IPv4 CIDR, got %q (IPv6 is not supported)", k, v)}
+	}
+
+	if strings.Contains(v, "/") {
+		ip, ipnet, err := net.ParseCIDR(v)
+		if err != nil || ip.To4() == nil {
+			return nil, []error{fmt.Errorf("%q must be a valid IPv4 CIDR, got %q", k, v)}
+		}
+		if !ip.Equal(ipnet.IP) {
+			return nil, []error{fmt.Errorf("%q must be a CIDR network address with no host bits set, got %q (did you mean %q?)", k, v, ipnet.String())}
+		}
+		return nil, nil
+	}
+
+	if ip := net.ParseIP(v); ip == nil || ip.To4() == nil {
+		return nil, []error{fmt.Errorf("%q must be a valid IPv4 address or IPv4 CIDR, got %q", k, v)}
+	}
+
+	return nil, nil
 }

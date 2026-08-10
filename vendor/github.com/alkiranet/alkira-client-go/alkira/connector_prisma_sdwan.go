@@ -24,6 +24,7 @@ type ConnectorPrismaSDWANInstance struct {
 }
 
 type ConnectorPrismaSDWAN struct {
+	AllowList               []string                         `json:"allowList,omitempty"`
 	BillingTags             []int                            `json:"billingTags,omitempty"`
 	Cxp                     string                           `json:"cxp"`
 	Description             string                           `json:"description,omitempty"`
