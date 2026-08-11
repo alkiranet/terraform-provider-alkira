@@ -519,7 +519,7 @@ func TestIpReservationFieldNameMatch(t *testing.T) {
 		assert.False(t, wrongFieldExists, "Schema should NOT have 'first_ip_assignement' field (bug was typo with extra 'e')")
 	})
 }
-
+//
 func TestIpReservationStateHandling(t *testing.T) {
 	t.Run("first_ip_assignment data can be saved and retrieved", func(t *testing.T) {
 		resourceSchema := resourceAlkiraIpReservation().Schema
