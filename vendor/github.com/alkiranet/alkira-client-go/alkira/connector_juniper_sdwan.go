@@ -22,6 +22,7 @@ type ConnectorJuniperSdwanInstance struct {
 }
 
 type ConnectorJuniperSdwan struct {
+	AllowList             []string                        `json:"allowList,omitempty"`
 	BillingTags           []int                           `json:"billingTags,omitempty"`
 	Cxp                   string                          `json:"cxp"`
 	Enabled               bool                            `json:"enabled"`

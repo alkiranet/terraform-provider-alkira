@@ -56,7 +56,7 @@ type ConnectorAwsVpc struct {
 	Size                               string          `json:"size"`
 	TgwAttachments                     []TgwAttachment `json:"tgwAttachments,omitempty"`
 	VpcId                              string          `json:"vpcId"`
-	VpcOwnerId                         string          `json:"vpcOwnerId,omitempty"`
+	VpcOwnerId                         string          `json:"vpcOwnerId"`
 	VpcRouting                         interface{}     `json:"vpcRouting"`
 	TgwConnectEnabled                  bool            `json:"tgwConnectEnabled"`
 	ScaleGroupId                       string          `json:"scaleGroupId,omitempty"`
