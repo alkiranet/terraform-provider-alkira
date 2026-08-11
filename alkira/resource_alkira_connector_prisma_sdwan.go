@@ -34,6 +34,17 @@ func resourceAlkiraConnectorPrismaSDWAN() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or " +
+					"IP addresses. When set, only these sources can reach " +
+					"the management interface of the connector instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 			"name": {
 				Description: "The name of the connector.",
 				Type:        schema.TypeString,
@@ -253,6 +264,7 @@ func resourceConnectorPrismaSDWANRead(ctx context.Context, d *schema.ResourceDat
 		}}
 	}
 
+	d.Set("allow_list", connector.AllowList)
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("cxp", connector.Cxp)
 	d.Set("description", connector.Description)
@@ -393,6 +405,7 @@ func generateConnectorPrismaSDWANRequest(d *schema.ResourceData, m interface{}) 
 
 	// Construct the request payload
 	connector := &alkira.ConnectorPrismaSDWAN{
+		AllowList:              convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		BillingTags:            convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Cxp:                    d.Get("cxp").(string),
 		Description:            d.Get("description").(string),
