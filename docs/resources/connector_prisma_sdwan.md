@@ -2,7 +2,7 @@
 page_title: "alkira_connector_prisma_sdwan Resource - terraform-provider-alkira"
 subcategory: ""
 description: |-
-  Manage Prisma SD-WAN Connector
+  Manage Prisma SD-WAN Connector.
 ---
 
 # alkira_connector_prisma_sdwan (Resource)
@@ -57,6 +57,7 @@ resource "alkira_connector_prisma_sdwan" "test1" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the connector instances.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
@@ -83,6 +84,7 @@ Required:
 Read-Only:
 
 - `id` (Number) The ID of the instance.
+
 
 <a id="nestedblock--target_segment"></a>
 ### Nested Schema for `target_segment`
