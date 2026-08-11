@@ -454,7 +454,6 @@ func TestAzureVnetCidrFieldNameMatch(t *testing.T) {
 	})
 }
 
-
 // The backend auto-populates `customerAsn` when the user omits it in VGW mode
 // (either to the existing Azure VGW's ASN, or to a DEFAULT_ASN constant for a
 // fresh VNet). If the provider schema declares this field as Optional only,

@@ -355,6 +355,7 @@ func validateIPv4CidrOrIP(i interface{}, k string) ([]string, []error) {
 		return nil, []error{fmt.Errorf("expected type of %q to be string", k)}
 	}
 
+	// A colon means an IPv6 literal.
 	if strings.Contains(v, ":") {
 		return nil, []error{fmt.Errorf("%q must be an IPv4 address or IPv4 CIDR, got %q (IPv6 is not supported)", k, v)}
 	}
@@ -364,6 +365,7 @@ func validateIPv4CidrOrIP(i interface{}, k string) ([]string, []error) {
 		if err != nil || ip.To4() == nil {
 			return nil, []error{fmt.Errorf("%q must be a valid IPv4 CIDR, got %q", k, v)}
 		}
+		// Reject host bits rather than silently masking them.
 		if !ip.Equal(ipnet.IP) {
 			return nil, []error{fmt.Errorf("%q must be a CIDR network address with no host bits set, got %q (did you mean %q?)", k, v, ipnet.String())}
 		}
