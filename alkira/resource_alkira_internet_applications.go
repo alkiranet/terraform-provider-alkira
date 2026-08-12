@@ -342,6 +342,30 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
+// setInternetApplicationFields writes the internet application fields that map
+// directly from the API response onto the resource state. Fields that need
+// extra lookups or reshaping (segment, source NAT pool, targets, provision
+// state) stay in the Read function.
+//
+// Every field the API returns must be set here. `terraform import` populates
+// state solely from Read, so a field that is only ever sent on create/update
+// lands in state as null and shows up as a spurious diff on the next plan.
+func setInternetApplicationFields(d *schema.ResourceData, app *alkira.InternetApplication) {
+	d.Set("billing_tag_ids", app.BillingTags)
+	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
+	d.Set("byoip_id", app.ByoipId)
+	d.Set("connector_id", app.ConnectorId)
+	d.Set("connector_type", app.ConnectorType)
+	d.Set("description", app.Description)
+	d.Set("fqdn_prefix", app.FqdnPrefix)
+	d.Set("inbound_connector_type", app.InboundConnectorType)
+	d.Set("name", app.Name)
+	d.Set("internet_protocol", app.InternetProtocol)
+	d.Set("public_ips", app.PublicIps)
+	d.Set("size", app.Size)
+	d.Set("ilb_credential_id", app.IlbCredentialId)
+}
+
 func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
@@ -359,18 +383,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 		}}
 	}
 
-	d.Set("billing_tag_ids", app.BillingTags)
-	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
-	d.Set("byoip_id", app.ByoipId)
-	d.Set("connector_id", app.ConnectorId)
-	d.Set("connector_type", app.ConnectorType)
-	d.Set("description", app.Description)
-	d.Set("fqdn_prefix", app.FqdnPrefix)
-	d.Set("name", app.Name)
-	d.Set("internet_protocol", app.InternetProtocol)
-	d.Set("public_ips", app.PublicIps)
-	d.Set("size", app.Size)
-	d.Set("ilb_credential_id", app.IlbCredentialId)
+	setInternetApplicationFields(d, app)
 
 	// Segment
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
