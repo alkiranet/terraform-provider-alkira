@@ -35,9 +35,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"aws_account_id": {
-				Description: "AWS Account ID.",
+				Description: "AWS Account ID. If not provided, it will be automatically detected from the VPC.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"aws_region": {
 				Description: "AWS Region where VPC resides.",
