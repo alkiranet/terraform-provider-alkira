@@ -71,6 +71,17 @@ func resourceAlkiraServicePan() *schema.Resource {
 			StateContext: importWithReadValidation(resourceServicePanRead),
 		},
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or " +
+					"IP addresses. When set, only these sources can reach " +
+					"the management interface of the service instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 			"billing_tag_ids": {
 				Description: "Billing tags to be associated with " +
 					"the resource. (see resource `alkira_billing_tag`).",
@@ -557,6 +568,7 @@ func resourceServicePanRead(ctx context.Context, d *schema.ResourceData, m inter
 		}}
 	}
 
+	d.Set("allow_list", pan.AllowList)
 	d.Set("billing_tag_ids", pan.BillingTagIds)
 	d.Set("bundle", pan.Bundle)
 	d.Set("cxp", pan.CXP)
