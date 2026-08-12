@@ -34,6 +34,17 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			StateContext: importWithReadValidation(resourceFortinetRead),
 		},
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or " +
+					"IP addresses. When set, only these sources can reach " +
+					"the management interface of the service instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 			"auto_scale": {
 				Description: "Whether enable auto scale for Fortinet firewall. " +
 					"It could be either `ON` and `OFF`. Default value is `OFF`.",
@@ -345,6 +356,7 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 		}}
 	}
 
+	d.Set("allow_list", f.AllowList)
 	d.Set("auto_scale", f.AutoScale)
 	d.Set("billing_tag_ids", f.BillingTags)
 	d.Set("credential_id", f.CredentialId)

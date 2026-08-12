@@ -293,6 +293,7 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	}
 
 	service := &alkira.ServiceFortinet{
+		AllowList:        convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      billingTagIds,
 		CredentialId:     d.Get("credential_id").(string),
