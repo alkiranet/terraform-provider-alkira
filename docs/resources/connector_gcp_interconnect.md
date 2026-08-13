@@ -126,7 +126,7 @@ resource "alkira_connector_gcp_interconnect" "example_gcp_interconnect_2" {
 - `instances` (Block List, Min: 1) A list of instances of the InterConnect (see [below for nested schema](#nestedblock--instances))
 - `loopback_prefixes` (Set of String) A list of prefixes that should be associated with the connector. Eg :["10.30.0.0/24"]
 - `name` (String) The name of the connector.
-- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.
+- `size` (String) The size of the connector, one of `SMALL`, `MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`, `30LARGE`, `40LARGE` or `50LARGE`.
 - `tunnel_protocol` (String) The tunnel protocol used by the connector.Can be one of `GRE`, `IPSEC`, `VXLAN`, or `VXLAN_GPE`.
 
 ### Optional
