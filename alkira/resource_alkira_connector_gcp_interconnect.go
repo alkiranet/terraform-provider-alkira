@@ -42,7 +42,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`, " +
+					"`30LARGE`, `40LARGE` or `50LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
