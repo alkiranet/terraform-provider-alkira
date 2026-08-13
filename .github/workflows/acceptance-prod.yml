@@ -2,11 +2,10 @@ name: acceptance-test-prod
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-      - dev
-      - 'release/*'
+  # NOTE: deliberately no `pull_request:` trigger. This workflow exports live
+  # production portal credentials at workflow scope and then builds and runs
+  # the checked-out code, so a `pull_request` run would hand those secrets to
+  # unreviewed code. Use `workflow_dispatch` to run acceptance on a branch.
   push:
     branches:
       - main
