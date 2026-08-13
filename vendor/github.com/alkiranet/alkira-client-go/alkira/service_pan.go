@@ -31,6 +31,9 @@ type ServicePan struct {
 	PanoramaTemplate            *string                              `json:"panoramaTemplate,omitempty"`
 	PanWarmBootEnabled          bool                                 `json:"panWarmBootEnabled,omitempty"`
 	RegistrationCredentialId    string                               `json:"registrationCredentialId,omitempty"`
+	RoutingType                 *string                              `json:"routingType,omitempty"`
+	ScmEnabled                  bool                                 `json:"scmEnabled,omitempty"`
+	ScmFolder                   *string                              `json:"scmFolder,omitempty"`
 	SegmentIds                  []int                                `json:"segments"`
 	SegmentOptions              SegmentNameToZone                    `json:"segmentOptions,omitempty"`
 	Size                        string                               `json:"size"`
