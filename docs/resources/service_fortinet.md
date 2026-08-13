@@ -65,6 +65,7 @@ resource "alkira_service_fortinet" "test1" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the service instances.
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
 - `description` (String) The description of the service.
