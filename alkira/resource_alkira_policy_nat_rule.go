@@ -329,6 +329,12 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("enabled", rule.Enabled)
 	d.Set("category", rule.Category)
 
+	// "direction" is sent on create and update and returned by the API, so it
+	// must be read back here. "terraform import" populates state from Read
+	// alone, and a field left unset lands as null and shows up as a spurious
+	// diff on the next plan.
+	d.Set("direction", rule.Direction)
+
 	setNatRuleActionOptions(rule.Action, d)
 	setNatRuleMatch(rule.Match, d)
 
