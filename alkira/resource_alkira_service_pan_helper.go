@@ -459,6 +459,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	}
 
 	service := &alkira.ServicePan{
+		AllowList:                   convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		BillingTagIds:               convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Bundle:                      d.Get("bundle").(string),
 		CXP:                         d.Get("cxp").(string),
