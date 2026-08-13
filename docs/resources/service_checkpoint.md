@@ -78,6 +78,7 @@ resource "alkira_service_checkpoint" "test" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the service instances.
 - `auto_scale` (String) Indicate if `auto_scale` should be enabled for your checkpoint firewall. `ON` and `OFF` are accepted values. `OFF` is the default if field is omitted
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the checkpoint service.
