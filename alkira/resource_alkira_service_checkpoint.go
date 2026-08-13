@@ -34,6 +34,17 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or " +
+					"IP addresses. When set, only these sources can reach " +
+					"the management interface of the service instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 			"auto_scale": {
 				Description: "Indicate if `auto_scale` should be enabled " +
 					"for your checkpoint firewall. `ON` and `OFF` are " +
@@ -374,6 +385,7 @@ func resourceCheckpointRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(fmt.Errorf("failed to find segment"))
 	}
 
+	d.Set("allow_list", checkpoint.AllowList)
 	d.Set("auto_scale", checkpoint.AutoScale)
 	d.Set("billing_tag_ids", checkpoint.BillingTags)
 	d.Set("credential_id", checkpoint.CredentialId)

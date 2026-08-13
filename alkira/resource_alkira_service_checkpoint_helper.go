@@ -309,6 +309,7 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 
 	// Assemble request
 	return &alkira.ServiceCheckpoint{
+		AllowList:        convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		AutoScale:        d.Get("auto_scale").(string),
 		BillingTags:      convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		CredentialId:     d.Get("credential_id").(string),
