@@ -121,12 +121,15 @@ func convertTypeListToIntList(in []interface{}) []int {
 
 // convertTypeListToStringList convert a TypeList into a list of string
 func convertTypeListToStringList(in []interface{}) []string {
-	log.Printf("[DEBUG] Convert TypeList %v", in)
-
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] empty TypeList to convert to StringList")
 		return nil
 	}
+
+	// Log only the entry count, never the values. This is a generic converter
+	// with no way to know whether its input is secret, and IPSec pre-shared keys
+	// are among the values routed through it.
+	log.Printf("[DEBUG] Convert TypeList with %d entries to StringList", len(in))
 
 	strList := make([]string, len(in))
 
