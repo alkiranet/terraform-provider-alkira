@@ -112,8 +112,8 @@ once `provision_state` is `SUCCESS`.
 
 ### Optional
 
-- `api_key` (String) Your Alkira API key. This is the recommended authentication method. API keys can be managed from Portal -> Settings -> User Management.
-- `password` (String, Deprecated) Your Tenant Password. If this is not provided then `api_key` must have a value.
+- `api_key` (String, Sensitive) Your Alkira API key. This is the recommended authentication method. API keys can be managed from Portal -> Settings -> User Management.
+- `password` (String, Sensitive, Deprecated) Your Tenant Password. If this is not provided then `api_key` must have a value.
 - `provision` (Boolean) With provision or not.
 - `serialization_enabled` (Boolean) Enable API serialization. Enabled by default.
 - `serialization_timeout` (Number) API serialization timeout in seconds.

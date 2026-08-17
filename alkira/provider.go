@@ -33,6 +33,7 @@ func Provider() *schema.Provider {
 					"then `api_key` must have a value.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Deprecated:  "Use `api_key` instead. Username/password authentication will be removed in a future major release.",
 				DefaultFunc: envDefaultFunc("ALKIRA_PASSWORD"),
 			},
@@ -42,6 +43,7 @@ func Provider() *schema.Provider {
 					"Portal -> Settings -> User Management.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				DefaultFunc: envDefaultFunc("ALKIRA_API_KEY"),
 			},
 			"provision": {
