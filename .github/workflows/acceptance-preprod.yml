@@ -3,9 +3,9 @@ name: acceptance-test-preprod
 on:
   workflow_dispatch:
   # NOTE: deliberately no `pull_request:` trigger. This workflow exports live
-  # preprod portal credentials at workflow scope and then builds and runs the
-  # checked-out code, so a `pull_request` run would hand those secrets to
-  # unreviewed code. Use `workflow_dispatch` to run acceptance on a branch.
+  # preprod portal credentials and then builds and runs the checked-out code,
+  # so a `pull_request` run would hand those secrets to unreviewed code.
+  # Use `workflow_dispatch` to run acceptance on a branch.
   push:
     branches:
       - main
@@ -16,16 +16,22 @@ concurrency:
   group: acceptance-test-preprod
   cancel-in-progress: false
 
-env:
-  ALKIRA_PORTAL:   ${{ secrets.PREPROD_TERRAFORM_PORTAL }}
-  ALKIRA_USERNAME: ${{ secrets.PREPROD_TERRAFORM_USERNAME }}
-  ALKIRA_PASSWORD: ${{ secrets.PREPROD_TERRAFORM_PASSWORD }}
-  ALKIRA_CXP:      "US-WEST-1"
-  ALKIRA_API_SERIALIZATION_ENABLED:    "true"
-
 jobs:
   acceptance-test-preprod:
     runs-on: ubuntu-latest
+    # Gate every path that reaches the preprod portal credentials behind a
+    # protected environment with required reviewers. Both a `push` to an
+    # unprotected branch (e.g. dev) and a `workflow_dispatch` on an arbitrary
+    # ref now pause for reviewer approval before this job runs. The
+    # PREPROD_TERRAFORM_* secrets must live in this environment (not at repo
+    # scope) so they only resolve inside this approved job.
+    environment: acceptance-preprod
+    env:
+      ALKIRA_PORTAL:   ${{ secrets.PREPROD_TERRAFORM_PORTAL }}
+      ALKIRA_USERNAME: ${{ secrets.PREPROD_TERRAFORM_USERNAME }}
+      ALKIRA_PASSWORD: ${{ secrets.PREPROD_TERRAFORM_PASSWORD }}
+      ALKIRA_CXP:      "US-WEST-1"
+      ALKIRA_API_SERIALIZATION_ENABLED:    "true"
 
     steps:
       -
