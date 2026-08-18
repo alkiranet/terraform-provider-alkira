@@ -238,6 +238,7 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 										Description: "The pre-shared key of the " +
 											"tunnel.",
 										Type:         schema.TypeString,
+										Sensitive:    true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 										Required:     true,
 									},

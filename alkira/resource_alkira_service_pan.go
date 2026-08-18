@@ -218,8 +218,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 								"**IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. " +
 								"Auth keys generated using the Panorama web interface are NOT supported " +
 								"by Alkira and may cause provisioning to fail.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 						"auth_code": {
 							Description: "PAN instance auth code. Only required " +

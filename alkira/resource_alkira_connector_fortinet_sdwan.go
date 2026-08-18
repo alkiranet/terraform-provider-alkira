@@ -115,6 +115,7 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 						"password": {
 							Description: "The password of the WAN Edge instance.",
 							Type:        schema.TypeString,
+							Sensitive:   true,
 							Required:    true,
 						},
 						"hostname": {
