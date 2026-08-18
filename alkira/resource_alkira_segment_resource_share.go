@@ -52,10 +52,12 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Computed:    true,
 			},
 			"service_ids": {
-				Description: "The list of service IDs.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "The list of service IDs. Alongside the ID of a deployed " +
+					"service, two sentinel values are accepted: `0` selects no service " +
+					"and `-1` selects any service. An empty list is equivalent to `[0]`.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 			"designated_segment_id": {
 				Description: "The designated segment ID.",
@@ -93,18 +95,21 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			"traffic_direction": {
 				Description: "Specify the direction in which traffic " +
 					"is orignated at both Resource End-A and Resource " +
-					"End-B. The default value is `BIDIRECTIONAL`.",
+					"End-B. Value could be `BIDIRECTIONAL` or " +
+					"`UNIDIRECTIONAL`. The default value is `BIDIRECTIONAL`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "BIDIRECTIONAL",
 				ValidateFunc: validation.StringInSlice([]string{"UNIDIRECTIONAL", "BIDIRECTIONAL"}, false),
 			},
 			"traffic_from_end": {
-				Description: "The end from which traffic originates. This field " +
-					"is only applicable when `traffic_direction` is set to " +
-					"`UNIDIRECTIONAL`.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The end from which traffic originates. Value could be " +
+					"`A` or `B`. This field is only applicable when " +
+					"`traffic_direction` is set to `UNIDIRECTIONAL`, and must be " +
+					"omitted when it is set to `BIDIRECTIONAL`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"A", "B"}, false),
 			},
 			"policy_rule_list_id": {
 				Description: "The ID of a `policy_rule_list` that is to be used " +

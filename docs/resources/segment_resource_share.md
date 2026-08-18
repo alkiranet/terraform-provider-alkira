@@ -38,7 +38,7 @@ resource "alkira_segment_resource_share" "test" {
 - `end_a_segment_resource_ids` (List of Number) The End-A segment resource IDs. All segment resources must be on the same segment.
 - `end_b_segment_resource_ids` (List of Number) The End-B segment resource IDs. All segment resources must be on the same segment.
 - `name` (String) The name of the segment resource share.
-- `service_ids` (List of Number) The list of service IDs.
+- `service_ids` (List of Number) The list of service IDs. Alongside the ID of a deployed service, two sentinel values are accepted: `0` selects no service and `-1` selects any service. An empty list is equivalent to `[0]`.
 
 ### Optional
 
@@ -46,12 +46,10 @@ resource "alkira_segment_resource_share" "test" {
 - `end_a_route_limit` (Number) The End-A route limit. The default value is `100`.
 - `end_b_route_limit` (Number) The End-B route limit. The default value is `100`.
 - `policy_rule_list_id` (Number) The ID of a `policy_rule_list` that is to be used for the inter-segment policy generated for this resource. (**BETA**)
-- `traffic_direction` (String) Specify the direction in which traffic is orignated at both Resource End-A and Resource End-B. The default value is `BIDIRECTIONAL`.
-- `traffic_from_end` (String) The end from which traffic originates. This field is only applicable when `traffic_direction` is set to `UNIDIRECTIONAL`.
+- `traffic_direction` (String) Specify the direction in which traffic is orignated at both Resource End-A and Resource End-B. Value could be `BIDIRECTIONAL` or `UNIDIRECTIONAL`. The default value is `BIDIRECTIONAL`.
+- `traffic_from_end` (String) The end from which traffic originates. Value could be `A` or `B`. This field is only applicable when `traffic_direction` is set to `UNIDIRECTIONAL`, and must be omitted when it is set to `BIDIRECTIONAL`.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `provision_state` (String) The provision state of the resource.
-
-
