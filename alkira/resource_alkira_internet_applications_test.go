@@ -37,6 +37,20 @@ func TestInternetApplicationSetFields(t *testing.T) {
 			"Read must persist inbound_connector_type, otherwise import leaves it null")
 	})
 
+	// TPS leaves inbound_connector_type NULL for applications that never set it
+	// explicitly, and serializes the response with NON_NULL, so the field is
+	// omitted from the payload. TPS treats that NULL as DEFAULT; if Read wrote
+	// the empty string instead, state would diff forever against the schema
+	// default and import would still be broken for those applications.
+	t.Run("omitted inbound_connector_type falls back to DEFAULT", func(t *testing.T) {
+		d := resourceAlkiraInternetApplication().TestResourceData()
+
+		setInternetApplicationFields(d, &alkira.InternetApplication{})
+
+		assert.Equal(t, "DEFAULT", d.Get("inbound_connector_type"),
+			"a NULL inbound_connector_type in TPS means DEFAULT, not empty")
+	})
+
 	t.Run("api response fields are written to state", func(t *testing.T) {
 		d := resourceAlkiraInternetApplication().TestResourceData()
 

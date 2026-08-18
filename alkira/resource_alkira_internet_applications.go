@@ -342,6 +342,19 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
+// inboundConnectorTypeOrDefault normalizes the inbound connector type coming
+// back from the API. The column behind it is nullable in TPS and the response
+// model is serialized with NON_NULL, so the field is omitted entirely for an
+// internet application whose type was never set explicitly. TPS itself treats
+// that NULL as DEFAULT, so mirror it here -- writing the empty string into
+// state would diff forever against the schema default.
+func inboundConnectorTypeOrDefault(t string) string {
+	if t == "" {
+		return "DEFAULT"
+	}
+	return t
+}
+
 // setInternetApplicationFields writes the internet application fields that map
 // directly from the API response onto the resource state. Fields that need
 // extra lookups or reshaping (segment, source NAT pool, targets, provision
@@ -358,7 +371,7 @@ func setInternetApplicationFields(d *schema.ResourceData, app *alkira.InternetAp
 	d.Set("connector_type", app.ConnectorType)
 	d.Set("description", app.Description)
 	d.Set("fqdn_prefix", app.FqdnPrefix)
-	d.Set("inbound_connector_type", app.InboundConnectorType)
+	d.Set("inbound_connector_type", inboundConnectorTypeOrDefault(app.InboundConnectorType))
 	d.Set("name", app.Name)
 	d.Set("internet_protocol", app.InternetProtocol)
 	d.Set("public_ips", app.PublicIps)
