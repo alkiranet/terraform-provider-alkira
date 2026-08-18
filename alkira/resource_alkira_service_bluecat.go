@@ -42,9 +42,12 @@ func resourceAlkiraBluecat() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Defines the AnyCast configuration for BDDS type instances",
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Description: "Defines the AnyCast configuration for BDDS type instances. " +
+					"At most one block may be given; list multiple AnyCast IPs in `ips` " +
+					"rather than repeating the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
@@ -69,9 +72,12 @@ func resourceAlkiraBluecat() *schema.Resource {
 				},
 			},
 			"edge_anycast": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Defines the AnyCast configuration for EDGE type instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Description: "Defines the AnyCast configuration for EDGE type instances. " +
+					"At most one block may be given; list multiple AnyCast IPs in `ips` " +
+					"rather than repeating the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
