@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -249,6 +250,17 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 	return timeInput.Unix(), nil
 }
 
+// importIDPattern allow-lists the characters accepted in a `terraform import`
+// id. Every alkira_* resource id is portal-issued and is always a short
+// numeric or alphanumeric token (see the resource docs' import examples) --
+// this pattern accepts all such ids. It rejects ids containing path
+// metacharacters ("/", ".."), query-string delimiters ("?", "&"), or other
+// characters that would otherwise be interpolated unescaped into the request
+// URI the vendored alkira-client-go SDK builds for the Read/Update/Delete
+// call (e.g. `fmt.Sprintf("%s/%s", a.Uri, id)`), which has no escaping of
+// its own.
+var importIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+
 // importWithReadValidation wraps a Read function for import operations.
 // During import, any diagnostic (warning or error) is treated as a failure
 // to ensure imports fail clearly when the resource cannot be retrieved.
@@ -257,6 +269,13 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 // messages even when the import actually failed.
 func importWithReadValidation(readFunc schema.ReadContextFunc) schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+		// Reject ids that don't look like a portal-issued resource id before
+		// they ever reach the Read function (and, downstream, the
+		// unescaped URI interpolation in the vendored SDK).
+		if !importIDPattern.MatchString(d.Id()) {
+			return nil, fmt.Errorf("import failed: invalid resource id %q; expected an alphanumeric id (letters, digits, '-', '_'), 1-64 characters", d.Id())
+		}
+
 		// Call the Read function to populate state
 		diags := readFunc(ctx, d, m)
 

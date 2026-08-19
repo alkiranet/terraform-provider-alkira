@@ -698,6 +698,10 @@ func TestImportWithReadValidation(t *testing.T) {
 			}, map[string]interface{}{
 				"id": "test-id",
 			})
+			// TestResourceDataRaw does not populate the InstanceState id from the
+			// "id" schema field, so set it explicitly to exercise the same id
+			// importWithReadValidation sees during a real `terraform import`.
+			resourceData.SetId("42")
 
 			// Call the wrapper function
 			result, err := wrapperFunc(context.Background(), resourceData, nil)
@@ -712,6 +716,62 @@ func TestImportWithReadValidation(t *testing.T) {
 				assert.NotNil(t, result, "Expected resource data to be returned")
 				assert.Len(t, result, 1, "Expected exactly one resource data")
 				assert.Equal(t, resourceData, result[0], "Expected the same resource data object")
+			}
+		})
+	}
+}
+
+// TestImportWithReadValidationRejectsInvalidId asserts that
+// importWithReadValidation checks the import id against an allow-listed
+// character set *before* invoking the Read function. This closes the
+// confused-deputy path where a `terraform import <res> <id>` id containing
+// path metacharacters (e.g. "../") would otherwise be interpolated
+// unescaped into the authenticated API request URI built by the vendored
+// alkira-client-go SDK. A rejected id must never reach Read.
+func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
+	tests := []struct {
+		name        string
+		id          string
+		expectError bool
+	}{
+		{name: "valid numeric id", id: "12345", expectError: false},
+		{name: "valid alphanumeric id with dash", id: "credential-1", expectError: false},
+		{name: "valid alphanumeric id with underscore", id: "credential_1", expectError: false},
+		{name: "path traversal id", id: "1/../../otherResource", expectError: true},
+		{name: "slash-composite id", id: "1/2", expectError: true},
+		{name: "query-string injection id", id: "1?includeMarkedForDeletion=false", expectError: true},
+		{name: "empty id", id: "", expectError: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			readCalled := false
+			mockReadFunc := schema.ReadContextFunc(func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				readCalled = true
+				return nil
+			})
+
+			wrapperFunc := importWithReadValidation(mockReadFunc)
+
+			resourceData := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}, map[string]interface{}{
+				"id": tt.id,
+			})
+			resourceData.SetId(tt.id)
+
+			result, err := wrapperFunc(context.Background(), resourceData, nil)
+
+			if tt.expectError {
+				assert.Error(t, err, "expected invalid import id %q to be rejected", tt.id)
+				assert.Nil(t, result, "expected nil resource data for rejected id %q", tt.id)
+				assert.False(t, readCalled, "Read must not run for a rejected id %q", tt.id)
+			} else {
+				assert.NoError(t, err, "expected valid import id %q to be accepted", tt.id)
+				assert.True(t, readCalled, "Read should run for a valid id %q", tt.id)
 			}
 		})
 	}
