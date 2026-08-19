@@ -112,6 +112,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"pan_password": {
 				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Required:    true,
 			},
 			"pan_username": {
@@ -123,6 +124,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"pan_license_key": {
 				Description: "PAN Licensing API Key.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Optional:    true,
 			},
 			"pan_credential_id": {
@@ -218,8 +220,9 @@ func resourceAlkiraServicePan() *schema.Resource {
 								"**IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. " +
 								"Auth keys generated using the Panorama web interface are NOT supported " +
 								"by Alkira and may cause provisioning to fail.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 						"auth_code": {
 							Description: "PAN instance auth code. Only required " +

@@ -91,7 +91,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						"preshared_keys": {
 							Description: "An array of preshared keys, one per " +
 								"tunnel. The value needs to be provided explicitly.",
-							Type: schema.TypeList,
+							Type:      schema.TypeList,
+							Sensitive: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringIsNotWhiteSpace,
@@ -314,8 +315,9 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 						"bgp_auth_key": {
 							Description: " BGP MD5 auth key for Alkira to " +
 								"authenticate Alkira CXP (On Premise Gateway).",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 					},
 				},

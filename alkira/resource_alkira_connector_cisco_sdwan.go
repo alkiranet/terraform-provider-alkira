@@ -137,8 +137,9 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 						"password": {
 							Description: "Cisco SD-WAN password. It could be also " +
 								"set by environment variable `AK_CISCO_SDWAN_PASSWORD`.",
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Required:  true,
 							DefaultFunc: schema.EnvDefaultFunc(
 								"AK_CISCO_SDWAN_PASSWORD",
 								nil),
