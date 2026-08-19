@@ -14,6 +14,10 @@ on:
 
 concurrency:
   group: acceptance-test-prod
+  # false is deliberate: a live terraform apply/destroy against prod must run to completion
+  # rather than be cancelled mid-flight. Consequence: consecutive pushes queue as separate
+  # pending approvals instead of superseding one another. Reviewers should approve the
+  # newest queued run and dismiss the rest, or an old run may apply against a stale commit.
   cancel-in-progress: false
 
 jobs:
