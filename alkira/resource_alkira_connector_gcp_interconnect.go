@@ -183,8 +183,9 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 						"bgp_auth_key": {
 							Description: "The BGP MD5 authentication key " +
 								"to authenticate Alkira CXP.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 						"gateway_mac_address": {
 							Description: "The MAC address of the gateway." +
