@@ -417,8 +417,9 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 						"bgp_auth_key": {
 							Description: " BGP MD5 auth key for Alkira to " +
 								"authenticate Alkira CXP (On Premise Gateway).",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 					},
 				},

@@ -1,70 +1,128 @@
 package alkira
 
 import (
+	"regexp"
+	"sort"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// countSensitiveByName walks a resource schema (including nested TypeList/TypeSet
-// blocks whose Elem is a *schema.Resource) and, for the given attribute name,
-// returns how many occurrences it found and how many of those were marked
-// Sensitive. A secret attribute is only masked in `terraform plan`/`apply`
-// output and CI logs when Sensitive is true.
-func countSensitiveByName(s map[string]*schema.Schema, name string) (found int, sensitive int) {
+// secretAttrPattern matches attribute names that look like they hold secret
+// material. It is intentionally broad and word-boundary aware (via `_` or
+// start/end of string as the separator, since schema keys are snake_case) so
+// it catches new secret-shaped attributes as they are added, rather than
+// pinning today's known list.
+var secretAttrPattern = regexp.MustCompile(
+	`(?i)(^|_)(password|secret|private_key|preshared|shared_secret|auth_key|license_key|api_key|token|passphrase)($|_)`,
+)
+
+// allowedNonSensitive is the reviewed exception list: attributes that match
+// secretAttrPattern by name but are not secret material, so they are
+// deliberately left unmarked. Every entry must carry a one-line justification.
+var allowedNonSensitive = map[string]string{
+	// A filesystem path to a license key file, not the key material itself.
+	"license_key_file_path": "path to a license key file, not key material",
+	// A GCP OAuth2 token endpoint URL (e.g. https://oauth2.googleapis.com/token),
+	// not a token value.
+	"token_uri": "GCP OAuth2 endpoint URL, not a token value",
+	// A username, matched only because it shares the "pan_" prefix convention
+	// with pan_password/pan_license_key; contains no secret material.
+	"pan_username": "PAN Panorama username, not secret material",
+	// A GCP service-account key identifier (fingerprint used for key
+	// rotation/reference). It does not grant access on its own — the actual
+	// secret is the sibling "private_key" attribute, which is Sensitive.
+	"private_key_id": "GCP service-account key identifier, not key material (see PR body)",
+}
+
+// walkSchema recurses into a resource schema, including nested TypeList/TypeSet
+// blocks whose Elem is a *schema.Resource, and reports every attribute whose
+// name matches secretAttrPattern. path identifies the attribute's location for
+// failure messages, e.g. "alkira_connector_ipsec/endpoint/bgp_auth_key".
+func walkSchema(resourceName, path string, s map[string]*schema.Schema, out *[]string, sensitiveOK *[]bool) {
 	for key, attr := range s {
-		if key == name {
-			found++
-			if attr.Sensitive {
-				sensitive++
-			}
+		attrPath := path + "/" + key
+		if secretAttrPattern.MatchString(key) {
+			*out = append(*out, resourceName+attrPath)
+			*sensitiveOK = append(*sensitiveOK, attr.Sensitive)
 		}
 		if attr.Elem != nil {
 			if r, ok := attr.Elem.(*schema.Resource); ok {
-				f, sen := countSensitiveByName(r.Schema, name)
-				found += f
-				sensitive += sen
+				walkSchema(resourceName, attrPath, r.Schema, out, sensitiveOK)
 			}
 		}
 	}
-	return found, sensitive
 }
 
-// TestSecretResourceAttributesAreSensitive asserts that credential-bearing
-// resource attributes are marked Sensitive so their values are not rendered in
-// cleartext in the plan/apply diff shown on the operator terminal or captured in
-// CI job logs. This fails against code where any listed attribute lacks the flag.
+// TestSecretResourceAttributesAreSensitive walks every resource in
+// Provider().ResourcesMap (including nested TypeList/TypeSet sub-resources)
+// and fails if any attribute whose name looks secret-shaped lacks
+// Sensitive: true, unless it is named in allowedNonSensitive. This is
+// deny-by-default: it does not enumerate the attributes it expects to find,
+// so it also catches secret attributes added after this test was written.
 func TestSecretResourceAttributesAreSensitive(t *testing.T) {
-	cases := []struct {
-		resource string
-		schema   map[string]*schema.Schema
-		attrs    []string
-	}{
-		{"alkira_connector_cisco_sdwan", resourceAlkiraConnectorCiscoSdwan().Schema, []string{"password"}},
-		{"alkira_connector_fortinet_sdwan", resourceAlkiraConnectorFortinetSdwan().Schema, []string{"password"}},
-		{"alkira_connector_ipsec_adv", resourceAlkiraConnectorIPSecAdv().Schema, []string{"preshared_key"}},
-		{"alkira_credential_azure_vnet", resourceAlkiraCredentialAzureVnet().Schema, []string{"secret_key"}},
-		{"alkira_credential_gcp_vpc", resourceAlkiraCredentialGcpVpc().Schema, []string{"private_key"}},
-		{"alkira_service_checkpoint", resourceAlkiraCheckpoint().Schema, []string{"password"}},
-		{"alkira_service_cisco_ftdv", resourceAlkiraServiceCiscoFTDv().Schema, []string{"password", "admin_password"}},
-		{"alkira_service_fortinet", resourceAlkiraServiceFortinet().Schema, []string{"password", "license_key"}},
-		{"alkira_service_infoblox", resourceAlkiraInfoblox().Schema, []string{"password", "shared_secret"}},
-		{"alkira_service_pan", resourceAlkiraServicePan().Schema, []string{"auth_key"}},
+	provider := Provider()
+
+	var flagged []string
+	var sensitiveOK []bool
+
+	resourceNames := make([]string, 0, len(provider.ResourcesMap))
+	for name := range provider.ResourcesMap {
+		resourceNames = append(resourceNames, name)
+	}
+	sort.Strings(resourceNames)
+
+	for _, name := range resourceNames {
+		res := provider.ResourcesMap[name]
+		if res == nil {
+			continue
+		}
+		walkSchema(name, "", res.Schema, &flagged, &sensitiveOK)
 	}
 
-	for _, c := range cases {
-		for _, attr := range c.attrs {
-			t.Run(c.resource+"/"+attr, func(t *testing.T) {
-				found, sensitive := countSensitiveByName(c.schema, attr)
-				if found == 0 {
-					t.Fatalf("%s: attribute %q not found in schema", c.resource, attr)
-				}
-				if sensitive != found {
-					t.Fatalf("%s: attribute %q present %d time(s) but only %d marked Sensitive; "+
-						"an unmarked secret is printed in cleartext in plan/apply output and CI logs",
-						c.resource, attr, found, sensitive)
-				}
-			})
+	var failures []string
+	for i, attrPath := range flagged {
+		// attrPath looks like "<resource>/<nested>.../<attr>"; the leaf
+		// segment after the last "/" is the actual schema key.
+		leaf := attrPath
+		if idx := lastSlash(attrPath); idx >= 0 {
+			leaf = attrPath[idx+1:]
+		}
+		if _, ok := allowedNonSensitive[leaf]; ok {
+			continue
+		}
+		if !sensitiveOK[i] {
+			failures = append(failures, attrPath)
 		}
 	}
+
+	if len(failures) > 0 {
+		sort.Strings(failures)
+		t.Fatalf("the following attributes look secret-shaped (matched against %q) "+
+			"but are not marked Sensitive, so their values render in cleartext in "+
+			"terraform plan/apply output and CI job logs. Either add Sensitive: true, "+
+			"or add the attribute name to allowedNonSensitive with a one-line "+
+			"justification if it is genuinely not secret material:\n  %s",
+			secretAttrPattern.String(), joinLines(failures))
+	}
+}
+
+func lastSlash(s string) int {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == '/' {
+			return i
+		}
+	}
+	return -1
+}
+
+func joinLines(lines []string) string {
+	out := ""
+	for i, l := range lines {
+		if i > 0 {
+			out += "\n  "
+		}
+		out += l
+	}
+	return out
 }

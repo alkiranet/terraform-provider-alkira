@@ -112,6 +112,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"pan_password": {
 				Description: "PAN Panorama password.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Required:    true,
 			},
 			"pan_username": {
@@ -123,6 +124,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 			"pan_license_key": {
 				Description: "PAN Licensing API Key.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Optional:    true,
 			},
 			"pan_credential_id": {
