@@ -103,6 +103,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"password": {
 				Description: "Fortinet password.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Optional:    true,
 			},
 			"instances": {
@@ -140,8 +141,9 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 								"and place them as literal data into your configuration. \n\n\n" +
 								"Instead of using this field you may also use `license_key_file_path`" +
 								"to simply place the path to the license key file you'd like to use. ",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 
 						"serial_number": {
