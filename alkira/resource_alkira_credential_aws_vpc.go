@@ -50,6 +50,7 @@ func resourceAlkiraCredentialAwsVpc() *schema.Resource {
 			"aws_secret_key": {
 				Description: "AWS secret key.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AK_AWS_SECRET_ACCESS_KEY",

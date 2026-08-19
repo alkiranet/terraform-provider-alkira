@@ -74,6 +74,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 			"password": {
 				Description: "The Checkpoint Firewall service password.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Required:    true,
 			},
 			"credential_id": {
@@ -203,6 +204,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						"password": {
 							Description: "The password of the management server.",
 							Type:        schema.TypeString,
+							Sensitive:   true,
 							Optional:    true,
 						},
 					},

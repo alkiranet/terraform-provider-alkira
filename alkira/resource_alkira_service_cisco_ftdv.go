@@ -134,6 +134,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 						"password": {
 							Description: "Firepower Management Center (FMC) password.",
 							Type:        schema.TypeString,
+							Sensitive:   true,
 							Required:    true,
 						},
 						"segment_id": {
@@ -192,6 +193,7 @@ func resourceAlkiraServiceCiscoFTDv() *schema.Resource {
 						"admin_password": {
 							Description: "Firepower Firewall Admin Password.",
 							Type:        schema.TypeString,
+							Sensitive:   true,
 							Required:    true,
 						},
 						"fmc_registration_key": {

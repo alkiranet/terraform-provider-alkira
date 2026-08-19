@@ -63,6 +63,7 @@ func resourceAlkiraCredentialGcpVpc() *schema.Resource {
 			"private_key": {
 				Description: "GCP Private Key",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Required:    true,
 			},
 			"project_id": {
