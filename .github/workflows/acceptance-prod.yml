@@ -3,9 +3,9 @@ name: acceptance-test-prod
 on:
   workflow_dispatch:
   # NOTE: deliberately no `pull_request:` trigger. This workflow exports live
-  # production portal credentials at workflow scope and then builds and runs
-  # the checked-out code, so a `pull_request` run would hand those secrets to
-  # unreviewed code. Use `workflow_dispatch` to run acceptance on a branch.
+  # production portal credentials and then builds and runs the checked-out
+  # code, so a `pull_request` run would hand those secrets to unreviewed code.
+  # Use `workflow_dispatch` to run acceptance on a branch.
   push:
     branches:
       - main
@@ -14,18 +14,28 @@ on:
 
 concurrency:
   group: acceptance-test-prod
+  # false is deliberate: a live terraform apply/destroy against prod must run to completion
+  # rather than be cancelled mid-flight. Consequence: consecutive pushes queue as separate
+  # pending approvals instead of superseding one another. Reviewers should approve the
+  # newest queued run and dismiss the rest, or an old run may apply against a stale commit.
   cancel-in-progress: false
-
-env:
-  ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
-  ALKIRA_USERNAME: ${{ secrets.PROD_TERRAFORM_USERNAME }}
-  ALKIRA_PASSWORD: ${{ secrets.PROD_TERRAFORM_PASSWORD }}
-  ALKIRA_CXP:      "US-WEST"
-  ALKIRA_API_SERIALIZATION_ENABLED:    "true"
 
 jobs:
   acceptance-test-prod:
     runs-on: ubuntu-latest
+    # Gate every path that reaches the production portal credentials behind a
+    # protected environment with required reviewers. Both a `push` to an
+    # unprotected branch (e.g. dev) and a `workflow_dispatch` on an arbitrary
+    # ref now pause for reviewer approval before this job runs. The
+    # PROD_TERRAFORM_* secrets must live in this environment (not at repo
+    # scope) so they only resolve inside this approved job.
+    environment: acceptance-prod
+    env:
+      ALKIRA_PORTAL:   ${{ secrets.PROD_TERRAFORM_PORTAL }}
+      ALKIRA_USERNAME: ${{ secrets.PROD_TERRAFORM_USERNAME }}
+      ALKIRA_PASSWORD: ${{ secrets.PROD_TERRAFORM_PASSWORD }}
+      ALKIRA_CXP:      "US-WEST"
+      ALKIRA_API_SERIALIZATION_ENABLED:    "true"
 
     steps:
       -
