@@ -43,6 +43,10 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		}
 
 		if v, ok := optionsCfg["segment_id"].(string); ok {
+			if err := validateReferenceId(v); err != nil {
+				return nil, err
+			}
+
 			seg, _, err := segmentApi.GetById(v)
 
 			if err != nil {
@@ -261,16 +265,17 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 // own.
 //
 // Scope: this check runs once, at `terraform import` time, via
-// importWithReadValidation below. It does not run again on the ordinary
-// plan/apply path -- every subsequent Read/Update/Delete for an
-// already-imported resource reads the id straight back out of
-// terraform.tfstate via d.Id() with no revalidation. An id written directly
-// into state (hand-edited, restored from a tampered backend, or produced by
-// a state-manipulation tool) reaches the same unescaped SDK call unguarded.
-// Closing that gap means validating at the point of use (Read/Update/Delete)
-// rather than only at the point of entry (import); that is a larger,
-// cross-cutting change spanning every resource file and is tracked as a
-// follow-up, not done in this change.
+// importWithReadValidation below, and also on the ordinary plan/apply path
+// via validateReferenceId (below) for cross-resource id references such as
+// `segment_id`. It does not run again for an already-imported resource's
+// own id on subsequent Read/Update/Delete -- those read the id straight
+// back out of terraform.tfstate via d.Id() with no revalidation. An id
+// written directly into state (hand-edited, restored from a tampered
+// backend, or produced by a state-manipulation tool) reaches the same
+// unescaped SDK call unguarded. Closing that gap means validating at the
+// point of use (Read/Update/Delete) rather than only at the point of entry
+// (import); that is a larger, cross-cutting change spanning every resource
+// file and is tracked as a follow-up, not done in this change.
 //
 // The upper bound is a sanity limit, not a contract: it is not derived from
 // any API guarantee about maximum id length, so it is set well above every
@@ -284,6 +289,32 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 // resources -- there is no second line of defense from a 404 on a bad id
 // the way there is for every other resource's Read/GetById call.
 var importIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,256}$`)
+
+// validateReferenceId checks a cross-resource id reference (e.g. a
+// segment_id given in HCL config for another resource) against the same
+// allow-list as importIDPattern, before it is used to look up that
+// resource server-side.
+//
+// This guards the ordinary plan/apply path, not just import: a field such
+// as `segment_id` is an ordinary schema.TypeString with no `Validate*`,
+// and its value is passed straight to a GetById-style lookup whose URI is
+// built with unescaped string interpolation (see importIDPattern above).
+// Without this check, a crafted value (e.g. containing "../" and a "#"
+// fragment to neutralize an appended query string) reaches that lookup on
+// a plain `terraform apply` -- no import required. Every resource or
+// helper that takes a portal-issued id from config and passes it to such
+// a lookup should call this first.
+//
+// Named distinctly from the test-only validateResourceId (test_utils.go),
+// which checks a *returned* resource id is purely numeric -- a different,
+// stricter check for a different purpose (asserting on API responses in
+// tests, not validating attacker-reachable config input).
+func validateReferenceId(id string) error {
+	if !importIDPattern.MatchString(id) {
+		return fmt.Errorf("invalid resource id %q; expected an alphanumeric id (letters, digits, '-', '_'), 1-256 characters", id)
+	}
+	return nil
+}
 
 // importWithReadValidation wraps a Read function for import operations.
 // During import, any diagnostic (warning or error) is treated as a failure
