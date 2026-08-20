@@ -256,10 +256,34 @@ func convertInputTimeToEpoch(t string) (int64, error) {
 // this pattern accepts all such ids. It rejects ids containing path
 // metacharacters ("/", ".."), query-string delimiters ("?", "&"), or other
 // characters that would otherwise be interpolated unescaped into the request
-// URI the vendored alkira-client-go SDK builds for the Read/Update/Delete
-// call (e.g. `fmt.Sprintf("%s/%s", a.Uri, id)`), which has no escaping of
-// its own.
-var importIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+// URI the vendored alkira-client-go SDK builds
+// (e.g. `fmt.Sprintf("%s/%s", a.Uri, id)`), which has no escaping of its
+// own.
+//
+// Scope: this check runs once, at `terraform import` time, via
+// importWithReadValidation below. It does not run again on the ordinary
+// plan/apply path -- every subsequent Read/Update/Delete for an
+// already-imported resource reads the id straight back out of
+// terraform.tfstate via d.Id() with no revalidation. An id written directly
+// into state (hand-edited, restored from a tampered backend, or produced by
+// a state-manipulation tool) reaches the same unescaped SDK call unguarded.
+// Closing that gap means validating at the point of use (Read/Update/Delete)
+// rather than only at the point of entry (import); that is a larger,
+// cross-cutting change spanning every resource file and is tracked as a
+// follow-up, not done in this change.
+//
+// The upper bound is a sanity limit, not a contract: it is not derived from
+// any API guarantee about maximum id length, so it is set well above every
+// id shape observed today (numeric ids, short alphanumeric tokens, UUIDs)
+// rather than tight to it, to avoid rejecting a legitimate id if the portal
+// ever issues a longer one.
+//
+// For the six alkira_credential_* resources (aws_vpc, azure_vnet, gcp_vpc,
+// oci_vcn, prisma_sdwan, ssh_key_pair), Read is a no-op that always returns
+// nil, so this check is the only validation an import id gets for those
+// resources -- there is no second line of defense from a 404 on a bad id
+// the way there is for every other resource's Read/GetById call.
+var importIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,256}$`)
 
 // importWithReadValidation wraps a Read function for import operations.
 // During import, any diagnostic (warning or error) is treated as a failure
@@ -273,7 +297,7 @@ func importWithReadValidation(readFunc schema.ReadContextFunc) schema.StateConte
 		// they ever reach the Read function (and, downstream, the
 		// unescaped URI interpolation in the vendored SDK).
 		if !importIDPattern.MatchString(d.Id()) {
-			return nil, fmt.Errorf("import failed: invalid resource id %q; expected an alphanumeric id (letters, digits, '-', '_'), 1-64 characters", d.Id())
+			return nil, fmt.Errorf("import failed: invalid resource id %q; expected an alphanumeric id (letters, digits, '-', '_'), 1-256 characters", d.Id())
 		}
 
 		// Call the Read function to populate state

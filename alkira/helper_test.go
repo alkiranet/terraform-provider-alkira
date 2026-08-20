@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -737,10 +738,15 @@ func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
 		{name: "valid numeric id", id: "12345", expectError: false},
 		{name: "valid alphanumeric id with dash", id: "credential-1", expectError: false},
 		{name: "valid alphanumeric id with underscore", id: "credential_1", expectError: false},
+		{name: "valid uuid id", id: "d70503d2-1a99-4084-8aae-8268e2764365", expectError: false},
 		{name: "path traversal id", id: "1/../../otherResource", expectError: true},
 		{name: "slash-composite id", id: "1/2", expectError: true},
 		{name: "query-string injection id", id: "1?includeMarkedForDeletion=false", expectError: true},
 		{name: "empty id", id: "", expectError: true},
+		{name: "id at length limit", id: strings.Repeat("a", 256), expectError: false},
+		{name: "id over length limit", id: strings.Repeat("a", 257), expectError: true},
+		{name: "trailing newline", id: "12345\n", expectError: true},
+		{name: "leading newline", id: "\n12345", expectError: true},
 	}
 
 	for _, tt := range tests {
