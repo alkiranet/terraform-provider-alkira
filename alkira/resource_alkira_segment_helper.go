@@ -10,6 +10,10 @@ import (
 // getSegmentNamebyId get a segment name by its ID
 func getSegmentNameById(id string, m interface{}) (string, error) {
 
+	if err := validateReferenceId(id); err != nil {
+		return "", err
+	}
+
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))
 	segment, _, err := segmentApi.GetById(id)
 

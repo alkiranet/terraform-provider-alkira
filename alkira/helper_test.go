@@ -2,7 +2,9 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 	"testing"
@@ -740,6 +742,7 @@ func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
 		{name: "valid alphanumeric id with underscore", id: "credential_1", expectError: false},
 		{name: "valid uuid id", id: "d70503d2-1a99-4084-8aae-8268e2764365", expectError: false},
 		{name: "path traversal id", id: "1/../../otherResource", expectError: true},
+		{name: "bare dot-dot id", id: "..", expectError: true},
 		{name: "slash-composite id", id: "1/2", expectError: true},
 		{name: "query-string injection id", id: "1?includeMarkedForDeletion=false", expectError: true},
 		{name: "empty id", id: "", expectError: true},
@@ -781,6 +784,84 @@ func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
 			}
 		})
 	}
+}
+
+// expandSegmentOptionsElemSchema mirrors the "segment_options" block schema
+// shared by the resources that call expandSegmentOptions (e.g.
+// alkira_service_checkpoint, alkira_service_fortinet, alkira_service_pan).
+func expandSegmentOptionsElemSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"segment_id": {Type: schema.TypeString, Required: true},
+			"zone_name":  {Type: schema.TypeString, Optional: true},
+			"groups": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+		},
+	}
+}
+
+func newSegmentOptionsSet(items ...map[string]interface{}) *schema.Set {
+	iface := make([]interface{}, len(items))
+	for i, m := range items {
+		iface[i] = m
+	}
+	return schema.NewSet(schema.HashResource(expandSegmentOptionsElemSchema()), iface)
+}
+
+// TestExpandSegmentOptionsRejectsInvalidSegmentId asserts that
+// expandSegmentOptions validates a segment_option's segment_id before
+// calling the Segment API. Like getSegmentNameById, this is a plain
+// schema.TypeString with no Validate* whose value was passed straight to
+// segmentApi.GetById -- reachable on an ordinary `terraform apply` via any
+// resource with a `segment_options` block, no import required. A rejected
+// id must never reach the API.
+func TestExpandSegmentOptionsRejectsInvalidSegmentId(t *testing.T) {
+	t.Run("malicious segment_id is rejected before any API call", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "999", Name: "unexpected"})
+		}))
+
+		in := newSegmentOptionsSet(map[string]interface{}{
+			"segment_id": "../tenant/users?includeSecrets=true#",
+			"zone_name":  "DEFAULT",
+			"groups":     []interface{}{},
+		})
+
+		result, err := expandSegmentOptions(in, client)
+
+		assert.Error(t, err, "expected a malicious segment_id to be rejected")
+		assert.Nil(t, result)
+		assert.False(t, serverHit, "the segment API must not be called for a rejected segment_id")
+	})
+
+	t.Run("valid numeric segment_id still resolves through the API", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "100", Name: "prod-segment"})
+		}))
+
+		in := newSegmentOptionsSet(map[string]interface{}{
+			"segment_id": "100",
+			"zone_name":  "DEFAULT",
+			"groups":     []interface{}{},
+		})
+
+		result, err := expandSegmentOptions(in, client)
+
+		require.NoError(t, err)
+		assert.Contains(t, result, "prod-segment")
+		assert.True(t, serverHit, "a valid segment_id should still reach the segment API")
+	})
 }
 
 func TestWarnOnFailedStateUpdate(t *testing.T) {
