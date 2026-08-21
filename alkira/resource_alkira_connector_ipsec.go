@@ -296,7 +296,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 								"`IPSEC_INTERFACE_PING`.",
 							Type: schema.TypeString,
 							ValidateFunc: validation.StringInSlice(
-								[]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
+								[]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
 							Optional: true,
 							Default:  "IPSEC_INTERFACE_PING",
 						},
