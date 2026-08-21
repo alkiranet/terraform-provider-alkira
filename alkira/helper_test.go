@@ -2,8 +2,11 @@ package alkira
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -698,6 +701,10 @@ func TestImportWithReadValidation(t *testing.T) {
 			}, map[string]interface{}{
 				"id": "test-id",
 			})
+			// TestResourceDataRaw does not populate the InstanceState id from the
+			// "id" schema field, so set it explicitly to exercise the same id
+			// importWithReadValidation sees during a real `terraform import`.
+			resourceData.SetId("42")
 
 			// Call the wrapper function
 			result, err := wrapperFunc(context.Background(), resourceData, nil)
@@ -715,6 +722,134 @@ func TestImportWithReadValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestImportWithReadValidationRejectsInvalidId asserts that
+// importWithReadValidation checks the import id against an allow-listed
+// character set *before* invoking the Read function. This closes the
+// confused-deputy path where a `terraform import <res> <id>` id containing
+// path metacharacters (e.g. "../") would otherwise be interpolated
+// unescaped into the authenticated API request URI built by the vendored
+// alkira-client-go SDK. A rejected id must never reach Read.
+func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
+	tests := []struct {
+		name        string
+		id          string
+		expectError bool
+	}{
+		{name: "valid numeric id", id: "12345", expectError: false},
+		{name: "valid alphanumeric id with dash", id: "credential-1", expectError: false},
+		{name: "valid alphanumeric id with underscore", id: "credential_1", expectError: false},
+		{name: "valid uuid id", id: "d70503d2-1a99-4084-8aae-8268e2764365", expectError: false},
+		{name: "path traversal id", id: "1/../../otherResource", expectError: true},
+		{name: "bare dot-dot id", id: "..", expectError: true},
+		{name: "slash-composite id", id: "1/2", expectError: true},
+		{name: "query-string injection id", id: "1?includeMarkedForDeletion=false", expectError: true},
+		{name: "empty id", id: "", expectError: true},
+		{name: "id at length limit", id: strings.Repeat("a", 256), expectError: false},
+		{name: "id over length limit", id: strings.Repeat("a", 257), expectError: true},
+		{name: "trailing newline", id: "12345\n", expectError: true},
+		{name: "leading newline", id: "\n12345", expectError: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			readCalled := false
+			mockReadFunc := schema.ReadContextFunc(func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+				readCalled = true
+				return nil
+			})
+
+			wrapperFunc := importWithReadValidation(mockReadFunc)
+
+			resourceData := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}, map[string]interface{}{
+				"id": tt.id,
+			})
+			resourceData.SetId(tt.id)
+
+			result, err := wrapperFunc(context.Background(), resourceData, nil)
+
+			if tt.expectError {
+				assert.Error(t, err, "expected invalid import id %q to be rejected", tt.id)
+				assert.Nil(t, result, "expected nil resource data for rejected id %q", tt.id)
+				assert.False(t, readCalled, "Read must not run for a rejected id %q", tt.id)
+			} else {
+				assert.NoError(t, err, "expected valid import id %q to be accepted", tt.id)
+				assert.True(t, readCalled, "Read should run for a valid id %q", tt.id)
+			}
+		})
+	}
+}
+
+func newSegmentOptionsSet(items ...map[string]interface{}) *schema.Set {
+	iface := make([]interface{}, len(items))
+	for i, m := range items {
+		iface[i] = m
+	}
+	// Use the real "segment_options" block schema (alkira_service_fortinet is one of several
+	// resources that share it, e.g. alkira_service_checkpoint, alkira_service_pan) rather than a
+	// hand-mirrored copy, so a future shape change to the real block doesn't leave this test green
+	// against a schema no resource actually has.
+	elemSchema := resourceAlkiraServiceFortinet().Schema["segment_options"].Elem.(*schema.Resource)
+	return schema.NewSet(schema.HashResource(elemSchema), iface)
+}
+
+// TestExpandSegmentOptionsRejectsInvalidSegmentId asserts that
+// expandSegmentOptions validates a segment_option's segment_id before
+// calling the Segment API. Like getSegmentNameById, this is a plain
+// schema.TypeString with no Validate* whose value was passed straight to
+// segmentApi.GetById -- reachable on an ordinary `terraform apply` via any
+// resource with a `segment_options` block, no import required. A rejected
+// id must never reach the API.
+func TestExpandSegmentOptionsRejectsInvalidSegmentId(t *testing.T) {
+	t.Run("malicious segment_id is rejected before any API call", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "999", Name: "unexpected"})
+		}))
+
+		in := newSegmentOptionsSet(map[string]interface{}{
+			"segment_id": "../tenant/users?includeSecrets=true#",
+			"zone_name":  "DEFAULT",
+			"groups":     []interface{}{},
+		})
+
+		result, err := expandSegmentOptions(in, client)
+
+		assert.Error(t, err, "expected a malicious segment_id to be rejected")
+		assert.Nil(t, result)
+		assert.False(t, serverHit, "the segment API must not be called for a rejected segment_id")
+	})
+
+	t.Run("valid numeric segment_id still resolves through the API", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "100", Name: "prod-segment"})
+		}))
+
+		in := newSegmentOptionsSet(map[string]interface{}{
+			"segment_id": "100",
+			"zone_name":  "DEFAULT",
+			"groups":     []interface{}{},
+		})
+
+		result, err := expandSegmentOptions(in, client)
+
+		require.NoError(t, err)
+		assert.Contains(t, result, "prod-segment")
+		assert.True(t, serverHit, "a valid segment_id should still reach the segment API")
+	})
 }
 
 func TestWarnOnFailedStateUpdate(t *testing.T) {
