@@ -786,29 +786,17 @@ func TestImportWithReadValidationRejectsInvalidId(t *testing.T) {
 	}
 }
 
-// expandSegmentOptionsElemSchema mirrors the "segment_options" block schema
-// shared by the resources that call expandSegmentOptions (e.g.
-// alkira_service_checkpoint, alkira_service_fortinet, alkira_service_pan).
-func expandSegmentOptionsElemSchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"segment_id": {Type: schema.TypeString, Required: true},
-			"zone_name":  {Type: schema.TypeString, Optional: true},
-			"groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-		},
-	}
-}
-
 func newSegmentOptionsSet(items ...map[string]interface{}) *schema.Set {
 	iface := make([]interface{}, len(items))
 	for i, m := range items {
 		iface[i] = m
 	}
-	return schema.NewSet(schema.HashResource(expandSegmentOptionsElemSchema()), iface)
+	// Use the real "segment_options" block schema (alkira_service_fortinet is one of several
+	// resources that share it, e.g. alkira_service_checkpoint, alkira_service_pan) rather than a
+	// hand-mirrored copy, so a future shape change to the real block doesn't leave this test green
+	// against a schema no resource actually has.
+	elemSchema := resourceAlkiraServiceFortinet().Schema["segment_options"].Elem.(*schema.Resource)
+	return schema.NewSet(schema.HashResource(elemSchema), iface)
 }
 
 // TestExpandSegmentOptionsRejectsInvalidSegmentId asserts that
