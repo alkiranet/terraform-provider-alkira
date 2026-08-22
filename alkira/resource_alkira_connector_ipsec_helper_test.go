@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFlattenConnectorIPSecSegmentOptions(t *testing.T) {
@@ -129,7 +131,11 @@ func TestFlattenConnectorIPSecRoutingOptions(t *testing.T) {
 			},
 		},
 		{
-			name: "BOTH routing options",
+			// PING is a legacy backend value that the API may still return for
+			// older connectors, even though it is no longer accepted in
+			// configuration (AK-73307). Flatten must pass it through unchanged
+			// so the drift stays visible instead of being silently normalized.
+			name: "BOTH routing options with legacy PING availability from API",
 			input: &alkira.ConnectorIPSecRoutingOptions{
 				StaticRouting: &alkira.ConnectorIPSecStaticRouting{
 					PrefixListId: 456,
@@ -234,6 +240,66 @@ func TestFlattenConnectorIPSecPolicyOptions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := flattenConnectorIPSecPolicyOptions(tt.input)
 			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestAlkiraConnectorIPSec_validateAvailability(t *testing.T) {
+	tests := []ValidationTestCase{
+		{
+			Name:      "Valid IKE_STATUS availability",
+			Input:     "IKE_STATUS",
+			ExpectErr: false,
+			ErrCount:  0,
+		},
+		{
+			Name:      "Valid IPSEC_INTERFACE_PING availability",
+			Input:     "IPSEC_INTERFACE_PING",
+			ExpectErr: false,
+			ErrCount:  0,
+		},
+		{
+			Name:      "Legacy PING availability is no longer accepted (AK-73307)",
+			Input:     "PING",
+			ExpectErr: true,
+			ErrCount:  1,
+		},
+		{
+			Name:      "Wrong case is rejected",
+			Input:     "ike_status",
+			ExpectErr: true,
+			ErrCount:  1,
+		},
+		{
+			Name:      "Empty string",
+			Input:     "",
+			ExpectErr: true,
+			ErrCount:  1,
+		},
+	}
+
+	resource := resourceAlkiraConnectorIPSec()
+
+	routingOptionsSchema, exists := resource.Schema["routing_options"]
+	require.True(t, exists, "routing_options schema field not found")
+
+	routingOptionsElem, ok := routingOptionsSchema.Elem.(*schema.Resource)
+	require.True(t, ok, "routing_options schema element is not a resource")
+
+	availabilitySchema, exists := routingOptionsElem.Schema["availability"]
+	require.True(t, exists, "availability schema field not found in routing_options")
+	require.NotNil(t, availabilitySchema.ValidateFunc, "availability has no ValidateFunc")
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			warnings, errors := availabilitySchema.ValidateFunc(tt.Input, "availability")
+
+			if tt.ExpectErr {
+				assert.Len(t, errors, tt.ErrCount, "Expected %d errors for input %v", tt.ErrCount, tt.Input)
+			} else {
+				assert.Empty(t, errors, "Expected no errors for input %v", tt.Input)
+			}
+			assert.Empty(t, warnings, "Expected no warnings")
 		})
 	}
 }
