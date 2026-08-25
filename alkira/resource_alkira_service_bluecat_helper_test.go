@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
