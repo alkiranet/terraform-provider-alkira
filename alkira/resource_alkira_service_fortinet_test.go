@@ -163,6 +163,13 @@ func TestAlkiraServiceFortinetAllowListGenerateRequest(t *testing.T) {
 		},
 	}
 
+	// management_server_segment_id is Required in the real schema; Terraform
+	// itself would block a plan without it. Set it explicitly rather than
+	// relying on the zero-value "" the fixture previously left unset, which
+	// the mock happened to resolve for any id (see comment above) but which
+	// getSegmentNameById now rejects before ever reaching the API.
+	managementServerSegmentId := "1"
+
 	tests := []struct {
 		name      string
 		allowList interface{}
@@ -187,7 +194,10 @@ func TestAlkiraServiceFortinetAllowListGenerateRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			raw := map[string]interface{}{"instances": instances}
+			raw := map[string]interface{}{
+				"instances":                    instances,
+				"management_server_segment_id": managementServerSegmentId,
+			}
 			if tt.allowList != nil {
 				raw["allow_list"] = tt.allowList
 			}
