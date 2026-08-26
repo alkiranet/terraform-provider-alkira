@@ -1,0 +1,80 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_service_pan/resource.tf" }}
+
+## Strata Cloud Manager (SCM) Example Usage
+
+When `scm_enabled = true`, the firewall is managed by Strata Cloud Manager
+instead of Panorama. SCM mode requires `license_type = "BRING_YOUR_OWN"`,
+`routing_type = "advanced"`, and PAN-OS `version >= 10.2.3`.
+`scm_enabled` is mutually exclusive with `panorama_enabled`.
+
+{{ tffile "examples/resources/alkira_service_pan/resource_scm.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
+
+### Credential arguments are not read back
+
+Importing a PAN service differs from importing a connector, because the API
+holds the Panorama credentials, the registration PIN and the master key
+write-only. A `GET` on the service does not return them, so `Read` cannot put
+them in state. Eight arguments are affected:
+
+| Argument | Schema |
+|---|---|
+| `pan_username` | Required |
+| `pan_password` | Required, Sensitive |
+| `registration_pin_id` | Required |
+| `registration_pin_value` | Required |
+| `pan_license_key` | Optional, Sensitive |
+| `registration_pin_expiry` | Optional |
+| `master_key` | Optional, required when `master_key_enabled` is `true` |
+| `master_key_expiry` | Optional |
+
+The `auth_key`, `auth_code` and `auth_expiry` values inside each `instance`
+block behave the same way, for a different reason: the provider carries them
+forward from whatever is already in state, and an import starts with none. The
+instance `name`, `id` and `credential_id` do come from the API and populate
+correctly.
+
+`pan_username`, `pan_password`, `registration_pin_id` and
+`registration_pin_value` are `Required`, so they must already be in the
+configuration when `terraform import` runs. Import populates state from the API
+and validates against the configuration, which means the values have to come
+from you. Supply the same ones the service was created with:
+
+{{ tffile "examples/resources/alkira_service_pan/import.tf" }}
+
+Keeping these arguments `Required` rather than `Optional` is deliberate. A
+missing credential is reported at plan time, against the configuration, instead
+of reaching the API and failing at apply. It also prevents an imported resource
+from sitting in state with no credentials and no drift to signal it.
+
+### Expected plan after import
+
+The plan taken directly after the import reports the credential arguments as
+changes, because state has no value for them and the configuration does. This
+is the expected result, not a sign that the import went wrong. One
+`terraform apply` writes them into state, and the plan after that is clean.
+
+That apply sends the configured values to the API, so confirm they match the
+deployed firewall before running it. Everything else on the service --
+`segment_ids`, `management_segment_id`, `size`, `version`, `instance` names and
+IDs -- is read from the API during the import and should already plan clean.
