@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -385,18 +384,17 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 		d.Set("management_server_segment_id", managementServerSegmentId)
 	}
 	// Set segments
-	segments := make([]int, len(f.Segments))
+	segmentIds, err := convertSegmentNamesToSegmentIds(f.Segments, m)
 
-	for _, seg := range f.Segments {
-		seg, err := getSegmentIdByName(seg, m)
-
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		segId, _ := strconv.Atoi(seg)
-		segments = append(segments, segId)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	d.Set("segment_ids", segments)
+
+	// Checked: a type mismatch against the schema here is a provider bug the
+	// SDK would otherwise log and drop, which is how this went unnoticed.
+	if err := d.Set("segment_ids", segmentIds); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Set instances
 	setInstance(d, f)
