@@ -40,10 +40,10 @@ them in state. Eight arguments are affected:
 | Argument | Schema |
 |---|---|
 | `pan_username` | Required |
-| `pan_password` | Required |
+| `pan_password` | Required, Sensitive |
 | `registration_pin_id` | Required |
 | `registration_pin_value` | Required |
-| `pan_license_key` | Optional |
+| `pan_license_key` | Optional, Sensitive |
 | `registration_pin_expiry` | Optional |
 | `master_key` | Optional, required when `master_key_enabled` is `true` |
 | `master_key_expiry` | Optional |
