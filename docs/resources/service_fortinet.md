@@ -65,6 +65,7 @@ resource "alkira_service_fortinet" "test1" {
 
 ### Optional
 
+- `alkira_admin_password` (String, Sensitive) Customer-supplied alkira-admin password. Used to authenticate against the FortiGate during first-time provisioning. Once provisioned, this field is for record-keeping only — Alkira does not rotate the password on deployed FortiGate instances. To change the password after provisioning, update the FortiGate side independently, then update this field to match.
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
 - `description` (String) The description of the service.
@@ -117,4 +118,10 @@ Optional:
 
 - `groups` (List of String) The list of groups associated with the zone.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_fortinet.example SERVICE_ID
+```
