@@ -39,7 +39,7 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 
 - `availability_zone` (Number) Availability zone of the Juniper instance(s)
 - `cxp` (String) The CXP where the connector should be provisioned.
-- `instance` (Block List, Min: 1, Max: 1) Juniper SSR Connector Instance. Only one instance is supported per connector. (see [below for nested schema](#nestedblock--instance))
+- `instance` (Block List, Min: 1) Juniper SSR Connector Instances (see [below for nested schema](#nestedblock--instance))
 - `juniper_ssr_version` (String) The Juniper SSR Version.
 - `juniper_ssr_vrf_mapping` (Block Set, Min: 1, Max: 1) Juniper SSR Vrf Mapping. (see [below for nested schema](#nestedblock--juniper_ssr_vrf_mapping))
 - `name` (String) The name of the connector.
@@ -47,7 +47,6 @@ resource "alkira_connector_juniper_sdwan" "juniper" {
 
 ### Optional
 
-- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the connector instances.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
@@ -91,8 +90,6 @@ Optional:
 ## Import
 
 Import is supported using the following syntax:
-
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import alkira_connector_juniper_sdwan.example CONNECTOR_ID
