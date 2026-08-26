@@ -65,6 +65,7 @@ resource "alkira_service_fortinet" "test1" {
 
 ### Optional
 
+- `alkira_admin_password` (String, Sensitive) Customer-supplied alkira-admin password. Used to authenticate against the FortiGate during first-time provisioning. Once provisioned, this field is for record-keeping only — Alkira does not rotate the password on deployed FortiGate instances. To change the password after provisioning, update the FortiGate side independently, then update this field to match.
 - `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the service instances.
 - `auto_scale` (String) Whether enable auto scale for Fortinet firewall. It could be either `ON` and `OFF`. Default value is `OFF`.
 - `billing_tag_ids` (Set of Number) IDs of billing tags to associate with the service.
@@ -72,7 +73,7 @@ resource "alkira_service_fortinet" "test1" {
 - `license_scheme` (String) The license scheme tells more about BYOL license method. `POINT_BASED` scheme refers to FortiFlex license whereas `TERM_BASED` refers to regular BYOL.
 - `management_server_ip` (String) The IP addresses used to access the management server.
 - `min_instance_count` (Number) The minimum number of Fortinet Firewall instances that should be deployed.
-- `password` (String) Fortinet password.
+- `password` (String, Sensitive) Fortinet password.
 - `segment_options` (Block Set) The segment options as used by your Fortinet firewall. (see [below for nested schema](#nestedblock--segment_options))
 - `tunnel_protocol` (String) Tunnel Protocol. The default value is `IPSEC`. it could be either `IPSEC` or `GRE`.
 - `username` (String) Fortinet username. The field could not be updated after creation.
@@ -89,7 +90,7 @@ resource "alkira_service_fortinet" "test1" {
 
 Optional:
 
-- `license_key` (String) The Fortinet license key literal. You may copy and paste the contents of your license key here. You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`the `file` helper function will copy the contents of your file and place them as literal data into your configuration. 
+- `license_key` (String, Sensitive) The Fortinet license key literal. You may copy and paste the contents of your license key here. You may also use terraform's built in `file` helper function as a literal input for `license_key`. Ex: `license_key = file('/path/to/license/file')`the `file` helper function will copy the contents of your file and place them as literal data into your configuration. 
 
 
 Instead of using this field you may also use `license_key_file_path`to simply place the path to the license key file you'd like to use.
@@ -118,4 +119,10 @@ Optional:
 
 - `groups` (List of String) The list of groups associated with the zone.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import alkira_service_fortinet.example SERVICE_ID
+```
