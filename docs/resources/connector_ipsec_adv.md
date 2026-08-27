@@ -199,6 +199,7 @@ Optional:
 - `availability` (String) The method to determine the availability of the routes. The value could be `IKE_STATUS` or `IPSEC_INTERFACE_PING`. Default value is `IPSEC_INTERFACE_PING`.
 - `bgp_auth_key` (String) BGP MD5 auth key for Alkira to authenticate Alkira CXP (On Premise Gateway).
 - `customer_gateway_asn` (String) The customer gateway ASN to use for dynamic route propagation.
+- `local_asn` (String) The ASN Alkira presents to this connector's BGP peer instead of the segment's own ASN.
 - `prefix_list_id` (Number) The ID of prefix list to use for static route propagation.
 
 ## Import
