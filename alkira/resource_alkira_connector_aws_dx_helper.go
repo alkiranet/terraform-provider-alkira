@@ -31,6 +31,9 @@ func expandAwsDirectConnectSegmentOptions(in *schema.Set, m interface{}) ([]alki
 		if v, ok := cfg["on_prem_segment_asn"].(int); ok {
 			option.CustomerAsn = v
 		}
+		if v, ok := cfg["local_asn"].(string); ok {
+			option.LocalAsn = v
+		}
 		if v, ok := cfg["customer_loopback_ip"].(string); ok {
 			option.CustomerLoopbackIp = v
 		}
@@ -185,6 +188,7 @@ func getAwsDirectConnectSegmentOptions(instance alkira.ConnectorAwsDirectConnect
 		segmentOption := map[string]interface{}{
 			"segment_id":                            segmentId,
 			"on_prem_segment_asn":                   option.CustomerAsn,
+			"local_asn":                             option.LocalAsn,
 			"customer_loopback_ip":                  option.CustomerLoopbackIp,
 			"alkira_loopback_ip1":                   option.AlkLoopbackIp1,
 			"alkira_loopback_ip2":                   option.AlkLoopbackIp2,

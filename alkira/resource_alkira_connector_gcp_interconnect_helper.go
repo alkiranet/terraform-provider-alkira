@@ -98,6 +98,9 @@ func expandGcpInterconnectInstances(in []interface{}, m interface{}) ([]alkira.C
 		if v, ok := cfgInstance["customer_asn"].(int); ok {
 			newInstance.CustomerAsn = v
 		}
+		if v, ok := cfgInstance["local_asn"].(string); ok {
+			newInstance.LocalAsn = v
+		}
 		if v, ok := cfgInstance["vni_id"].(int); ok {
 			newInstance.Vni = v
 		}
@@ -160,6 +163,7 @@ func setGcpInterconnectInstance(ins []alkira.ConnectorGcpInterconnectInstance, m
 			"name":                     in.Name,
 			"edge_availability_domain": in.GcpEdgeAvailabilityDomain,
 			"customer_asn":             in.CustomerAsn,
+			"local_asn":                in.LocalAsn,
 			"bgp_auth_key":             in.BgpAuthKeyAlkira,
 			"gateway_mac_address":      in.GatewayMacAddress,
 			"vni_id":                   in.Vni,
