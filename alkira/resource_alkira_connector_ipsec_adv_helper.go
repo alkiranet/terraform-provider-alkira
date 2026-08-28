@@ -198,6 +198,10 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 					dynamicOption.BgpAuthKeyAlkira = bgp
 				}
 
+				if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
+					dynamicOption.LocalAsn = localAsn
+				}
+
 				routingOptions = alkira.ConnectorAdvIPSecRoutingOptions{
 					DynamicRouting: &dynamicOption,
 				}
@@ -225,6 +229,10 @@ func expandConnectorAdvIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorAdv
 					dynamicOption.CustomerGwAsn = asn
 				} else {
 					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required")
+				}
+
+				if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
+					dynamicOption.LocalAsn = localAsn
 				}
 
 				routingOptions = alkira.ConnectorAdvIPSecRoutingOptions{
@@ -346,6 +354,7 @@ func setConnectorAdvIPSecRoutingOptions(routingOptions *alkira.ConnectorAdvIPSec
 			"prefix_list_id":       routingOptions.StaticRouting.PrefixListId,
 			"availability":         routingOptions.StaticRouting.Availability,
 			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
+			"local_asn":            routingOptions.DynamicRouting.LocalAsn,
 		}
 		options = append(options, option)
 	} else if routingOptions.DynamicRouting == nil {
@@ -365,6 +374,7 @@ func setConnectorAdvIPSecRoutingOptions(routingOptions *alkira.ConnectorAdvIPSec
 			"availability":         routingOptions.DynamicRouting.Availability,
 			"customer_gateway_asn": routingOptions.DynamicRouting.CustomerGwAsn,
 			"bgp_auth_key":         routingOptions.DynamicRouting.BgpAuthKeyAlkira,
+			"local_asn":            routingOptions.DynamicRouting.LocalAsn,
 		}
 		options = append(options, option)
 	} else {
