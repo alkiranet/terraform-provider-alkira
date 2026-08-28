@@ -222,6 +222,13 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									"local_asn": {
+										Description: "The ASN Alkira presents " +
+											"to this connector's BGP peer " +
+											"instead of the segment's own ASN.",
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"customer_loopback_ip": {
 										Description: "Customer loopback IP " +
 											"which is set as tunnel source. " +

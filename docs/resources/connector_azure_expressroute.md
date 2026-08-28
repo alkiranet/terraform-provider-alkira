@@ -386,3 +386,4 @@ Optional:
 
 - `advertise_on_prem_routes` (Boolean) Allow routes from the branch/premises to be advertised to the cloud.
 - `disable_internet_exit` (Boolean) Enable or disable access to the internet when traffic arrives via this connector.
+- `local_asn` (String) The ASN Alkira presents to this connector's BGP peer instead of the segment's own ASN.

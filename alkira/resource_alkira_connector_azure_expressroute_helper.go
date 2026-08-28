@@ -179,6 +179,10 @@ func expandAzureExpressRouteSegments(seg []interface{}, m interface{}) ([]alkira
 			r.CustomerAsn = v
 		}
 
+		if v, ok := instanceCfg["local_asn"].(string); ok {
+			r.LocalAsn = v
+		}
+
 		if v, ok := instanceCfg["disable_internet_exit"].(bool); ok {
 			r.DisableInternetExit = v
 		}

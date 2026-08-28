@@ -264,6 +264,13 @@ func resourceAlkiraConnectorAzureExpressRoute() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
+						"local_asn": {
+							Description: "The ASN Alkira presents to this " +
+								"connector's BGP peer instead of the " +
+								"segment's own ASN.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"disable_internet_exit": {
 							Description: "Enable or disable access to the " +
 								"internet when traffic arrives via this " +
@@ -396,6 +403,7 @@ func resourceConnectorAzureExpressRouteRead(ctx context.Context, d *schema.Resou
 		segments[i] = map[string]interface{}{
 			"segment_id":               segmentId,
 			"customer_asn":             seg.CustomerAsn,
+			"local_asn":                seg.LocalAsn,
 			"disable_internet_exit":    seg.DisableInternetExit,
 			"advertise_on_prem_routes": seg.AdvertiseOnPremRoutes,
 		}
