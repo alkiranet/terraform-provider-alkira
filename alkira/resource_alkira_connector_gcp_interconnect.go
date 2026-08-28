@@ -180,6 +180,13 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 							Type:        schema.TypeInt,
 							Required:    true,
 						},
+						"local_asn": {
+							Description: "The ASN Alkira presents to this " +
+								"connector's BGP peer instead of the " +
+								"segment's own ASN.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"bgp_auth_key": {
 							Description: "The BGP MD5 authentication key " +
 								"to authenticate Alkira CXP.",

@@ -156,6 +156,7 @@ Optional:
 
 - `bgp_auth_key` (String) The BGP MD5 authentication key to authenticate Alkira CXP.
 - `gateway_mac_address` (String) The MAC address of the gateway.It's required if the `tunnel_protocol` is `VXLAN`.
+- `local_asn` (String) The ASN Alkira presents to this connector's BGP peer instead of the segment's own ASN.
 - `vni_id` (Number) The VXLAN Network Identifier.It's required if the `tunnel_protocol` is `VXLAN`.
 
 Read-Only:
