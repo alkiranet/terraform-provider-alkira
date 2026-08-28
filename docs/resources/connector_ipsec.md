@@ -25,7 +25,6 @@ Manage IPSec Connector.
 The `routing_options` block supports the following availability check methods:
 - `IKE_STATUS`: Uses IKE tunnel status to determine route availability
 - `IPSEC_INTERFACE_PING`: Pings the IPSec interface to verify connectivity (default)
-- `PING`: Simple ping-based availability check
 
 For dynamic routing, you can optionally specify `bgp_auth_key` for BGP MD5 authentication.
 
@@ -144,7 +143,7 @@ resource "alkira_connector_ipsec" "bgp_auth" {
     type                 = "DYNAMIC"
     customer_gateway_asn = "65330"
     bgp_auth_key         = "my-bgp-secret-key"
-    availability         = "PING"
+    availability         = "IPSEC_INTERFACE_PING"
   }
 
   endpoint {
