@@ -130,7 +130,12 @@ func expandCiscoFtdvManagementServer(in []interface{}, m interface{}) (string, [
 			ipAllowList = convertTypeListToStringList(v)
 		}
 		if v, ok := cfg["segment_id"].(string); ok {
-			segmentName, _ := getSegmentNameById(v, m)
+			segmentName, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return credentialId, ipAllowList, managementServer, err
+			}
+
 			managementServer.Segment = segmentName
 		}
 	}
