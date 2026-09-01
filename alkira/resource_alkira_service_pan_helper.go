@@ -189,7 +189,13 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segmentName, _ = getSegmentNameById(v, m)
+			name, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+
+			segmentName = name
 		}
 		if v, ok := segmentCfg["remote_user_zone_name"].(string); ok {
 			r.RemoteUserZoneName = v
@@ -220,7 +226,13 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segmentName, _ = getSegmentNameById(v, m)
+			name, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+
+			segmentName = name
 		}
 		if v, ok := segmentCfg["portal_enabled"].(bool); ok {
 			r.PortalEnabled = v

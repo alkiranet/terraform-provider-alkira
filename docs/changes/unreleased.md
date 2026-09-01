@@ -52,3 +52,13 @@ One group does need an edit: anyone whose HCL holds a segment name in either fie
 `peering_gateway_cxp_id` on `alkira_connector_azure_vnet` is now `Computed` as well as `Optional`. When the configuration omits it, the provider keeps the gateway ID from state and sends it on update.
 
 **Impact:** updates to a provisioned connector whose configuration omits `peering_gateway_cxp_id` no longer fail with `400 The CXP Peering Gateway of connector '<name>' cannot be updated after it is provisioned.` Configurations that set it explicitly are unaffected. Removing the attribute from a configuration retains the last known value rather than clearing it. No state migration is required.
+
+## Segment IDs are validated before the segment lookup, across every resource that takes one (AK-74389)
+
+`getSegmentNameById` turns a `segment_id` from configuration into `GET /segments/<value>`. It validated that value with `validateReferenceId`, whose pattern accepts letters, so a segment **name** reached the backend, which answers a non-numeric id with a 500. The client retries a 500 five times with escalating backoff, so an apply spent around four minutes on nine requests before failing on `giving up after 6 attempt(s): retryable status code: 500`. The value is now checked against the segment ID pattern first, and a name fails in about a second with an error naming the value and pointing at `alkira_segment.example.id`. Leading zeros are rejected for the same reason they are on `alkira_segment_resource`: the backend accepts `GET /segments/0690` and answers with id `690`, which Read then writes back to state against the config that produced it.
+
+This covers the 37 call sites that reach `getSegmentNameById` directly, the six services that reach it through `convertSegmentIdsToSegmentNames`, and `segment_options.segment_id`, which ran the same lookup inline.
+
+Three code paths discarded the lookup error and sent an empty segment name to the API: the `global_protect_segment_options` and `global_protect_segment_options_instance` blocks of `alkira_service_pan`, and the `firepower_management_center` block of `alkira_service_cisco_ftdv`. A fourth, `alkira_connector_remote_access`, dropped every segment name and continued with none. All four now report the failure.
+
+**Impact:** configurations that reference segments by ID are unaffected. A configuration that passes a segment name already failed; it now fails in a second with a message that says what to change, instead of after four minutes with a backend status code. For the four paths above, a failure that previously produced a silently wrong API request now stops the apply. No HCL changes and no state migration are required.
