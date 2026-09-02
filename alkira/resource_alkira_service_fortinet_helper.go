@@ -75,7 +75,6 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 				"serial_number": info.SerialNumber,
 			}
 			instances = append(instances, i)
-			break
 		}
 	}
 
