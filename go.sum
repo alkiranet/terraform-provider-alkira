@@ -7,6 +7,8 @@ github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXva
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/alkiranet/alkira-client-go v1.59.1-0.20260828190743-512c51622db1 h1:v2o8O9LE/0WQSGzKRFVhbUxeMfX223MuOO04sDnd9Rg=
 github.com/alkiranet/alkira-client-go v1.59.1-0.20260828190743-512c51622db1/go.mod h1:ms9LjOc4O1Zrr7/VQOva+xwv3sJuBUqS9JsI+MbE2go=
+github.com/alkiranet/alkira-client-go v1.59.1-0.20260902090643-c60574ec7e80 h1:LzXO6Vg8d2rok7Kz7ZDrvfIi10AVEkzrNyi067NM6vc=
+github.com/alkiranet/alkira-client-go v1.59.1-0.20260902090643-c60574ec7e80/go.mod h1:ms9LjOc4O1Zrr7/VQOva+xwv3sJuBUqS9JsI+MbE2go=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
