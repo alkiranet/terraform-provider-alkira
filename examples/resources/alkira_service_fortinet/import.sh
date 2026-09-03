@@ -1,0 +1,1 @@
+terraform import alkira_service_fortinet.example SERVICE_ID
