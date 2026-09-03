@@ -309,6 +309,17 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 	return resourcePolicyNatRuleRead(ctx, d, m)
 }
 
+func setNatRuleFields(d *schema.ResourceData, rule *alkira.NatPolicyRule) {
+	d.Set("name", rule.Name)
+	d.Set("description", rule.Description)
+	d.Set("enabled", rule.Enabled)
+	d.Set("category", natCategoryOrDefault(rule.Category))
+	d.Set("direction", rule.Direction)
+
+	setNatRuleActionOptions(rule.Action, d)
+	setNatRuleMatch(rule.Match, d)
+}
+
 func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -324,13 +335,7 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 		}}
 	}
 
-	d.Set("name", rule.Name)
-	d.Set("description", rule.Description)
-	d.Set("enabled", rule.Enabled)
-	d.Set("category", rule.Category)
-
-	setNatRuleActionOptions(rule.Action, d)
-	setNatRuleMatch(rule.Match, d)
+	setNatRuleFields(d, rule)
 
 	// Set provision state
 	if client.Provision && provState != "" {
