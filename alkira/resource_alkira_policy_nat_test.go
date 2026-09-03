@@ -3,6 +3,7 @@ package alkira
 import (
 	"testing"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -83,5 +84,78 @@ func TestPolicyNatFieldNaming(t *testing.T) {
 
 		assert.True(t, hasPlural, "Schema must use plural form 'addresses'")
 		assert.False(t, hasSingular, "Schema must NOT have singular form 'address'")
+	})
+}
+
+// TPS stores a NULL category for any NAT policy or rule created without an
+// explicit one, and omits the key from the GET body, so the client-go value
+// arrives as "". Read must translate that back to the schema default.
+func TestNatCategoryOrDefault(t *testing.T) {
+	cases := []struct {
+		name     string
+		apiValue string
+		expected string
+	}{
+		{"omitted by the API becomes the schema default", "", "DEFAULT"},
+		{"explicit DEFAULT is preserved", "DEFAULT", "DEFAULT"},
+		{"INTERNET_CONNECTOR is preserved", "INTERNET_CONNECTOR", "INTERNET_CONNECTOR"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, natCategoryOrDefault(tc.apiValue))
+		})
+	}
+}
+
+// The normalization constant is only correct while it matches the schema
+// default -- if they diverge, an imported resource diffs forever.
+func TestNatCategoryOrDefaultMatchesSchemaDefault(t *testing.T) {
+	for name, resourceSchema := range map[string]map[string]*schema.Schema{
+		"alkira_policy_nat":      resourceAlkiraPolicyNat().Schema,
+		"alkira_policy_nat_rule": resourceAlkiraPolicyNatRule().Schema,
+	} {
+		t.Run(name, func(t *testing.T) {
+			category, exists := resourceSchema["category"]
+			require.True(t, exists, "schema must declare category")
+			assert.Equal(t, natCategoryOrDefault(""), category.Default,
+				"normalization constant must equal the schema default")
+		})
+	}
+}
+
+// direction is Optional with no Default, so it must be written through
+// unnormalized: Terraform's unset value and the API's "" already coincide.
+func TestPolicyNatRuleDirectionHasNoSchemaDefault(t *testing.T) {
+	direction, exists := resourceAlkiraPolicyNatRule().Schema["direction"]
+	require.True(t, exists, "schema must declare direction")
+	assert.Nil(t, direction.Default, "direction must not gain a default")
+}
+
+// Characterizes the import round-trip: every attribute the API returns has to
+// land in state, or the plan taken right after `terraform import` is dirty.
+func TestSetNatRuleFieldsPopulatesStateFromAPI(t *testing.T) {
+	t.Run("category omitted by the API lands as DEFAULT", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNatRule().Schema, map[string]interface{}{})
+
+		setNatRuleFields(d, &alkira.NatPolicyRule{Name: "rule-1", Category: ""})
+
+		assert.Equal(t, "DEFAULT", d.Get("category"))
+	})
+
+	t.Run("direction is read back into state", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNatRule().Schema, map[string]interface{}{})
+
+		setNatRuleFields(d, &alkira.NatPolicyRule{Name: "rule-1", Direction: "INBOUND"})
+
+		assert.Equal(t, "INBOUND", d.Get("direction"))
+	})
+
+	t.Run("an explicit category survives the round-trip", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNatRule().Schema, map[string]interface{}{})
+
+		setNatRuleFields(d, &alkira.NatPolicyRule{Name: "rule-1", Category: "INTERNET_CONNECTOR"})
+
+		assert.Equal(t, "INTERNET_CONNECTOR", d.Get("category"))
 	})
 }
