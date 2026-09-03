@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -555,6 +556,45 @@ func TestExpandBluecatAnycast(t *testing.T) {
 			},
 			expectError: false,
 		},
+		{
+			// AK-73552 regression guard: two blocks with differing contents used to
+			// expand silently to whichever one sorted first, discarding the other.
+			name: "multiple anycast blocks are rejected",
+			input: schema.NewSet(
+				distinctAnycastBlockHash,
+				[]interface{}{
+					map[string]interface{}{
+						"ips":         schema.NewSet(schema.HashString, []interface{}{"100.100.100.53"}),
+						"backup_cxps": schema.NewSet(schema.HashString, []interface{}{"US-WEST"}),
+					},
+					map[string]interface{}{
+						"ips":         schema.NewSet(schema.HashString, []interface{}{"100.100.100.54"}),
+						"backup_cxps": schema.NewSet(schema.HashString, []interface{}{"US-WEST"}),
+					},
+				},
+			),
+			expectError: true,
+			errorMsg:    "only one anycast block may be specified, got 2",
+		},
+		{
+			// AK-73552, the nastier variant: fields split across two blocks used to
+			// yield a struct carrying backup_cxps with no ips, tripping a misleading
+			// server-side "ips must be populated" error.
+			name: "anycast fields split across blocks are rejected",
+			input: schema.NewSet(
+				distinctAnycastBlockHash,
+				[]interface{}{
+					map[string]interface{}{
+						"ips": schema.NewSet(schema.HashString, []interface{}{"100.100.100.53"}),
+					},
+					map[string]interface{}{
+						"backup_cxps": schema.NewSet(schema.HashString, []interface{}{"US-WEST"}),
+					},
+				},
+			),
+			expectError: true,
+			errorMsg:    "only one anycast block may be specified",
+		},
 	}
 
 	for _, tt := range tests {
@@ -573,6 +613,34 @@ func TestExpandBluecatAnycast(t *testing.T) {
 				assert.ElementsMatch(t, tt.expected.Ips, result.Ips)
 				assert.ElementsMatch(t, tt.expected.BackupCxps, result.BackupCxps)
 			}
+		})
+	}
+}
+
+// distinctAnycastBlockHash hashes an anycast block by its rendered contents so that
+// blocks with differing fields stay distinct set members. The fixed-string hash used by
+// the single-block cases above would dedupe them down to one element.
+func distinctAnycastBlockHash(i interface{}) int {
+	return schema.HashString(fmt.Sprintf("%v", i))
+}
+
+// TestBluecatAnycastSchemaMaxItems is the plan-time half of the AK-73552 fix: the
+// expander guard only fires if a repeated block reaches it, and MaxItems is what stops
+// it at plan time with a clear error.
+func TestBluecatAnycastSchemaMaxItems(t *testing.T) {
+	resourceSchema := resourceAlkiraBluecat().Schema
+
+	for _, name := range []string{"bdds_anycast", "edge_anycast"} {
+		t.Run(name, func(t *testing.T) {
+			block, ok := resourceSchema[name]
+			assert.True(t, ok, "%s must be present in the schema", name)
+			assert.Equal(t, 1, block.MaxItems, "%s must be capped at one block", name)
+
+			// ips itself must stay uncapped - several AnyCast IPs in one block is the
+			// supported way to express what repeating the block was misused for.
+			elem, ok := block.Elem.(*schema.Resource)
+			assert.True(t, ok, "%s Elem must be a *schema.Resource", name)
+			assert.Equal(t, 0, elem.Schema["ips"].MaxItems, "%s.ips must not be capped", name)
 		})
 	}
 }

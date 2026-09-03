@@ -341,10 +341,10 @@ resource "alkira_service_bluecat" "production" {
 
 ### Optional
 
-- `bdds_anycast` (Block Set) Defines the AnyCast configuration for BDDS type instances (see [below for nested schema](#nestedblock--bdds_anycast))
+- `bdds_anycast` (Block Set, Max: 1) Defines the AnyCast configuration for BDDS type instances. At most one block may be given; list multiple AnyCast IPs in `ips` rather than repeating the block. (see [below for nested schema](#nestedblock--bdds_anycast))
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the Bluecat service.
-- `edge_anycast` (Block Set) Defines the AnyCast configuration for EDGE type instances. (see [below for nested schema](#nestedblock--edge_anycast))
+- `edge_anycast` (Block Set, Max: 1) Defines the AnyCast configuration for EDGE type instances. At most one block may be given; list multiple AnyCast IPs in `ips` rather than repeating the block. (see [below for nested schema](#nestedblock--edge_anycast))
 
 ### Read-Only
 
