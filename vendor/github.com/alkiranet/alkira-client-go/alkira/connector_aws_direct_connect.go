@@ -10,6 +10,7 @@ import (
 type ConnectorAwsDirectConnectSegmentOption struct {
 	SegmentName                      string `json:"segmentName"`
 	CustomerAsn                      int    `json:"customerAsn"`
+	LocalAsn                         string `json:"localAsn,omitempty"`
 	CustomerLoopbackIp               string `json:"customerLoopbackIp,omitempty"`
 	AlkLoopbackIp1                   string `json:"alkLoopbackIp1,omitempty"`
 	AlkLoopbackIp2                   string `json:"alkLoopbackIp2,omitempty"`
