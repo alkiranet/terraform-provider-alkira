@@ -23,6 +23,7 @@ type VmwareSdwanInstance struct {
 }
 
 type ConnectorVmwareSdwan struct {
+	AllowList               []string                `json:"allowList,omitempty"`
 	BillingTags             []int                   `json:"billingTags"`
 	Cxp                     string                  `json:"cxp"`
 	Group                   string                  `json:"group,omitempty"`

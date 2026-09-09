@@ -8,6 +8,7 @@ import (
 )
 
 type ServiceCheckpoint struct {
+	AllowList        []string                    `json:"allowList,omitempty"`
 	AutoScale        string                      `json:"autoScale"`
 	BillingTags      []int                       `json:"billingTags"`
 	Cxp              string                      `json:"cxp"`
