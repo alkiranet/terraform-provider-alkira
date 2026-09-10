@@ -21,6 +21,7 @@ type ServiceF5Lb struct {
 	BillingTags         []int           `json:"billingTags,omitempty"`
 	PrefixListId        int             `json:"prefixListId,omitempty"`
 	GlobalCidrListId    int             `json:"globalCidrListId"`
+	TunnelProtocol      string          `json:"tunnelProtocol,omitempty"`
 }
 
 type F5Instance struct {

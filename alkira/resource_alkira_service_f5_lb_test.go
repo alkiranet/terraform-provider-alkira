@@ -8,6 +8,7 @@ import (
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +30,7 @@ func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequest(t *testin
 	expectedMaxInstanceCount := 3
 	expectedMinInstanceCount := 1
 	expectedAutoScale := "ON"
-	expectedTunnelProtocol := "IPSEC"
+	expectedTunnelProtocol := "VXLAN"
 
 	d.Set("name", expectedName)
 	d.Set("description", expectedDescription)
@@ -51,7 +52,7 @@ func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequest(t *testin
 	require.Equal(t, expectedDescription, request.Description)
 	require.Equal(t, expectedCxp, request.Cxp)
 	require.Equal(t, expectedSize, request.Size)
-	// Note: TunnelProtocol field does not exist in ServiceF5Lb struct
+	require.Equal(t, expectedTunnelProtocol, request.TunnelProtocol)
 }
 
 func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequestMinimal(t *testing.T) {
@@ -135,6 +136,19 @@ func TestAlkiraServiceF5LoadBalancer_resourceSchema(t *testing.T) {
 	if segmentIdsSchema, exists := resource.Schema["segment_ids"]; exists {
 		assert.Equal(t, schema.TypeSet, segmentIdsSchema.Type, "Segment IDs should be set type")
 	}
+
+	tunnelProtocolSchema := resource.Schema["tunnel_protocol"]
+	require.NotNil(t, tunnelProtocolSchema, "tunnel_protocol should be present")
+	assert.Equal(t, schema.TypeString, tunnelProtocolSchema.Type, "tunnel_protocol should be string type")
+	assert.True(t, tunnelProtocolSchema.Optional, "tunnel_protocol should be optional")
+	assert.True(t, tunnelProtocolSchema.Computed, "tunnel_protocol should be computed when unset")
+	assert.False(t, tunnelProtocolSchema.ForceNew, "tunnel_protocol should not force replacement")
+	for _, valid := range []string{"GRE", "VXLAN"} {
+		_, errs := tunnelProtocolSchema.ValidateFunc(valid, "tunnel_protocol")
+		assert.Empty(t, errs, "tunnel_protocol should accept %s", valid)
+	}
+	_, errs := tunnelProtocolSchema.ValidateFunc("IPSEC", "tunnel_protocol")
+	assert.NotEmpty(t, errs, "tunnel_protocol should reject IPSEC")
 
 	// Basic test - just verify the resource can be created
 	assert.True(t, true, "F5 Load Balancer resource schema test completed successfully")
@@ -407,6 +421,8 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 		Description: getStringFromResourceData(d, "description"),
 		Cxp:         getStringFromResourceData(d, "cxp"),
 		Size:        getStringFromResourceData(d, "size"),
+
+		TunnelProtocol: getStringFromResourceData(d, "tunnel_protocol"),
 	}
 	// Extract instances if they exist
 
@@ -439,3 +455,63 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 //		})
 //	}
 //
+
+func TestAlkiraServiceF5LoadBalancer_customizeDiffTunnelProtocol(t *testing.T) {
+	r := resourceAlkiraF5LoadBalancer()
+	client := &alkira.AlkiraClient{Provision: false}
+
+	tests := []struct {
+		name        string
+		state       map[string]string
+		config      map[string]interface{}
+		expectError bool
+	}{
+		{
+			// A service created before tunnel_protocol existed: absent from both
+			// state and configuration, and it must keep planning cleanly.
+			name:        "provisioned, attribute absent from state and config",
+			state:       map[string]string{"id": "1", "provision_state": "SUCCESS"},
+			config:      map[string]interface{}{},
+			expectError: false,
+		},
+		{
+			name:        "provisioned, tunnel_protocol unchanged",
+			state:       map[string]string{"id": "1", "provision_state": "SUCCESS", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{"tunnel_protocol": "GRE"},
+			expectError: false,
+		},
+		{
+			// Read populates the attribute on an upgraded service; omitting it from
+			// configuration leaves the computed value in place rather than changing it.
+			name:        "provisioned, attribute in state only",
+			state:       map[string]string{"id": "1", "provision_state": "SUCCESS", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{},
+			expectError: false,
+		},
+		{
+			name:        "provisioned, tunnel_protocol changed",
+			state:       map[string]string{"id": "1", "provision_state": "SUCCESS", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{"tunnel_protocol": "VXLAN"},
+			expectError: true,
+		},
+		{
+			name:        "unprovisioned, tunnel_protocol changed",
+			state:       map[string]string{"id": "1", "provision_state": "PENDING", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{"tunnel_protocol": "VXLAN"},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := &terraform.InstanceState{ID: tt.state["id"], Attributes: tt.state}
+			_, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(tt.config), client)
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "tunnel_protocol cannot be changed")
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

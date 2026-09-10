@@ -310,6 +310,7 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 		SegmentOptions:      segmentOptions,
 		PrefixListId:        d.Get("prefix_list_id").(int),
 		GlobalCidrListId:    d.Get("global_cidr_list_id").(int),
+		TunnelProtocol:      d.Get("tunnel_protocol").(string),
 	}
 	return service, nil
 }
