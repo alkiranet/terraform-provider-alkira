@@ -23,6 +23,10 @@ or `license_type`: `PAY_AS_YOU_GO`
  {{tffile "examples/resources/alkira_service_f5_lb/resource4.tf"}}
  User can also configure ILB with `lb_type`
  {{tffile "examples/resources/alkira_service_f5_lb/resource5.tf"}}
+ On an AWS CXP, `tunnel_protocol` must be set to `VXLAN` to enable `ILB`. When
+ `tunnel_protocol` is omitted the API defaults it to `GRE` on AWS and `VXLAN` on
+ Azure, and it cannot be changed once the service has been provisioned.
+ {{tffile "examples/resources/alkira_service_f5_lb/resource6.tf"}}
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import

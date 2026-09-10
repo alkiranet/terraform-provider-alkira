@@ -29,7 +29,7 @@ func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequest(t *testin
 	expectedMaxInstanceCount := 3
 	expectedMinInstanceCount := 1
 	expectedAutoScale := "ON"
-	expectedTunnelProtocol := "IPSEC"
+	expectedTunnelProtocol := "VXLAN"
 
 	d.Set("name", expectedName)
 	d.Set("description", expectedDescription)
@@ -51,7 +51,7 @@ func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequest(t *testin
 	require.Equal(t, expectedDescription, request.Description)
 	require.Equal(t, expectedCxp, request.Cxp)
 	require.Equal(t, expectedSize, request.Size)
-	// Note: TunnelProtocol field does not exist in ServiceF5Lb struct
+	require.Equal(t, expectedTunnelProtocol, request.TunnelProtocol)
 }
 
 func TestAlkiraServiceF5LoadBalancer_buildServiceF5LoadBalancerRequestMinimal(t *testing.T) {
@@ -135,6 +135,19 @@ func TestAlkiraServiceF5LoadBalancer_resourceSchema(t *testing.T) {
 	if segmentIdsSchema, exists := resource.Schema["segment_ids"]; exists {
 		assert.Equal(t, schema.TypeSet, segmentIdsSchema.Type, "Segment IDs should be set type")
 	}
+
+	tunnelProtocolSchema := resource.Schema["tunnel_protocol"]
+	require.NotNil(t, tunnelProtocolSchema, "tunnel_protocol should be present")
+	assert.Equal(t, schema.TypeString, tunnelProtocolSchema.Type, "tunnel_protocol should be string type")
+	assert.True(t, tunnelProtocolSchema.Optional, "tunnel_protocol should be optional")
+	assert.True(t, tunnelProtocolSchema.Computed, "tunnel_protocol should be computed when unset")
+	assert.False(t, tunnelProtocolSchema.ForceNew, "tunnel_protocol should not force replacement")
+	for _, valid := range []string{"GRE", "VXLAN"} {
+		_, errs := tunnelProtocolSchema.ValidateFunc(valid, "tunnel_protocol")
+		assert.Empty(t, errs, "tunnel_protocol should accept %s", valid)
+	}
+	_, errs := tunnelProtocolSchema.ValidateFunc("IPSEC", "tunnel_protocol")
+	assert.NotEmpty(t, errs, "tunnel_protocol should reject IPSEC")
 
 	// Basic test - just verify the resource can be created
 	assert.True(t, true, "F5 Load Balancer resource schema test completed successfully")
@@ -407,6 +420,8 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 		Description: getStringFromResourceData(d, "description"),
 		Cxp:         getStringFromResourceData(d, "cxp"),
 		Size:        getStringFromResourceData(d, "size"),
+
+		TunnelProtocol: getStringFromResourceData(d, "tunnel_protocol"),
 	}
 	// Extract instances if they exist
 

@@ -27,6 +27,21 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// The server rejects a tunnel_protocol change once the service has been
+			// provisioned and accepts it while it has not. Surface the rejection at
+			// plan time instead of a confusing apply-time 400. (CustomizeDiff, not
+			// ForceNew — ForceNew would also destroy and recreate the load balancer
+			// in the unprovisioned case the server allows.)
+			if d.Id() != "" && old == "SUCCESS" && d.HasChange("tunnel_protocol") {
+				oldProtocol, newProtocol := d.GetChange("tunnel_protocol")
+				if newProtocol.(string) != "" {
+					return fmt.Errorf(
+						"tunnel_protocol cannot be changed from %q to %q after the "+
+							"service has been provisioned",
+						oldProtocol.(string), newProtocol.(string))
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -97,6 +112,23 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Description: "ID of prefix list to use for IP allowlist",
 				Type:        schema.TypeInt,
 				Optional:    true,
+			},
+			"tunnel_protocol": {
+				Description: "Encapsulation used for the tunnels between the " +
+					"CXP and the F5 instances. Can be `GRE` or `VXLAN`. When " +
+					"not specified, the API defaults it per cloud provider: " +
+					"`GRE` on AWS and `VXLAN` on Azure. `VXLAN` is required " +
+					"when any segment enables `ILB` in `lb_type`, and it is " +
+					"incompatible with `elb_bgp_options_advertise_to_cxp_prefix_list_id` " +
+					"on an AWS CXP. Immutable once the service has been " +
+					"provisioned; it can still be changed while the service " +
+					"is unprovisioned.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"GRE", "VXLAN"},
+					false),
 			},
 			"segment_options": {
 				Type:     schema.TypeSet,
@@ -386,6 +418,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("billing_tag_ids", lb.BillingTags)
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
+	d.Set("tunnel_protocol", lb.TunnelProtocol)
 	d.Set("service_group_name", lb.ServiceGroupName)
 	d.Set("ilb_service_group_name", lb.IlbServiceGroupName)
 	d.Set("implicit_group_id", lb.ImplicitGroupId)

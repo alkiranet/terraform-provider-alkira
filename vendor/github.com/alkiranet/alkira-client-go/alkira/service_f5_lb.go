@@ -21,6 +21,13 @@ type ServiceF5Lb struct {
 	BillingTags         []int           `json:"billingTags,omitempty"`
 	PrefixListId        int             `json:"prefixListId,omitempty"`
 	GlobalCidrListId    int             `json:"globalCidrListId"`
+	// TunnelProtocol is `GRE` or `VXLAN`. Omitted when unset so the API applies its own
+	// per-provider default (GRE on AWS, VXLAN on Azure).
+	//
+	// NOTE (AK-74575): this field is a vendor-local addition and is NOT yet present in
+	// upstream alkira-client-go. `go mod vendor` will drop it. Before this branch is
+	// merged, land the same field upstream and re-vendor.
+	TunnelProtocol string `json:"tunnelProtocol,omitempty"`
 }
 
 type F5Instance struct {
