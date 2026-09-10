@@ -131,7 +131,7 @@ resource "alkira_connector_azure_vnet" "peering" {
 
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `connection_mode` (String) The mode that connector will use to connect to the Alkira CXP. `VNET_GATEWAY` will connect with a Virtual Gateway, `VNET_PEERING` will connect using an Alkira Transit Hub (ATH).
-- `customer_asn` (Number) A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updated once the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp).
+- `customer_asn` (Number) A specific BGP ASN for the connector. This cannot be specified when `connection_mode` is `VNET_PEERING`. This field cannot be updated once the connector has been provisioned. The ASN cannot be value that is [restricted by Azure](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq#bgp). If omitted, the backend assigns one (the existing Azure VGW's ASN if present, otherwise a default), which the provider reads back into state.
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `failover_cxps` (List of String) A list of additional CXPs where the connector should be provisioned for failover.
@@ -174,7 +174,6 @@ Optional:
 
 Required:
 
-- `subnet_cidr` (String) VNET subnet CIDR.
 - `subnet_id` (String) VNET subnet ID.
 
 Optional:
@@ -183,6 +182,8 @@ Optional:
 - `prefix_list_ids` (List of Number) Prefix List IDs.
 - `routing_options` (String) Routing options for the subnet, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`.
 - `service_tags` (Set of String) List of service tags provided by Azure.
+- `subnet_cidr` (String) VNET subnet CIDR. Use `subnet_cidrs` instead when the subnet has several address prefixes. Exactly one of the two is required.
+- `subnet_cidrs` (Set of String) Every address prefix of the VNET subnet, for a subnet that has more than one. A subnet is onboarded all or nothing, so this must name every prefix the subnet has or the request is rejected. Requires the multi-prefix feature to be enabled on the tenant. Exactly one of `subnet_cidr` and `subnet_cidrs` is required.
 - `udr_list_ids` (Set of Number) User defined routes list (`list_udr`).
 
 ## Import
