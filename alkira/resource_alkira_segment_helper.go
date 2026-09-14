@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,8 +23,9 @@ const segmentIdValidationMessage = "must be a segment ID rather than a segment n
 // costs minutes before surfacing a type-conversion error from Java.
 //
 // validateReferenceId runs first because it carries the URI-safety guarantee
-// its own comment describes, and because it bounds the length, which the digit
-// pattern on its own does not.
+// its own comment describes. The ParseInt check bounds the magnitude: the
+// backend parses the path segment as a Java Long, and a value that overflows
+// it draws the same 500 and the same retries as a name.
 func validateSegmentId(id string) error {
 	if err := validateReferenceId(id); err != nil {
 		return err
@@ -33,10 +35,14 @@ func validateSegmentId(id string) error {
 		return fmt.Errorf("invalid segment id %q; expected a segment's numeric id rather than its name, for example alkira_segment.example.id", id)
 	}
 
+	if _, err := strconv.ParseInt(id, 10, 64); err != nil {
+		return fmt.Errorf("invalid segment id %q; value is too large to be a segment id", id)
+	}
+
 	return nil
 }
 
-// getSegmentNamebyId get a segment name by its ID
+// getSegmentNameById get a segment name by its ID
 func getSegmentNameById(id string, m interface{}) (string, error) {
 
 	if err := validateSegmentId(id); err != nil {
@@ -53,7 +59,7 @@ func getSegmentNameById(id string, m interface{}) (string, error) {
 	return segment.Name, err
 }
 
-// getSegmentIdbyName get a segment ID by its name
+// getSegmentIdByName get a segment ID by its name
 func getSegmentIdByName(name string, m interface{}) (string, error) {
 
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))

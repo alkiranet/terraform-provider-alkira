@@ -10,7 +10,7 @@ import (
 
 // TestValidateSegmentId pins what reaches GET /segments/<value>.
 func TestValidateSegmentId(t *testing.T) {
-	accepted := []string{"1", "690", "1145", "2147483647"}
+	accepted := []string{"1", "690", "1145", "2147483647", "9223372036854775807"}
 
 	for _, id := range accepted {
 		t.Run("accepts "+id, func(t *testing.T) {
@@ -18,7 +18,7 @@ func TestValidateSegmentId(t *testing.T) {
 		})
 	}
 
-	rejected := []string{"", "0", "0690", "007", "ak74335-seg-a", "12ab", "-1", "1.5", " 1145", "1145 ", "seg_1"}
+	rejected := []string{"", "0", "0690", "007", "ak74335-seg-a", "12ab", "-1", "1.5", " 1145", "1145 ", "seg_1", "9223372036854775808", "99999999999999999999"}
 
 	for _, id := range rejected {
 		t.Run("rejects "+id, func(t *testing.T) {
@@ -33,12 +33,20 @@ func TestValidateSegmentId(t *testing.T) {
 		assert.Contains(t, err.Error(), "ak74335-seg-a")
 		assert.Contains(t, err.Error(), "alkira_segment.example.id")
 	})
+
+	t.Run("error text for an oversized value names the value", func(t *testing.T) {
+		err := validateSegmentId("99999999999999999999")
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "99999999999999999999")
+		assert.Contains(t, err.Error(), "too large")
+	})
 }
 
 // TestGetSegmentNameByIdRejectsNameWithoutCallingApi pins that a segment name
 // never reaches the API, which is what made this cost five retries.
 func TestGetSegmentNameByIdRejectsNameWithoutCallingApi(t *testing.T) {
-	cases := []string{"ak74335-seg-a", "0690"}
+	cases := []string{"ak74335-seg-a", "0690", "99999999999999999999"}
 
 	for _, id := range cases {
 		t.Run(id, func(t *testing.T) {
