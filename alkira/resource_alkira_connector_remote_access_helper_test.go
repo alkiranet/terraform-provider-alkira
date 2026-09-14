@@ -1,11 +1,13 @@
 package alkira
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func remoteAccessTestSchema() *schema.Resource {
@@ -363,4 +365,27 @@ func TestSetAuthorization_InvalidMapping(t *testing.T) {
 
 	auths := d.Get("authorization").(*schema.Set).List()
 	assert.Len(t, auths, 0)
+}
+
+// TestGenerateConnectorRemoteAccessRequestPropagatesSegmentIdError pins that a
+// rejected segment id fails the request instead of producing one with no
+// segments, and that the segment API is never called for it.
+func TestGenerateConnectorRemoteAccessRequestPropagatesSegmentIdError(t *testing.T) {
+	client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		t.Errorf("segment API must not be called for a rejected segment id, got %s", req.URL.Path)
+	}))
+
+	r := resourceAlkiraConnectorRemoteAccess()
+	d := r.TestResourceData()
+	d.Set("name", "ak74389-ra")
+	d.Set("cxp", "US-WEST")
+	d.Set("size", "SMALL")
+	d.Set("authentication_mode", "LOCAL")
+	d.Set("segment_ids", []interface{}{"ak74389-seg-a"})
+
+	request, err := generateConnectorRemoteAccessRequest(d, client)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "ak74389-seg-a")
+	assert.Nil(t, request)
 }

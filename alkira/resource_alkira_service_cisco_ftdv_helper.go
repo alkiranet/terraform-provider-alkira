@@ -106,6 +106,17 @@ func expandCiscoFtdvManagementServer(in []interface{}, m interface{}) (string, [
 		if v, ok := cfg["password"].(string); ok {
 			password = v
 		}
+		// Resolved before the credential is created, so a bad segment_id
+		// does not leave an orphaned credential behind.
+		if v, ok := cfg["segment_id"].(string); ok {
+			segmentName, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return credentialId, ipAllowList, managementServer, err
+			}
+
+			managementServer.Segment = segmentName
+		}
 		if v, ok := cfg["credential_id"].(string); ok {
 			if v == "" {
 				credentialName := "cisco-fdtv-" + randomNameSuffix()
@@ -128,15 +139,6 @@ func expandCiscoFtdvManagementServer(in []interface{}, m interface{}) (string, [
 		}
 		if v, ok := cfg["ip_allow_list"].([]interface{}); ok {
 			ipAllowList = convertTypeListToStringList(v)
-		}
-		if v, ok := cfg["segment_id"].(string); ok {
-			segmentName, err := getSegmentNameById(v, m)
-
-			if err != nil {
-				return credentialId, ipAllowList, managementServer, err
-			}
-
-			managementServer.Segment = segmentName
 		}
 	}
 

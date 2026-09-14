@@ -63,7 +63,7 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Description:  "The ID of the designated segment. This is the segment's numeric ID, not its name.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(segmentIdPattern, segmentIdValidationMessage),
+				ValidateFunc: validateSegmentIdField,
 			},
 			"end_a_segment_resource_ids": {
 				Description: "The End-A segment resource IDs. All " +

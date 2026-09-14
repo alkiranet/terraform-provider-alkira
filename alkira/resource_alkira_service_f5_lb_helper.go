@@ -280,19 +280,20 @@ func generateRequestF5Lb(d *schema.ResourceData, m interface{}) (*alkira.Service
 
 	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
 
-	instances, err := expandF5Instances(
-		d.Get("instance").([]interface{}), m)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert segment IDs to segment names
+	// Segment lookups run before expandF5Instances, which creates
+	// credentials, so a bad segment_id orphans none.
 	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}
 
 	segmentOptions, err := expandF5SegmentOptions(d.Get("segment_options").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+
+	instances, err := expandF5Instances(
+		d.Get("instance").([]interface{}), m)
 	if err != nil {
 		return nil, err
 	}

@@ -536,6 +536,14 @@ func resourceInfobloxDelete(ctx context.Context, d *schema.ResourceData, m inter
 func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceInfoblox, error) {
 	client := m.(*alkira.AlkiraClient)
 
+	// Segment lookups run before any credential is created below, so a bad
+	// segment_id orphans none.
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
 	//Create Infoblox Service Credential
 	name := d.Get("name").(string)
 	nameWithSuffix := name + randomNameSuffix()
@@ -554,7 +562,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	}
 
 	var infobloxCredentialId string
-	var err error
 
 	if shared_secret != "" && !niosxOnly {
 		infobloxCredentialId, err = client.CreateCredential(
@@ -601,13 +608,6 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 
 	//Parse Anycast
 	anycast, err := expandInfobloxAnycast(d.Get("anycast").(*schema.Set))
-	if err != nil {
-		return nil, err
-	}
-
-	//segmentIdsToSegmentNames
-	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
-
 	if err != nil {
 		return nil, err
 	}

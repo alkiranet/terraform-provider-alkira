@@ -302,6 +302,11 @@ func resourceCheckpoint(ctx context.Context, d *schema.ResourceData, m interface
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
+	segments, err := resolveCheckpointSegments(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Create checkpoint service credentail
 	credentialId, err := createCheckpointCredential(d, client)
 	if err != nil {
@@ -310,7 +315,7 @@ func resourceCheckpoint(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("credential_id", credentialId)
 
 	// Construct request
-	request, err := generateCheckpointRequest(d, m)
+	request, err := generateCheckpointRequest(d, m, segments)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -420,14 +425,19 @@ func resourceCheckpointUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceCheckpoint(m.(*alkira.AlkiraClient))
 
+	segments, err := resolveCheckpointSegments(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Update checkpoint service credential
-	err := updateCheckpointCredential(d, client)
+	err = updateCheckpointCredential(d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Construct request
-	request, err := generateCheckpointRequest(d, m)
+	request, err := generateCheckpointRequest(d, m, segments)
 
 	if err != nil {
 		return diag.FromErr(err)
