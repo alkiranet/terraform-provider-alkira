@@ -159,3 +159,24 @@ func TestSetNatRuleFieldsPopulatesStateFromAPI(t *testing.T) {
 		assert.Equal(t, "INTERNET_CONNECTOR", d.Get("category"))
 	})
 }
+
+// Characterizes the import round-trip for the policy, the resource AK-74359
+// reports: a policy stored without a category must still land in state as
+// DEFAULT, or the plan taken right after `terraform import` is dirty.
+func TestSetNatPolicyFieldsPopulatesStateFromAPI(t *testing.T) {
+	t.Run("category omitted by the API lands as DEFAULT", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNat().Schema, map[string]interface{}{})
+
+		setNatPolicyFields(d, &alkira.NatPolicy{Name: "policy-1", Category: ""})
+
+		assert.Equal(t, "DEFAULT", d.Get("category"))
+	})
+
+	t.Run("an explicit category survives the round-trip", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNat().Schema, map[string]interface{}{})
+
+		setNatPolicyFields(d, &alkira.NatPolicy{Name: "policy-1", Category: "INTERNET_CONNECTOR"})
+
+		assert.Equal(t, "INTERNET_CONNECTOR", d.Get("category"))
+	})
+}
