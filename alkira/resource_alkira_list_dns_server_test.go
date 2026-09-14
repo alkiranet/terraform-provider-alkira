@@ -382,3 +382,17 @@ func validateDnsServerIps(v interface{}, k string) (warnings []string, errors []
 
 	return warnings, errors
 }
+
+// TestListDnsServerSegmentIdSchema pins plan-time rejection of a segment name
+// in segment_id.
+func TestListDnsServerSegmentIdSchema(t *testing.T) {
+	s := resourceAlkiraListDnsServer().Schema["segment_id"]
+
+	require.NotNil(t, s.ValidateFunc, "segment_id needs a plan-time validator")
+
+	_, errs := s.ValidateFunc("ak74389-seg-a", "segment_id")
+	assert.NotEmpty(t, errs, "a segment name must be rejected at plan time")
+
+	_, errs = s.ValidateFunc("1145", "segment_id")
+	assert.Empty(t, errs, "a numeric segment id must pass")
+}
