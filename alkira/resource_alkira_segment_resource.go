@@ -162,15 +162,27 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("implicit_group_id", resource.GroupId)
 
 	//
-	// Get segemnt
+	// Get segment
 	//
+	// The lookup stays non-fatal: GetById asks for the resource with
+	// includeMarkedForDeletion=true while the segment get-by-name does not,
+	// so a segment already marked for deletion resolves to nothing and would
+	// otherwise abort the refresh that terraform destroy runs first. On
+	// failure segment_id keeps its prior state value and the attributes
+	// below still refresh.
+	var diags diag.Diagnostics
+
 	segmentId, err := getSegmentIdByName(resource.Segment, m)
 
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET SEGMENT ID",
+			Detail:   fmt.Sprintf("failed to convert segment name %q to ID: %s", resource.Segment, err),
+		})
+	} else {
+		d.Set("segment_id", segmentId)
 	}
-
-	d.Set("segment_id", segmentId)
 
 	//
 	// Get Prefixes
@@ -192,7 +204,7 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 		d.Set("provision_state", provState)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSegmentResourceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

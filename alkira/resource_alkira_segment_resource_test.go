@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,33 +80,50 @@ func TestSegmentResourceSegmentIdRead(t *testing.T) {
 		"Read should store the segment's ID even though the API returns its name")
 }
 
-// TestSegmentResourceReadFailedSegmentLookupIsFatal pins this resource's
-// existing behavior on a failed segment lookup, which differs from
-// alkira_segment_resource_share: segment_id is the only place the segment
-// appears in state, so Read has nothing to fall back on and fails.
-func TestSegmentResourceReadFailedSegmentLookupIsFatal(t *testing.T) {
+// TestSegmentResourceReadFailedSegmentLookupKeepsRefreshing checks that an
+// unresolvable segment warns rather than aborting Read, so the refresh that
+// terraform destroy runs first still succeeds for a resource whose segment is
+// already marked for deletion.
+func TestSegmentResourceReadFailedSegmentLookupKeepsRefreshing(t *testing.T) {
 	client := createMockAlkiraClient(t, func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
+		// A get-by-name that matches nothing returns an empty list, which the
+		// client reports as a failure to resolve the name.
 		if req.URL.Query().Get("name") != "" {
 			json.NewEncoder(w).Encode([]alkira.Segment{})
 			return
 		}
 
 		json.NewEncoder(w).Encode(alkira.SegmentResource{
-			Id:      json.Number("1149"),
-			Name:    "ak74335-res-a",
-			Segment: "ak74335-seg-a",
+			Id:          json.Number("1149"),
+			Name:        "ak74335-res-a",
+			Description: "refreshed",
+			Segment:     "ak74335-seg-a",
+			GroupPrefixes: []alkira.SegmentResourceGroupPrefix{{
+				GroupId:      7,
+				PrefixListId: 9,
+			}},
 		})
 	})
 
 	r := resourceAlkiraSegmentResource()
 	d := r.TestResourceData()
 	d.SetId("1149")
+	d.Set("segment_id", "1145")
 
 	diags := resourceSegmentResourceRead(context.Background(), d, client)
 
-	require.True(t, diags.HasError(),
-		"an unresolvable segment must fail the refresh")
+	require.Len(t, diags, 1, "an unresolvable segment should warn once")
+	assert.Equal(t, diag.Warning, diags[0].Severity,
+		"the warning must not abort the refresh that terraform destroy runs first")
+	assert.Contains(t, diags[0].Detail, "ak74335-seg-a",
+		"the warning should name the segment it could not resolve")
+
+	assert.Equal(t, "1145", d.Get("segment_id"),
+		"segment_id keeps its prior value when the lookup fails")
+	assert.Equal(t, "refreshed", d.Get("description"),
+		"attributes after the segment lookup must still refresh")
+	assert.Equal(t, 1, d.Get("group_prefix.#"))
 }
