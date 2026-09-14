@@ -46,6 +46,8 @@ One group does need an edit: anyone whose HCL holds a segment name in either fie
 
 This covers the 37 call sites that reach `getSegmentNameById` directly, the six services that reach it through `convertSegmentIdsToSegmentNames`, and `segment_options.segment_id`, which ran the same lookup inline.
 
+The check also bounds the value to a 64-bit integer. The backend parses the path segment as a Java `Long`, so an id with too many digits drew the same 500 and the same retries as a name. `alkira_list_dns_server.segment_id` additionally gets the plan-time validator that `alkira_segment_resource.segment_id` carries, so a segment name there fails `terraform plan` rather than `terraform apply`. The remaining `segment_id` fields keep apply-time validation only.
+
 Three code paths discarded the lookup error and sent an empty segment name to the API: the `global_protect_segment_options` and `global_protect_segment_options_instance` blocks of `alkira_service_pan`, and the `firepower_management_center` block of `alkira_service_cisco_ftdv`. A fourth, `alkira_connector_remote_access`, dropped every segment name and continued with none. All four now report the failure.
 
 **Impact:** configurations that reference segments by ID are unaffected. A configuration that passes a segment name already failed; it now fails in a second with a message that says what to change, instead of after four minutes with a backend status code. For the four paths above, a failure that previously produced a silently wrong API request now stops the apply. No HCL changes and no state migration are required.
