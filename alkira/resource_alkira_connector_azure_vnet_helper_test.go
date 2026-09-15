@@ -478,3 +478,132 @@ func TestCustomerAsnSchemaIsOptionalAndComputed(t *testing.T) {
 			"in VGW mode when the user omits it (AK-68129). "+
 			"Without Computed, Terraform treats the backend-supplied value as drift.")
 }
+
+// AK-74515: a multi-prefix Azure subnet is ONE vnet_subnet block naming every
+// prefix in subnet_cidrs. Two blocks sharing a subnet_id serialise to two entries
+// with the same id, which the API rejects - the orchestrator keys its subnet maps
+// by id and a duplicate aborts task generation for the whole tenant network.
+func TestConstructVnetRoutingMultiPrefixSubnet(t *testing.T) {
+	r := resourceAlkiraConnectorAzureVnet()
+	d := r.TestResourceData()
+
+	block := map[string]interface{}{
+		"subnet_id":       "/subscriptions/s/.../subnets/private-endpoints",
+		"subnet_cidrs":    schema.NewSet(schema.HashString, []interface{}{"10.169.142.0/28", "10.169.142.32/27"}),
+		"routing_options": "ADVERTISE_DEFAULT_ROUTE",
+		"service_tags":    schema.NewSet(schema.HashString, []interface{}{"AzureKeyVault"}),
+		"udr_list_ids":    schema.NewSet(schema.HashInt, []interface{}{88}),
+	}
+	d.Set("vnet_subnet", schema.NewSet(
+		func(i interface{}) int { return schema.HashString("test") },
+		[]interface{}{block}))
+
+	result, err := constructVnetRouting(d)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	// One entry for the subnet, naming both prefixes - not one entry per prefix.
+	assert.Len(t, result.ExportOptions.UserInputPrefixes, 1)
+	sel := result.ExportOptions.UserInputPrefixes[0]
+	assert.ElementsMatch(t, []string{"10.169.142.0/28", "10.169.142.32/27"}, sel.Values)
+	assert.Empty(t, sel.Value, "value must be empty so it is omitted from the payload")
+
+	assert.Len(t, result.ImportOptions.Subnets, 1)
+	assert.ElementsMatch(t, []string{"10.169.142.0/28", "10.169.142.32/27"}, result.ImportOptions.Subnets[0].Values)
+	assert.Empty(t, result.ImportOptions.Subnets[0].Value)
+
+	assert.Len(t, result.ServiceRoutes.Subnets, 1)
+	assert.ElementsMatch(t, []string{"10.169.142.0/28", "10.169.142.32/27"}, result.ServiceRoutes.Subnets[0].Values)
+
+	assert.Len(t, result.UdrLists.Subnets, 1)
+	assert.ElementsMatch(t, []string{"10.169.142.0/28", "10.169.142.32/27"}, result.UdrLists.Subnets[0].Values)
+}
+
+// The single-prefix block keeps using subnet_cidr and must be byte-identical to
+// what the provider sent before this change.
+func TestConstructVnetRoutingSinglePrefixUnchanged(t *testing.T) {
+	r := resourceAlkiraConnectorAzureVnet()
+	d := r.TestResourceData()
+
+	d.Set("vnet_subnet", schema.NewSet(
+		func(i interface{}) int { return schema.HashString("test") },
+		[]interface{}{map[string]interface{}{
+			"subnet_id":       "/subscriptions/s/.../subnets/default",
+			"subnet_cidr":     "10.0.0.0/24",
+			"routing_options": "ADVERTISE_DEFAULT_ROUTE",
+		}}))
+
+	result, err := constructVnetRouting(d)
+	assert.NoError(t, err)
+	assert.Len(t, result.ExportOptions.UserInputPrefixes, 1)
+	assert.Equal(t, "10.0.0.0/24", result.ExportOptions.UserInputPrefixes[0].Value)
+	assert.Empty(t, result.ExportOptions.UserInputPrefixes[0].Values)
+}
+
+func TestConstructVnetRoutingRejectsBothCidrForms(t *testing.T) {
+	r := resourceAlkiraConnectorAzureVnet()
+	d := r.TestResourceData()
+
+	d.Set("vnet_subnet", schema.NewSet(
+		func(i interface{}) int { return schema.HashString("test") },
+		[]interface{}{map[string]interface{}{
+			"subnet_id":    "/subscriptions/s/.../subnets/default",
+			"subnet_cidr":  "10.0.0.0/24",
+			"subnet_cidrs": schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/24", "20.1.0.0/24"}),
+		}}))
+
+	_, err := constructVnetRouting(d)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mutually exclusive")
+}
+
+func TestConstructVnetRoutingRejectsNeitherCidrForm(t *testing.T) {
+	r := resourceAlkiraConnectorAzureVnet()
+	d := r.TestResourceData()
+
+	d.Set("vnet_subnet", schema.NewSet(
+		func(i interface{}) int { return schema.HashString("test") },
+		[]interface{}{map[string]interface{}{
+			"subnet_id": "/subscriptions/s/.../subnets/default",
+		}}))
+
+	_, err := constructVnetRouting(d)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "must be set")
+}
+
+// AK-74515: the same rule must fail at PLAN time, not only at apply - subnet_cidr moved
+// from Required to Optional, so the schema no longer catches a block that sets neither.
+func TestValidateVnetSubnetCidrForms(t *testing.T) {
+	block := func(m map[string]interface{}) *schema.Set {
+		return schema.NewSet(func(i interface{}) int { return schema.HashString("test") },
+			[]interface{}{m})
+	}
+
+	err := validateVnetSubnetCidrForms(block(map[string]interface{}{
+		"subnet_id": "/subscriptions/s/.../subnets/default",
+	}))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "must be set")
+
+	err = validateVnetSubnetCidrForms(block(map[string]interface{}{
+		"subnet_id":    "/subscriptions/s/.../subnets/default",
+		"subnet_cidr":  "10.0.0.0/24",
+		"subnet_cidrs": schema.NewSet(schema.HashString, []interface{}{"10.0.0.0/24"}),
+	}))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mutually exclusive")
+
+	// Each valid form on its own passes.
+	assert.NoError(t, validateVnetSubnetCidrForms(block(map[string]interface{}{
+		"subnet_id":   "/subscriptions/s/.../subnets/default",
+		"subnet_cidr": "10.0.0.0/24",
+	})))
+	assert.NoError(t, validateVnetSubnetCidrForms(block(map[string]interface{}{
+		"subnet_id":    "/subscriptions/s/.../subnets/default",
+		"subnet_cidrs": schema.NewSet(schema.HashString, []interface{}{"10.0.1.0/24", "20.1.1.0/24"}),
+	})))
+
+	// Nothing configured at all is not this validator's problem.
+	assert.NoError(t, validateVnetSubnetCidrForms(nil))
+}
