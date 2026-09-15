@@ -60,9 +60,10 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Required: true,
 			},
 			"designated_segment_id": {
-				Description: "The designated segment ID.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The ID of the designated segment. This is the segment's numeric ID, not its name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(segmentIdPattern, segmentIdValidationMessage),
 			},
 			"end_a_segment_resource_ids": {
 				Description: "The End-A segment resource IDs. All " +
@@ -196,16 +197,26 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("description", share.Description)
 	d.Set("service_ids", share.ServiceList)
 
-	// Convert segment name to ID for state
+	// The lookup stays non-fatal, in line with the rest of Read: GetById asks
+	// for the share with includeMarkedForDeletion=true while the segment
+	// get-by-name does not, so a segment already marked for deletion resolves
+	// to nothing and would otherwise abort the refresh that terraform destroy
+	// runs first. Collecting the warning rather than returning it keeps the
+	// attributes below refreshing.
+	var diags diag.Diagnostics
+
 	segmentId, err := getSegmentIdByName(share.DesignatedSegment, m)
+
 	if err != nil {
-		return diag.Diagnostics{{
+		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "FAILED TO GET SEGMENT ID",
 			Detail:   fmt.Sprintf("failed to convert segment name %q to ID: %s", share.DesignatedSegment, err),
-		}}
+		})
+	} else {
+		d.Set("designated_segment_id", segmentId)
 	}
-	d.Set("designated_segment_id", segmentId)
+
 	d.Set("end_a_segment_resource_ids", share.EndAResources)
 	d.Set("end_b_segment_resource_ids", share.EndBResources)
 	d.Set("end_a_route_limit", share.EndARouteLimit)
@@ -219,7 +230,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("provision_state", provState)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSegmentResourceShareUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

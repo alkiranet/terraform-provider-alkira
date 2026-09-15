@@ -2,10 +2,21 @@ package alkira
 
 import (
 	"log"
+	"regexp"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// segmentIdPattern matches a segment ID. A segment_id value is handed straight
+// to getSegmentNameById, which requests GET /segments/<value>; a segment name
+// there is a 500 the client retries five times before failing, so the value is
+// rejected at plan time instead. Leading zeros are rejected too: the backend
+// accepts GET /segments/0690 and answers with id 690, which Read then writes
+// back to state against a config that still says 0690.
+var segmentIdPattern = regexp.MustCompile(`^[1-9][0-9]*$`)
+
+const segmentIdValidationMessage = "must be a segment ID rather than a segment name, for example alkira_segment.example.id"
 
 // getSegmentNamebyId get a segment name by its ID
 func getSegmentNameById(id string, m interface{}) (string, error) {
