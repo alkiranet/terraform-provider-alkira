@@ -27,8 +27,9 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			// tunnel_protocol cannot be changed once the service has been provisioned.
-			if d.Id() != "" && old == "SUCCESS" && d.HasChange("tunnel_protocol") {
+			// tunnel_protocol is immutable once provisioned: the API rejects a
+			// change for any provision state other than PENDING.
+			if d.Id() != "" && old != "" && old != "PENDING" && d.HasChange("tunnel_protocol") {
 				oldProtocol, newProtocol := d.GetChange("tunnel_protocol")
 				if newProtocol.(string) != "" {
 					return fmt.Errorf(

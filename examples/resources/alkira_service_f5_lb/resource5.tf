@@ -1,7 +1,7 @@
 resource "alkira_service_f5_lb" "example-ilb" {
   name                = "example-ilb"
   description         = "example-ilb description."
-  cxp                 = "US-WEST"
+  cxp                 = "USWEST-AZURE-1"
   global_cidr_list_id = alkira_list_global_cidr.example-global-cidr.id
   instance {
     deployment_type     = "LTM_DNS"

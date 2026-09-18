@@ -176,7 +176,7 @@ resource "alkira_service_f5_lb" "example-lb" {
 resource "alkira_service_f5_lb" "example-ilb" {
   name                = "example-ilb"
   description         = "example-ilb description."
-  cxp                 = "US-WEST"
+  cxp                 = "USWEST-AZURE-1"
   global_cidr_list_id = alkira_list_global_cidr.example-global-cidr.id
   instance {
     deployment_type     = "LTM_DNS"
@@ -202,7 +202,12 @@ resource "alkira_service_f5_lb" "example-ilb" {
 ```
  On an AWS CXP, `tunnel_protocol` must be set to `VXLAN` to enable `ILB`. When
  `tunnel_protocol` is omitted the API defaults it to `GRE` on AWS and `VXLAN` on
- Azure, and it cannot be changed once the service has been provisioned.
+ Azure, and it cannot be changed once the service has been provisioned; that
+ immutability is enforced at plan time only when the provider has `provision`
+ set to `true`, and at apply time otherwise. On an AWS CXP,
+ `tunnel_protocol` set to `VXLAN` cannot be combined with
+ `elb_bgp_options_advertise_to_cxp_prefix_list_id` on any segment: the API
+ rejects the combination, and BGP on an AWS CXP remains `GRE` only.
  ```terraform
 resource "alkira_service_f5_lb" "example-aws-vxlan-ilb" {
   name                = "example-aws-vxlan-ilb"
@@ -223,7 +228,7 @@ resource "alkira_service_f5_lb" "example-aws-vxlan-ilb" {
   segment_options {
     elb_nic_count = 1
     segment_id    = alkira_segment.example-segment.id
-    lb_type       = ["ILB"]
+    lb_type       = ["ELB", "ILB"]
   }
   service_group_name     = "example-service-group-6"
   ilb_service_group_name = "example-ilb-service-group-6"

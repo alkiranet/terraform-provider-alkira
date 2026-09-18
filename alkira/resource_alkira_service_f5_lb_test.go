@@ -456,9 +456,11 @@ func buildServiceF5LoadBalancerRequest(d *schema.ResourceData) *alkira.ServiceF5
 //	}
 //
 
+// Cases key on provision_state, not provider configuration: SUCCESS and FAILED
+// reject a tunnel_protocol change, PENDING and an absent state do not.
 func TestAlkiraServiceF5LoadBalancer_customizeDiffTunnelProtocol(t *testing.T) {
 	r := resourceAlkiraF5LoadBalancer()
-	client := &alkira.AlkiraClient{Provision: false}
+	client := &alkira.AlkiraClient{}
 
 	tests := []struct {
 		name        string
@@ -493,6 +495,23 @@ func TestAlkiraServiceF5LoadBalancer_customizeDiffTunnelProtocol(t *testing.T) {
 			state:       map[string]string{"id": "1", "provision_state": "SUCCESS", "tunnel_protocol": "GRE"},
 			config:      map[string]interface{}{"tunnel_protocol": "VXLAN"},
 			expectError: true,
+		},
+		{
+			// FAILED is post-provision to the API, which rejects the change just as
+			// it does on SUCCESS.
+			name:        "provision failed, tunnel_protocol changed",
+			state:       map[string]string{"id": "1", "provision_state": "FAILED", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{"tunnel_protocol": "VXLAN"},
+			expectError: true,
+		},
+		{
+			// provision_state is written only by a provider with provisioning
+			// enabled, so it is empty for a service this provider never
+			// provisioned; the API rejects the change at apply time instead.
+			name:        "provision_state absent, tunnel_protocol changed",
+			state:       map[string]string{"id": "1", "tunnel_protocol": "GRE"},
+			config:      map[string]interface{}{"tunnel_protocol": "VXLAN"},
+			expectError: false,
 		},
 		{
 			name:        "unprovisioned, tunnel_protocol changed",

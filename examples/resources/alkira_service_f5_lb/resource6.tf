@@ -17,7 +17,7 @@ resource "alkira_service_f5_lb" "example-aws-vxlan-ilb" {
   segment_options {
     elb_nic_count = 1
     segment_id    = alkira_segment.example-segment.id
-    lb_type       = ["ILB"]
+    lb_type       = ["ELB", "ILB"]
   }
   service_group_name     = "example-service-group-6"
   ilb_service_group_name = "example-ilb-service-group-6"
