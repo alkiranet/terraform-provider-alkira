@@ -89,37 +89,15 @@ func expandConnectorRemoteAccessAuhtorization(in *schema.Set, cxp string) ([]alk
 	return segmentOptions, nil
 }
 
-// convertSegmentIdSetToStringList
-func convertSegmentIdSetToStringList(in *schema.Set, m interface{}) []string {
-
-	if in == nil || in.Len() == 0 {
-		return nil
-	}
-
-	strList := make([]string, in.Len())
-
-	for i, value := range in.List() {
-		if value != nil {
-			segmentName, err := getSegmentNameById(value.(string), m)
-
-			if err != nil {
-				return nil
-			}
-
-			strList[i] = segmentName
-		} else {
-			strList[i] = ""
-		}
-	}
-
-	return strList
-}
-
-// generateConnectorAwsVpcRequest generate request for connector_aws_vpc
+// generateConnectorRemoteAccessRequest generate request for connector_remote_access
 func generateConnectorRemoteAccessRequest(d *schema.ResourceData, m interface{}) (*alkira.ConnectorRemoteAccessTemplate, error) {
 
 	// Segment
-	segmentNames := convertSegmentIdSetToStringList(d.Get("segment_ids").(*schema.Set), m)
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// Process Auth Options
 	var authOptions alkira.ConnectorRemoteAccessAuthOptions
