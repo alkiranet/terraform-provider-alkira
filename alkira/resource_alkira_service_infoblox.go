@@ -150,12 +150,14 @@ func resourceAlkiraInfoblox() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external": {
-							Description: "External indicates if a new grid master should be " +
-								"created or if an existing grid master should be used. Default " +
-								"value is `false`.",
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Description: "Whether the grid master is external (not " +
+								"provisioned by Alkira). Derived by the server: `true` when " +
+								"`ip` is set, `false` otherwise. Any configured value is " +
+								"ignored.",
+							Type:       schema.TypeBool,
+							Optional:   true,
+							Computed:   true,
+							Deprecated: "Derived by the server from `ip`; the configured value is ignored. Remove it from the configuration.",
 						},
 						"ip": {
 							Description: "The IP address of the grid master.",
@@ -568,13 +570,12 @@ func generateInfobloxRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 	gmSet := d.Get("grid_master").([]interface{})
 	var gridMaster *alkira.InfobloxGridMaster
 	if niosxOnly {
-		// Send name/external only — no ip and no credential ids; TPS rejects a
+		// Send name only; no ip and no credential ids. TPS rejects a
 		// NIOS-X-only service whose gridMaster carries any of those.
 		gridMaster = &alkira.InfobloxGridMaster{}
 		if len(gmSet) == 1 {
 			cfg := gmSet[0].(map[string]interface{})
 			gridMaster.Name, _ = cfg["name"].(string)
-			gridMaster.External, _ = cfg["external"].(bool)
 		}
 	} else {
 		gridMaster, err = expandInfobloxGridMaster(gmSet, infobloxCredentialId, m)

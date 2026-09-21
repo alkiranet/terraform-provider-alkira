@@ -91,7 +91,6 @@ resource "alkira_service_infoblox" "test" {
   }
 
   grid_master {
-    external = false
     ip       = "10.10.10.10"
     name     = "newGridName2"
     username = "admin"
@@ -120,7 +119,7 @@ resource "alkira_service_infoblox" "test" {
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the Infoblox service.
 - `grid_master` (Block List) Defines the properties of the Infoblox grid master. Required for `NIOS` instances; **omit for a `NIOS_X`-only service** (the server rejects gridMaster for NIOS-X-only). (see [below for nested schema](#nestedblock--grid_master))
-- `shared_secret` (String) Shared Secret of the InfoBlox grid. Required for `NIOS`; **omit for a `NIOS_X`-only service** (the server rejects shared secret for NIOS-X-only).
+- `shared_secret` (String, Sensitive) Shared Secret of the InfoBlox grid. Required for `NIOS`; **omit for a `NIOS_X`-only service** (the server rejects shared secret for NIOS-X-only).
 - `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE` or `2LARGE`. Used for `NIOS_X` image sizing (`NIOS` instances derive size from the model and ignore it). When not specified, it defaults to `SMALL`.
 
 ### Read-Only
@@ -140,25 +139,6 @@ Optional:
 - `ips` (List of String) The IPs to be used when AnyCast is enabled. When AnyCast is enabled this list cannot be empty. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 
-<a id="nestedblock--grid_master"></a>
-### Nested Schema for `grid_master`
-
-Required:
-
-- `name` (String) Name of the grid master.
-- `password` (String) The Grid Master password.
-- `username` (String) The Grid Master user name.
-
-Optional:
-
-- `external` (Boolean) External indicates if a new grid master should be created or if an existing grid master should be used. Default value is `false`.
-- `ip` (String) The IP address of the grid master.
-
-Read-Only:
-
-- `credential_id` (String) The credential ID of the Grid Master.
-
-
 <a id="nestedblock--instance"></a>
 ### Nested Schema for `instance`
 
@@ -172,7 +152,7 @@ Optional:
 - `anycast_enabled` (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service. The default value is `false`.
 - `join_token` (String, Sensitive) The join token used to register a `NIOS_X` platform instance. Only used for `NIOS_X` platform instances. The token is injected at instance launch; changing it after the instance is provisioned has no effect on the running instance.
 - `model` (String) The model of the Infoblox instance. Not used for `NIOS_X` platform instances.
-- `password` (String) The password associated with the infoblox instance. Not used for `NIOS_X` platform instances.
+- `password` (String, Sensitive) The password associated with the infoblox instance. Not used for `NIOS_X` platform instances.
 - `platform` (String) The platform type of the Infoblox instance. The value could be `NIOS` or `NIOS_X`. When not specified, it defaults to `NIOS`. Immutable once the service is provisioned (enforced at plan time).
 - `type` (String) The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.
 
@@ -180,6 +160,25 @@ Read-Only:
 
 - `credential_id` (String) The credential ID of the Infoblox instance.
 - `id` (Number) The ID of the Infoblox instance.
+
+
+<a id="nestedblock--grid_master"></a>
+### Nested Schema for `grid_master`
+
+Required:
+
+- `name` (String) Name of the grid master.
+- `password` (String, Sensitive) The Grid Master password.
+- `username` (String) The Grid Master user name.
+
+Optional:
+
+- `external` (Boolean, Deprecated) Whether the grid master is external (not provisioned by Alkira). Derived by the server: `true` when `ip` is set, `false` otherwise. Any configured value is ignored.
+- `ip` (String) The IP address of the grid master.
+
+Read-Only:
+
+- `credential_id` (String) The credential ID of the Grid Master.
 
 ## Import
 
