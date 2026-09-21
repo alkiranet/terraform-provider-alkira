@@ -23,6 +23,15 @@ or `license_type`: `PAY_AS_YOU_GO`
  {{tffile "examples/resources/alkira_service_f5_lb/resource4.tf"}}
  User can also configure ILB with `lb_type`
  {{tffile "examples/resources/alkira_service_f5_lb/resource5.tf"}}
+ On an AWS CXP, `tunnel_protocol` must be set to `VXLAN` to enable `ILB`. When
+ `tunnel_protocol` is omitted the API defaults it to `GRE` on AWS and `VXLAN` on
+ Azure, and it cannot be changed once the service has been provisioned; that
+ immutability is enforced at plan time only when the provider has `provision`
+ set to `true`, and at apply time otherwise. On an AWS CXP,
+ `tunnel_protocol` set to `VXLAN` cannot be combined with
+ `elb_bgp_options_advertise_to_cxp_prefix_list_id` on any segment: the API
+ rejects the combination, and BGP on an AWS CXP remains `GRE` only.
+ {{tffile "examples/resources/alkira_service_f5_lb/resource6.tf"}}
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import
