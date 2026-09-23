@@ -243,6 +243,11 @@ func resourceAlkiraInfoblox() *schema.Resource {
 								"(enforced at plan time).",
 							Type:     schema.TypeString,
 							Optional: true,
+							// Computed: the backend defaults this to NIOS when the
+							// config omits it and returns that value on Read. Without
+							// Computed the plan compares an empty config against a
+							// "NIOS" state on every run and never converges.
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"NIOS", "NIOS_X"}, false),
 						},
