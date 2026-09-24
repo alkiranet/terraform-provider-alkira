@@ -31,9 +31,30 @@ BDDS instances it must be configured for EDGE instances also and vice versa.
 ## Instances
 
 Bluecat services support flexible instance configurations.
-There can be BDDS instances only services, 
+There can be BDDS instances only services,
 EDGE instances only services or a
 hybrid scenario with both BDDS and EDGE instances.
+
+### Reading `instance` plan output
+
+The `instance` blocks are a set keyed on `hostname` + `type`. Terraform has no
+in-place edit for a set element, so changing a field on an existing instance
+(for example `version` or `model`) is rendered as a removal (`- instance`)
+followed by an addition (`+ instance`). This is how Terraform represents a
+changed set element — it does **not** mean the instance is destroyed and
+recreated. On apply the provider sends a single update and the backend
+reconciles the instances in place. Removing N instances plans exactly N
+removals (with no re-add) as long as the remaining instances still match what
+is deployed.
+
+Each `instance` also contains a sensitive field (`activation_key`), and
+Terraform redacts the entire element of a set when any nested value is
+sensitive. As a result the whole `instance` block shows as `# At least one
+attribute in this block is (or was) sensitive, so its contents will not be
+displayed`, hiding the non-sensitive fields (`name`, `hostname`, `version`,
+`model`) as well — and this applies to `EDGE` instances too even though they
+carry no secret. To tell which instance changed, compare your configuration
+against the deployed instance `hostname` / `version`.
 
 
 ## Example Usage

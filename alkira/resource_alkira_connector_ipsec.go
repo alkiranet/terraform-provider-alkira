@@ -295,7 +295,7 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 								"`IPSEC_INTERFACE_PING`.",
 							Type: schema.TypeString,
 							ValidateFunc: validation.StringInSlice(
-								[]string{"IKE_STATUS", "IPSEC_INTERFACE_PING", "PING"}, false),
+								[]string{"IKE_STATUS", "IPSEC_INTERFACE_PING"}, false),
 							Optional: true,
 							Default:  "IPSEC_INTERFACE_PING",
 						},
@@ -353,9 +353,11 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 				Optional: true,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"segment_id": {
 				Description: "The ID of the segment associated with the connector.",
@@ -625,7 +627,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 	api := alkira.NewConnectorIPSec(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -648,7 +650,7 @@ func resourceConnectorIPSecDelete(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

@@ -63,7 +63,9 @@ resource "alkira_service_infoblox" "test" {
   segment_ids         = [alkira_segment.test1.id]
   service_group_name  = "serviceGroupName"
   shared_secret       = "thisisanewsecredet"
+  size                = "SMALL" # drives NIOS-X instance sizing; NIOS instances ignore it
 
+  # NIOS instance (grid-managed appliance): model + member-role type required.
   instance {
     anycast_enabled = false
     hostname        = "hostname.localdomain"
@@ -71,6 +73,16 @@ resource "alkira_service_infoblox" "test" {
     password        = "password1234"
     type            = "MASTER_CANDIDATE"
     version         = "8.5.2"
+  }
+
+  # NIOS-X instance (SaaS-managed): platform = NIOS_X, registered via a join token.
+  # No model / member-role type. One service may mix NIOS and NIOS_X instances.
+  instance {
+    anycast_enabled = false
+    hostname        = "niosx1.localdomain"
+    platform        = "NIOS_X"
+    version         = "4.0.1"
+    join_token      = "REPLACE_WITH_JOIN_TOKEN"
   }
 
 
@@ -96,19 +108,20 @@ resource "alkira_service_infoblox" "test" {
 - `anycast` (Block Set, Min: 1) Defines the AnyCast policy. (see [below for nested schema](#nestedblock--anycast))
 - `cxp` (String) The CXP where the service should be provisioned.
 - `global_cidr_list_id` (Number) The ID of the global cidr list to be associated with the Infoblox service.
-- `grid_master` (Block List, Min: 1) Defines the properties of the Infoblox grid master. (see [below for nested schema](#nestedblock--grid_master))
-- `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. (see [below for nested schema](#nestedblock--instance))
+- `instance` (Block List, Min: 1) The properties pertaining to each individual instance of the Infoblox service. When adding instances to an existing service, **append them at the end of the list** — inserting before existing entries shifts list indexes and makes the plan re-map existing instances. (see [below for nested schema](#nestedblock--instance))
 - `license_type` (String) Infoblox license type, only `BRING_YOUR_OWN` is supported right now.
 - `name` (String) Name of the Infoblox service.
 - `segment_ids` (Set of String) IDs of segments associated with the service.
 - `service_group_name` (String) The name of the service group to be associated with the service. A service group represents the service in traffic policies, route policies and when configuring segment resource shares.
-- `shared_secret` (String) Shared Secret of the InfoBlox grid. This cannot be empty.
 
 ### Optional
 
 - `allow_list_id` (Number) The ID of the `alkira_policy_prefix_list` to be used to whitelist prefixes for the service.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the Infoblox service.
+- `grid_master` (Block List) Defines the properties of the Infoblox grid master. Required for `NIOS` instances; **omit for a `NIOS_X`-only service** (the server rejects gridMaster for NIOS-X-only). (see [below for nested schema](#nestedblock--grid_master))
+- `shared_secret` (String) Shared Secret of the InfoBlox grid. Required for `NIOS`; **omit for a `NIOS_X`-only service** (the server rejects shared secret for NIOS-X-only).
+- `size` (String) The size of the service, one of `SMALL`, `MEDIUM`, `LARGE` or `2LARGE`. Used for `NIOS_X` image sizing (`NIOS` instances derive size from the model and ignore it). When not specified, it defaults to `SMALL`.
 
 ### Read-Only
 
@@ -152,14 +165,16 @@ Read-Only:
 Required:
 
 - `hostname` (String) The host name of the instance. The host name MUST always have a suffix `.localdomain`.
-- `model` (String) The model of the Infoblox instance.
-- `password` (String) The password associated with the infoblox instance.
-- `type` (String) The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.
 - `version` (String) The version of the Infoblox to be used. Please check Alkira Portal for all supported versions
 
 Optional:
 
 - `anycast_enabled` (Boolean) This knob controls whether AnyCast is to be enabled for this instance or not. AnyCast can only be enabled on an instance if it is also enabled on the service. The default value is `false`.
+- `join_token` (String, Sensitive) The join token used to register a `NIOS_X` platform instance. Only used for `NIOS_X` platform instances. The token is injected at instance launch; changing it after the instance is provisioned has no effect on the running instance.
+- `model` (String) The model of the Infoblox instance. Not used for `NIOS_X` platform instances.
+- `password` (String) The password associated with the infoblox instance. Not used for `NIOS_X` platform instances.
+- `platform` (String) The platform type of the Infoblox instance. The value could be `NIOS` or `NIOS_X`. When not specified, it defaults to `NIOS`. Immutable once the service is provisioned (enforced at plan time).
+- `type` (String) The type of the Infoblox instance that is to be provisioned. The value could be `MASTER`, `MASTER_CANDIDATE` and `MEMBER`.
 
 Read-Only:
 

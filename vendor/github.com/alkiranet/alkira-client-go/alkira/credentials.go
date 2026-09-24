@@ -27,6 +27,7 @@ const (
 	CredentialTypeInfoblox                   CredentialType = "infoblox"
 	CredentialTypeInfobloxGridMaster         CredentialType = "infoblox-grid-master"
 	CredentialTypeInfobloxInstance           CredentialType = "infoblox-instance"
+	CredentialTypeInfobloxJoinToken          CredentialType = "infoblox-join-token"
 	CredentialTypeKeyPair                    CredentialType = "keypair"
 	CredentialTypeLdap                       CredentialType = "ldap"
 	CredentialTypeOciVcn                     CredentialType = "ocivcn"
@@ -40,6 +41,7 @@ const (
 	CredentialTypeApiKey                     CredentialType = "api-key"
 	CredentialTypeBluecatBDDSInstanceLicense CredentialType = "bluecat-bdds-instance-license"
 	CredentialTypeBluecatEdgeInstance        CredentialType = "bluecat-edge-instance"
+	CredentialTypePrismaSDWANInstance        CredentialType = "prisma-sdwan-connector-instance"
 )
 
 type CredentialAkamaiProlexic struct {
@@ -114,6 +116,13 @@ type CredentialGcpVpc struct {
 type CredentialFortinet struct {
 	UserName string `json:"userName"`
 	Password string `json:"password"`
+	// AlkiraAdminPassword is the customer-supplied alkira-admin password.
+	// Used to authenticate against the FortiGate during first-time provisioning.
+	// Once provisioned, this field is for record-keeping only — Alkira does not
+	// rotate the password on deployed FortiGate instances. To change the password
+	// after provisioning, customers must update the FortiGate side independently
+	// and then update this field in Alkira to match.
+	AlkiraAdminPassword string `json:"alkiraAdminPassword,omitempty"`
 }
 
 type CredentialFortinetInstance struct {
@@ -128,6 +137,11 @@ type CredentialFortinetSdwanInstance struct {
 	Username    string `json:"userName"`
 }
 
+type CredentialPrismaSDWANInstance struct {
+	IonToken  string `json:"ionToken"`
+	IonSecret string `json:"ionSecret"`
+}
+
 type CredentialInfoblox struct {
 	SharedSecret string `json:"sharedSecret"`
 }
@@ -139,6 +153,10 @@ type CredentialInfobloxInstance struct {
 type CredentialInfobloxGridMaster struct {
 	Username string `json:"userName"`
 	Password string `json:"password"`
+}
+
+type CredentialInfobloxJoinToken struct {
+	JoinToken string `json:"joinToken"`
 }
 
 type CredentialBluecatBDDSInstanceLicense struct {

@@ -31,9 +31,30 @@ BDDS instances it must be configured for EDGE instances also and vice versa.
 ## Instances
 
 Bluecat services support flexible instance configurations.
-There can be BDDS instances only services, 
+There can be BDDS instances only services,
 EDGE instances only services or a
 hybrid scenario with both BDDS and EDGE instances.
+
+### Reading `instance` plan output
+
+The `instance` blocks are a set keyed on `hostname` + `type`. Terraform has no
+in-place edit for a set element, so changing a field on an existing instance
+(for example `version` or `model`) is rendered as a removal (`- instance`)
+followed by an addition (`+ instance`). This is how Terraform represents a
+changed set element — it does **not** mean the instance is destroyed and
+recreated. On apply the provider sends a single update and the backend
+reconciles the instances in place. Removing N instances plans exactly N
+removals (with no re-add) as long as the remaining instances still match what
+is deployed.
+
+Each `instance` also contains a sensitive field (`activation_key`), and
+Terraform redacts the entire element of a set when any nested value is
+sensitive. As a result the whole `instance` block shows as `# At least one
+attribute in this block is (or was) sensitive, so its contents will not be
+displayed`, hiding the non-sensitive fields (`name`, `hostname`, `version`,
+`model`) as well — and this applies to `EDGE` instances too even though they
+carry no secret. To tell which instance changed, compare your configuration
+against the deployed instance `hostname` / `version`.
 
 
 ## Example Usage
@@ -320,10 +341,10 @@ resource "alkira_service_bluecat" "production" {
 
 ### Optional
 
-- `bdds_anycast` (Block Set) Defines the AnyCast configuration for BDDS type instances (see [below for nested schema](#nestedblock--bdds_anycast))
+- `bdds_anycast` (Block Set, Max: 1) Defines the AnyCast configuration for BDDS type instances. At most one block may be given; list multiple AnyCast IPs in `ips` rather than repeating the block. (see [below for nested schema](#nestedblock--bdds_anycast))
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the Bluecat service.
-- `edge_anycast` (Block Set) Defines the AnyCast configuration for EDGE type instances. (see [below for nested schema](#nestedblock--edge_anycast))
+- `edge_anycast` (Block Set, Max: 1) Defines the AnyCast configuration for EDGE type instances. At most one block may be given; list multiple AnyCast IPs in `ips` rather than repeating the block. (see [below for nested schema](#nestedblock--edge_anycast))
 
 ### Read-Only
 
@@ -386,8 +407,8 @@ Read-Only:
 
 Optional:
 
-- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `backup_cxps` (Set of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
+- `ips` (Set of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 
 <a id="nestedblock--edge_anycast"></a>
@@ -395,8 +416,8 @@ Optional:
 
 Optional:
 
-- `backup_cxps` (List of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
-- `ips` (List of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
+- `backup_cxps` (Set of String) The `backup_cxps` to be used when the current Bluecat service is not available. It also needs to have a configured Bluecat service in order to take advantage of this feature. It is NOT required that the `backup_cxps` should have a configured Bluecat service before it can be designated as a backup.
+- `ips` (Set of String) The IPs to be used for AnyCast. The IPs used for AnyCast MUST NOT overlap the CIDR of `alkira_segment` resource associated with the service.
 
 ## Import
 

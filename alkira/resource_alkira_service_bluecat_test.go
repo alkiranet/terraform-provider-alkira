@@ -157,11 +157,11 @@ func TestAlkiraServiceBluecat_buildServiceBluecatRequestWithAnycast(t *testing.T
 	require.Equal(t, expectedServiceGroupName, request.ServiceGroupName)
 	require.Equal(t, expectedGlobalCidrListId, request.GlobalCidrListId)
 
-	// Verify anycast configurations
-	require.Equal(t, []string{"192.168.1.10", "192.168.1.11"}, request.BddsAnycast.Ips)
-	require.Equal(t, []string{"US-EAST", "EU-WEST"}, request.BddsAnycast.BackupCxps)
-	require.Equal(t, []string{"192.168.2.10"}, request.EdgeAnycast.Ips)
-	require.Equal(t, []string{"US-EAST"}, request.EdgeAnycast.BackupCxps)
+	// Verify anycast configurations (ips/backup_cxps are sets, order-agnostic)
+	require.ElementsMatch(t, []string{"192.168.1.10", "192.168.1.11"}, request.BddsAnycast.Ips)
+	require.ElementsMatch(t, []string{"US-EAST", "EU-WEST"}, request.BddsAnycast.BackupCxps)
+	require.ElementsMatch(t, []string{"192.168.2.10"}, request.EdgeAnycast.Ips)
+	require.ElementsMatch(t, []string{"US-EAST"}, request.EdgeAnycast.BackupCxps)
 
 	// Basic test completed successfully
 	assert.True(t, true, "Bluecat anycast service request test completed successfully")
@@ -730,6 +730,11 @@ func getStringFromMapBluecat(m map[string]interface{}, key string) string {
 
 func getStringSliceFromMapBluecat(m map[string]interface{}, key string) []string {
 	if val, ok := m[key]; ok {
+		// ips/backup_cxps are TypeSet (post AK-69549); accept both the
+		// set form returned by d.Get and the raw list form.
+		if set, ok := val.(*schema.Set); ok {
+			val = set.List()
+		}
 		if list, ok := val.([]interface{}); ok {
 			result := make([]string, len(list))
 			for i, v := range list {

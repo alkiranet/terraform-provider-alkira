@@ -13,7 +13,7 @@ resource "alkira_connector_ipsec" "bgp_auth" {
     type                 = "DYNAMIC"
     customer_gateway_asn = "65330"
     bgp_auth_key         = "my-bgp-secret-key"
-    availability         = "PING"
+    availability         = "IPSEC_INTERFACE_PING"
   }
 
   endpoint {

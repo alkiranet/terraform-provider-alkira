@@ -75,7 +75,6 @@ func setInstance(d *schema.ResourceData, service *alkira.ServiceFortinet) {
 				"serial_number": info.SerialNumber,
 			}
 			instances = append(instances, i)
-			break
 		}
 	}
 
@@ -165,8 +164,9 @@ func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (s
 	d.Set("credential_name", credentialName)
 
 	credential := alkira.CredentialFortinet{
-		UserName: d.Get("username").(string),
-		Password: d.Get("password").(string),
+		UserName:            d.Get("username").(string),
+		Password:            d.Get("password").(string),
+		AlkiraAdminPassword: d.Get("alkira_admin_password").(string),
 	}
 
 	return c.CreateCredential(credentialName, alkira.CredentialTypeFortinet, credential, 0)
@@ -174,7 +174,7 @@ func createFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) (s
 
 // updateFortinetCredential update credential when username or password has changes
 func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) error {
-	if d.HasChanges("username", "password") {
+	if d.HasChanges("username", "password", "alkira_admin_password") {
 		log.Printf("[INFO] Fortinet credential has changed")
 
 		if d.Get("credential_id") == nil {
@@ -188,8 +188,9 @@ func updateFortinetCredential(d *schema.ResourceData, c *alkira.AlkiraClient) er
 			credentialId := d.Get("credential_id").(string)
 
 			credential := alkira.CredentialFortinet{
-				UserName: d.Get("username").(string),
-				Password: d.Get("password").(string),
+				UserName:            d.Get("username").(string),
+				Password:            d.Get("password").(string),
+				AlkiraAdminPassword: d.Get("alkira_admin_password").(string),
 			}
 
 			return c.UpdateCredential(credentialId, credentialName, alkira.CredentialTypeFortinet, credential, 0)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraSegmentResource() *schema.Resource {
@@ -49,9 +50,10 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Computed:    true,
 			},
 			"segment_id": {
-				Description: "The segment ID.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The ID of the segment the resource belongs to. This is the segment's numeric ID, not its name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(segmentIdPattern, segmentIdValidationMessage),
 			},
 			"implicit_group_id": {
 				Description: "The ID of automatically created implicit group.",
@@ -160,15 +162,27 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("implicit_group_id", resource.GroupId)
 
 	//
-	// Get segemnt
+	// Get segment
 	//
+	// The lookup stays non-fatal: GetById asks for the resource with
+	// includeMarkedForDeletion=true while the segment get-by-name does not,
+	// so a segment already marked for deletion resolves to nothing and would
+	// otherwise abort the refresh that terraform destroy runs first. On
+	// failure segment_id keeps its prior state value and the attributes
+	// below still refresh.
+	var diags diag.Diagnostics
+
 	segmentId, err := getSegmentIdByName(resource.Segment, m)
 
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET SEGMENT ID",
+			Detail:   fmt.Sprintf("failed to convert segment name %q to ID: %s", resource.Segment, err),
+		})
+	} else {
+		d.Set("segment_id", segmentId)
 	}
-
-	d.Set("segment_id", segmentId)
 
 	//
 	// Get Prefixes
@@ -190,7 +204,7 @@ func resourceSegmentResourceRead(ctx context.Context, d *schema.ResourceData, m 
 		d.Set("provision_state", provState)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSegmentResourceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -252,7 +266,7 @@ func resourceSegmentResourceDelete(ctx context.Context, d *schema.ResourceData, 
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResource(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -275,7 +289,7 @@ func resourceSegmentResourceDelete(ctx context.Context, d *schema.ResourceData, 
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

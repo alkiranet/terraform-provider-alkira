@@ -13,6 +13,7 @@ type AzureVnetThirdPartyConnector struct {
 	Group                                    string      `json:"group,omitempty"`
 	Segments                                 []string    `json:"segments"`
 	Size                                     string      `json:"size"`
+	ScaleGroupId                             string      `json:"scaleGroupId,omitempty"`
 	AzureVnetThirdPartyConnectorAttachmentId int         `json:"azureVnetThirdPartyConnectorAttachmentId"`
 	BillingTags                              []int       `json:"billingTags,omitempty"`
 	StaticRoutes                             []int       `json:"staticRoutes,omitempty"`

@@ -1,6 +1,6 @@
 resource "alkira_service_fortinet" "test1" {
   username                     = "admin"
-  password                     = "Ak12345678"
+  password                     = "Ak123456789!"
   cxp                          = var.cxp
   license_type                 = "BRING_YOUR_OWN"
   management_server_segment_id = alkira_segment.test1.id

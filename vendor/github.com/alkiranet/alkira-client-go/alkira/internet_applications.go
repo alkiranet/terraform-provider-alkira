@@ -13,10 +13,11 @@ type InternetApplicationSnatIpv4 struct {
 }
 
 type InternetApplicationTargets struct {
-	Type       string   `json:"type"`
-	Value      string   `json:"value"`
-	Ports      []int    `json:"ports"`
-	PortRanges []string `json:"portRanges,omitempty"`
+	Type             string   `json:"type"`
+	Value            string   `json:"value"`
+	Ports            []int    `json:"ports"`
+	PortRanges       []string `json:"portRanges,omitempty"`
+	PolicyFqdnListId int      `json:"policyFqdnListId,omitempty"`
 }
 
 type InternetApplication struct {
