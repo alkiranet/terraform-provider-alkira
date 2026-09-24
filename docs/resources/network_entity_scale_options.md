@@ -98,7 +98,7 @@ Optional:
 
 - `additional_nodes` (Number) Number of additional nodes to be added. By default there are 2 nodes per connector or service on an average. Maximum nodes are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.
 - `additional_tunnel_options_per_node` (Block List) Additional tunnel options per node configuration. (see [below for nested schema](#nestedblock--segment_scale_options--additional_tunnel_options_per_node))
-- `additional_tunnels_per_node` (Number) Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option.
+- `additional_tunnels_per_node` (Number) Number of additional Tunnels to be added per node. By default there is one tunnel per node. There are 2 nodes per connector or service on an average. Maximum tunnels are based on the limits allocated to a tenant. Either additionalTunnelsPerNode or additionalNodes either must be defined in a scale option. When `additional_tunnel_options_per_node` (labels) are configured, this must equal the number of labels — the API derives it from the label count.
 - `zone_name` (String) optional field, if provided only tunnels associated with given zone would be scaled. Not applicable if scale options are defined for a connector.
 
 <a id="nestedblock--segment_scale_options--additional_tunnel_options_per_node"></a>

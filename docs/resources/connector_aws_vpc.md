@@ -200,7 +200,6 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Required
 
-- `aws_account_id` (String) AWS Account ID.
 - `aws_region` (String) AWS Region where VPC resides.
 - `credential_id` (String) ID of resource `credential_aws_vpc`.
 - `cxp` (String) The CXP where the connector should be provisioned.
@@ -211,6 +210,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 
 ### Optional
 
+- `aws_account_id` (String) AWS Account ID. If not provided, it will be automatically detected from the VPC.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `direct_inter_vpc_communication_enabled` (Boolean) Enable direct inter-vpc communication. Default is set to `false`.
@@ -219,7 +219,7 @@ resource "alkira_connector_aws_vpc" "connector" {
 - `failover_cxps` (Set of String) A list of additional CXPs where the connector should be provisioned for failover.
 - `group` (String) The group of the connector.
 - `overlay_subnets` (List of String) Overlay subnet.
-- `scale_group_id` (String) The ID of the scale group associated with the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tgw_attachment` (Block List) TGW attachment. (see [below for nested schema](#nestedblock--tgw_attachment))
 - `tgw_connect_enabled` (Boolean) When it's set to `true`, Alkira will use TGW Connect attachments to build connection to AWS Transit Gateway. Connect Attachments suppport GRE tunnel protocol for high performance and BGP for dynamic routing. This applies to all TGW attachments. This field can be set to `true` only if the VPC is in the same AWS region as the Alkira CXP it is being deployed onto.
 - `vpc_cidr` (List of String) The list of CIDR attached to the target VPC for routing purpose. It could be only specified if `vpc_subnet` is not specified.

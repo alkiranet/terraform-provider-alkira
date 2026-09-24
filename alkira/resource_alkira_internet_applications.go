@@ -31,6 +31,59 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// Inspect raw config so we can tell which fields the user actually
+			// wrote vs. unknown references to other terraform-managed resources.
+			// Unknown fields are skipped; the API enforces them at apply time.
+			rawConfig := d.GetRawConfig()
+			if !rawConfig.IsKnown() || rawConfig.IsNull() {
+				return nil
+			}
+
+			targetRaw := rawConfig.GetAttr("target")
+			if targetRaw.IsNull() || !targetRaw.IsKnown() {
+				return nil
+			}
+
+			for it := targetRaw.ElementIterator(); it.Next(); {
+				_, elem := it.Element()
+
+				typeAttr := elem.GetAttr("type")
+				if !typeAttr.IsKnown() || typeAttr.IsNull() {
+					continue
+				}
+				tType := typeAttr.AsString()
+
+				valueAttr := elem.GetAttr("value")
+				fqdnAttr := elem.GetAttr("policy_fqdn_list_id")
+
+				valueKnown := valueAttr.IsKnown()
+				valueSet := valueKnown && !valueAttr.IsNull() && valueAttr.AsString() != ""
+
+				fqdnKnown := fqdnAttr.IsKnown()
+				fqdnSet := false
+				if fqdnKnown && !fqdnAttr.IsNull() {
+					n, _ := fqdnAttr.AsBigFloat().Int64()
+					fqdnSet = n != 0
+				}
+
+				switch tType {
+				case "IP", "ILB_NAME":
+					if valueKnown && !valueSet {
+						return fmt.Errorf("[ERROR] target.value is required when target.type is %q", tType)
+					}
+					if fqdnSet {
+						return fmt.Errorf("[ERROR] target.policy_fqdn_list_id must not be set when target.type is %q", tType)
+					}
+				case "INTERNAL_DNS":
+					if valueSet {
+						return fmt.Errorf("[ERROR] target.value must not be set when target.type is \"INTERNAL_DNS\"")
+					}
+					if fqdnKnown && !fqdnSet {
+						return fmt.Errorf("[ERROR] target.policy_fqdn_list_id is required when target.type is \"INTERNAL_DNS\"")
+					}
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -188,16 +241,16 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Description: "The type of the target, one of " +
-								"`IP` or `ILB_NAME`.",
+								"`IP`, `ILB_NAME` or `INTERNAL_DNS`.",
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice(
-								[]string{"IP", "ILB_NAME"}, false),
+								[]string{"IP", "ILB_NAME", "INTERNAL_DNS"}, false),
 						},
 						"value": {
-							Description: "IFA ILB name or private IP.",
+							Description: "IFA ILB name or private IP. Not required when `type` is `INTERNAL_DNS`.",
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 						},
 						"port_ranges": {
 							Description: "list of ports or port ranges. " +
@@ -207,6 +260,12 @@ func resourceAlkiraInternetApplication() *schema.Resource {
 							Type:     schema.TypeList,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
+						},
+						"policy_fqdn_list_id": {
+							Description: "The ID of the policy FQDN list. " +
+								"Only applicable when `type` is `INTERNAL_DNS`.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -283,6 +342,43 @@ func resourceInternetApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
+// inboundConnectorTypeOrDefault normalizes the inbound connector type coming
+// back from the API. The column behind it is nullable in TPS and the response
+// model is serialized with NON_NULL, so the field is omitted entirely for an
+// internet application whose type was never set explicitly. TPS itself treats
+// that NULL as DEFAULT, so mirror it here -- writing the empty string into
+// state would diff forever against the schema default.
+func inboundConnectorTypeOrDefault(t string) string {
+	if t == "" {
+		return "DEFAULT"
+	}
+	return t
+}
+
+// setInternetApplicationFields writes the internet application fields that map
+// directly from the API response onto the resource state. Fields that need
+// extra lookups or reshaping (segment, source NAT pool, targets, provision
+// state) stay in the Read function.
+//
+// Every field the API returns must be set here. `terraform import` populates
+// state solely from Read, so a field that is only ever sent on create/update
+// lands in state as null and shows up as a spurious diff on the next plan.
+func setInternetApplicationFields(d *schema.ResourceData, app *alkira.InternetApplication) {
+	d.Set("billing_tag_ids", app.BillingTags)
+	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
+	d.Set("byoip_id", app.ByoipId)
+	d.Set("connector_id", app.ConnectorId)
+	d.Set("connector_type", app.ConnectorType)
+	d.Set("description", app.Description)
+	d.Set("fqdn_prefix", app.FqdnPrefix)
+	d.Set("inbound_connector_type", inboundConnectorTypeOrDefault(app.InboundConnectorType))
+	d.Set("name", app.Name)
+	d.Set("internet_protocol", app.InternetProtocol)
+	d.Set("public_ips", app.PublicIps)
+	d.Set("size", app.Size)
+	d.Set("ilb_credential_id", app.IlbCredentialId)
+}
+
 func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	// INIT
@@ -300,18 +396,7 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 		}}
 	}
 
-	d.Set("billing_tag_ids", app.BillingTags)
-	d.Set("bi_directional_az", app.BiDirectionalAvailabilityZone)
-	d.Set("byoip_id", app.ByoipId)
-	d.Set("connector_id", app.ConnectorId)
-	d.Set("connector_type", app.ConnectorType)
-	d.Set("description", app.Description)
-	d.Set("fqdn_prefix", app.FqdnPrefix)
-	d.Set("name", app.Name)
-	d.Set("internet_protocol", app.InternetProtocol)
-	d.Set("public_ips", app.PublicIps)
-	d.Set("size", app.Size)
-	d.Set("ilb_credential_id", app.IlbCredentialId)
+	setInternetApplicationFields(d, app)
 
 	// Segment
 	segmentId, err := getSegmentIdByName(app.SegmentName, m)
@@ -340,9 +425,10 @@ func resourceInternetApplicationRead(ctx context.Context, d *schema.ResourceData
 
 	for _, target := range app.Targets {
 		i := map[string]interface{}{
-			"type":        target.Type,
-			"value":       target.Value,
-			"port_ranges": target.PortRanges,
+			"type":                target.Type,
+			"value":               target.Value,
+			"port_ranges":         target.PortRanges,
+			"policy_fqdn_list_id": target.PolicyFqdnListId,
 		}
 		targets = append(targets, i)
 	}
@@ -416,7 +502,7 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewInternetApplication(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -439,7 +525,7 @@ func resourceInternetApplicationDelete(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId("")
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

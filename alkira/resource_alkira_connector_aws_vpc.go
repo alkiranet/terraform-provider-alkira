@@ -35,9 +35,10 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"aws_account_id": {
-				Description: "AWS Account ID.",
+				Description: "AWS Account ID. If not provided, it will be automatically detected from the VPC.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"aws_region": {
 				Description: "AWS Region where VPC resides.",
@@ -221,9 +222,11 @@ func resourceAlkiraConnectorAwsVpc() *schema.Resource {
 				Optional: true,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"overlay_subnets": {
 				Description: "Overlay subnet.",
@@ -411,7 +414,7 @@ func resourceConnectorAwsVpcDelete(ctx context.Context, d *schema.ResourceData, 
 	api := alkira.NewConnectorAwsVpc(client)
 
 	// DELETE
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -434,7 +437,7 @@ func resourceConnectorAwsVpcDelete(ctx context.Context, d *schema.ResourceData, 
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

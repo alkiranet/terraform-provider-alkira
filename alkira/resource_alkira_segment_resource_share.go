@@ -52,15 +52,18 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 				Computed:    true,
 			},
 			"service_ids": {
-				Description: "The list of service IDs.",
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Required:    true,
+				Description: "The list of service IDs. Alongside the ID of a deployed " +
+					"service, two sentinel values are accepted: `0` selects no service " +
+					"and `-1` selects any service. An empty list is equivalent to `[0]`.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Required: true,
 			},
 			"designated_segment_id": {
-				Description: "The designated segment ID.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The ID of the designated segment. This is the segment's numeric ID, not its name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(segmentIdPattern, segmentIdValidationMessage),
 			},
 			"end_a_segment_resource_ids": {
 				Description: "The End-A segment resource IDs. All " +
@@ -93,18 +96,21 @@ func resourceAlkiraSegmentResourceShare() *schema.Resource {
 			"traffic_direction": {
 				Description: "Specify the direction in which traffic " +
 					"is orignated at both Resource End-A and Resource " +
-					"End-B. The default value is `BIDIRECTIONAL`.",
+					"End-B. Value could be `BIDIRECTIONAL` or " +
+					"`UNIDIRECTIONAL`. The default value is `BIDIRECTIONAL`.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "BIDIRECTIONAL",
 				ValidateFunc: validation.StringInSlice([]string{"UNIDIRECTIONAL", "BIDIRECTIONAL"}, false),
 			},
 			"traffic_from_end": {
-				Description: "The end from which traffic originates. This field " +
-					"is only applicable when `traffic_direction` is set to " +
-					"`UNIDIRECTIONAL`.",
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The end from which traffic originates. Value could be " +
+					"`A` or `B`. This field is only applicable when " +
+					"`traffic_direction` is set to `UNIDIRECTIONAL`, and must be " +
+					"omitted when it is set to `BIDIRECTIONAL`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"A", "B"}, false),
 			},
 			"policy_rule_list_id": {
 				Description: "The ID of a `policy_rule_list` that is to be used " +
@@ -191,16 +197,26 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("description", share.Description)
 	d.Set("service_ids", share.ServiceList)
 
-	// Convert segment name to ID for state
+	// The lookup stays non-fatal, in line with the rest of Read: GetById asks
+	// for the share with includeMarkedForDeletion=true while the segment
+	// get-by-name does not, so a segment already marked for deletion resolves
+	// to nothing and would otherwise abort the refresh that terraform destroy
+	// runs first. Collecting the warning rather than returning it keeps the
+	// attributes below refreshing.
+	var diags diag.Diagnostics
+
 	segmentId, err := getSegmentIdByName(share.DesignatedSegment, m)
+
 	if err != nil {
-		return diag.Diagnostics{{
+		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "FAILED TO GET SEGMENT ID",
 			Detail:   fmt.Sprintf("failed to convert segment name %q to ID: %s", share.DesignatedSegment, err),
-		}}
+		})
+	} else {
+		d.Set("designated_segment_id", segmentId)
 	}
-	d.Set("designated_segment_id", segmentId)
+
 	d.Set("end_a_segment_resource_ids", share.EndAResources)
 	d.Set("end_b_segment_resource_ids", share.EndBResources)
 	d.Set("end_a_route_limit", share.EndARouteLimit)
@@ -214,7 +230,7 @@ func resourceSegmentResourceShareRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("provision_state", provState)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSegmentResourceShareUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -276,7 +292,7 @@ func resourceSegmentResourceShareDelete(ctx context.Context, d *schema.ResourceD
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewSegmentResourceShare(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -299,7 +315,7 @@ func resourceSegmentResourceShareDelete(ctx context.Context, d *schema.ResourceD
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
