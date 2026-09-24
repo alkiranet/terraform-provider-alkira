@@ -13,8 +13,6 @@ Release Date: 2026-09-23
 
 Version 1.6.0 adds the Prisma SD-WAN connector, Infoblox NIOS-X support, and Strata Cloud Manager with advanced routing for PAN firewalls. It also relaxes several fields that were required unnecessarily, and includes drift, import, and validation fixes across a number of resources.
 
-This release fixes an issue where IPSec pre-shared keys could be written to provider debug logs. See Upgrade Instructions.
-
 ---
 
 ## New Resources
@@ -39,10 +37,6 @@ This release fixes an issue where IPSec pre-shared keys could be written to prov
 ---
 
 ## Bug Fixes
-
-### Security
-
-- **IPSec Connectors (`alkira_connector_ipsec`):** Fixed `preshared_keys` being written in cleartext to provider logs when logging was enabled. See Upgrade Instructions.
 
 ### State & Drift Fixes
 
@@ -79,35 +73,31 @@ This release fixes an issue where IPSec pre-shared keys could be written to prov
 
 ### From v1.5.1 to v1.6.0
 
-1. **Rotate IPSec Pre-Shared Keys if You Have Retained Debug Logs:**
-   - Earlier versions wrote `preshared_keys` in cleartext to the provider log whenever `TF_LOG` was set. If those logs were retained, shared with support, or stored as CI artifacts, rotate the affected pre-shared keys.
-   - No configuration change is needed. The logging itself is fixed in this release.
-
-2. **Verify No PAN Services Are Marked for Replacement:**
+1. **Verify No PAN Services Are Marked for Replacement:**
    - The new `scm_enabled`, `scm_folder`, and `routing_type` fields force replacement when changed. Services created before this release read them as empty and plan clean.
    - As a precaution, run `terraform plan` and confirm no `alkira_service_pan` resource is marked for replacement before applying.
    - SCM cannot be enabled on an existing service — these fields are immutable after provisioning.
 
-3. **Merge Repeated Bluecat AnyCast Blocks:**
+2. **Merge Repeated Bluecat AnyCast Blocks:**
    - Configurations with more than one `bdds_anycast` or `edge_anycast` block on the same service now fail at plan.
    - Combine them into a single block and list all AnyCast IPs in `ips`. Because only one block previously took effect, verify the result against the Portal rather than your previous configuration.
 
-4. **Replace `availability = "PING"` on IPSec Connectors:**
+3. **Replace `availability = "PING"` on IPSec Connectors:**
    - Configurations using `availability = "PING"` in `routing_options` now fail validation. Replace it with `IPSEC_INTERFACE_PING`.
    - For connectors already storing `PING`, the next plan shows a single in-place change that resolves on apply.
 
-5. **Use Segment IDs Rather Than Names:**
+4. **Use Segment IDs Rather Than Names:**
    - `segment_id` on `alkira_segment_resource` and `designated_segment_id` on `alkira_segment_resource_share` now reject segment names at plan time. Use `alkira_segment.<name>.id` or the numeric ID.
    - Leading zeros are also rejected — use `690`, not `0690`.
 
-6. **Align `additional_tunnels_per_node` With Tunnel Option Labels:**
+5. **Align `additional_tunnels_per_node` With Tunnel Option Labels:**
    - Where `additional_tunnel_options_per_node` is configured, `additional_tunnels_per_node` must equal the number of labels, or the plan now fails naming the block.
    - Such configurations previously showed drift on every plan.
 
-7. **Review Diffs After the First Refresh:**
+6. **Review Diffs After the First Refresh:**
    - Read fixes in this release populate fields that were previously missing from state, so the first `terraform plan` after upgrading may show changes.
    - **`alkira_service_fortinet` (`segment_ids`, `instances`) — review before applying.** These fields were never refreshed before, so drift was not detected. A diff here may be a real difference between your configuration and the deployed service, and applying it will change the deployed resource. Confirm the plan matches your intent rather than applying it blindly.
    - `alkira_internet_application` (`inbound_connector_type`) — cosmetic; the value is read back from the platform and converges on the first apply.
    - The Bluecat state migration runs on first refresh and may show a one-time diff if the same AnyCast IP was listed twice.
 
-8. **Compatibility.** Existing configurations continue to plan and apply unchanged, except as noted in steps 3 through 6 — each of which rejects a configuration that could not work correctly before. The Bluecat state migration is automatic; no other state migrations are required.
+7. **Compatibility.** Existing configurations continue to plan and apply unchanged, except as noted in steps 2 through 5 — each of which rejects a configuration that could not work correctly before. The Bluecat state migration is automatic; no other state migrations are required.
