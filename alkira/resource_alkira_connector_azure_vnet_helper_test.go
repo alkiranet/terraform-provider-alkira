@@ -650,8 +650,9 @@ func TestValidateVnetSubnetCidrForms(t *testing.T) {
 	})
 }
 
-// AK-74515: the server keeps `value` as the representative prefix alongside `values`
-// for a multi-prefix subnet, so the read path must not write subnet_cidr from it.
+// AK-74515: the server echoes rows as sent, so a multi-prefix row carries `value`
+// alongside `values` only when the client that wrote it sent both - but when it does,
+// the read path must not write subnet_cidr from it.
 // A block written with only subnet_cidrs plans subnet_cidr="" (Optional, not Computed);
 // Create ends in Read, so a non-empty subnet_cidr in state makes core reject the apply
 // with "planned set element does not correlate with any element in actual", and the
@@ -959,7 +960,7 @@ func TestSetVnetRoutingElementHashMatchesConfig(t *testing.T) {
 				"subnet_cidrs": schema.NewSet(schema.HashString,
 					[]interface{}{"10.169.142.0/28", "10.169.142.32/27"}),
 			},
-			// the server echoes value as the representative prefix alongside values
+			// a row written by a client that sent both value and values
 			response: alkira.ConnectorVnetExportOptionUserInputPrefix{
 				Type: "SUBNET", Id: "/sub/multi",
 				Value:  "10.169.142.0/28",

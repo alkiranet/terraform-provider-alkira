@@ -54,10 +54,10 @@ func setVnetRouting(d *schema.ResourceData, routingOptions *alkira.ConnectorVnet
 	// Set vnet_subnet
 	for _, prefixes := range routingOptions.ExportOptions.UserInputPrefixes {
 		if prefixes.Type == "SUBNET" {
-			// A response for a multi-prefix subnet carries BOTH `values` and `value` -
-			// the server keeps `value` as the representative prefix for older clients -
-			// so a non-empty `value` never by itself means "single prefix". Write the
-			// form the config used: leaving state in the other form makes the planned
+			// The server echoes each row as it was sent, so a response carries both
+			// `values` and `value` only if the request did - but a row written by
+			// another client may hold both, so a non-empty `value` never by itself
+			// means "single prefix". Write the form the config used: leaving state in the other form makes the planned
 			// and actual TypeSet element hashes differ, which core rejects after apply
 			// ("planned set element does not correlate with any element in actual") and
 			// which otherwise shows the block as removed-and-re-added on every plan.
