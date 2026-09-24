@@ -19,9 +19,9 @@ This release fixes an issue where IPSec pre-shared keys could be written to prov
 
 ## New Resources
 
-- **`alkira_connector_prisma_sdwan`**: Connects a Palo Alto Prisma SD-WAN fabric to the Alkira CXP. Supports segment assignment, size-based scaling, and per-instance configuration. A matching data source is available for lookups by name or ID.
+- **`alkira_connector_prisma_sdwan`**: Connects a Palo Alto Prisma SD-WAN fabric to the Alkira CXP. Supports segment assignment, size-based scaling, and per-instance configuration. A matching data source is available for lookups by name.
 
-- **`alkira_credential_prisma_sdwan`**: Stores the Prisma SD-WAN service account credentials used by the connector.
+- **`alkira_credential_prisma_sdwan`**: Stores the ION token and secret used to register Prisma SD-WAN devices.
 
 ---
 
@@ -29,12 +29,12 @@ This release fixes an issue where IPSec pre-shared keys could be written to prov
 
 - **Infoblox Service (`alkira_service_infoblox`):** Added NIOS-X support. Each `instance` accepts a `platform` of `NIOS` or `NIOS_X` (defaults to `NIOS`) and a `join_token` for NIOS-X onboarding, and the service accepts a `size`. Fields that apply only to NIOS are now optional — `grid_master`, `shared_secret`, and `model`, `password`, and `type` within `instance` — so a NIOS-X-only service can omit them. `platform` cannot be changed after provisioning.
 - **AWS VPC Connector (`alkira_connector_aws_vpc`):** The `aws_account_id` field is now optional. When omitted, the account is detected from the VPC.
-- **PAN Service (`alkira_service_pan`):** Added Strata Cloud Manager (SCM) and advanced routing support with new fields `scm_enabled`, `scm_folder`, and `routing_type`. SCM requires `routing_type = "advanced"` and PAN-OS 10.2.3 or later; advanced routing alone requires 10.2 or later. SCM and Panorama are mutually exclusive. These fields cannot be changed after provisioning.
-- **Cisco SD-WAN Connector (`alkira_connector_cisco_sdwan`):** Added an optional `allow_list` restricting which IPv4 CIDRs or addresses can reach the management interface, matching the Fortinet SD-WAN connector.
-- **Internet Application (`alkira_internet_application`):** Added `policy_fqdn_list_id` to the `target` block, so a target can be defined by an FQDN list. `value` is now optional within `target`.
+- **PAN Service (`alkira_service_pan`):** Added Strata Cloud Manager (SCM) and advanced routing support with new fields `scm_enabled`, `scm_folder`, and `routing_type`. SCM requires `routing_type = "advanced"`, `license_type = "BRING_YOUR_OWN"`, and PAN-OS 10.2.3 or later. Advanced routing is only supported with SCM — `routing_type = "advanced"` without `scm_enabled` is rejected. SCM and Panorama are mutually exclusive. Changing any of these fields on an existing service forces replacement, and the platform rejects the change once the service is provisioned.
+- **Cisco SD-WAN Connector (`alkira_connector_cisco_sdwan`):** Added an optional `allow_list` restricting which IPv4 CIDRs or addresses can reach the management interface, matching the Fortinet SD-WAN connector. Supported only on `CAT8000V` connectors.
+- **Internet Application (`alkira_internet_application`):** Added a `target` type of `INTERNAL_DNS`, which resolves the target from an FQDN list rather than an address. `INTERNAL_DNS` targets require the new `policy_fqdn_list_id` and must omit `value`; `IP` and `ILB_NAME` targets still require `value` and must omit `policy_fqdn_list_id`.
 - **Azure VNet Third Party Connector (`alkira_connector_azure_vnet_third_party`):** Added optional `scale_group_id`. This field cannot be updated after provisioning.
-- **Fortinet Service (`alkira_service_fortinet`):** Added optional `alkira_admin_password` on the credential resource.
-- **Advanced IPSec Connector (`alkira_connector_ipsec_adv`):** `customer_end_overlay_ip_reservation_id` in `gateway.tunnel` is now optional.
+- **Fortinet Service (`alkira_service_fortinet`):** Added optional `alkira_admin_password`, used to authenticate against the FortiGate during first-time provisioning. After provisioning, the field is for record-keeping only — updating it does not rotate the password on deployed FortiGate instances. To change it, update the FortiGate side first, then update this field to match.
+- **Advanced IPSec Connector (`alkira_connector_ipsec_adv`):** `customer_end_overlay_ip_reservation_id` in `gateway.tunnel` is now optional, so a tunnel can set `customer_end_overlay_ip` directly instead — useful when the customer-end IP falls outside the ranges available from a reservation. The two are now mutually exclusive and a configuration setting both fails at plan. When `customer_end_overlay_ip` is used, the CXP-end overlay reservation must be a `/32`, and the address must not overlap segment IP blocks or link-local, multicast, broadcast, or loopback ranges.
 
 ---
 
@@ -104,11 +104,10 @@ This release fixes an issue where IPSec pre-shared keys could be written to prov
    - Where `additional_tunnel_options_per_node` is configured, `additional_tunnels_per_node` must equal the number of labels, or the plan now fails naming the block.
    - Such configurations previously showed drift on every plan.
 
-7. **One-Time State Refresh:**
-   - Read fixes in this release populate fields that were previously missing from state. After upgrading, run `terraform plan` and expect one-time diffs on:
-     - `alkira_service_fortinet` (`segment_ids`, `instances`)
-     - `alkira_internet_application` (`inbound_connector_type`)
-   - The Bluecat state migration also runs on first refresh and may show a one-time diff if the same AnyCast IP was listed twice.
-   - These diffs are benign. Run `terraform apply` once to stabilize state.
+7. **Review Diffs After the First Refresh:**
+   - Read fixes in this release populate fields that were previously missing from state, so the first `terraform plan` after upgrading may show changes.
+   - **`alkira_service_fortinet` (`segment_ids`, `instances`) — review before applying.** These fields were never refreshed before, so drift was not detected. A diff here may be a real difference between your configuration and the deployed service, and applying it will change the deployed resource. Confirm the plan matches your intent rather than applying it blindly.
+   - `alkira_internet_application` (`inbound_connector_type`) — cosmetic; the value is read back from the platform and converges on the first apply.
+   - The Bluecat state migration runs on first refresh and may show a one-time diff if the same AnyCast IP was listed twice.
 
 8. **Compatibility.** Existing configurations continue to plan and apply unchanged, except as noted in steps 3 through 6 — each of which rejects a configuration that could not work correctly before. The Bluecat state migration is automatic; no other state migrations are required.
