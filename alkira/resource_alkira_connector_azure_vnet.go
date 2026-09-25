@@ -306,9 +306,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Optional: true,
 			},
 			"peering_gateway_cxp_id": {
-				Description: "The ID of the CXP peering gateway associated with the connector.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Description: "The ID of the CXP peering gateway associated with the connector. " +
+					"This field cannot be updated once the connector has been provisioned.",
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Description: "The description of the connector.",

@@ -46,3 +46,9 @@ One group does need an edit: anyone whose HCL holds a segment name in either fie
 `platform` inside the `instance` block of `alkira_service_infoblox` is now `Computed` as well as `Optional`. It was `Optional` only, while Read writes the backend value straight back into state. The backend defaults `platform` to `NIOS` when the configuration omits it, so every plan compared an empty configuration against a `NIOS` state and asked to change it back — and apply never converged, because the backend re-applied the default.
 
 **Impact:** configurations that omit `platform` now plan clean instead of showing a permanent in-place change on the instance block. Configurations that set `platform` explicitly are unaffected. Removing the attribute from a configuration now retains the last known value rather than clearing it, which is the standard `Optional`+`Computed` behaviour and harmless here because `platform` is immutable once the service is provisioned. No state migration is required.
+
+## Azure VNET connector — `peering_gateway_cxp_id` is now computed, so an omitted value keeps the backend's gateway (AK-75338)
+
+`peering_gateway_cxp_id` on `alkira_connector_azure_vnet` is now `Computed` as well as `Optional`. When the configuration omits it, the provider keeps the gateway ID from state and sends it on update.
+
+**Impact:** updates to a provisioned connector whose configuration omits `peering_gateway_cxp_id` no longer fail with `400 The CXP Peering Gateway of connector '<name>' cannot be updated after it is provisioned.` Configurations that set it explicitly are unaffected. Removing the attribute from a configuration retains the last known value rather than clearing it. No state migration is required.
