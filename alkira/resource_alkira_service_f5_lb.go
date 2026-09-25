@@ -27,6 +27,18 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// tunnel_protocol is immutable once provisioned: the API rejects a
+			// change for any provision state other than PENDING.
+			if d.Id() != "" && old != "" && old != "PENDING" && d.HasChange("tunnel_protocol") {
+				oldProtocol, newProtocol := d.GetChange("tunnel_protocol")
+				if newProtocol.(string) != "" {
+					return fmt.Errorf(
+						"tunnel_protocol cannot be changed from %q to %q after the "+
+							"service has been provisioned",
+						oldProtocol.(string), newProtocol.(string))
+				}
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -97,6 +109,16 @@ func resourceAlkiraF5LoadBalancer() *schema.Resource {
 				Description: "ID of prefix list to use for IP allowlist",
 				Type:        schema.TypeInt,
 				Optional:    true,
+			},
+			"tunnel_protocol": {
+				Description: "Encapsulation used for the tunnels between the " +
+					"CXP and the F5 instances. Can be `GRE` or `VXLAN`.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"GRE", "VXLAN"},
+					false),
 			},
 			"segment_options": {
 				Type:     schema.TypeSet,
@@ -386,6 +408,7 @@ func resourceF5LoadBalancerRead(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("billing_tag_ids", lb.BillingTags)
 	d.Set("global_cidr_list_id", lb.GlobalCidrListId)
 	d.Set("prefix_list_id", lb.PrefixListId)
+	d.Set("tunnel_protocol", lb.TunnelProtocol)
 	d.Set("service_group_name", lb.ServiceGroupName)
 	d.Set("ilb_service_group_name", lb.IlbServiceGroupName)
 	d.Set("implicit_group_id", lb.ImplicitGroupId)
