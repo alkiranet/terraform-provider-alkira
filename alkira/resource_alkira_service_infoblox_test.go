@@ -470,3 +470,28 @@ func getStringSliceFromMap(m map[string]interface{}, key string) []string {
 	}
 	return []string{}
 }
+
+func TestAlkiraServiceInfoblox_instancePlatformIsComputed(t *testing.T) {
+	instance, ok := resourceAlkiraInfoblox().Schema["instance"]
+	require.True(t, ok, "instance must exist")
+
+	elem, ok := instance.Elem.(*schema.Resource)
+	require.True(t, ok, "instance must have a *schema.Resource element")
+
+	platform, ok := elem.Schema["platform"]
+	require.True(t, ok, "instance.platform must exist")
+
+	// The backend defaults platform to NIOS when the config omits it and returns
+	// that value on Read (deflateInfobloxInstances writes it straight back). Without
+	// Computed, an empty config is compared against a "NIOS" state on every plan and
+	// never converges. See AK-75209.
+	assert.True(t, platform.Optional, "platform must stay Optional")
+	assert.True(t, platform.Computed,
+		"platform must be Computed, otherwise a backend-defaulted NIOS drifts on every plan")
+
+	// Guard the reason this matters: Read must still be writing the value back.
+	got := deflateInfobloxInstances([]alkira.InfobloxInstance{{Platform: "NIOS"}})
+	require.Len(t, got, 1)
+	assert.Equal(t, "NIOS", got[0]["platform"],
+		"Read writes platform back, which is what makes Computed necessary")
+}

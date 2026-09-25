@@ -26,6 +26,20 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
+			// AK-74515: subnet_cidr moved from Required to Optional so it can give way
+			// to subnet_cidrs, which means the schema no longer catches a block that
+			// sets neither. Check at plan time rather than only at apply - otherwise a
+			// bad config plans clean and fails partway through apply, after other
+			// resources in the graph may already exist. ExactlyOneOf cannot express
+			// this: it does not apply inside a nested block's element schema.
+			//
+			// Walks the raw config, not d.Get: on a ResourceDiff an unknown reads as the
+			// zero value, so a block whose CIDRs come from a resource created in the same
+			// run would look like "neither form set" and fail the plan.
+			if err := validateVnetSubnetCidrForms(d.GetRawConfig()); err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Importer: &schema.ResourceImporter{
@@ -198,9 +212,25 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 							Required:    true,
 						},
 						"subnet_cidr": {
-							Description: "VNET subnet CIDR.",
-							Type:        schema.TypeString,
-							Required:    true,
+							Description: "VNET subnet CIDR. Use `subnet_cidrs` " +
+								"instead when the subnet has several address " +
+								"prefixes. Exactly one of the two is required.",
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"subnet_cidrs": {
+							Description: "Every address prefix of the VNET subnet, " +
+								"for a subnet that has more than one. A subnet is " +
+								"onboarded all or nothing, so this must name every " +
+								"prefix the subnet has or the request is rejected. " +
+								"A subnet with a single prefix may be written either " +
+								"way - a one-element `subnet_cidrs` is sent exactly " +
+								"as `subnet_cidr` would be. Requires the multi-prefix " +
+								"feature to be enabled on the tenant. Exactly one of " +
+								"`subnet_cidr` and `subnet_cidrs` is required.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"routing_options": {
 							Description: "Routing options for the subnet, " +
