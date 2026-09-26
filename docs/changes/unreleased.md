@@ -41,8 +41,17 @@ Read also dropped all but one `instances` entry. It walks the instances already 
 **Impact:** configurations that reference a segment by ID, including `alkira_segment.example.id`, are unaffected, and importing either resource continues to plan clean. No state migration is required.
 
 One group does need an edit: anyone whose HCL holds a segment name in either field. That configuration planned clean because a plan only compares, so the mismatch went unnoticed. For `alkira_segment_resource_share`, a name is also what `terraform import` wrote into `designated_segment_id` on builds between the two AK-64221 fixes, so HCL written to match an import from that window holds one. Validation now rejects it, and the failure blocks `terraform plan`, `terraform apply` and `terraform destroy` for the whole root module until the value changes to `alkira_segment.<name>.id` or the segment's numeric ID.
+
 ## Infoblox service — `instance.platform` is now computed, stopping a perpetual diff (AK-75209)
 
 `platform` inside the `instance` block of `alkira_service_infoblox` is now `Computed` as well as `Optional`. It was `Optional` only, while Read writes the backend value straight back into state. The backend defaults `platform` to `NIOS` when the configuration omits it, so every plan compared an empty configuration against a `NIOS` state and asked to change it back — and apply never converged, because the backend re-applied the default.
 
 **Impact:** configurations that omit `platform` now plan clean instead of showing a permanent in-place change on the instance block. Configurations that set `platform` explicitly are unaffected. Removing the attribute from a configuration now retains the last known value rather than clearing it, which is the standard `Optional`+`Computed` behaviour and harmless here because `platform` is immutable once the service is provisioned. No state migration is required.
+
+## Infoblox service — `grid_master.external` is now computed to stop spurious diffs (AK-74969)
+
+`external` inside the `grid_master` block of `alkira_service_infoblox` is now `Optional + Computed` with no default, and is deprecated. The server derives the value on every create and update: `true` when `grid_master.ip` is set, `false` otherwise. Any configured value is ignored on write. The provider no longer sends `external` in create or update requests.
+
+**Impact:** services whose `grid_master.ip` is set and whose configuration omits `external` previously showed a perpetual `external = true -> false` in-place update; they now plan clean. Configurations that still set `external` get a deprecation warning. A configured value that disagrees with the server-derived one keeps showing a diff until the line is removed.
+
+**Migration:** remove `external` from the `grid_master` block. No state migration is required.
