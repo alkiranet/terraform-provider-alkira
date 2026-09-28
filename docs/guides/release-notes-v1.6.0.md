@@ -56,6 +56,10 @@ Version 1.6.0 adds the Prisma SD-WAN connector, Infoblox NIOS-X support, and Str
 - **Segment Resource Share (`alkira_segment_resource_share`):** `traffic_from_end` is now validated against its accepted values.
 - **Network Entity Scale Options (`alkira_network_entity_scale_options`):** When `additional_tunnel_options_per_node` is configured, `additional_tunnels_per_node` must match the number of labels. A mismatch is now reported at plan time rather than drifting on every plan. See Upgrade Instructions.
 
+### Provisioning
+
+- **All resources:** Fixed a spurious `PROVISION (DELETE) FAILED` warning on `terraform destroy`. The delete path treated any provision state other than `SUCCESS` as a failure, including states that are normal during teardown, so a successful destroy could still report a provisioning failure. It now reports a failure only when the platform actually returns a provisioning error. Affects 55 resources.
+
 ---
 
 ## Documentation
@@ -65,7 +69,7 @@ Version 1.6.0 adds the Prisma SD-WAN connector, Infoblox NIOS-X support, and Str
 - **Bluecat Service (`alkira_service_bluecat`):** Documented instance set comparison and sensitive field redaction.
 - **Segment Resource Share (`alkira_segment_resource_share`):** Documented the accepted values for `traffic_from_end` and related parameters.
 - **GCP Interconnect Connector (`alkira_connector_gcp_interconnect`):** Documented `20LARGE`, `30LARGE`, `40LARGE`, and `50LARGE` sizes.
-- **Azure VNet Third Party Connector (`alkira_connector_azure_vnet_third_party`):** Documented that `scale_group_id` cannot be updated after provisioning.
+- **Connectors with `scale_group_id`:** Documented that `scale_group_id` can only be set at create time and cannot be changed after provisioning. Applies to `alkira_connector_aruba_edge`, `alkira_connector_aws_dx`, `alkira_connector_aws_tgw`, `alkira_connector_aws_vpc`, `alkira_connector_azure_vhub`, `alkira_connector_azure_vnet`, `alkira_connector_azure_vnet_third_party`, `alkira_connector_gcp_interconnect`, `alkira_connector_gcp_vpc`, `alkira_connector_ipsec` and `alkira_connector_prisma_sdwan`.
 
 ---
 
