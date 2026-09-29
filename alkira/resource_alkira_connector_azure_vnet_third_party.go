@@ -69,6 +69,13 @@ func resourceAlkiraConnectorAzureVnetThirdParty() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"azure_vnet_third_party_connector_attachment_id": {
 				Description: "The ID of the Azure VNET Third Party Connector Attachment.",
 				Type:        schema.TypeInt,
@@ -173,6 +180,7 @@ func resourceConnectorAzureVnetThirdPartyRead(ctx context.Context, d *schema.Res
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
 	d.Set("size", connector.Size)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("azure_vnet_third_party_connector_attachment_id", connector.AzureVnetThirdPartyConnectorAttachmentId)
 	d.Set("implicit_group_id", connector.ImplicitGroupId)
 
@@ -250,7 +258,7 @@ func resourceConnectorAzureVnetThirdPartyDelete(ctx context.Context, d *schema.R
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewAzureVnetThirdPartyConnector(client)
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -273,7 +281,7 @@ func resourceConnectorAzureVnetThirdPartyDelete(ctx context.Context, d *schema.R
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
@@ -301,6 +309,7 @@ func generateConnectorAzureVnetThirdPartyRequest(d *schema.ResourceData, m inter
 		Group:                                    d.Get("group").(string),
 		Segments:                                 []string{segmentName},
 		Size:                                     d.Get("size").(string),
+		ScaleGroupId:                             d.Get("scale_group_id").(string),
 		AzureVnetThirdPartyConnectorAttachmentId: d.Get("azure_vnet_third_party_connector_attachment_id").(int),
 		BillingTags:                              billingTags,
 		StaticRoutes:                             staticRoutes,

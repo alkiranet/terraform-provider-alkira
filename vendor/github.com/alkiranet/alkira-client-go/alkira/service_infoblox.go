@@ -50,11 +50,12 @@ type InfobloxInstance struct {
 	InternalName       string      `json:"internalName,omitempty"`
 	LanPrefix          string      `json:"lanPrefix,omitempty"`
 	ManagementPrefix   string      `json:"managementPrefix,omitempty"`
-	Model              string      `json:"model"`
+	Model              string      `json:"model,omitempty"`
 	Name               string      `json:"name,omitempty"`
+	Platform           string      `json:"platform,omitempty"`
 	ProductId          string      `json:"productId,omitempty"`
 	PublicIp           string      `json:"publicIp,omitempty"`
-	Type               string      `json:"type"`
+	Type               string      `json:"type,omitempty"`
 	Version            string      `json:"version,omitempty"`
 }
 

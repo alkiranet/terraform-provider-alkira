@@ -8,6 +8,7 @@ import (
 )
 
 type ServiceFortinet struct {
+	AllowList        []string                 `json:"allowList,omitempty"`
 	AutoScale        string                   `json:"autoScale,omitempty"`
 	BillingTags      []int                    `json:"billingTags"`
 	CredentialId     string                   `json:"credentialId"`

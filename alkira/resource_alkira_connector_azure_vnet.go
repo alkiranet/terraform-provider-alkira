@@ -269,9 +269,11 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Computed: true,
 			},
 			"scale_group_id": {
-				Description: "The ID of the scale group associated with the connector.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"peering_gateway_cxp_id": {
 				Description: "The ID of the CXP peering gateway associated with the connector.",
@@ -468,7 +470,7 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 	api := alkira.NewConnectorAzureVnet(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -491,7 +493,7 @@ func resourceConnectorAzureVnetDelete(ctx context.Context, d *schema.ResourceDat
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
