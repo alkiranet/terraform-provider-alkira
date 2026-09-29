@@ -205,15 +205,23 @@ func expandBluecatAnycast(in *schema.Set) (*alkira.BluecatAnycast, error) {
 		return &alkira.BluecatAnycast{}, nil
 	}
 
+	// The schema caps these blocks at one, so more than one can only arrive from state
+	// written before that cap existed. Fail loudly instead of silently keeping whichever
+	// block sorts first and discarding the rest.
+	if in.Len() > 1 {
+		return nil, fmt.Errorf("only one anycast block may be specified, got %d. "+
+			"To use several AnyCast IPs, list them all in `ips` within a single block", in.Len())
+	}
+
 	anycast := &alkira.BluecatAnycast{}
 
 	for _, option := range in.List() {
 		cfg := option.(map[string]interface{})
-		if v, ok := cfg["ips"].([]interface{}); ok {
-			anycast.Ips = convertTypeListToStringList(v)
+		if v, ok := cfg["ips"].(*schema.Set); ok {
+			anycast.Ips = convertTypeSetToStringList(v)
 		}
-		if v, ok := cfg["backup_cxps"].([]interface{}); ok {
-			anycast.BackupCxps = convertTypeListToStringList(v)
+		if v, ok := cfg["backup_cxps"].(*schema.Set); ok {
+			anycast.BackupCxps = convertTypeSetToStringList(v)
 		}
 	}
 	return anycast, nil

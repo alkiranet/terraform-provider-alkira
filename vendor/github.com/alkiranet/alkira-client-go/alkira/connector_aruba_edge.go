@@ -8,6 +8,7 @@ import (
 )
 
 type ConnectorArubaEdge struct {
+	AllowList            []string               `json:"allowList,omitempty"`
 	ArubaEdgeVrfMappings []ArubaEdgeVRFMappings `json:"arubaEdgeVRFMappings"`
 	BillingTags          []int                  `json:"billingTags"`
 	BoostMode            bool                   `json:"boostMode"`

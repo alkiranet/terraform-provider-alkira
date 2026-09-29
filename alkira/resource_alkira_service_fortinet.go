@@ -3,7 +3,6 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -61,6 +60,17 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 					"by credential resource.",
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"alkira_admin_password": {
+				Description: "Customer-supplied alkira-admin password. " +
+					"Used to authenticate against the FortiGate during first-time provisioning. " +
+					"Once provisioned, this field is for record-keeping only — Alkira does not " +
+					"rotate the password on deployed FortiGate instances. To change the password " +
+					"after provisioning, update the FortiGate side independently, then update " +
+					"this field to match.",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"cxp": {
 				Description: "The CXP where the service should be provisioned.",
@@ -360,18 +370,17 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 		d.Set("management_server_segment_id", managementServerSegmentId)
 	}
 	// Set segments
-	segments := make([]int, len(f.Segments))
+	segmentIds, err := convertSegmentNamesToSegmentIds(f.Segments, m)
 
-	for _, seg := range f.Segments {
-		seg, err := getSegmentIdByName(seg, m)
-
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		segId, _ := strconv.Atoi(seg)
-		segments = append(segments, segId)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	d.Set("segment_ids", segments)
+
+	// Checked: a type mismatch against the schema here is a provider bug the
+	// SDK would otherwise log and drop, which is how this went unnoticed.
+	if err := d.Set("segment_ids", segmentIds); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Set instances
 	setInstance(d, f)
@@ -447,7 +456,7 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceFortinet(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -470,7 +479,7 @@ func resourceFortinetDelete(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	// Check provision state
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

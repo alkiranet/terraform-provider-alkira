@@ -32,18 +32,29 @@ func resourceAlkiraBluecat() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: importWithReadValidation(resourceBluecatRead),
 		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceBluecatV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceBluecatStateUpgradeV0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"bdds_anycast": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Defines the AnyCast configuration for BDDS type instances",
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Description: "Defines the AnyCast configuration for BDDS type instances. " +
+					"At most one block may be given; list multiple AnyCast IPs in `ips` " +
+					"rather than repeating the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
 							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -53,7 +64,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 								"have a configured Bluecat service in order to take advantage of " +
 								"this feature. It is NOT required that the `backup_cxps` should have " +
 								"a configured Bluecat service before it can be designated as a backup.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -61,16 +72,19 @@ func resourceAlkiraBluecat() *schema.Resource {
 				},
 			},
 			"edge_anycast": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Defines the AnyCast configuration for EDGE type instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Description: "Defines the AnyCast configuration for EDGE type instances. " +
+					"At most one block may be given; list multiple AnyCast IPs in `ips` " +
+					"rather than repeating the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ips": {
 							Description: "The IPs to be used for AnyCast. The IPs used for AnyCast MUST " +
 								"NOT overlap the CIDR of `alkira_segment` resource associated with " +
 								"the service.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -80,7 +94,7 @@ func resourceAlkiraBluecat() *schema.Resource {
 								"have a configured Bluecat service in order to take advantage of " +
 								"this feature. It is NOT required that the `backup_cxps` should have " +
 								"a configured Bluecat service before it can be designated as a backup.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -413,7 +427,7 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServiceBluecat(m.(*alkira.AlkiraClient))
 
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -430,7 +444,7 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",

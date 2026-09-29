@@ -42,7 +42,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 			},
 			"size": {
 				Description: "The size of the connector, one of `SMALL`, " +
-					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE` or `10LARGE`.",
+					"`MEDIUM`, `LARGE`, `2LARGE`, `5LARGE`, `10LARGE`, `20LARGE`, " +
+					"`30LARGE`, `40LARGE` or `50LARGE`.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -205,7 +206,8 @@ func resourceAlkiraConnectorGcpInterconnect() *schema.Resource {
 
 			"scale_group_id": {
 				Description: "The ID of the scale group associated with " +
-					"the connector.",
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -373,7 +375,7 @@ func resourceConnectorGcpInterconnectDelete(ctx context.Context, d *schema.Resou
 	api := alkira.NewConnectorGcpInterconnect(m.(*alkira.AlkiraClient))
 
 	// DELETE
-	provState, err, valErr, provErr := api.Delete(d.Id())
+	_, err, valErr, provErr := api.Delete(d.Id())
 
 	if err != nil {
 		// Terraform may not print "with <resource address>" for destroys of objects
@@ -396,7 +398,7 @@ func resourceConnectorGcpInterconnectDelete(ctx context.Context, d *schema.Resou
 		}}
 	}
 
-	if client.Provision && provState != "SUCCESS" {
+	if client.Provision && provErr != nil {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "PROVISION (DELETE) FAILED",
