@@ -309,6 +309,23 @@ func resourcePolicyNatRule(ctx context.Context, d *schema.ResourceData, m interf
 	return resourcePolicyNatRuleRead(ctx, d, m)
 }
 
+// setNatRuleFields writes every schema attribute the API returns. Extra
+// reshaping (provision state) stays in the Read function.
+//
+// Every field the API returns must be set here. `terraform import` populates
+// state solely from Read, so a field that is only ever sent on create/update
+// lands in state as null and shows up as a spurious diff on the next plan.
+func setNatRuleFields(d *schema.ResourceData, rule *alkira.NatPolicyRule) {
+	d.Set("name", rule.Name)
+	d.Set("description", rule.Description)
+	d.Set("enabled", rule.Enabled)
+	d.Set("category", natCategoryOrDefault(rule.Category))
+	d.Set("direction", rule.Direction)
+
+	setNatRuleActionOptions(rule.Action, d)
+	setNatRuleMatch(rule.Match, d)
+}
+
 func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -324,13 +341,7 @@ func resourcePolicyNatRuleRead(ctx context.Context, d *schema.ResourceData, m in
 		}}
 	}
 
-	d.Set("name", rule.Name)
-	d.Set("description", rule.Description)
-	d.Set("enabled", rule.Enabled)
-	d.Set("category", rule.Category)
-
-	setNatRuleActionOptions(rule.Action, d)
-	setNatRuleMatch(rule.Match, d)
+	setNatRuleFields(d, rule)
 
 	// Set provision state
 	if client.Provision && provState != "" {
