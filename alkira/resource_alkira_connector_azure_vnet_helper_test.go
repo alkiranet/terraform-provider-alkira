@@ -1,12 +1,15 @@
 package alkira
 
 import (
+	"context"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVnetRoutingDataValidation(t *testing.T) {
@@ -478,6 +481,50 @@ func TestCustomerAsnSchemaIsOptionalAndComputed(t *testing.T) {
 		"customer_asn must be Computed because the backend auto-populates it "+
 			"in VGW mode when the user omits it (AK-68129). "+
 			"Without Computed, Terraform treats the backend-supplied value as drift.")
+}
+
+func TestPeeringGatewayCxpIdSchemaIsOptionalAndComputed(t *testing.T) {
+	r := resourceAlkiraConnectorAzureVnet()
+
+	peeringGateway, ok := r.Schema["peering_gateway_cxp_id"]
+	require.True(t, ok, "peering_gateway_cxp_id must exist")
+
+	// The backend may assign a CXP peering gateway when the config omits it and
+	// returns that value on Read, and rejects any change to it once the connector
+	// is provisioned. Without Computed, an omitted value plans as a removal and
+	// the update sends no gateway, which the backend rejects. See AK-75338.
+	assert.Equal(t, schema.TypeInt, peeringGateway.Type, "peering_gateway_cxp_id must be TypeInt")
+	assert.True(t, peeringGateway.Optional, "peering_gateway_cxp_id must stay Optional")
+	assert.True(t, peeringGateway.Computed,
+		"peering_gateway_cxp_id must be Computed, otherwise an omitted value plans as a removal")
+
+	// Guard the behaviour Computed provides: with the backend value in state and
+	// the attribute omitted from config, the plan keeps the state value.
+	state := &terraform.InstanceState{
+		ID: "1",
+		Attributes: map[string]string{
+			"id":                     "1",
+			"peering_gateway_cxp_id": "7",
+		},
+	}
+	client := &alkira.AlkiraClient{}
+
+	diff, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(map[string]interface{}{}), client)
+	require.NoError(t, err)
+	if diff != nil {
+		_, changed := diff.Attributes["peering_gateway_cxp_id"]
+		assert.False(t, changed, "an omitted peering_gateway_cxp_id must keep the state value")
+	}
+
+	// An explicit value still plans as a change.
+	diff, err = r.Diff(context.Background(), state,
+		terraform.NewResourceConfigRaw(map[string]interface{}{"peering_gateway_cxp_id": 8}), client)
+	require.NoError(t, err)
+	require.NotNil(t, diff)
+	attr, changed := diff.Attributes["peering_gateway_cxp_id"]
+	require.True(t, changed, "an explicit peering_gateway_cxp_id must plan as a change")
+	assert.Equal(t, "7", attr.Old)
+	assert.Equal(t, "8", attr.New)
 }
 
 // AK-74515: a multi-prefix Azure subnet is ONE vnet_subnet block naming every
