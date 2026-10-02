@@ -189,7 +189,13 @@ func expandGlobalProtectSegmentOptions(in *schema.Set, m interface{}) (map[strin
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segmentName, _ = getSegmentNameById(v, m)
+			name, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+
+			segmentName = name
 		}
 		if v, ok := segmentCfg["remote_user_zone_name"].(string); ok {
 			r.RemoteUserZoneName = v
@@ -220,7 +226,13 @@ func expandGlobalProtectSegmentOptionsInstance(in *schema.Set, m interface{}) (m
 		var segmentName string
 
 		if v, ok := segmentCfg["segment_id"].(string); ok {
-			segmentName, _ = getSegmentNameById(v, m)
+			name, err := getSegmentNameById(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+
+			segmentName = name
 		}
 		if v, ok := segmentCfg["portal_enabled"].(bool); ok {
 			r.PortalEnabled = v
@@ -342,8 +354,10 @@ func flattenGlobalProtectSegmentOptionsInstance(in map[string]*alkira.GlobalProt
 // 	return segmentOptions, nil
 // }
 
-// expand "instance" block from config to generate request payload
-func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanInstance, error) {
+// expand "instance" block from config to generate request payload.
+// globalProtectOptions holds each instance's resolved
+// global_protect_segment_options, indexed like in.
+func expandPanInstances(in []interface{}, globalProtectOptions []map[string]*alkira.GlobalProtectSegmentNameInstance, m interface{}) ([]alkira.ServicePanInstance, error) {
 	client := m.(*alkira.AlkiraClient)
 
 	if len(in) == 0 {
@@ -407,13 +421,8 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 				r.CredentialId = v
 			}
 		}
-		if v, ok := instanceCfg["global_protect_segment_options"].(*schema.Set); ok {
-			options, err := expandGlobalProtectSegmentOptionsInstance(v, m)
-			if err != nil {
-				return nil, err
-			}
-
-			r.GlobalProtectSegmentOptions = options
+		if i < len(globalProtectOptions) {
+			r.GlobalProtectSegmentOptions = globalProtectOptions[i]
 		}
 		if v, ok := instanceCfg["enable_traffic"].(bool); ok {
 			r.TrafficEnabled = v
@@ -424,8 +433,52 @@ func expandPanInstances(in []interface{}, m interface{}) ([]alkira.ServicePanIns
 	return instances, nil
 }
 
+// panSegments holds the segment names a PAN request needs.
+// resolvePanSegments runs before any credential is created, so a rejected
+// segment_id leaves no orphaned credential behind.
+type panSegments struct {
+	segmentOptions        alkira.SegmentNameToZone
+	globalProtect         map[string]*alkira.GlobalProtectSegmentName
+	instanceGlobalProtect []map[string]*alkira.GlobalProtectSegmentNameInstance
+}
+
+// resolvePanSegments looks up every segment the request references.
+func resolvePanSegments(d *schema.ResourceData, m interface{}) (*panSegments, error) {
+
+	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	globalProtect, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	in := d.Get("instance").([]interface{})
+	instanceGlobalProtect := make([]map[string]*alkira.GlobalProtectSegmentNameInstance, len(in))
+
+	for i, instance := range in {
+		if v, ok := instance.(map[string]interface{})["global_protect_segment_options"].(*schema.Set); ok {
+			instanceGlobalProtect[i], err = expandGlobalProtectSegmentOptionsInstance(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &panSegments{
+		segmentOptions:        segmentOptions,
+		globalProtect:         globalProtect,
+		instanceGlobalProtect: instanceGlobalProtect,
+	}, nil
+}
+
 // generate request payload
-func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.ServicePan, error) {
+func generateServicePanRequest(d *schema.ResourceData, m interface{}, segments *panSegments) (*alkira.ServicePan, error) {
 
 	panoramaDeviceGroup := d.Get("panorama_device_group").(string)
 	panoramaIpAddresses := convertTypeListToStringList(d.Get("panorama_ip_addresses").([]interface{}))
@@ -434,25 +487,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	//
 	// Construct instances
 	//
-	instances, err := expandPanInstances(d.Get("instance").([]interface{}), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct segment options
-	//
-	segmentOptions, err := expandSegmentOptions(d.Get("segment_options").(*schema.Set), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Construct global protect
-	//
-	globalProtectSegmentOptions, err := expandGlobalProtectSegmentOptions(d.Get("global_protect_segment_options").(*schema.Set), m)
+	instances, err := expandPanInstances(d.Get("instance").([]interface{}), segments.instanceGlobalProtect, m)
 
 	if err != nil {
 		return nil, err
@@ -465,7 +500,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		CXP:                         d.Get("cxp").(string),
 		CredentialId:                d.Get("pan_credential_id").(string),
 		GlobalProtectEnabled:        d.Get("global_protect_enabled").(bool),
-		GlobalProtectSegmentOptions: globalProtectSegmentOptions,
+		GlobalProtectSegmentOptions: segments.globalProtect,
 		Instances:                   instances,
 		LicenseType:                 d.Get("license_type").(string),
 		SubLicenseType:              d.Get("license_sub_type").(string),
@@ -481,7 +516,7 @@ func generateServicePanRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		PanoramaTemplate:            &panoramaTemplate,
 		RegistrationCredentialId:    d.Get("pan_registration_credential_id").(string),
 		ScmEnabled:                  d.Get("scm_enabled").(bool),
-		SegmentOptions:              segmentOptions,
+		SegmentOptions:              segments.segmentOptions,
 		SegmentIds:                  convertTypeSetToIntList(d.Get("segment_ids").(*schema.Set)),
 		TunnelProtocol:              d.Get("tunnel_protocol").(string),
 		Size:                        d.Get("size").(string),

@@ -456,6 +456,13 @@ func resourceBluecatDelete(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceBluecat, error) {
+	// Segment lookups run before expandBluecatInstances, which creates
+	// credentials, so a bad segment_id orphans none.
+	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
+	if err != nil {
+		return nil, err
+	}
+
 	// Parse Instances - use GetChange so we can pass old state for hostname-based
 	// id lookup. This prevents positional list shifts from sending wrong ids to the API.
 	oldInstanceListRaw, newInstanceListRaw := d.GetChange("instance")
@@ -476,12 +483,6 @@ func generateBluecatRequest(d *schema.ResourceData, m interface{}) (*alkira.Serv
 
 	// Parse Edge Anycast
 	edgeAnycast, err := expandBluecatAnycast(d.Get("edge_anycast").(*schema.Set))
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert segment IDs to segment names
-	segmentNames, err := convertSegmentIdsToSegmentNames(d.Get("segment_ids").(*schema.Set), m)
 	if err != nil {
 		return nil, err
 	}

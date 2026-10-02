@@ -180,7 +180,10 @@ func TestAlkiraServiceCheckpointAllowListGenerateRequest(t *testing.T) {
 			r := resourceAlkiraCheckpoint()
 			d := schema.TestResourceDataRaw(t, r.Schema, raw)
 
-			service, err := generateCheckpointRequest(d, mockClient)
+			segments, err := resolveCheckpointSegments(d, mockClient)
+			require.NoError(t, err, "resolveCheckpointSegments should not return error")
+
+			service, err := generateCheckpointRequest(d, mockClient, segments)
 			require.NoError(t, err, "generateCheckpointRequest should not return error")
 			assert.ElementsMatch(t, tt.expected, service.AllowList)
 		})

@@ -223,7 +223,7 @@ Required:
 
 - `portal_fqdn_prefix` (String) Prefix for the global protect portal FQDN, this would be prepended to customer specific alkira domain For Example: if prefix is abc and tenant name is example then the FQDN would be abc.example.gpportal.alkira.com
 - `remote_user_zone_name` (String) Firewall security zone is created using the zone name for remote user sessions.
-- `segment_id` (String) The name of the segment to which the global protect options should apply
+- `segment_id` (String) The ID of the segment to which the global protect options should apply.
 - `service_group_name` (String) The name of the service group. A group with the same name will be created.
 
 

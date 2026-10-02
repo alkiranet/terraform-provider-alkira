@@ -1,27 +1,63 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// segmentIdPattern matches a segment ID. A segment_id value is handed straight
-// to getSegmentNameById, which requests GET /segments/<value>; a segment name
-// there is a 500 the client retries five times before failing, so the value is
-// rejected at plan time instead. Leading zeros are rejected too: the backend
-// accepts GET /segments/0690 and answers with id 690, which Read then writes
-// back to state against a config that still says 0690.
+// segmentIdPattern matches a segment ID. Leading zeros are excluded: the
+// backend accepts GET /segments/0690 and answers with id 690, which Read then
+// writes back to state against a config that still says 0690.
 var segmentIdPattern = regexp.MustCompile(`^[1-9][0-9]*$`)
 
-const segmentIdValidationMessage = "must be a segment ID rather than a segment name, for example alkira_segment.example.id"
+// validateSegmentId rejects a value that is not a segment ID before it reaches
+// GET /segments/<value>. The backend answers a segment name there with a 500
+// that the client retries five times with escalating backoff, so the request
+// costs minutes before surfacing a type-conversion error from Java.
+//
+// The ParseInt check bounds the magnitude: the backend parses the path
+// segment as a Java Long, and a value that overflows it draws the same 500
+// and the same retries as a name. The two checks together imply
+// validateReferenceId; it runs last so this path stays on the URI-safety
+// allow-list that function documents if segmentIdPattern ever loosens.
+func validateSegmentId(id string) error {
+	if !segmentIdPattern.MatchString(id) {
+		return fmt.Errorf("invalid segment id %q; expected a segment's numeric id rather than its name, for example alkira_segment.example.id", id)
+	}
 
-// getSegmentNamebyId get a segment name by its ID
+	if _, err := strconv.ParseInt(id, 10, 64); err != nil {
+		return fmt.Errorf("invalid segment id %q; value is too large to be a segment id", id)
+	}
+
+	return validateReferenceId(id)
+}
+
+// validateSegmentIdField is the schema.SchemaValidateFunc form of
+// validateSegmentId, so a field fails terraform plan on the same rules the
+// segment lookup applies at apply time.
+func validateSegmentIdField(i interface{}, k string) ([]string, []error) {
+	v, ok := i.(string)
+
+	if !ok {
+		return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
+	}
+
+	if err := validateSegmentId(v); err != nil {
+		return nil, []error{fmt.Errorf("%s: %w", k, err)}
+	}
+
+	return nil, nil
+}
+
+// getSegmentNameById get a segment name by its ID
 func getSegmentNameById(id string, m interface{}) (string, error) {
 
-	if err := validateReferenceId(id); err != nil {
+	if err := validateSegmentId(id); err != nil {
 		return "", err
 	}
 
@@ -35,7 +71,7 @@ func getSegmentNameById(id string, m interface{}) (string, error) {
 	return segment.Name, err
 }
 
-// getSegmentIdbyName get a segment ID by its name
+// getSegmentIdByName get a segment ID by its name
 func getSegmentIdByName(name string, m interface{}) (string, error) {
 
 	segmentApi := alkira.NewSegment(m.(*alkira.AlkiraClient))

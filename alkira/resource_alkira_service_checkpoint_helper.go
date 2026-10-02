@@ -35,7 +35,7 @@ func updateCheckpointCredential(d *schema.ResourceData, c *alkira.AlkiraClient) 
 	return nil
 }
 
-func expandCheckpointManagementServer(name string, in []interface{}, m interface{}) (*alkira.CheckpointManagementServer, error) {
+func expandCheckpointManagementServer(name string, in []interface{}, segmentName string, m interface{}) (*alkira.CheckpointManagementServer, error) {
 
 	client := m.(*alkira.AlkiraClient)
 
@@ -86,17 +86,7 @@ func expandCheckpointManagementServer(name string, in []interface{}, m interface
 		if v, ok := cfg["reachability"].(string); ok {
 			mg.Reachability = v
 		}
-		if v, ok := cfg["segment_id"].(string); ok {
-			if v != "" {
-				segment, err := getSegmentNameById(v, m)
-
-				if err != nil {
-					return nil, err
-				}
-
-				mg.Segment = segment
-			}
-		}
+		mg.Segment = segmentName
 		if v, ok := cfg["type"].(string); ok {
 			mg.Type = v
 		}
@@ -270,11 +260,50 @@ func setCheckpointInstances(d *schema.ResourceData, c []alkira.CheckpointInstanc
 	return instances
 }
 
+// checkpointSegments holds the segment names a checkpoint request needs.
+// resolveCheckpointSegments runs before any credential is created, so a
+// rejected segment_id leaves no orphaned credential behind.
+type checkpointSegments struct {
+	segment                 string
+	segmentOptions          alkira.SegmentNameToZone
+	managementServerSegment string
+}
+
+// resolveCheckpointSegments looks up every segment the request references.
+func resolveCheckpointSegments(d *schema.ResourceData, m interface{}) (*checkpointSegments, error) {
+
+	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
+
+	if err != nil {
+		return nil, err
+	}
+
+	segments := &checkpointSegments{segment: segmentName, segmentOptions: segmentOptions}
+
+	for _, option := range d.Get("management_server").([]interface{}) {
+		if v, ok := option.(map[string]interface{})["segment_id"].(string); ok && v != "" {
+			segments.managementServerSegment, err = getSegmentNameById(v, m)
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return segments, nil
+}
+
 // generateCheckpointRequest
-func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceCheckpoint, error) {
+func generateCheckpointRequest(d *schema.ResourceData, m interface{}, segments *checkpointSegments) (*alkira.ServiceCheckpoint, error) {
 
 	// Management Server block
-	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").([]interface{}), m)
+	managementServer, err := expandCheckpointManagementServer(d.Get("name").(string), d.Get("management_server").([]interface{}), segments.managementServerSegment, m)
 
 	if err != nil {
 		return nil, err
@@ -284,24 +313,6 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 	// Instances block
 	//
 	instances, err := expandCheckpointInstances(d.Get("instance").([]interface{}), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Segment
-	//
-	segmentName, err := getSegmentNameById(d.Get("segment_id").(string), m)
-
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Segment Options
-	//
-	segmentOptions, err := expandCheckpointSegmentOptions(segmentName, d.Get("segment_options").(*schema.Set), m)
 
 	if err != nil {
 		return nil, err
@@ -322,8 +333,8 @@ func generateCheckpointRequest(d *schema.ResourceData, m interface{}) (*alkira.S
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		Name:             d.Get("name").(string),
 		PdpIps:           convertTypeListToStringList(d.Get("pdp_ips").([]interface{})),
-		Segments:         []string{segmentName},
-		SegmentOptions:   segmentOptions,
+		Segments:         []string{segments.segment},
+		SegmentOptions:   segments.segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		Version:          d.Get("version").(string),

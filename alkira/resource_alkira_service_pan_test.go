@@ -141,7 +141,7 @@ func TestAlkiraServicePanExpandPanInstances(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	result, err := expandPanInstances(instances, mockClient)
+	result, err := expandPanInstances(instances, nil, mockClient)
 	require.NoError(t, err, "expandPanInstances should not return error")
 	require.Len(t, result, 2, "Should return 2 instances")
 
@@ -570,7 +570,10 @@ func TestAlkiraServicePanAllowListGenerateRequest(t *testing.T) {
 			r := resourceAlkiraServicePan()
 			d := schema.TestResourceDataRaw(t, r.Schema, raw)
 
-			service, err := generateServicePanRequest(d, mockClient)
+			segments, err := resolvePanSegments(d, mockClient)
+			require.NoError(t, err, "resolvePanSegments should not return error")
+
+			service, err := generateServicePanRequest(d, mockClient, segments)
 			require.NoError(t, err, "generateServicePanRequest should not return error")
 			assert.ElementsMatch(t, tt.expected, service.AllowList)
 		})
