@@ -139,7 +139,9 @@ func resourcePolicyRuleListRead(ctx context.Context, d *schema.ResourceData, m i
 
 	d.Set("name", ruleList.Name)
 	d.Set("description", ruleList.Description)
-	d.Set("rules", ruleList.Rules)
+	if err := d.Set("rules", flattenPolicyRuleListRules(ruleList.Rules)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Set provision state
 	if client.Provision && provState != "" {
