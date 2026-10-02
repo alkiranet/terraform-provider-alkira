@@ -166,7 +166,9 @@ func resourceListUdrRead(ctx context.Context, d *schema.ResourceData, m interfac
 	d.Set("name", list.Name)
 	d.Set("description", list.Description)
 	d.Set("cloud_provider", list.CloudProvider)
-	d.Set("route", list.Udrs)
+	if err := d.Set("route", flattenListUdrRoutes(list.Udrs)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Set provision state
 	if client.Provision && provState != "" {
@@ -302,6 +304,19 @@ func expandListUdrRoutes(in *schema.Set) []alkira.UdrListUdrs {
 		r.NextHopValue = ""
 
 		routes[i] = r
+	}
+
+	return routes
+}
+
+// AK-75539: d.Set rejects the client structs, so Read must map them to schema keys.
+func flattenListUdrRoutes(in []alkira.UdrListUdrs) []map[string]interface{} {
+	routes := make([]map[string]interface{}, len(in))
+	for i, r := range in {
+		routes[i] = map[string]interface{}{
+			"prefix":      r.Prefix,
+			"description": r.Description,
+		}
 	}
 
 	return routes
