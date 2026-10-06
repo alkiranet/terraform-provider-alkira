@@ -108,7 +108,7 @@ func TestSegmentResourceShareDesignatedSegmentIdSchema(t *testing.T) {
 		assert.Emptyf(t, errs, "expected %q to be accepted", v)
 	}
 
-	for _, v := range []string{"ak74335-seg-a", "seg_1", "", "-1", "12ab", "0690", "007"} {
+	for _, v := range []string{"ak74335-seg-a", "seg_1", "", "-1", "12ab", "0690", "007", "99999999999999999999"} {
 		_, errs := field.ValidateFunc(v, "designated_segment_id")
 		assert.Lenf(t, errs, 1, "expected %q to be rejected with exactly one error", v)
 	}

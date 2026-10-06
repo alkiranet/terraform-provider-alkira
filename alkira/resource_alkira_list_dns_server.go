@@ -58,9 +58,10 @@ func resourceAlkiraListDnsServer() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"segment_id": {
-				Description: "The segment that is associated with the list.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The ID of the segment that is associated with the list. This is the segment's numeric ID, not its name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateSegmentIdField,
 			},
 		},
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAlkiraSegmentResource() *schema.Resource {
@@ -53,7 +52,7 @@ func resourceAlkiraSegmentResource() *schema.Resource {
 				Description:  "The ID of the segment the resource belongs to. This is the segment's numeric ID, not its name.",
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(segmentIdPattern, segmentIdValidationMessage),
+				ValidateFunc: validateSegmentIdField,
 			},
 			"implicit_group_id": {
 				Description: "The ID of automatically created implicit group.",

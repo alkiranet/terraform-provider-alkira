@@ -205,7 +205,10 @@ func TestAlkiraServiceFortinetAllowListGenerateRequest(t *testing.T) {
 			r := resourceAlkiraServiceFortinet()
 			d := schema.TestResourceDataRaw(t, r.Schema, raw)
 
-			service, err := generateFortinetRequest(d, mockClient)
+			segments, err := resolveFortinetSegments(d, mockClient)
+			require.NoError(t, err, "resolveFortinetSegments should not return error")
+
+			service, err := generateFortinetRequest(d, mockClient, segments)
 			require.NoError(t, err, "generateFortinetRequest should not return error")
 			assert.ElementsMatch(t, tt.expected, service.AllowList)
 		})

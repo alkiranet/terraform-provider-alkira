@@ -28,7 +28,7 @@ resource "alkira_list_dns_server" "test" {
 
 - `dns_server_ips` (Set of String) DNS server IPs. The IP can't be `any` and can't be an IP from the following CIDRs: `0.0.0.0/8`, `127.0.0.0/8`, `169.254.0.0/16`, `224.0.0.0/4`, `240.0.0.0/4`, `255.255.255.255/32`.
 - `name` (String) Name of the list.
-- `segment_id` (String) The segment that is associated with the list.
+- `segment_id` (String) The ID of the segment that is associated with the list. This is the segment's numeric ID, not its name.
 
 ### Optional
 

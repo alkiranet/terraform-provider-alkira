@@ -255,25 +255,19 @@ func createFortinetInstanceCredential(c *alkira.AlkiraClient, name string, licen
 	return id, nil
 }
 
-func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.ServiceFortinet, error) {
+// fortinetSegments holds the segment names a fortinet request needs.
+// resolveFortinetSegments runs before any credential is created, so a
+// rejected segment_id leaves no orphaned credential behind.
+type fortinetSegments struct {
+	managementServerSegment string
+	segments                []string
+	segmentOptions          alkira.SegmentNameToZone
+}
 
-	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
+// resolveFortinetSegments looks up every segment the request references.
+func resolveFortinetSegments(d *schema.ResourceData, m interface{}) (*fortinetSegments, error) {
 
 	mgmtSegName, err := getSegmentNameById(d.Get("management_server_segment_id").(string), m)
-	if err != nil {
-		return nil, err
-	}
-
-	managementServer := &alkira.FortinetManagmentServer{
-		IpAddress: d.Get("management_server_ip").(string),
-		Segment:   mgmtSegName,
-	}
-
-	instances, err := expandFortinetInstances(
-		d.Get("license_type").(string),
-		d.Get("instances").([]interface{}),
-		m,
-	)
 	if err != nil {
 		return nil, err
 	}
@@ -291,6 +285,31 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		return nil, err
 	}
 
+	return &fortinetSegments{
+		managementServerSegment: mgmtSegName,
+		segments:                segmentNames,
+		segmentOptions:          segmentOptions,
+	}, nil
+}
+
+func generateFortinetRequest(d *schema.ResourceData, m interface{}, segments *fortinetSegments) (*alkira.ServiceFortinet, error) {
+
+	billingTagIds := convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set))
+
+	managementServer := &alkira.FortinetManagmentServer{
+		IpAddress: d.Get("management_server_ip").(string),
+		Segment:   segments.managementServerSegment,
+	}
+
+	instances, err := expandFortinetInstances(
+		d.Get("license_type").(string),
+		d.Get("instances").([]interface{}),
+		m,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	service := &alkira.ServiceFortinet{
 		AllowList:        convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		AutoScale:        d.Get("auto_scale").(string),
@@ -304,8 +323,8 @@ func generateFortinetRequest(d *schema.ResourceData, m interface{}) (*alkira.Ser
 		MaxInstanceCount: d.Get("max_instance_count").(int),
 		MinInstanceCount: d.Get("min_instance_count").(int),
 		Name:             d.Get("name").(string),
-		Segments:         segmentNames,
-		SegmentOptions:   segmentOptions,
+		Segments:         segments.segments,
+		SegmentOptions:   segments.segmentOptions,
 		Size:             d.Get("size").(string),
 		TunnelProtocol:   d.Get("tunnel_protocol").(string),
 		Version:          d.Get("version").(string),

@@ -43,7 +43,7 @@ func expandSegmentOptions(in *schema.Set, m interface{}) (alkira.SegmentNameToZo
 		}
 
 		if v, ok := optionsCfg["segment_id"].(string); ok {
-			if err := validateReferenceId(v); err != nil {
+			if err := validateSegmentId(v); err != nil {
 				return nil, err
 			}
 

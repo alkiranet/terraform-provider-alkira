@@ -165,8 +165,8 @@ func resourceAlkiraServicePan() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_id": {
-							Description: "The name of the segment to which the " +
-								"global protect options should apply",
+							Description: "The ID of the segment to which the " +
+								"global protect options should apply.",
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -499,14 +499,19 @@ func resourceServicePanCreate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	segments, err := resolvePanSegments(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Create credentials
-	err := createCredentials(d, client)
+	err = createCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Construct request
-	request, err := generateServicePanRequest(d, m)
+	request, err := generateServicePanRequest(d, m, segments)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -640,14 +645,19 @@ func resourceServicePanUpdate(ctx context.Context, d *schema.ResourceData, m int
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewServicePan(client)
 
+	segments, err := resolvePanSegments(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// Update all credentials
-	err := updateCredentials(d, client)
+	err = updateCredentials(d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Construct request
-	request, err := generateServicePanRequest(d, m)
+	request, err := generateServicePanRequest(d, m, segments)
 
 	if err != nil {
 		return diag.FromErr(err)
