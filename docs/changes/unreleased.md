@@ -40,3 +40,11 @@ Read also dropped all but one `instances` entry. It walks the instances already 
 `peering_gateway_cxp_id` on `alkira_connector_azure_vnet` is now `Computed` as well as `Optional`. When the configuration omits it, the provider keeps the gateway ID from state and sends it on update.
 
 **Impact:** updates to a provisioned connector whose configuration omits `peering_gateway_cxp_id` no longer fail with `400 The CXP Peering Gateway of connector '<name>' cannot be updated after it is provisioned.` Configurations that set it explicitly are unaffected. Removing the attribute from a configuration retains the last known value rather than clearing it. No state migration is required.
+
+## Infoblox service — `grid_master.external` is now computed to stop spurious diffs (AK-74969)
+
+`external` inside the `grid_master` block of `alkira_service_infoblox` is now `Optional + Computed` with no default, and is deprecated. The server derives the value on every create and update: `true` when `grid_master.ip` is set, `false` otherwise. Any configured value is ignored on write. The provider no longer sends `external` in create or update requests.
+
+**Impact:** services whose `grid_master.ip` is set and whose configuration omits `external` previously showed a perpetual `external = true -> false` in-place update; they now plan clean. Configurations that still set `external` get a deprecation warning. A configured value that disagrees with the server-derived one keeps showing a diff until the line is removed.
+
+**Migration:** remove `external` from the `grid_master` block. No state migration is required.

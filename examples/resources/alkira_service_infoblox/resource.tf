@@ -34,7 +34,6 @@ resource "alkira_service_infoblox" "test" {
   }
 
   grid_master {
-    external = false
     ip       = "10.10.10.10"
     name     = "newGridName2"
     username = "admin"

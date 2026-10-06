@@ -215,9 +215,6 @@ func expandInfobloxGridMaster(in []interface{}, sharedSecretCredentialId string,
 	for _, option := range in {
 
 		cfg := option.(map[string]interface{})
-		if v, ok := cfg["external"].(bool); ok {
-			im.External = v
-		}
 		if v, ok := cfg["ip"].(string); ok {
 			im.Ip = v
 		}
