@@ -7,8 +7,6 @@ description: |-
 
 # Alkira Terraform Provider v1.7.0 Release Notes
 
-Release Date: 2026-10-05
-
 ## Overview
 
 Version 1.7.0 marks credential and key attributes across the provider as sensitive, so they are redacted in plan and apply output. It extends the management-access allow-list to five more connectors and services, and fixes several fields that produced a permanent diff when left out of a configuration.
