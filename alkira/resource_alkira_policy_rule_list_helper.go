@@ -28,3 +28,16 @@ func expandPolicyRuleListRules(in *schema.Set) []alkira.PolicyRuleListRule {
 
 	return rules
 }
+
+// AK-75539: d.Set rejects the client structs, so Read must map them to schema keys.
+func flattenPolicyRuleListRules(in []alkira.PolicyRuleListRule) []map[string]interface{} {
+	rules := make([]map[string]interface{}, len(in))
+	for i, r := range in {
+		rules[i] = map[string]interface{}{
+			"priority": r.Priority,
+			"rule_id":  r.RuleId,
+		}
+	}
+
+	return rules
+}
