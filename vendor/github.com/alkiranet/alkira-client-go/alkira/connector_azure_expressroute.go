@@ -11,7 +11,6 @@ type ConnectorAzureExpressRouteSegment struct {
 	SegmentName           string `json:"segmentName"`
 	SegmentId             int    `json:"segmentId:omitempty"`
 	CustomerAsn           int    `json:"customerAsn"`
-	LocalAsn              string `json:"localAsn,omitempty"`
 	DisableInternetExit   bool   `json:"disableInternetExit"`
 	AdvertiseOnPremRoutes bool   `json:"advertiseOnPremRoutes"`
 }
