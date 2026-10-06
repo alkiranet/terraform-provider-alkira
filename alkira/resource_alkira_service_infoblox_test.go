@@ -108,8 +108,15 @@ func TestAlkiraServiceInfoblox_resourceSchema(t *testing.T) {
 		assert.Equal(t, schema.TypeString, sizeSchema.Type, "Size should be string type")
 	}
 
-	// Basic test - just verify the resource can be created
-	assert.True(t, true, "Infoblox resource schema test completed successfully")
+	gridMaster, ok := resource.Schema["grid_master"].Elem.(*schema.Resource)
+	assert.True(t, ok, "grid_master elem should be a resource")
+	external := gridMaster.Schema["external"]
+	assert.NotNil(t, external)
+	assert.Equal(t, schema.TypeBool, external.Type)
+	assert.True(t, external.Optional, "external should be optional")
+	assert.True(t, external.Computed, "external should be computed (server-derived)")
+	assert.Nil(t, external.Default, "external must not carry a default")
+	assert.NotEmpty(t, external.Deprecated, "external should be deprecated")
 }
 
 func TestAlkiraServiceInfoblox_validateSize(t *testing.T) {
