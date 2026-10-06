@@ -29,7 +29,6 @@ type ConnectorGcpInterconnectInstance struct {
 	SegmentOptions            []ConnectorGcpInterconnectSegmentOption `json:"segmentOptions"`
 	Id                        int                                     `json:"id,omitempty"` // RESPONSE ONLY
 	CustomerAsn               int                                     `json:"customerAsn"`
-	LocalAsn                  string                                  `json:"localAsn,omitempty"`
 	Vni                       int                                     `json:"vni,omitempty"`
 }
 
