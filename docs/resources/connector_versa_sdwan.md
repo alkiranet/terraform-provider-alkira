@@ -53,6 +53,7 @@ resource "alkira_connector_versa_sdwan" "test" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the connector instances.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default value is `true`.
@@ -99,6 +100,8 @@ Optional:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import alkira_connector_versa_sdwan.example CONNECTOR_ID

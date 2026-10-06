@@ -1,11 +1,58 @@
 package alkira
 
 import (
+	"encoding/json"
+	"net/http"
 	"testing"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// TestGetSegmentNameByIdRejectsInvalidId asserts that getSegmentNameById
+// validates its id argument before calling the Segment API. This closes
+// the reachable-without-import path where a plain schema.TypeString
+// `segment_id` (present on every resource that references a segment, with
+// no Validate* of its own) was passed straight to segmentApi.GetById,
+// whose URI is built with unescaped string interpolation. A payload like
+// "../tenant/users?includeSecrets=true#" reached that call on an ordinary
+// `terraform apply` -- no import required. A rejected id must never reach
+// the API.
+func TestGetSegmentNameByIdRejectsInvalidId(t *testing.T) {
+	t.Run("malicious id is rejected before any API call", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "999", Name: "unexpected"})
+		}))
+
+		name, err := getSegmentNameById("../tenant/users?includeSecrets=true#", client)
+
+		assert.Error(t, err, "expected a malicious segment_id to be rejected")
+		assert.Empty(t, name)
+		assert.False(t, serverHit, "the segment API must not be called for a rejected id")
+	})
+
+	t.Run("valid numeric id still resolves through the API", func(t *testing.T) {
+		serverHit := false
+		client := createMockAlkiraClient(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serverHit = true
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(alkira.Segment{Id: "100", Name: "prod-segment"})
+		}))
+
+		name, err := getSegmentNameById("100", client)
+
+		require.NoError(t, err)
+		assert.Equal(t, "prod-segment", name)
+		assert.True(t, serverHit, "a valid segment_id should still reach the segment API")
+	})
+}
 
 // These tests focus on the input validation and data structure handling
 // The actual API calls would need integration tests or dependency injection for proper testing

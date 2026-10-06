@@ -161,14 +161,16 @@ func resourceAlkiraConnectorAwsDx() *schema.Resource {
 						"bgp_auth_key": {
 							Description: "The BGP MD5 authentication key for" +
 								"Direct Connect Gateway to verify peer.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 						"bgp_auth_key_alkira": {
 							Description: "The BGP MD5 authentication key for" +
 								"Alkira to authenticate CXP.",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 						"vlan_id": {
 							Description: "ID of customer facing VLAN " +

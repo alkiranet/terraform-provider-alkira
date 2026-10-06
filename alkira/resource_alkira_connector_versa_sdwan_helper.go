@@ -19,6 +19,7 @@ func generateConnectorVersaSdwanRequest(d *schema.ResourceData) (*alkira.Connect
 
 	// Construct the request payload
 	connector := &alkira.ConnectorVersaSdwan{
+		AllowList:             convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 		BillingTags:           convertTypeSetToIntList(d.Get("billing_tag_ids").(*schema.Set)),
 		Cxp:                   d.Get("cxp").(string),
 		Group:                 d.Get("group").(string),

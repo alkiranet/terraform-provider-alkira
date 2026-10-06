@@ -51,6 +51,7 @@ func resourceAlkiraCredentialAzureVnet() *schema.Resource {
 			"secret_key": {
 				Description: "Azure Secret Key.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc(
 					"AK_AZURE_SECRET_KEY",

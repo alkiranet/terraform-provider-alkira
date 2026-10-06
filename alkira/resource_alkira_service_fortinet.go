@@ -33,6 +33,17 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			StateContext: importWithReadValidation(resourceFortinetRead),
 		},
 		Schema: map[string]*schema.Schema{
+			"allow_list": {
+				Description: "Management-access allow-list of IPv4 CIDRs or " +
+					"IP addresses. When set, only these sources can reach " +
+					"the management interface of the service instances.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateIPv4CidrOrIP,
+				},
+			},
 			"auto_scale": {
 				Description: "Whether enable auto scale for Fortinet firewall. " +
 					"It could be either `ON` and `OFF`. Default value is `OFF`.",
@@ -91,6 +102,7 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 			"password": {
 				Description: "Fortinet password.",
 				Type:        schema.TypeString,
+				Sensitive:   true,
 				Optional:    true,
 			},
 			"instances": {
@@ -128,8 +140,9 @@ func resourceAlkiraServiceFortinet() *schema.Resource {
 								"and place them as literal data into your configuration. \n\n\n" +
 								"Instead of using this field you may also use `license_key_file_path`" +
 								"to simply place the path to the license key file you'd like to use. ",
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Optional:  true,
 						},
 
 						"serial_number": {
@@ -344,6 +357,7 @@ func resourceFortinetRead(ctx context.Context, d *schema.ResourceData, m interfa
 		}}
 	}
 
+	d.Set("allow_list", f.AllowList)
 	d.Set("auto_scale", f.AutoScale)
 	d.Set("billing_tag_ids", f.BillingTags)
 	d.Set("credential_id", f.CredentialId)
