@@ -1,9 +1,13 @@
 package alkira
 
 import (
+	"context"
 	"testing"
 
+	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPolicyRoutingInputValidation(t *testing.T) {
@@ -106,4 +110,65 @@ func TestPolicyRoutingDataStructures(t *testing.T) {
 			}
 		}
 	})
+}
+
+// AK-75598: the API returns neither field for INBOUND, so an imported INBOUND
+// policy has them absent from state while config gets the default `true`.
+func TestPolicyRoutingOutboundOnlyFieldsDiff(t *testing.T) {
+	outboundOnly := []string{"advertise_internet_exit", "enable_as_override"}
+
+	tests := []struct {
+		name        string
+		direction   string
+		stateValue  string // "" means absent from state, as after import
+		configValue interface{}
+		wantDiff    bool
+	}{
+		{name: "inbound import, omitted in config", direction: "INBOUND", wantDiff: false},
+		{name: "inbound import, explicit false", direction: "INBOUND", configValue: false, wantDiff: false},
+		{name: "inbound, state true, config false", direction: "INBOUND", stateValue: "true", configValue: false, wantDiff: false},
+		{name: "outbound import, omitted in config", direction: "OUTBOUND", wantDiff: true},
+		{name: "outbound, state true, config false", direction: "OUTBOUND", stateValue: "true", configValue: false, wantDiff: true},
+		{name: "outbound, state matches default", direction: "OUTBOUND", stateValue: "true", wantDiff: false},
+	}
+
+	r := resourceAlkiraPolicyRouting()
+	client := &alkira.AlkiraClient{}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			attrs := map[string]string{
+				"id":         "1",
+				"name":       "p",
+				"direction":  tt.direction,
+				"segment_id": "1",
+			}
+			cfg := map[string]interface{}{
+				"name":               "p",
+				"direction":          tt.direction,
+				"segment_id":         "1",
+				"included_group_ids": []interface{}{1},
+			}
+			for _, f := range outboundOnly {
+				if tt.stateValue != "" {
+					attrs[f] = tt.stateValue
+				}
+				if tt.configValue != nil {
+					cfg[f] = tt.configValue
+				}
+			}
+
+			state := &terraform.InstanceState{ID: "1", Attributes: attrs}
+			diff, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(cfg), client)
+			require.NoError(t, err)
+
+			for _, f := range outboundOnly {
+				changed := false
+				if diff != nil {
+					_, changed = diff.Attributes[f]
+				}
+				assert.Equal(t, tt.wantDiff, changed, "diff on %s", f)
+			}
+		})
+	}
 }

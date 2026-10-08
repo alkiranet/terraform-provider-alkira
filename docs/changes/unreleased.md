@@ -2,6 +2,12 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## Routing policy — no drift on OUTBOUND-only fields for INBOUND policies (AK-75598)
+
+`advertise_internet_exit` and `enable_as_override` on `alkira_policy_routing` no longer show a diff when `direction` is `INBOUND`. The API doesn't return them for INBOUND policies, and the provider doesn't send them.
+
+**Impact:** imported INBOUND policies no longer plan `1 to change` on every run. Values set for these fields on an INBOUND policy are ignored, as before. No state migration is required.
+
 ## IPSec connectors — `routing_options` changes are now visible in plan (AK-75926)
 
 `routing_options` on `alkira_connector_ipsec` and `alkira_connector_ipsec_adv` is now a `List` (max 1) instead of a `Set`. As a set, the sensitive `bgp_auth_key` hid the whole block, so a plan that removed `local_asn` (which drops the customer's BGP session) showed only a masked replace. Now only `bgp_auth_key` is masked and changes such as `local_asn "27205" -> null` are shown. A state migration (`SchemaVersion` 0 → 1) runs automatically.
