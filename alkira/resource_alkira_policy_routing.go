@@ -113,6 +113,8 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				// AK-75598: INBOUND policies drift forever on import without this.
+				DiffSuppressFunc: suppressForInboundPolicy,
 			},
 			"advertise_on_prem_routes": {
 				Description: "Advertise routes from other on premise connectors to " +
@@ -133,6 +135,8 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				// AK-75598: INBOUND policies drift forever on import without this.
+				DiffSuppressFunc: suppressForInboundPolicy,
 			},
 			"rule": {
 				Type:     schema.TypeList,
