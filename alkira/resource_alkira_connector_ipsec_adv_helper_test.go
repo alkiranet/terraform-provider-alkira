@@ -311,7 +311,7 @@ func TestExpandConnectorAdvIPSecPolicyOptions(t *testing.T) {
 func TestExpandConnectorAdvIPSecRoutingOptions(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       *schema.Set
+		input       []interface{}
 		expected    *alkira.ConnectorAdvIPSecRoutingOptions
 		expectError bool
 		errorMsg    string
@@ -324,24 +324,19 @@ func TestExpandConnectorAdvIPSecRoutingOptions(t *testing.T) {
 		},
 		{
 			name:        "empty input",
-			input:       schema.NewSet(schema.HashString, []interface{}{}),
+			input:       []interface{}{},
 			expected:    &alkira.ConnectorAdvIPSecRoutingOptions{},
 			expectError: false,
 		},
 		{
 			name: "valid static routing options",
-			input: schema.NewSet(
-				func(i interface{}) int {
-					return schema.HashString("test")
+			input: []interface{}{
+				map[string]interface{}{
+					"type":           "STATIC",
+					"prefix_list_id": 123,
+					"availability":   "HIGH",
 				},
-				[]interface{}{
-					map[string]interface{}{
-						"type":           "STATIC",
-						"prefix_list_id": 123,
-						"availability":   "HIGH",
-					},
-				},
-			),
+			},
 			expected: &alkira.ConnectorAdvIPSecRoutingOptions{
 				StaticRouting: &alkira.ConnectorAdvIPSecStaticRouting{
 					PrefixListId: 123,
@@ -352,19 +347,14 @@ func TestExpandConnectorAdvIPSecRoutingOptions(t *testing.T) {
 		},
 		{
 			name: "valid dynamic routing options",
-			input: schema.NewSet(
-				func(i interface{}) int {
-					return schema.HashString("test")
+			input: []interface{}{
+				map[string]interface{}{
+					"type":                 "DYNAMIC",
+					"customer_gateway_asn": "65001",
+					"availability":         "HIGH",
+					"bgp_auth_key":         "bgp-secret",
 				},
-				[]interface{}{
-					map[string]interface{}{
-						"type":                 "DYNAMIC",
-						"customer_gateway_asn": "65001",
-						"availability":         "HIGH",
-						"bgp_auth_key":         "bgp-secret",
-					},
-				},
-			),
+			},
 			expected: &alkira.ConnectorAdvIPSecRoutingOptions{
 				DynamicRouting: &alkira.ConnectorAdvIPSecDynamicRouting{
 					CustomerGwAsn:    "65001",
@@ -376,34 +366,24 @@ func TestExpandConnectorAdvIPSecRoutingOptions(t *testing.T) {
 		},
 		{
 			name: "static routing without prefix_list_id - should error",
-			input: schema.NewSet(
-				func(i interface{}) int {
-					return schema.HashString("test")
+			input: []interface{}{
+				map[string]interface{}{
+					"type":         "STATIC",
+					"availability": "HIGH",
 				},
-				[]interface{}{
-					map[string]interface{}{
-						"type":         "STATIC",
-						"availability": "HIGH",
-					},
-				},
-			),
+			},
 			expected:    nil,
 			expectError: true,
 			errorMsg:    "if STATIC routing type is specified, prefix_list_id is required",
 		},
 		{
 			name: "dynamic routing without customer_gateway_asn - should error",
-			input: schema.NewSet(
-				func(i interface{}) int {
-					return schema.HashString("test")
+			input: []interface{}{
+				map[string]interface{}{
+					"type":         "DYNAMIC",
+					"availability": "HIGH",
 				},
-				[]interface{}{
-					map[string]interface{}{
-						"type":         "DYNAMIC",
-						"availability": "HIGH",
-					},
-				},
-			),
+			},
 			expected:    nil,
 			expectError: true,
 			errorMsg:    "if DYNAMIC routing type is specified, customer_gateway_asn is required",
