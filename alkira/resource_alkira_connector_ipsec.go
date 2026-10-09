@@ -279,7 +279,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			"routing_options": {
 				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or" +
 					"`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
-				Type: schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -706,7 +707,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
 	case "ROUTE_BASED":
 		{
-			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
+			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").([]interface{}))
 
 			if err != nil {
 				return nil, err

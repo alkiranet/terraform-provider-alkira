@@ -382,7 +382,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			"routing_options": {
 				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or" +
 					"`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
-				Type: schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {

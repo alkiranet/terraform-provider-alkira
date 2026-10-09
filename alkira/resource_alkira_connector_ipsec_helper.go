@@ -167,13 +167,13 @@ func expandConnectorIPSecPolicyOptions(in *schema.Set) (*alkira.ConnectorIPSecPo
 }
 
 // expandConnectorIPSecRoutingOptions expand routing_options
-func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecRoutingOptions, error) {
-	if in == nil || in.Len() == 0 {
+func expandConnectorIPSecRoutingOptions(in []interface{}) (*alkira.ConnectorIPSecRoutingOptions, error) {
+	if len(in) == 0 {
 		log.Printf("[DEBUG] Empty routing options of IPSec connector.")
 		return &alkira.ConnectorIPSecRoutingOptions{}, nil
 	}
 
-	if in.Len() > 1 {
+	if len(in) > 1 {
 		return nil, fmt.Errorf("ERROR: only one routing_options could be specified")
 	}
 
@@ -181,7 +181,7 @@ func expandConnectorIPSecRoutingOptions(in *schema.Set) (*alkira.ConnectorIPSecR
 	dynamicOption := alkira.ConnectorIPSecDynamicRouting{}
 	routingOptions := alkira.ConnectorIPSecRoutingOptions{}
 
-	for _, input := range in.List() {
+	for _, input := range in {
 		routingOptionsInput := input.(map[string]interface{})
 
 		switch routingType := routingOptionsInput["type"].(string); routingType {
