@@ -12,7 +12,8 @@ import (
 )
 
 func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
+		SchemaVersion: 1,
 		Description:   "Manage Advanced IPSec Connector. (**BETA**)",
 		CreateContext: resourceConnectorIPSecAdvCreate,
 		ReadContext:   resourceConnectorIPSecAdvRead,
@@ -435,6 +436,12 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			},
 		},
 	}
+
+	r.StateUpgraders = []schema.StateUpgrader{
+		connectorRoutingOptionsSetUpgraderV0(r),
+	}
+
+	return r
 }
 
 func resourceConnectorIPSecAdvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
