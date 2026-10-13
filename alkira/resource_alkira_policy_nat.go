@@ -166,6 +166,34 @@ func resourcePolicyNat(ctx context.Context, d *schema.ResourceData, m interface{
 	return resourcePolicyNatRead(ctx, d, m)
 }
 
+// natCategoryOrDefault maps the category returned by the API onto the value the
+// schema declares. The GET response omits `category` for a policy or rule
+// created without one, so client-go yields "". An absent category is DEFAULT
+// under the API contract, so read it back as DEFAULT here.
+func natCategoryOrDefault(c string) string {
+	if c == "" {
+		return "DEFAULT"
+	}
+	return c
+}
+
+// setNatPolicyFields writes every schema attribute the API returns. Extra
+// lookups and reshaping (segment, provision state) stay in the Read function.
+//
+// Every field the API returns must be set here. `terraform import` populates
+// state solely from Read, so a field that is only ever sent on create/update
+// lands in state as null and shows up as a spurious diff on the next plan.
+func setNatPolicyFields(d *schema.ResourceData, policy *alkira.NatPolicy) {
+	d.Set("name", policy.Name)
+	d.Set("description", policy.Description)
+	d.Set("type", policy.Type)
+	d.Set("included_group_ids", policy.IncludedGroups)
+	d.Set("excluded_group_ids", policy.ExcludedGroups)
+	d.Set("nat_rule_ids", policy.NatRuleIds)
+	d.Set("category", natCategoryOrDefault(policy.Category))
+	d.Set("allow_overlapping_translated_source_addresses", policy.AllowOverlappingTranslatedPrefixes)
+}
+
 func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	client := m.(*alkira.AlkiraClient)
@@ -181,14 +209,7 @@ func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interf
 		}}
 	}
 
-	d.Set("name", policy.Name)
-	d.Set("description", policy.Description)
-	d.Set("type", policy.Type)
-	d.Set("included_group_ids", policy.IncludedGroups)
-	d.Set("excluded_group_ids", policy.ExcludedGroups)
-	d.Set("nat_rule_ids", policy.NatRuleIds)
-	d.Set("category", policy.Category)
-	d.Set("allow_overlapping_translated_source_addresses", policy.AllowOverlappingTranslatedPrefixes)
+	setNatPolicyFields(d, policy)
 
 	// Get segment
 	segmentId, err := getSegmentIdByName(policy.Segment, m)

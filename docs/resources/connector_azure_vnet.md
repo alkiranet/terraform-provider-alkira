@@ -138,7 +138,7 @@ resource "alkira_connector_azure_vnet" "peering" {
 - `group` (String) The group of the connector.
 - `group_direct_inter_connector` (String) The direct inter connector group associated with the connector
 - `native_services` (List of String) A list of Azure native services. The value could be `Azure KMS` or `Azure RHUI`. This is only effective when `vnet_cidr` and `vnet_subnet` block is not specified.
-- `peering_gateway_cxp_id` (Number) The ID of the CXP peering gateway associated with the connector.
+- `peering_gateway_cxp_id` (Number) The ID of the CXP peering gateway associated with the connector. This field cannot be updated once the connector has been provisioned.
 - `routing_options` (String) Routing options for the entire VNET, either `ADVERTISE_DEFAULT_ROUTE` or `ADVERTISE_CUSTOM_PREFIX`. Default value is `AVERTISE_DEFAULT_ROUTE`.
 - `routing_prefix_list_ids` (List of Number) Prefix List IDs.
 - `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.

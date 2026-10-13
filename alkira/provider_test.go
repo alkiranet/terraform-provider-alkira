@@ -2,6 +2,7 @@ package alkira
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,6 +35,53 @@ func TestProvider(t *testing.T) {
 
 func TestProvider_impl(t *testing.T) {
 	var _ = Provider()
+}
+
+// TestProviderSecretInputsAreSensitive pins VULN-001 (Phase-1 subset): the
+// provider-level authentication inputs must be marked Sensitive so their values
+// are not rendered in cleartext in `terraform plan`/`apply` output or captured
+// in CI job logs. These are provider configuration inputs (not resource
+// attributes), so marking them Sensitive cannot break a downstream `output`.
+func TestProviderSecretInputsAreSensitive(t *testing.T) {
+	p := Provider()
+
+	for _, name := range []string{"password", "api_key"} {
+		t.Run(name, func(t *testing.T) {
+			s := p.Schema[name]
+			if s == nil {
+				t.Fatalf("provider schema %q not found", name)
+			}
+			if !s.Sensitive {
+				t.Fatalf("provider input %q must be marked Sensitive: true, "+
+					"otherwise the credential is printed in cleartext in plan/apply output", name)
+			}
+		})
+	}
+}
+
+// TestProviderSecretLikeInputsAreSensitive guards the whole class rather than
+// the two keys above: any future provider input whose name looks like a
+// credential has to carry Sensitive: true.
+func TestProviderSecretLikeInputsAreSensitive(t *testing.T) {
+	secretLike := []string{
+		"password", "passwd", "secret", "api_key", "apikey", "token",
+		"private_key", "preshared_key", "shared_secret", "auth_key",
+		"license_key", "credential",
+	}
+
+	for name, s := range Provider().Schema {
+		lower := strings.ToLower(name)
+
+		for _, needle := range secretLike {
+			if !strings.Contains(lower, needle) {
+				continue
+			}
+			if !s.Sensitive {
+				t.Errorf("provider input %q looks like a credential but is not marked Sensitive: true", name)
+			}
+			break
+		}
+	}
 }
 
 func TestProviderSerializationEnabledDefault(t *testing.T) {

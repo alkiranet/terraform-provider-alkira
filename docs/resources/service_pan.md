@@ -144,7 +144,7 @@ resource "alkira_service_pan" "scm_example" {
 - `management_segment_id` (Number) Management Segment ID.
 - `max_instance_count` (Number) Max number of Panorama instances for auto scale. Note: For Azure CXPs, this must equal `min_instance_count` as Azure does not support AutoScale.
 - `name` (String) Name of the PAN service.
-- `pan_password` (String) PAN Panorama password.
+- `pan_password` (String, Sensitive) PAN Panorama password.
 - `pan_username` (String) PAN Panorama username. For AWS, username should be `admin`. For AZURE, it should be `akadmin`.
 - `registration_pin_id` (String) PAN Registration PIN ID.
 - `registration_pin_value` (String) PAN Registration PIN Value.
@@ -154,6 +154,7 @@ resource "alkira_service_pan" "scm_example" {
 
 ### Optional
 
+- `allow_list` (Set of String) Management-access allow-list of IPv4 CIDRs or IP addresses. When set, only these sources can reach the management interface of the service instances.
 - `billing_tag_ids` (Set of Number) Billing tags to be associated with the resource. (see resource `alkira_billing_tag`).
 - `bundle` (String) The software image bundle that would be used forPAN instance deployment. This is applicable for licenseType`PAY_AS_YOU_GO` only. If not provided, the default`PAN_VM_300_BUNDLE_2` would be used. However `PAN_VM_300_BUNDLE_2`is legacy bundle and is not supported on AWS. It is recommendedto use `VM_SERIES_BUNDLE_1` and `VM_SERIES_BUNDLE_2` (supports Global Protect).
 - `description` (String) The description of the service.
@@ -164,7 +165,7 @@ resource "alkira_service_pan" "scm_example" {
 - `master_key_enabled` (Boolean) Enable Master Key for PAN instances or not. It's default to `false`.
 - `master_key_expiry` (String) PAN Master Key Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
 - `min_instance_count` (Number) Minimal number of Panorama instances for auto scale. Default value is `0`. Note: For Azure CXPs, this must equal `max_instance_count` as Azure does not support AutoScale.
-- `pan_license_key` (String) PAN Licensing API Key.
+- `pan_license_key` (String, Sensitive) PAN Licensing API Key.
 - `panorama_device_group` (String) Panorama device group.
 - `panorama_enabled` (Boolean) Enable Panorama or not. Default value is `false`.
 - `panorama_ip_addresses` (List of String) Panorama IP addresses.
@@ -193,7 +194,7 @@ Optional:
 
 - `auth_code` (String) PAN instance auth code. Only required when `license_type` is `BRING_YOUR_OWN`.
 - `auth_expiry` (String) PAN Auth Expiry. The date should be in format of `YYYY-MM-DD`, e.g. `2000-01-01`.
-- `auth_key` (String) PAN instance auth key (VM-series bootstrap auth key). This is only required when `panorama_enabled` is set to `true`. **IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. Auth keys generated using the Panorama web interface are NOT supported by Alkira and may cause provisioning to fail.
+- `auth_key` (String, Sensitive) PAN instance auth key (VM-series bootstrap auth key). This is only required when `panorama_enabled` is set to `true`. **IMPORTANT:** The auth key MUST be generated from the Panorama CLI only. Auth keys generated using the Panorama web interface are NOT supported by Alkira and may cause provisioning to fail.
 - `enable_traffic` (Boolean) Enable traffic on the PAN instance. Default value is `true`.
 - `global_protect_segment_options` (Block Set) These options should be set only when global protect is enabled on service. These are set per segment. It is expected that on a segment where global protect is enabled at least 1 instance should be set with portal_enabled and at least one with gateway_enabled. It can be on the same instance or a different instance under the segment. (see [below for nested schema](#nestedblock--instance--global_protect_segment_options))
 - `name` (String) The name of the PAN instance.
@@ -256,10 +257,10 @@ them in state. Eight arguments are affected:
 | Argument | Schema |
 |---|---|
 | `pan_username` | Required |
-| `pan_password` | Required |
+| `pan_password` | Required, Sensitive |
 | `registration_pin_id` | Required |
 | `registration_pin_value` | Required |
-| `pan_license_key` | Optional |
+| `pan_license_key` | Optional, Sensitive |
 | `registration_pin_expiry` | Optional |
 | `master_key` | Optional, required when `master_key_enabled` is `true` |
 | `master_key_expiry` | Optional |
