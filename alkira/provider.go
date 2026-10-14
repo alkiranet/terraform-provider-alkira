@@ -152,6 +152,7 @@ func Provider() *schema.Provider {
 			"alkira_service_bluecat":                                             resourceAlkiraBluecat(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"alkira_multi_cloud_gateway":                dataSourceAlkiraMultiCloudGateway(),
 			"alkira_billing_tag":                        dataSourceAlkiraBillingTag(),
 			"alkira_byoip_prefix":                       dataSourceAlkiraByoipPrefix(),
 			"alkira_byoip":                              dataSourceAlkiraByoip(),
