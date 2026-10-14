@@ -62,7 +62,7 @@ One group does need an edit: anyone whose HCL holds a segment name in either fie
 
 **Impact:** updates to a provisioned connector whose configuration omits `peering_gateway_cxp_id` no longer fail with `400 The CXP Peering Gateway of connector '<name>' cannot be updated after it is provisioned.` Configurations that set it to a non-zero ID are unaffected. Removing the attribute from a configuration retains the last known value rather than clearing it. No state migration is required.
 
-## Azure VNET connector — `peering_gateway_cxp_id = 0` is treated as unset, and import no longer writes it (AK-76131)
+## Azure VNET connector — `peering_gateway_cxp_id = 0` is treated as unset, and import no longer writes it
 
 A configured `peering_gateway_cxp_id = 0` on `alkira_connector_azure_vnet` now plans the same as an omitted value: the gateway ID in state is kept and sent on update. Read leaves the attribute null when the API returns no gateway, so `terraform plan -generate-config-out` no longer writes `peering_gateway_cxp_id = 0` for a connector without one.
 

@@ -228,3 +228,136 @@ func TestPeeringGatewayCxpIdImportWithoutGatewayIsNull(t *testing.T) {
 		})
 	}
 }
+
+// apply plans config against prior, applies the plan and returns the new state.
+func (p *azureVnetProvider) apply(t *testing.T, prior, config cty.Value) cty.Value {
+	planned, err := p.server.PlanResourceChange(context.Background(), &tfprotov5.PlanResourceChangeRequest{
+		TypeName:         azureVnetTypeName,
+		PriorState:       p.encode(t, prior),
+		ProposedNewState: p.encode(t, p.proposedNew(config, prior)),
+		Config:           p.encode(t, config),
+	})
+	require.NoError(t, err)
+	require.Empty(t, planned.Diagnostics)
+
+	applied, err := p.server.ApplyResourceChange(context.Background(), &tfprotov5.ApplyResourceChangeRequest{
+		TypeName:       azureVnetTypeName,
+		PriorState:     p.encode(t, prior),
+		PlannedState:   planned.PlannedState,
+		Config:         p.encode(t, config),
+		PlannedPrivate: planned.PlannedPrivate,
+	})
+	require.NoError(t, err)
+	require.Empty(t, applied.Diagnostics)
+	return p.decode(t, applied.NewState)
+}
+
+// requestRecorder answers PUT and POST with a connector id and keeps the last
+// request body. Other requests go to next.
+type requestRecorder struct {
+	body map[string]interface{}
+}
+
+func (rec *requestRecorder) handler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut && r.Method != http.MethodPost {
+			next(w, r)
+			return
+		}
+		rec.body = map[string]interface{}{}
+		json.NewDecoder(r.Body).Decode(&rec.body)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"id":1}`))
+	}
+}
+
+// An update with peering_gateway_cxp_id = 0 sends the assigned gateway.
+func TestPeeringGatewayCxpIdZeroUpdateSendsAssignedGateway(t *testing.T) {
+	assigned := 163
+	rec := &requestRecorder{}
+	p := newAzureVnetProvider(createMockAlkiraClient(t, rec.handler(azureVnetConnectorHandler(&assigned))))
+
+	config := p.config(cty.NumberIntVal(0)).AsValueMap()
+	config["description"] = cty.StringVal("updated")
+	p.apply(t, p.state(cty.NumberIntVal(163)), cty.ObjectVal(config))
+
+	require.NotNil(t, rec.body)
+	assert.EqualValues(t, 163, rec.body["cxpPeeringGatewayId"])
+}
+
+// A create with peering_gateway_cxp_id omitted or 0 leaves cxpPeeringGatewayId
+// out of the request, and the gateway the API assigns lands in state.
+func TestPeeringGatewayCxpIdCreateOmitsUnsetGateway(t *testing.T) {
+	cases := []struct {
+		name string
+		cpg  cty.Value
+	}{
+		{"omitted", cty.NullVal(cty.Number)},
+		{"zero", cty.NumberIntVal(0)},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assigned := 163
+			rec := &requestRecorder{}
+			p := newAzureVnetProvider(createMockAlkiraClient(t, rec.handler(azureVnetConnectorHandler(&assigned))))
+
+			state := p.apply(t, cty.NullVal(p.ty), p.config(c.cpg))
+
+			require.NotNil(t, rec.body)
+			assert.NotContains(t, rec.body, "cxpPeeringGatewayId")
+			assert.Equal(t, "163", cpgString(state.GetAttr(cpgAttr)))
+		})
+	}
+}
+
+// Planned peering_gateway_cxp_id for each prior state and config. A prior of 0
+// is state written while an explicit 0 still planned as 0.
+func TestPeeringGatewayCxpIdPlanMatrix(t *testing.T) {
+	p := newAzureVnetProvider(&alkira.AlkiraClient{})
+	noPrior := cty.NullVal(p.ty)
+	omitted := cty.NullVal(cty.Number)
+	id := func(v int64) cty.Value { return cty.NumberIntVal(v) }
+
+	cases := []struct {
+		name   string
+		prior  cty.Value
+		config cty.Value
+		want   string
+	}{
+		{"create, omitted", noPrior, omitted, "unknown"},
+		{"create, 0", noPrior, id(0), "unknown"},
+		{"create, 200", noPrior, id(200), "200"},
+		{"prior null, omitted", p.state(omitted), omitted, "null"},
+		{"prior null, 0", p.state(omitted), id(0), "null"},
+		{"prior null, 200", p.state(omitted), id(200), "200"},
+		{"prior 0, omitted", p.state(id(0)), omitted, "0"},
+		{"prior 0, 0", p.state(id(0)), id(0), "0"},
+		{"prior 0, 200", p.state(id(0)), id(200), "200"},
+		{"prior 163, omitted", p.state(id(163)), omitted, "163"},
+		{"prior 163, 0", p.state(id(163)), id(0), "163"},
+		{"prior 163, 163", p.state(id(163)), id(163), "163"},
+		{"prior 163, 200", p.state(id(163)), id(200), "200"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assert.Equal(t, c.want, p.planCpg(t, c.prior, p.config(c.config)))
+		})
+	}
+}
+
+// Refresh keeps peering_gateway_cxp_id in state when the API stops returning
+// cxpPeeringGatewayId.
+func TestPeeringGatewayCxpIdRefreshKeepsStateWhenApiOmitsGateway(t *testing.T) {
+	p := newAzureVnetProvider(createMockAlkiraClient(t, azureVnetConnectorHandler(nil)))
+
+	refreshed, err := p.server.ReadResource(context.Background(), &tfprotov5.ReadResourceRequest{
+		TypeName:     azureVnetTypeName,
+		CurrentState: p.encode(t, p.state(cty.NumberIntVal(163))),
+	})
+	require.NoError(t, err)
+	require.Empty(t, refreshed.Diagnostics)
+
+	assert.Equal(t, "163", cpgString(p.decode(t, refreshed.NewState).GetAttr(cpgAttr)))
+}
