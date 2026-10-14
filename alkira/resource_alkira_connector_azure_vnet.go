@@ -311,6 +311,10 @@ func resourceAlkiraConnectorAzureVnet() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				// An explicit 0 plans the same as an omitted value.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "0"
+				},
 			},
 			"description": {
 				Description: "The description of the connector.",
@@ -414,7 +418,9 @@ func resourceConnectorAzureVnetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("service_tags", connector.ServiceTags)
 	d.Set("customer_asn", connector.CustomerASN)
 	d.Set("scale_group_id", connector.ScaleGroupId)
-	d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
+	if connector.PeeringGatewayCxpId != 0 {
+		d.Set("peering_gateway_cxp_id", connector.PeeringGatewayCxpId)
+	}
 	d.Set("group_direct_inter_connector", connector.DirectInterVNETCommunicationGroup)
 	d.Set("udr_list_ids", connector.UdrListIds)
 	d.Set("description", connector.Description)
