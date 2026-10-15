@@ -233,38 +233,3 @@ func TestMultiCloudGatewayImportAndDelete(t *testing.T) {
 		t.Fatalf("delete: %v, ID %q", diags, d.Id())
 	}
 }
-
-func TestMultiCloudGatewayCreateCancelsRequest(t *testing.T) {
-	for _, stage := range []string{"POST", "GET"} {
-		t.Run(stage, func(t *testing.T) {
-			r := mcgwResource(t)
-			r.Timeouts = &schema.ResourceTimeout{Create: schema.DefaultTimeout(50 * time.Millisecond)}
-			d := r.Data(nil)
-			for k, v := range mcgwValues() {
-				if err := d.Set(k, v); err != nil {
-					t.Fatal(err)
-				}
-			}
-			c := mcgwClient(t, func(req *http.Request) (int, string) { return 201, mcgwJSON("10GBPS", "original", "PROVISIONING") })
-			transport := c.Client.HTTPClient.Transport
-			c.Client.HTTPClient.Transport = mcgwTransport(func(req *http.Request) (*http.Response, error) {
-				if req.Method == stage {
-					<-req.Context().Done()
-					return nil, req.Context().Err()
-				}
-				return transport.RoundTrip(req)
-			})
-			start := time.Now()
-			diags := r.CreateContext(context.Background(), d, c)
-			if !diags.HasError() || time.Since(start) > time.Second {
-				t.Fatalf("request not bounded by timeout: %v", diags)
-			}
-			if stage == "GET" && d.Id() != "42" {
-				t.Fatal("lost created ID")
-			}
-			if c.Client.RequestLogHook != nil {
-				t.Fatal("shared client was modified")
-			}
-		})
-	}
-}

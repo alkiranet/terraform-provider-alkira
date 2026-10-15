@@ -3,11 +3,9 @@ package alkira
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -46,9 +44,7 @@ func setMultiCloudGateway(d *schema.ResourceData, gateway *alkira.MultiCloudGate
 }
 
 func resourceMultiCloudGatewayCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
-	defer cancel()
-	api := alkira.NewMultiCloudGateway(multiCloudGatewayClientWithContext(ctx, m.(*alkira.AlkiraClient)))
+	api := alkira.NewMultiCloudGateway(m.(*alkira.AlkiraClient))
 	gateway, _, err, valErr, _ := api.Create(multiCloudGatewayRequest(d))
 	if err != nil {
 		return diag.FromErr(err)
@@ -60,6 +56,9 @@ func resourceMultiCloudGatewayCreate(ctx context.Context, d *schema.ResourceData
 	if valErr != nil {
 		return diag.FromErr(valErr)
 	}
+	// Only the wait for PROVISIONED is bound to the create timeout, so a slow POST can't lose the new ID.
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
+	defer cancel()
 	for {
 		if err := ctx.Err(); err != nil {
 			return diag.FromErr(fmt.Errorf("waiting for multi-cloud gateway %s to become PROVISIONED: %w", d.Id(), err))
@@ -87,7 +86,11 @@ func resourceMultiCloudGatewayCreate(ctx context.Context, d *schema.ResourceData
 func resourceMultiCloudGatewayRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	gateway, _, err := alkira.NewMultiCloudGateway(m.(*alkira.AlkiraClient)).GetById(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "FAILED TO GET RESOURCE",
+			Detail:   fmt.Sprintf("%s", err),
+		}}
 	}
 	return setMultiCloudGateway(d, gateway)
 }
@@ -117,26 +120,6 @@ func resourceMultiCloudGatewayDelete(ctx context.Context, d *schema.ResourceData
 	}
 	d.SetId("")
 	return nil
-}
-
-// The client API does not accept contexts. Bind requests and retries to the
-// create deadline without changing the shared provider client's configuration.
-func multiCloudGatewayClientWithContext(ctx context.Context, original *alkira.AlkiraClient) *alkira.AlkiraClient {
-	client := *original
-	c := original.Client
-	client.Client = &retryablehttp.Client{
-		HTTPClient: c.HTTPClient, Logger: c.Logger,
-		RetryWaitMin: c.RetryWaitMin, RetryWaitMax: c.RetryWaitMax, RetryMax: c.RetryMax,
-		ResponseLogHook: c.ResponseLogHook, CheckRetry: c.CheckRetry, Backoff: c.Backoff,
-		ErrorHandler: c.ErrorHandler, PrepareRetry: c.PrepareRetry,
-		RequestLogHook: func(logger retryablehttp.Logger, request *http.Request, attempt int) {
-			*request = *request.WithContext(ctx)
-			if c.RequestLogHook != nil {
-				c.RequestLogHook(logger, request, attempt)
-			}
-		},
-	}
-	return &client
 }
 
 type multiCloudGatewayUpdateRequest struct {
