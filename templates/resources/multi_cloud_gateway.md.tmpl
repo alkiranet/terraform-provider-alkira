@@ -1,0 +1,26 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+Changing `tier` or `description` updates the gateway in place. Changing `name`
+replaces it. Creation fails if the gateway enters `FAILED` or the create timeout
+expires. The default create timeout is 20 minutes.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_multi_cloud_gateway/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import using the Alkira gateway ID:
+
+{{ codefile "shell" "examples/resources/alkira_multi_cloud_gateway/import.sh" }}

@@ -20,11 +20,12 @@ type ConnectorVnetUdrList struct {
 // AK-74515: an Azure subnet can carry several address prefixes, and is onboarded
 // all-or-nothing, so one entry names the subnet and lists every prefix in Values.
 //
-// A request sets one or the other. A RESPONSE may carry BOTH: the server keeps
-// Value as the representative prefix for older clients (AzureVNETConnector.java,
-// ImportFromCXPOptions.Subnet). So on the read path do not treat a non-empty Value
-// as meaning "single prefix" - check Values first, or a multi-prefix subnet gets
-// flattened and written back narrowed. Both carry omitempty because the server
+// A request sets one or the other. The server stores these rows as sent and echoes
+// them back unchanged - it does not fill in Value for a row that carries Values - so
+// a response carries both only if the request did. On the read path, check Values
+// first anyway: a row written by another client may hold both, and treating a
+// non-empty Value as "single prefix" would flatten a multi-prefix subnet and write
+// it back narrowed. Both carry omitempty because the server
 // distinguishes an absent field from an empty one - a "value": "" reaches clients
 // that read the field directly and is not the same as the key being missing.
 //
@@ -102,7 +103,7 @@ type ConnectorVnetImportOptionsSubnet struct {
 	RouteImportMode string `json:"routeImportMode"`
 	PrefixListIds   []int  `json:"prefixListIds"`
 	Value           string `json:"value,omitempty"`
-	// AK-74515: see ConnectorVnetUdrList.
+	// AK-74515: see ConnectorVnetUdrListSubnet.
 	Values []string `json:"values,omitempty"`
 }
 
