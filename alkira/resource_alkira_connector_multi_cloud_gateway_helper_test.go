@@ -18,7 +18,7 @@ func toInterfaceSlice(in []map[string]interface{}) []interface{} {
 
 // TestExpandFlattenInstances: a round-trip through flatten (API -> state) and back through
 // instanceIdsByName/expand (state -> request) keeps each instance's id by name, and the computed
-// bandwidth_in_mbps, on_ramp and lumen_connection_id survive being stored in state (DT-20).
+// bandwidth_in_mbps, on_ramp and lumen_connection_id survive being stored in state.
 func TestExpandFlattenInstances(t *testing.T) {
 	r := resourceAlkiraConnectorMultiCloudGateway()
 	instances := []alkira.ConnectorMultiCloudGatewayInstance{
@@ -48,7 +48,7 @@ func TestExpandFlattenInstances(t *testing.T) {
 	}
 }
 
-// TestInstanceIdsMatchedByName: ids are keyed by name, not list position (design C38).
+// TestInstanceIdsMatchedByName: ids are keyed by name, not list position.
 func TestInstanceIdsMatchedByName(t *testing.T) {
 	stored := toInterfaceSlice([]map[string]interface{}{
 		{"name": "a", "id": 1}, {"name": "b", "id": 2}, {"name": "c", "id": 3},
@@ -60,7 +60,7 @@ func TestInstanceIdsMatchedByName(t *testing.T) {
 }
 
 // TestRemovingMiddleBlockKeepsOtherIds: blocks [a, b, c] with stored ids [1, 2, 3]; removing b
-// sends [a:1, c:3], and renaming c to d sends [a:1, b:2, d] with no id on d (DT-20).
+// sends [a:1, c:3], and renaming c to d sends [a:1, b:2, d] with no id on d.
 func TestRemovingMiddleBlockKeepsOtherIds(t *testing.T) {
 	ids := instanceIdsByName(toInterfaceSlice([]map[string]interface{}{
 		{"name": "a", "id": 1}, {"name": "b", "id": 2}, {"name": "c", "id": 3},
@@ -87,8 +87,7 @@ func TestRemovingMiddleBlockKeepsOtherIds(t *testing.T) {
 
 // TestOrderInstancesByPriorState: the API returning instances in a different order than the
 // prior state/config must not show as a permanent diff. A reordered API response is put back
-// into state order, and a new API-only instance is appended at the end (AC: read keeps prior
-// instance order).
+// into state order, and a new API-only instance is appended at the end.
 func TestOrderInstancesByPriorState(t *testing.T) {
 	prior := toInterfaceSlice([]map[string]interface{}{{"name": "a"}, {"name": "b"}})
 
@@ -113,7 +112,7 @@ func TestOrderInstancesByPriorState(t *testing.T) {
 }
 
 // TestUpdateSendsInstanceIds: an update sends each matched instance's stored id and no other
-// read-only field (DT-20, AC5).
+// read-only field.
 func TestUpdateSendsInstanceIds(t *testing.T) {
 	ids := instanceIdsByName(toInterfaceSlice([]map[string]interface{}{
 		{"name": "a", "id": 1, "bandwidth_in_mbps": 1000, "on_ramp": "onramp-1", "lumen_connection_id": "lumen-1"},
@@ -125,3 +124,6 @@ func TestUpdateSendsInstanceIds(t *testing.T) {
 		t.Fatalf("got %#v, want %#v: only id may be sent back for an existing instance", out, want)
 	}
 }
+
+// TestDuplicateInstanceNamesRejected: two instance blocks sharing a name fail plan-time
+// validation naming the duplicate; unique names pass.

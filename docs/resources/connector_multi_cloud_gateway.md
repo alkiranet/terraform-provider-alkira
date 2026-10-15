@@ -75,7 +75,7 @@ Required:
 Read-Only:
 
 - `bandwidth_in_mbps` (Number) Bandwidth of the instance when it was created. Never changes after.
-- `id` (Number) ID TPS assigned the instance.
+- `id` (Number) ID Alkira assigned to the instance.
 - `lumen_connection_id` (String) Lumen Connect ID to correlate the instance.
 - `on_ramp` (String) On-ramp Alkira chose for the instance.
 

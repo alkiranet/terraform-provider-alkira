@@ -61,7 +61,7 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateIPv4CidrOrIP,
+				ValidateFunc: validation.IsCIDRNetwork(26, 26),
 				Description:  "A free /26 of the gateway's loopback pool, used for tunnel endpoints.",
 			},
 			"billing_tag_ids": {
@@ -110,7 +110,7 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 							Required:    true,
 						},
 						"id": {
-							Description: "ID TPS assigned the instance.",
+							Description: "ID Alkira assigned to the instance.",
 							Type:        schema.TypeInt,
 							Computed:    true,
 						},

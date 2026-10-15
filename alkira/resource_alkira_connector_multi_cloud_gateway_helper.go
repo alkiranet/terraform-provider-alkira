@@ -42,7 +42,7 @@ func flattenConnectorMultiCloudGatewaySegmentOptions(options []alkira.ConnectorM
 }
 
 // instanceIdsByName maps each stored instance's name to its id, so an update can match a
-// config block to its stored instance by name instead of by list position (design C38).
+// config block to its stored instance by name instead of by list position.
 func instanceIdsByName(instances []interface{}) map[string]int {
 	ids := make(map[string]int, len(instances))
 	for _, v := range instances {
@@ -56,7 +56,7 @@ func instanceIdsByName(instances []interface{}) map[string]int {
 
 // expandConnectorMultiCloudGatewayInstances builds the request instances, carrying over the
 // stored id of any instance whose name is unchanged; a renamed or new instance gets no id, so
-// TPS treats it as new and removes the old one.
+// the backend treats it as new and removes the old one.
 func expandConnectorMultiCloudGatewayInstances(in []interface{}, ids map[string]int) []alkira.ConnectorMultiCloudGatewayInstance {
 	instances := make([]alkira.ConnectorMultiCloudGatewayInstance, len(in))
 	for i, v := range in {
@@ -83,7 +83,7 @@ func flattenConnectorMultiCloudGatewayInstances(instances []alkira.ConnectorMult
 
 // orderInstancesByPriorState reorders flattened instances to match the position each one has
 // in priorOrder (matched by name), appending any instance not found there at the end in API
-// order, so a TPS re-ordering of unchanged instances doesn't show as a permanent diff.
+// order, so an API re-ordering of unchanged instances doesn't show as a permanent diff.
 func orderInstancesByPriorState(flattened []map[string]interface{}, priorOrder []interface{}) []map[string]interface{} {
 	position := make(map[string]int, len(priorOrder))
 	for i, v := range priorOrder {
