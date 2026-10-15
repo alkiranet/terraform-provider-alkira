@@ -95,6 +95,7 @@ func Provider() *schema.Provider {
 			"alkira_connector_juniper_sdwan":                                     resourceAlkiraConnectorJuniperSdwan(),
 			"alkira_connector_gcp_vpc":                                           resourceAlkiraConnectorGcpVpc(),
 			"alkira_connector_gcp_interconnect":                                  resourceAlkiraConnectorGcpInterconnect(),
+			"alkira_connector_multi_cloud_gateway":                               resourceAlkiraConnectorMultiCloudGateway(),
 			"alkira_connector_oci_vcn":                                           resourceAlkiraConnectorOciVcn(),
 			"alkira_connector_internet_exit":                                     resourceAlkiraConnectorInternetExit(),
 			"alkira_connector_ipsec":                                             resourceAlkiraConnectorIPSec(),
