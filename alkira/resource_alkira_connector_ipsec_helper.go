@@ -173,105 +173,103 @@ func expandConnectorIPSecRoutingOptions(in []interface{}) (*alkira.ConnectorIPSe
 		return &alkira.ConnectorIPSecRoutingOptions{}, nil
 	}
 
-	if len(in) > 1 {
-		return nil, fmt.Errorf("ERROR: only one routing_options could be specified")
-	}
-
 	staticOption := alkira.ConnectorIPSecStaticRouting{}
 	dynamicOption := alkira.ConnectorIPSecDynamicRouting{}
 	routingOptions := alkira.ConnectorIPSecRoutingOptions{}
 
-	for _, input := range in {
-		routingOptionsInput := input.(map[string]interface{})
+	routingOptionsInput := in[0].(map[string]interface{})
 
-		switch routingType := routingOptionsInput["type"].(string); routingType {
-		case "STATIC":
-			{
-				v, ok := routingOptionsInput["prefix_list_id"].(int)
+	switch routingType := routingOptionsInput["type"].(string); routingType {
+	case "STATIC":
+		{
+			v, ok := routingOptionsInput["prefix_list_id"].(int)
 
-				if ok {
-					staticOption.PrefixListId = v
-				} else {
-					return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required")
-				}
-
-				avail, availOk := routingOptionsInput["availability"].(string)
-
-				if availOk {
-					staticOption.Availability = avail
-				}
-
-				routingOptions = alkira.ConnectorIPSecRoutingOptions{
-					StaticRouting: &staticOption,
-				}
+			if ok {
+				staticOption.PrefixListId = v
+			} else {
+				return nil, fmt.Errorf("ERROR: if STATIC routing type is specified, prefix_list_id is required")
 			}
-		case "DYNAMIC":
-			{
-				avail, availOk := routingOptionsInput["availability"].(string)
 
-				if availOk {
-					dynamicOption.Availability = avail
-				}
+			avail, availOk := routingOptionsInput["availability"].(string)
 
-				v, ok := routingOptionsInput["customer_gateway_asn"].(string)
-
-				if ok {
-					dynamicOption.CustomerGwAsn = v
-				} else {
-					return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required")
-				}
-
-				bgp, ok := routingOptionsInput["bgp_auth_key"].(string)
-
-				if ok {
-					dynamicOption.BgpAuthKeyAlkira = bgp
-				}
-
-				if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
-					dynamicOption.LocalAsn = localAsn
-				}
-
-				routingOptions = alkira.ConnectorIPSecRoutingOptions{
-					DynamicRouting: &dynamicOption,
-				}
+			if availOk {
+				staticOption.Availability = avail
 			}
-		case "BOTH":
-			{
-				id, idOk := routingOptionsInput["prefix_list_id"].(int)
 
-				if idOk {
-					staticOption.PrefixListId = id
-				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required")
-				}
-
-				avail, availOk := routingOptionsInput["availability"].(string)
-
-				if availOk {
-					staticOption.Availability = avail
-					dynamicOption.Availability = avail
-				}
-
-				asn, asnOk := routingOptionsInput["customer_gateway_asn"].(string)
-
-				if asnOk {
-					dynamicOption.CustomerGwAsn = asn
-				} else {
-					return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required")
-				}
-
-				if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
-					dynamicOption.LocalAsn = localAsn
-				}
-
-				routingOptions = alkira.ConnectorIPSecRoutingOptions{
-					StaticRouting:  &staticOption,
-					DynamicRouting: &dynamicOption,
-				}
+			routingOptions = alkira.ConnectorIPSecRoutingOptions{
+				StaticRouting: &staticOption,
 			}
-		default:
-			return nil, fmt.Errorf("ERROR: invalid routing type")
 		}
+	case "DYNAMIC":
+		{
+			avail, availOk := routingOptionsInput["availability"].(string)
+
+			if availOk {
+				dynamicOption.Availability = avail
+			}
+
+			v, ok := routingOptionsInput["customer_gateway_asn"].(string)
+
+			if ok {
+				dynamicOption.CustomerGwAsn = v
+			} else {
+				return nil, fmt.Errorf("ERROR: if DYNAMIC routing type is specified, customer_gateway_asn is required")
+			}
+
+			bgp, ok := routingOptionsInput["bgp_auth_key"].(string)
+
+			if ok {
+				dynamicOption.BgpAuthKeyAlkira = bgp
+			}
+
+			if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
+				dynamicOption.LocalAsn = localAsn
+			}
+
+			routingOptions = alkira.ConnectorIPSecRoutingOptions{
+				DynamicRouting: &dynamicOption,
+			}
+		}
+	case "BOTH":
+		{
+			id, idOk := routingOptionsInput["prefix_list_id"].(int)
+
+			if idOk {
+				staticOption.PrefixListId = id
+			} else {
+				return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, prefix_list_id is required")
+			}
+
+			avail, availOk := routingOptionsInput["availability"].(string)
+
+			if availOk {
+				staticOption.Availability = avail
+				dynamicOption.Availability = avail
+			}
+
+			asn, asnOk := routingOptionsInput["customer_gateway_asn"].(string)
+
+			if asnOk {
+				dynamicOption.CustomerGwAsn = asn
+			} else {
+				return nil, fmt.Errorf("ERROR: if BOTH routing type is specified, customer_gateway_asn is required")
+			}
+
+			if bgp, ok := routingOptionsInput["bgp_auth_key"].(string); ok {
+				dynamicOption.BgpAuthKeyAlkira = bgp
+			}
+
+			if localAsn, ok := routingOptionsInput["local_asn"].(string); ok {
+				dynamicOption.LocalAsn = localAsn
+			}
+
+			routingOptions = alkira.ConnectorIPSecRoutingOptions{
+				StaticRouting:  &staticOption,
+				DynamicRouting: &dynamicOption,
+			}
+		}
+	default:
+		return nil, fmt.Errorf("ERROR: invalid routing type")
 	}
 
 	return &routingOptions, nil

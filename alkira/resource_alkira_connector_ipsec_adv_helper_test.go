@@ -365,6 +365,30 @@ func TestExpandConnectorAdvIPSecRoutingOptions(t *testing.T) {
 			expectError: false,
 		},
 		{
+			name: "valid both routing options keeps bgp_auth_key",
+			input: []interface{}{
+				map[string]interface{}{
+					"type":                 "BOTH",
+					"prefix_list_id":       123,
+					"customer_gateway_asn": "65001",
+					"availability":         "IKE_STATUS",
+					"bgp_auth_key":         "bgp-secret",
+				},
+			},
+			expected: &alkira.ConnectorAdvIPSecRoutingOptions{
+				StaticRouting: &alkira.ConnectorAdvIPSecStaticRouting{
+					PrefixListId: 123,
+					Availability: "IKE_STATUS",
+				},
+				DynamicRouting: &alkira.ConnectorAdvIPSecDynamicRouting{
+					CustomerGwAsn:    "65001",
+					Availability:     "IKE_STATUS",
+					BgpAuthKeyAlkira: "bgp-secret",
+				},
+			},
+			expectError: false,
+		},
+		{
 			name: "static routing without prefix_list_id - should error",
 			input: []interface{}{
 				map[string]interface{}{
@@ -579,6 +603,79 @@ func TestAlkiraConnectorIPSecAdv_validateAvailability(t *testing.T) {
 				assert.Empty(t, errors, "Expected no errors for input %v", tt.Input)
 			}
 			assert.Empty(t, warnings, "Expected no warnings")
+		})
+	}
+}
+
+func TestSetConnectorAdvIPSecRoutingOptions(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *alkira.ConnectorAdvIPSecRoutingOptions
+		expected []interface{}
+	}{
+		{
+			name:     "nil clears routing_options",
+			input:    nil,
+			expected: []interface{}{},
+		},
+		{
+			name:     "both routing types nil clears routing_options",
+			input:    &alkira.ConnectorAdvIPSecRoutingOptions{},
+			expected: []interface{}{},
+		},
+		{
+			name: "dynamic with empty availability gets the default",
+			input: &alkira.ConnectorAdvIPSecRoutingOptions{
+				DynamicRouting: &alkira.ConnectorAdvIPSecDynamicRouting{
+					CustomerGwAsn:    "65001",
+					BgpAuthKeyAlkira: "bgp-secret",
+				},
+			},
+			expected: []interface{}{map[string]interface{}{
+				"type":                 "DYNAMIC",
+				"availability":         "IPSEC_INTERFACE_PING",
+				"customer_gateway_asn": "65001",
+				"bgp_auth_key":         "bgp-secret",
+				"local_asn":            "",
+				"prefix_list_id":       0,
+			}},
+		},
+		{
+			name: "both keeps bgp_auth_key",
+			input: &alkira.ConnectorAdvIPSecRoutingOptions{
+				StaticRouting: &alkira.ConnectorAdvIPSecStaticRouting{
+					PrefixListId: 123,
+					Availability: "IKE_STATUS",
+				},
+				DynamicRouting: &alkira.ConnectorAdvIPSecDynamicRouting{
+					CustomerGwAsn:    "65001",
+					BgpAuthKeyAlkira: "bgp-secret",
+					LocalAsn:         "27205",
+				},
+			},
+			expected: []interface{}{map[string]interface{}{
+				"type":                 "BOTH",
+				"availability":         "IKE_STATUS",
+				"prefix_list_id":       123,
+				"customer_gateway_asn": "65001",
+				"bgp_auth_key":         "bgp-secret",
+				"local_asn":            "27205",
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourceAlkiraConnectorIPSecAdv().Schema, map[string]interface{}{
+				"routing_options": []interface{}{map[string]interface{}{
+					"type":                 "DYNAMIC",
+					"customer_gateway_asn": "1",
+				}},
+			})
+
+			setConnectorAdvIPSecRoutingOptions(tt.input, d)
+
+			assert.Equal(t, tt.expected, d.Get("routing_options"))
 		})
 	}
 }

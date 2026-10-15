@@ -11,6 +11,11 @@ import (
 // shared by alkira_connector_ipsec and alkira_connector_ipsec_adv, where V1
 // changed routing_options from TypeSet to TypeList (MaxItems 1).
 //
+// routing_options is in every existing IPSec and Adv IPSec connector's state.
+// Changing its shape warrants a SchemaVersion bump so existing state goes
+// through the upgrade path, consistent with earlier list/set changes (e.g.
+// alkira_service_bluecat).
+//
 // The V0 type is derived from the current schema with routing_options switched
 // back to TypeSet, instead of keeping a hand-copied V0 schema. Both types
 // serialize to a JSON array, so the upgrade itself needs no transformation.

@@ -506,12 +506,8 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 	// Set routing_options and policy_options based on vpn_mode
 	switch connector.VpnMode {
 	case "ROUTE_BASED":
-		if connector.RoutingOptions != nil {
-			flatRoutingOpts := flattenConnectorIPSecRoutingOptions(connector.RoutingOptions)
-			if flatRoutingOpts != nil {
-				d.Set("routing_options", flatRoutingOpts)
-			}
-		}
+		// Always set, so routing options removed outside Terraform show as drift.
+		d.Set("routing_options", flattenConnectorIPSecRoutingOptions(connector.RoutingOptions))
 	case "POLICY_BASED":
 		if connector.PolicyOptions != nil {
 			flatPolicyOpts := flattenConnectorIPSecPolicyOptions(connector.PolicyOptions)

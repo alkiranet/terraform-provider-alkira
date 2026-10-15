@@ -318,3 +318,19 @@ func TestConnectorIPSecRoutingOptionsIsList(t *testing.T) {
 		})
 	}
 }
+
+func TestExpandConnectorIPSecRoutingOptionsBothKeepsBgpAuthKey(t *testing.T) {
+	result, err := expandConnectorIPSecRoutingOptions([]interface{}{
+		map[string]interface{}{
+			"type":                 "BOTH",
+			"prefix_list_id":       123,
+			"customer_gateway_asn": "65001",
+			"availability":         "IKE_STATUS",
+			"bgp_auth_key":         "bgp-secret",
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, result.DynamicRouting)
+	assert.Equal(t, "bgp-secret", result.DynamicRouting.BgpAuthKeyAlkira)
+}
