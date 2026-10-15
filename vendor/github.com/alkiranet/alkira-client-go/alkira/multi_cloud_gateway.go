@@ -10,7 +10,7 @@ import (
 type MultiCloudGateway struct {
 	Name         string      `json:"name"`
 	Tier         string      `json:"tier"`
-	Description  string      `json:"description,omitempty"`
+	Description  string      `json:"description"`
 	Id           json.Number `json:"id,omitempty"`           // RESPONSE ONLY
 	NativeId     string      `json:"nativeId,omitempty"`     // RESPONSE ONLY
 	State        string      `json:"state,omitempty"`        // RESPONSE ONLY

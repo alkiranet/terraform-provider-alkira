@@ -156,6 +156,7 @@ func TestCreateWaitsForProvisioned(t *testing.T) {
 		{"failed", []string{"FAILED"}, time.Second, true},
 		{"timeout", []string{"PROVISIONING"}, 50 * time.Millisecond, true},
 		{"get_error", []string{"ERROR"}, time.Second, true},
+		{"other_terminal_state", []string{"DELETING"}, 10 * time.Second, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := mcgwResource(t)
@@ -194,6 +195,9 @@ func TestCreateWaitsForProvisioned(t *testing.T) {
 			if tc.name == "timeout" && time.Since(start) > time.Second {
 				t.Fatal("create timeout did not bound wait")
 			}
+			if tc.name == "other_terminal_state" && (time.Since(start) > time.Second || !strings.Contains(fmt.Sprint(diags), "DELETING")) {
+				t.Fatalf("create must stop at once on a terminal state: %v", diags)
+			}
 		})
 	}
 }
@@ -231,5 +235,39 @@ func TestMultiCloudGatewayImportAndDelete(t *testing.T) {
 	})
 	if diags := r.DeleteContext(context.Background(), d, c); diags.HasError() || d.Id() != "" {
 		t.Fatalf("delete: %v, ID %q", diags, d.Id())
+	}
+}
+
+// Update waits like Create: through PROVISIONING to PROVISIONED, and fails on UPDATE_FAILED.
+func TestUpdateWaitsForProvisioned(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		states    []string
+		wantError bool
+	}{
+		{"provisioned", []string{"PROVISIONING", "PROVISIONED"}, false},
+		{"update_failed", []string{"UPDATE_FAILED"}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mcgwResource(t)
+			d := schema.TestResourceDataRaw(t, r.Schema, mcgwValues())
+			d.SetId("42")
+			gets := 0
+			c := mcgwClient(t, func(req *http.Request) (int, string) {
+				if req.Method == "PUT" {
+					return 200, mcgwJSON("50GBPS", "original", "PROVISIONING")
+				}
+				state := tc.states[min(gets, len(tc.states)-1)]
+				gets++
+				return 200, mcgwJSON("50GBPS", "original", state)
+			})
+			diags := r.UpdateContext(context.Background(), d, c)
+			if diags.HasError() != tc.wantError {
+				t.Fatalf("diagnostics: %v", diags)
+			}
+			if !tc.wantError && (gets < 2 || d.Get("state") != "PROVISIONED") {
+				t.Fatalf("returned before provisioned: gets=%d state=%v", gets, d.Get("state"))
+			}
+		})
 	}
 }

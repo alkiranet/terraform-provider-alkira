@@ -13,13 +13,13 @@ import (
 
 func resourceAlkiraMultiCloudGateway() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage a Multi-Cloud Gateway. Creation waits until the gateway is PROVISIONED.",
+		Description:   "Manage a Multi-Cloud Gateway. Create and update wait until the gateway is PROVISIONED.",
 		CreateContext: resourceMultiCloudGatewayCreate,
 		ReadContext:   resourceMultiCloudGatewayRead,
 		UpdateContext: resourceMultiCloudGatewayUpdate,
 		DeleteContext: resourceMultiCloudGatewayDelete,
 		Importer:      &schema.ResourceImporter{StateContext: importWithReadValidation(resourceMultiCloudGatewayRead)},
-		Timeouts:      &schema.ResourceTimeout{Create: schema.DefaultTimeout(20 * time.Minute)},
+		Timeouts:      &schema.ResourceTimeout{Create: schema.DefaultTimeout(20 * time.Minute), Update: schema.DefaultTimeout(20 * time.Minute)},
 		Schema: map[string]*schema.Schema{
 			"name":        {Type: schema.TypeString, Required: true, ForceNew: true, Description: "Name of the gateway. Changing the name creates a new gateway."},
 			"tier":        {Type: schema.TypeString, Required: true, ValidateFunc: validation.StringInSlice([]string{"10GBPS", "50GBPS", "UNLIMITED"}, false), Description: "Gateway bandwidth tier: `10GBPS`, `50GBPS`, or `UNLIMITED`. Can be updated in place."},
@@ -56,13 +56,14 @@ func resourceMultiCloudGatewayCreate(ctx context.Context, d *schema.ResourceData
 	if valErr != nil {
 		return diag.FromErr(valErr)
 	}
-	// Only the wait for PROVISIONED is bound to the create timeout, so a slow POST can't lose the new ID.
-	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
+	return waitForMultiCloudGateway(ctx, d, api, d.Timeout(schema.TimeoutCreate))
+}
+
+// waitForMultiCloudGateway polls while the gateway is PENDING or PROVISIONING; only the wait is bound to the timeout.
+func waitForMultiCloudGateway(ctx context.Context, d *schema.ResourceData, api *alkira.AlkiraAPI[alkira.MultiCloudGateway], timeout time.Duration) diag.Diagnostics {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	for {
-		if err := ctx.Err(); err != nil {
-			return diag.FromErr(fmt.Errorf("waiting for multi-cloud gateway %s to become PROVISIONED: %w", d.Id(), err))
-		}
 		gateway, _, err := api.GetById(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -70,8 +71,9 @@ func resourceMultiCloudGatewayCreate(ctx context.Context, d *schema.ResourceData
 		switch gateway.State {
 		case "PROVISIONED":
 			return setMultiCloudGateway(d, gateway)
-		case "FAILED":
-			return diag.Errorf("multi-cloud gateway %s entered FAILED state", d.Id())
+		case "PENDING", "PROVISIONING":
+		default:
+			return diag.Errorf("multi-cloud gateway %s entered %s state", d.Id(), gateway.State)
 		}
 		timer := time.NewTimer(5 * time.Second)
 		select {
@@ -97,17 +99,14 @@ func resourceMultiCloudGatewayRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceMultiCloudGatewayUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	api := alkira.NewMultiCloudGateway(m.(*alkira.AlkiraClient))
-	// Description must be present even when cleared; the client model omits empty descriptions.
-	request := &multiCloudGatewayUpdateRequest{Name: d.Get("name").(string), Tier: d.Get("tier").(string), Description: d.Get("description").(string)}
-	updateAPI := &alkira.AlkiraAPI[multiCloudGatewayUpdateRequest]{Client: api.Client, Uri: api.Uri, Provision: api.Provision}
-	_, err, valErr, _ := updateAPI.Update(d.Id(), request)
+	_, err, valErr, _ := api.Update(d.Id(), multiCloudGatewayRequest(d))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if valErr != nil {
 		return diag.FromErr(valErr)
 	}
-	return resourceMultiCloudGatewayRead(ctx, d, m)
+	return waitForMultiCloudGateway(ctx, d, api, d.Timeout(schema.TimeoutUpdate))
 }
 
 func resourceMultiCloudGatewayDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -120,10 +119,4 @@ func resourceMultiCloudGatewayDelete(ctx context.Context, d *schema.ResourceData
 	}
 	d.SetId("")
 	return nil
-}
-
-type multiCloudGatewayUpdateRequest struct {
-	Name        string `json:"name"`
-	Tier        string `json:"tier"`
-	Description string `json:"description"`
 }
