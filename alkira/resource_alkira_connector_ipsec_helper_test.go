@@ -303,3 +303,34 @@ func TestAlkiraConnectorIPSec_validateAvailability(t *testing.T) {
 		})
 	}
 }
+
+// routing_options must stay a list: in a set, the Sensitive bgp_auth_key
+// masks the whole block in plan output, hiding changes like local_asn.
+func TestConnectorIPSecRoutingOptionsIsList(t *testing.T) {
+	for name, r := range map[string]*schema.Resource{
+		"alkira_connector_ipsec":     resourceAlkiraConnectorIPSec(),
+		"alkira_connector_ipsec_adv": resourceAlkiraConnectorIPSecAdv(),
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := r.Schema["routing_options"]
+			assert.Equal(t, schema.TypeList, s.Type)
+			assert.Equal(t, 1, s.MaxItems)
+		})
+	}
+}
+
+func TestExpandConnectorIPSecRoutingOptionsBothKeepsBgpAuthKey(t *testing.T) {
+	result, err := expandConnectorIPSecRoutingOptions([]interface{}{
+		map[string]interface{}{
+			"type":                 "BOTH",
+			"prefix_list_id":       123,
+			"customer_gateway_asn": "65001",
+			"availability":         "IKE_STATUS",
+			"bgp_auth_key":         "bgp-secret",
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, result.DynamicRouting)
+	assert.Equal(t, "bgp-secret", result.DynamicRouting.BgpAuthKeyAlkira)
+}

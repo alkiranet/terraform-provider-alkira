@@ -12,7 +12,8 @@ import (
 )
 
 func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
+		SchemaVersion: 1,
 		Description:   "Manage Advanced IPSec Connector. (**BETA**)",
 		CreateContext: resourceConnectorIPSecAdvCreate,
 		ReadContext:   resourceConnectorIPSecAdvRead,
@@ -382,7 +383,8 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			"routing_options": {
 				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or" +
 					"`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
-				Type: schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -434,6 +436,12 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			},
 		},
 	}
+
+	r.StateUpgraders = []schema.StateUpgrader{
+		connectorRoutingOptionsSetUpgraderV0(r),
+	}
+
+	return r
 }
 
 func resourceConnectorIPSecAdvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

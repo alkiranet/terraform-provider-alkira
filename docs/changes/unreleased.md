@@ -2,6 +2,22 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## IPSec connectors — `routing_options` changes are now visible in plan (AK-75926)
+
+`routing_options` on `alkira_connector_ipsec` and `alkira_connector_ipsec_adv` is now a `List` (max 1) instead of a `Set`. As a set, the sensitive `bgp_auth_key` hid the whole block, so a plan that removed `local_asn` (which drops the customer's BGP session) showed only a masked replace. Now only `bgp_auth_key` is masked and changes such as `local_asn "27205" -> null` are shown. A state migration (`SchemaVersion` 0 → 1) runs automatically.
+
+The same change exposed older bugs in these blocks, which are also fixed:
+
+- `bgp_auth_key` was ignored for `type = "BOTH"`: it was never sent to Alkira, so those connectors ran BGP without MD5 auth and showed a diff on every plan.
+- `alkira_connector_ipsec_adv` now reports a missing `availability` as `IPSEC_INTERFACE_PING`, as `alkira_connector_ipsec` already did, instead of showing a diff on every plan.
+- `alkira_connector_ipsec_adv` no longer crashes on refresh when the API returns no static or dynamic routing.
+- `alkira_connector_ipsec` now shows drift when routing options are removed outside Terraform, instead of keeping the old values in state.
+
+**Impact:**
+- The first plan after upgrading still masks `routing_options` and shows a one-time update ("this block will no longer be marked as sensitive"). Applying it makes no API change. Apply it before making routing changes; `terraform apply -refresh-only` does not clear it.
+- Two identical `routing_options` blocks, previously merged by the set, now fail with "Too many routing_options blocks". Remove the duplicate.
+- **Connectors with `type = "BOTH"` and `bgp_auth_key` set:** the next apply sends the key to Alkira for the first time and enables MD5 auth on the BGP session. If the peer is not configured with the same key, the session goes down. Confirm the peer's key before applying, or remove `bgp_auth_key` from the configuration to keep the current behaviour.
+
 ## Provider credentials (`password`, `api_key`) are now marked sensitive (AK-72007)
 
 The provider-level `password` and `api_key` configuration inputs now carry `Sensitive: true`. Previously, a value set inline in the `provider "alkira"` block was rendered in cleartext in `terraform plan` / `terraform apply` output and captured verbatim in CI job logs; it now renders as `(sensitive value)`.

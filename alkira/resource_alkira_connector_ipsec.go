@@ -12,7 +12,8 @@ import (
 )
 
 func resourceAlkiraConnectorIPSec() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
+		SchemaVersion: 1,
 		Description:   "Manage IPSec Connector.",
 		CreateContext: resourceConnectorIPSecCreate,
 		ReadContext:   resourceConnectorIPSecRead,
@@ -279,7 +280,8 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			"routing_options": {
 				Description: "Routing options, type is `STATIC`, `DYNAMIC`, or" +
 					"`BOTH` must be provided if `vpn_mode` is `ROUTE_BASED`",
-				Type: schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -390,6 +392,12 @@ func resourceAlkiraConnectorIPSec() *schema.Resource {
 			},
 		},
 	}
+
+	r.StateUpgraders = []schema.StateUpgrader{
+		connectorRoutingOptionsSetUpgraderV0(r),
+	}
+
+	return r
 }
 
 func resourceConnectorIPSecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -498,12 +506,8 @@ func resourceConnectorIPSecRead(ctx context.Context, d *schema.ResourceData, m i
 	// Set routing_options and policy_options based on vpn_mode
 	switch connector.VpnMode {
 	case "ROUTE_BASED":
-		if connector.RoutingOptions != nil {
-			flatRoutingOpts := flattenConnectorIPSecRoutingOptions(connector.RoutingOptions)
-			if flatRoutingOpts != nil {
-				d.Set("routing_options", flatRoutingOpts)
-			}
-		}
+		// Always set, so routing options removed outside Terraform show as drift.
+		d.Set("routing_options", flattenConnectorIPSecRoutingOptions(connector.RoutingOptions))
 	case "POLICY_BASED":
 		if connector.PolicyOptions != nil {
 			flatPolicyOpts := flattenConnectorIPSecPolicyOptions(connector.PolicyOptions)
@@ -706,7 +710,7 @@ func generateConnectorIPSecRequest(d *schema.ResourceData, m interface{}) (*alki
 	switch vpnMode := d.Get("vpn_mode").(string); vpnMode {
 	case "ROUTE_BASED":
 		{
-			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").(*schema.Set))
+			routingOptions, err = expandConnectorIPSecRoutingOptions(d.Get("routing_options").([]interface{}))
 
 			if err != nil {
 				return nil, err
