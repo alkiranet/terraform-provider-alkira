@@ -79,12 +79,13 @@ func TestTierAndDescriptionUpdateInPlace(t *testing.T) {
 			old := schema.TestResourceDataRaw(t, r.Schema, mcgwValues())
 			old.SetId("42")
 			values := mcgwValues()
-			if field == "tier" {
+			switch field {
+			case "tier":
 				values[field] = "50GBPS"
-			} else if field == "clear_description" {
+			case "clear_description":
 				field = "description"
 				values[field] = ""
-			} else {
+			default:
 				values[field] = "changed"
 			}
 			diff, err := r.Diff(context.Background(), old.State(), terraform.NewResourceConfigRaw(values), nil)
