@@ -42,14 +42,8 @@ func dataSourceAlkiraMultiCloudGatewayRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	for key, value := range map[string]string{
-		"native_id": gateway.NativeId,
-		"tier":      gateway.Tier,
-		"state":     gateway.State,
-	} {
-		if err := d.Set(key, value); err != nil {
-			return diag.FromErr(err)
-		}
+	if diags := setMultiCloudGatewayFields(d, gateway, "native_id", "tier", "state"); diags.HasError() {
+		return diags
 	}
 	d.SetId(gateway.Id.String())
 	return nil

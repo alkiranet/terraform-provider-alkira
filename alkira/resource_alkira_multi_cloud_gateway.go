@@ -35,8 +35,14 @@ func multiCloudGatewayRequest(d *schema.ResourceData) *alkira.MultiCloudGateway 
 }
 
 func setMultiCloudGateway(d *schema.ResourceData, gateway *alkira.MultiCloudGateway) diag.Diagnostics {
-	for key, value := range map[string]string{"name": gateway.Name, "tier": gateway.Tier, "description": gateway.Description, "native_id": gateway.NativeId, "state": gateway.State} {
-		if err := d.Set(key, value); err != nil {
+	return setMultiCloudGatewayFields(d, gateway, "name", "tier", "description", "native_id", "state")
+}
+
+// setMultiCloudGatewayFields is shared with the data source, which sets only some of the keys.
+func setMultiCloudGatewayFields(d *schema.ResourceData, gateway *alkira.MultiCloudGateway, keys ...string) diag.Diagnostics {
+	values := map[string]string{"name": gateway.Name, "tier": gateway.Tier, "description": gateway.Description, "native_id": gateway.NativeId, "state": gateway.State}
+	for _, key := range keys {
+		if err := d.Set(key, values[key]); err != nil {
 			return diag.FromErr(err)
 		}
 	}
