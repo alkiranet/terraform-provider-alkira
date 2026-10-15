@@ -144,6 +144,7 @@ func setConnectorMultiCloudGateway(d *schema.ResourceData, connector *alkira.Con
 	d.Set("billing_tag_ids", connector.BillingTags)
 	d.Set("multi_cloud_gateway_id", connector.MultiCloudGatewayId)
 	d.Set("loopback_prefix", connector.LoopbackPrefix)
+	d.Set("implicit_group_id", connector.ImplicitGroupId)
 	if err := d.Set("segment_options", segmentOptions); err != nil {
 		return diag.FromErr(err)
 	}

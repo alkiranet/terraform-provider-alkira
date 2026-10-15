@@ -51,6 +51,12 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The provision state of the connector.",
 			},
+			"implicit_group_id": {
+				Description: "The ID of the implicit group associated " +
+					"with the connector.",
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"multi_cloud_gateway_id": {
 				Type:        schema.TypeInt,
 				Required:    true,

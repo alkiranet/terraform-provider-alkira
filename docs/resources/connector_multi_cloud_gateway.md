@@ -63,6 +63,7 @@ resource "alkira_connector_multi_cloud_gateway" "example" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `implicit_group_id` (Number) The ID of the implicit group associated with the connector.
 - `provision_state` (String) The provision state of the connector.
 
 <a id="nestedblock--instance"></a>
