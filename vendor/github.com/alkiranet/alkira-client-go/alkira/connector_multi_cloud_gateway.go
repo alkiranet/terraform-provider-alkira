@@ -15,8 +15,9 @@ type ConnectorMultiCloudGateway struct {
 	Size                string                                    `json:"size"`
 	Enabled             bool                                      `json:"enabled"`
 	BillingTags         []int                                     `json:"billingTags,omitempty"`
-	Id                  json.Number                               `json:"id,omitempty"`           // RESPONSE ONLY
-	ConfigStatus        string                                    `json:"configStatus,omitempty"` // RESPONSE ONLY
+	Id                  json.Number                               `json:"id,omitempty"`              // RESPONSE ONLY
+	ConfigStatus        string                                    `json:"configStatus,omitempty"`    // RESPONSE ONLY
+	ImplicitGroupId     int                                       `json:"implicitGroupId,omitempty"` // RESPONSE ONLY
 	MultiCloudGatewayId int                                       `json:"multiCloudGatewayId"`
 	LoopbackPrefix      string                                    `json:"loopbackPrefix"`
 	SegmentOptions      []ConnectorMultiCloudGatewaySegmentOption `json:"segmentOptions"`
@@ -30,14 +31,14 @@ type ConnectorMultiCloudGatewaySegmentOption struct {
 }
 
 type ConnectorMultiCloudGatewayInstance struct {
-	Id                int    `json:"id,omitempty"` // sent back on PUT to keep an existing instance (design C38)
+	Id                int    `json:"id,omitempty"` // sent back on PUT to keep an existing instance
 	Name              string `json:"name"`
 	BandwidthInMbps   int    `json:"bandwidthInMbps,omitempty"`   // RESPONSE ONLY
 	OnRamp            string `json:"onRamp,omitempty"`            // RESPONSE ONLY
 	LumenConnectionId string `json:"lumenConnectionId,omitempty"` // RESPONSE ONLY
 }
 
-// NewConnectorMultiCloudGateway new Multi-Cloud Gateway connector, as connector_gcp_interconnect.go does
+// NewConnectorMultiCloudGateway new Multi-Cloud Gateway connector
 func NewConnectorMultiCloudGateway(ac *AlkiraClient) *AlkiraAPI[ConnectorMultiCloudGateway] {
 	uri := fmt.Sprintf("%s/tenantnetworks/%s/multi-cloud-gateway-connectors", ac.URI, ac.TenantNetworkId)
 	api := &AlkiraAPI[ConnectorMultiCloudGateway]{ac, uri, true}
