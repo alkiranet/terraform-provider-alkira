@@ -1,0 +1,25 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+On update, an `instance` block is matched to its stored instance by `name`, not by its
+position in the list; a renamed block is treated as a new instance and the old one is removed.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_connector_multi_cloud_gateway/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import using the connector ID:
+
+{{ codefile "shell" "examples/resources/alkira_connector_multi_cloud_gateway/import.sh" }}
