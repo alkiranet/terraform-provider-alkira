@@ -223,3 +223,10 @@ func setPolicyRoutingRules(in []alkira.RoutePolicyRules, d *schema.ResourceData)
 	d.Set("rule", rules)
 	return nil
 }
+
+// suppressForInboundPolicy hides diffs on OUTBOUND-only fields of an INBOUND
+// policy. The API never returns them for INBOUND, so state can't match the
+// schema default.
+func suppressForInboundPolicy(_, _, _ string, d *schema.ResourceData) bool {
+	return d.Get("direction").(string) == "INBOUND"
+}
