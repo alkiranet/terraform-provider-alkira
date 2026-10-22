@@ -271,18 +271,33 @@ func (rec *requestRecorder) handler(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// An update with peering_gateway_cxp_id = 0 sends the assigned gateway.
-func TestPeeringGatewayCxpIdZeroUpdateSendsAssignedGateway(t *testing.T) {
-	assigned := 163
-	rec := &requestRecorder{}
-	p := newAzureVnetProvider(createMockAlkiraClient(t, rec.handler(azureVnetConnectorHandler(&assigned))))
+// An update with peering_gateway_cxp_id omitted or 0 sends the assigned
+// gateway, and an explicit id sends that id.
+func TestPeeringGatewayCxpIdUpdateSendsGateway(t *testing.T) {
+	cases := []struct {
+		name string
+		cpg  cty.Value
+		want int
+	}{
+		{"zero", cty.NumberIntVal(0), 163},
+		{"omitted", cty.NullVal(cty.Number), 163},
+		{"explicit id", cty.NumberIntVal(200), 200},
+	}
 
-	config := p.config(cty.NumberIntVal(0)).AsValueMap()
-	config["description"] = cty.StringVal("updated")
-	p.apply(t, p.state(cty.NumberIntVal(163)), cty.ObjectVal(config))
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assigned := 163
+			rec := &requestRecorder{}
+			p := newAzureVnetProvider(createMockAlkiraClient(t, rec.handler(azureVnetConnectorHandler(&assigned))))
 
-	require.NotNil(t, rec.body)
-	assert.EqualValues(t, 163, rec.body["cxpPeeringGatewayId"])
+			config := p.config(c.cpg).AsValueMap()
+			config["description"] = cty.StringVal("updated")
+			p.apply(t, p.state(cty.NumberIntVal(163)), cty.ObjectVal(config))
+
+			require.NotNil(t, rec.body)
+			assert.EqualValues(t, c.want, rec.body["cxpPeeringGatewayId"])
+		})
+	}
 }
 
 // A create with peering_gateway_cxp_id omitted or 0 leaves cxpPeeringGatewayId
@@ -348,16 +363,32 @@ func TestPeeringGatewayCxpIdPlanMatrix(t *testing.T) {
 }
 
 // Refresh keeps peering_gateway_cxp_id in state when the API stops returning
-// cxpPeeringGatewayId.
-func TestPeeringGatewayCxpIdRefreshKeepsStateWhenApiOmitsGateway(t *testing.T) {
-	p := newAzureVnetProvider(createMockAlkiraClient(t, azureVnetConnectorHandler(nil)))
+// cxpPeeringGatewayId, and picks up a gateway the API assigns after state was
+// written without one.
+func TestPeeringGatewayCxpIdRefresh(t *testing.T) {
+	assigned := 163
+	cases := []struct {
+		name  string
+		prior cty.Value
+		cpg   *int
+		want  string
+	}{
+		{"api omits gateway", cty.NumberIntVal(163), nil, "163"},
+		{"api assigns gateway to null state", cty.NullVal(cty.Number), &assigned, "163"},
+	}
 
-	refreshed, err := p.server.ReadResource(context.Background(), &tfprotov5.ReadResourceRequest{
-		TypeName:     azureVnetTypeName,
-		CurrentState: p.encode(t, p.state(cty.NumberIntVal(163))),
-	})
-	require.NoError(t, err)
-	require.Empty(t, refreshed.Diagnostics)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := newAzureVnetProvider(createMockAlkiraClient(t, azureVnetConnectorHandler(c.cpg)))
 
-	assert.Equal(t, "163", cpgString(p.decode(t, refreshed.NewState).GetAttr(cpgAttr)))
+			refreshed, err := p.server.ReadResource(context.Background(), &tfprotov5.ReadResourceRequest{
+				TypeName:     azureVnetTypeName,
+				CurrentState: p.encode(t, p.state(c.prior)),
+			})
+			require.NoError(t, err)
+			require.Empty(t, refreshed.Diagnostics)
+
+			assert.Equal(t, c.want, cpgString(p.decode(t, refreshed.NewState).GetAttr(cpgAttr)))
+		})
+	}
 }
