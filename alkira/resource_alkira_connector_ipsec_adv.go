@@ -264,9 +264,11 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 											"the value must not overlap segment " +
 											"IP blocks, link-local, multicast, " +
 											"broadcast, or loopback ranges. " +
-											"When omitted, the value is " +
-											"computed by the backend from the " +
-											"reservation.",
+											"When " +
+											"`customer_end_overlay_ip_reservation_id` " +
+											"is used instead, the backend derives " +
+											"the IP from the reservation and this " +
+											"attribute is left empty in state.",
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,

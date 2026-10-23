@@ -484,6 +484,59 @@ func TestDeflateConnectorAdvIPSecTunnel(t *testing.T) {
 			},
 			hasAdvancedOption: false,
 		},
+		{
+			name: "customer end overlay reservation drops backend-derived overlay ip",
+			input: &alkira.ConnectorAdvIPSecTunnel{
+				Id:       "tunnel-3",
+				TunnelNo: 3,
+				CustomerEnd: alkira.ConnectorAdvIPSecTunnelCustomerEnd{
+					OverlayIp:              "169.254.200.1",
+					OverlayIpReservationId: "ffd99e3f-0643-4cf4-b7c0-8acde417ca07",
+				},
+			},
+			expectNil: false,
+			checkFields: map[string]interface{}{
+				"customer_end_overlay_ip":                "",
+				"customer_end_overlay_ip_reservation_id": "ffd99e3f-0643-4cf4-b7c0-8acde417ca07",
+			},
+			hasAdvancedOption: false,
+		},
+		{
+			name: "customer end overlay reservation with advanced options drops overlay ip",
+			input: &alkira.ConnectorAdvIPSecTunnel{
+				Id:       "tunnel-4",
+				TunnelNo: 4,
+				CustomerEnd: alkira.ConnectorAdvIPSecTunnelCustomerEnd{
+					OverlayIp:              "169.254.200.5",
+					OverlayIpReservationId: "0b6c2d1e-5f1a-4a39-9c1e-0c8f3f0b7a11",
+				},
+				Advanced: &alkira.ConnectorAdvIPSecAdvanced{
+					IkeVersion: "IKEv2",
+				},
+			},
+			expectNil: false,
+			checkFields: map[string]interface{}{
+				"customer_end_overlay_ip":                "",
+				"customer_end_overlay_ip_reservation_id": "0b6c2d1e-5f1a-4a39-9c1e-0c8f3f0b7a11",
+			},
+			hasAdvancedOption: true,
+		},
+		{
+			name: "customer end overlay ip override is kept",
+			input: &alkira.ConnectorAdvIPSecTunnel{
+				Id:       "tunnel-5",
+				TunnelNo: 5,
+				CustomerEnd: alkira.ConnectorAdvIPSecTunnelCustomerEnd{
+					OverlayIp: "100.64.10.1",
+				},
+			},
+			expectNil: false,
+			checkFields: map[string]interface{}{
+				"customer_end_overlay_ip":                "100.64.10.1",
+				"customer_end_overlay_ip_reservation_id": "",
+			},
+			hasAdvancedOption: false,
+		},
 	}
 
 	for _, tt := range tests {
