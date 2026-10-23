@@ -1,7 +1,7 @@
 # github.com/agext/levenshtein v1.2.2
 ## explicit
 github.com/agext/levenshtein
-# github.com/alkiranet/alkira-client-go v1.59.1-0.20261015201252-399488609ec6
+# github.com/alkiranet/alkira-client-go v1.59.1-0.20261023182736-febf8fffcb9f
 ## explicit; go 1.26
 github.com/alkiranet/alkira-client-go/alkira
 # github.com/apparentlymart/go-textseg/v15 v15.0.0
