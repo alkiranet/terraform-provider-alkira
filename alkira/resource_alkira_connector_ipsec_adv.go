@@ -35,10 +35,11 @@ func resourceAlkiraConnectorIPSecAdv() *schema.Resource {
 			// reservation's customerEndIp into overlayIp), which is confusing
 			// authoring. Enforce in CustomizeDiff so terraform plan fails fast.
 			//
-			// We walk the raw config (not d.Get) because customer_end_overlay_ip
-			// is Optional+Computed: on subsequent plans for a reservation-only
-			// resource, d.Get would return the backend-populated value alongside
-			// the user-set reservation id and produce a false positive.
+			// We walk the raw config (not d.Get) because the rule is about what
+			// the user wrote. customer_end_overlay_ip is Optional+Computed, and
+			// state written by older provider versions (or a -refresh=false
+			// plan) can still hold the backend-derived IP alongside the
+			// reservation id, which d.Get would report as a false positive.
 			rawConfig := d.GetRawConfig()
 			if !rawConfig.IsKnown() || rawConfig.IsNull() {
 				return nil
