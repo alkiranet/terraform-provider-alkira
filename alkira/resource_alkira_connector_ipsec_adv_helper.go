@@ -394,6 +394,16 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 
 	var tunnel map[string]interface{}
 
+	// customer_end_overlay_ip and customer_end_overlay_ip_reservation_id are
+	// mutually exclusive in config. When the reservation id is set, the
+	// backend mirrors the reservation's customer-end IP into overlayIp, so
+	// that value is derived and must not land in state; otherwise import
+	// with -generate-config-out emits both and the config fails validation.
+	customerEndOverlayIp := tunnelConfig.CustomerEnd.OverlayIp
+	if tunnelConfig.CustomerEnd.OverlayIpReservationId != "" {
+		customerEndOverlayIp = ""
+	}
+
 	// If advanced_option is not there, don't set it
 	if tunnelConfig.Advanced != nil {
 		advancedConfig := make(map[string]interface{})
@@ -408,7 +418,7 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 			"preshared_key":                          tunnelConfig.PresharedKey,
 			"profile_id":                             tunnelConfig.ProfileId,
 			"id":                                     tunnelConfig.Id,
-			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip":                customerEndOverlayIp,
 			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
 			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
 			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
@@ -420,7 +430,7 @@ func deflateConnectorAdvIPSecTunnel(tunnelConfig *alkira.ConnectorAdvIPSecTunnel
 			"preshared_key":                          tunnelConfig.PresharedKey,
 			"profile_id":                             tunnelConfig.ProfileId,
 			"id":                                     tunnelConfig.Id,
-			"customer_end_overlay_ip":                tunnelConfig.CustomerEnd.OverlayIp,
+			"customer_end_overlay_ip":                customerEndOverlayIp,
 			"customer_end_overlay_ip_reservation_id": tunnelConfig.CustomerEnd.OverlayIpReservationId,
 			"cxp_end_overlay_ip_reservation_id":      tunnelConfig.CxpEnd.OverlayIpReservationId,
 			"cxp_end_public_ip_reservation_id":       tunnelConfig.CxpEnd.PublicIpReservationId,
