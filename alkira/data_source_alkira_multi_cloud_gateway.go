@@ -33,6 +33,11 @@ func dataSourceAlkiraMultiCloudGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"external": {
+				Description: "True if the gateway was created in Lumen Connect rather than from Alkira.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -42,7 +47,7 @@ func dataSourceAlkiraMultiCloudGatewayRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if diags := setMultiCloudGatewayFields(d, gateway, "native_id", "tier", "state"); diags.HasError() {
+	if diags := setMultiCloudGatewayFields(d, gateway, "native_id", "tier", "state", "external"); diags.HasError() {
 		return diags
 	}
 	d.SetId(gateway.Id.String())

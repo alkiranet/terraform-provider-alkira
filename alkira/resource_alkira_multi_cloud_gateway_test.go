@@ -48,6 +48,9 @@ func mcgwValues() map[string]interface{} {
 func mcgwJSON(tier, description, state string) string {
 	return fmt.Sprintf(`{"id":42,"name":"gateway","tier":%q,"description":%q,"nativeId":"native-42","state":%q}`, tier, description, state)
 }
+func mcgwJSONExternal(tier, description, state string, external bool) string {
+	return fmt.Sprintf(`{"id":42,"name":"gateway","tier":%q,"description":%q,"nativeId":"native-42","state":%q,"external":%t}`, tier, description, state, external)
+}
 func TestOnlyNameForceNew(t *testing.T) {
 	r := mcgwResource(t)
 	for name, s := range r.Schema {
@@ -143,6 +146,20 @@ func TestReadSetsTierAndDescription(t *testing.T) {
 	}
 	if diff == nil || diff.RequiresNew() || diff.Attributes["tier"] == nil || diff.Attributes["description"] == nil {
 		t.Fatalf("expected in-place drift diff: %#v", diff)
+	}
+}
+func TestReadSetsExternal(t *testing.T) {
+	r := mcgwResource(t)
+	d := schema.TestResourceDataRaw(t, r.Schema, mcgwValues())
+	d.SetId("42")
+	c := mcgwClient(t, func(req *http.Request) (int, string) {
+		return 200, mcgwJSONExternal("50GBPS", "external", "PROVISIONED", true)
+	})
+	if diags := r.ReadContext(context.Background(), d, c); diags.HasError() {
+		t.Fatal(diags)
+	}
+	if d.Get("external") != true {
+		t.Errorf("external = %v", d.Get("external"))
 	}
 }
 func TestCreateWaitsForProvisioned(t *testing.T) {

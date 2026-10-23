@@ -14,6 +14,7 @@ type MultiCloudGateway struct {
 	Id           json.Number `json:"id,omitempty"`           // RESPONSE ONLY
 	NativeId     string      `json:"nativeId,omitempty"`     // RESPONSE ONLY
 	State        string      `json:"state,omitempty"`        // RESPONSE ONLY
+	External     bool        `json:"external,omitempty"`     // RESPONSE ONLY
 	ConnectorIds []int       `json:"connectorIds,omitempty"` // RESPONSE ONLY
 }
 

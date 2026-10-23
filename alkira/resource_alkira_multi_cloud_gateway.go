@@ -13,7 +13,7 @@ import (
 
 func resourceAlkiraMultiCloudGateway() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage a Multi-Cloud Gateway. Create and update wait until the gateway is PROVISIONED.",
+		Description:   "Manage a Multi-Cloud Gateway. Create and update wait until the gateway is PROVISIONED. An external gateway (created in Lumen Connect rather than from Alkira) cannot be deleted from Alkira, so `terraform destroy` fails for an imported external gateway.",
 		CreateContext: resourceMultiCloudGatewayCreate,
 		ReadContext:   resourceMultiCloudGatewayRead,
 		UpdateContext: resourceMultiCloudGatewayUpdate,
@@ -26,6 +26,7 @@ func resourceAlkiraMultiCloudGateway() *schema.Resource {
 			"description": {Type: schema.TypeString, Optional: true, Description: "Description of the gateway. Can be updated in place."},
 			"native_id":   {Type: schema.TypeString, Computed: true, Description: "Native gateway ID assigned by Lumen."},
 			"state":       {Type: schema.TypeString, Computed: true, Description: "Provisioning state of the gateway."},
+			"external":    {Type: schema.TypeBool, Computed: true, Description: "True if the gateway was created in Lumen Connect rather than from Alkira."},
 		},
 	}
 }
@@ -35,13 +36,19 @@ func multiCloudGatewayRequest(d *schema.ResourceData) *alkira.MultiCloudGateway 
 }
 
 func setMultiCloudGateway(d *schema.ResourceData, gateway *alkira.MultiCloudGateway) diag.Diagnostics {
-	return setMultiCloudGatewayFields(d, gateway, "name", "tier", "description", "native_id", "state")
+	return setMultiCloudGatewayFields(d, gateway, "name", "tier", "description", "native_id", "state", "external")
 }
 
 // setMultiCloudGatewayFields is shared with the data source, which sets only some of the keys.
 func setMultiCloudGatewayFields(d *schema.ResourceData, gateway *alkira.MultiCloudGateway, keys ...string) diag.Diagnostics {
 	values := map[string]string{"name": gateway.Name, "tier": gateway.Tier, "description": gateway.Description, "native_id": gateway.NativeId, "state": gateway.State}
 	for _, key := range keys {
+		if key == "external" {
+			if err := d.Set(key, gateway.External); err != nil {
+				return diag.FromErr(err)
+			}
+			continue
+		}
 		if err := d.Set(key, values[key]); err != nil {
 			return diag.FromErr(err)
 		}
