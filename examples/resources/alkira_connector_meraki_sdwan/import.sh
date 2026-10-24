@@ -1,0 +1,1 @@
+terraform import alkira_connector_meraki_sdwan.example CONNECTOR_ID
