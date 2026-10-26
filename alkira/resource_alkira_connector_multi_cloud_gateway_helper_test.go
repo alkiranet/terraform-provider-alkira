@@ -17,13 +17,14 @@ func toInterfaceSlice(in []map[string]interface{}) []interface{} {
 }
 
 // TestExpandFlattenInstances: a round-trip through flatten (API -> state) and back through
-// instanceIdsByName/expand (state -> request) keeps each instance's id by name, and the computed
-// bandwidth_in_mbps, on_ramp and lumen_connection_id survive being stored in state.
+// instanceIdsByName/expand (state -> request) keeps each instance's id by name, carries
+// on_ramp_region through (it is sent on every request, not read-only), and the computed
+// bandwidth_in_mbps and lumen_connection_id survive being stored in state.
 func TestExpandFlattenInstances(t *testing.T) {
 	r := resourceAlkiraConnectorMultiCloudGateway()
 	instances := []alkira.ConnectorMultiCloudGatewayInstance{
-		{Id: 1, Name: "a", BandwidthInMbps: 1000, OnRamp: "onramp-1", LumenConnectionId: "lumen-1"},
-		{Id: 2, Name: "b", BandwidthInMbps: 2000, OnRamp: "onramp-2", LumenConnectionId: "lumen-2"},
+		{Id: 1, Name: "a", OnRampRegion: "us-sanjose-1 (San Jose)", BandwidthInMbps: 1000, LumenConnectionId: "lumen-1"},
+		{Id: 2, Name: "b", OnRampRegion: "us-ashburn-1 (Ashburn)", BandwidthInMbps: 2000, LumenConnectionId: "lumen-2"},
 	}
 	flattened := flattenConnectorMultiCloudGatewayInstances(instances)
 
@@ -35,14 +36,17 @@ func TestExpandFlattenInstances(t *testing.T) {
 
 	for i, want := range instances {
 		got := stored[i].(map[string]interface{})
-		if got["bandwidth_in_mbps"] != want.BandwidthInMbps || got["on_ramp"] != want.OnRamp || got["lumen_connection_id"] != want.LumenConnectionId {
-			t.Fatalf("computed fields lost in state round-trip: %#v", got)
+		if got["bandwidth_in_mbps"] != want.BandwidthInMbps || got["on_ramp_region"] != want.OnRampRegion || got["lumen_connection_id"] != want.LumenConnectionId {
+			t.Fatalf("fields lost in state round-trip: %#v", got)
 		}
 	}
 
 	ids := instanceIdsByName(stored)
 	out := expandConnectorMultiCloudGatewayInstances(stored, ids)
-	want := []alkira.ConnectorMultiCloudGatewayInstance{{Name: "a", Id: 1}, {Name: "b", Id: 2}}
+	want := []alkira.ConnectorMultiCloudGatewayInstance{
+		{Name: "a", Id: 1, OnRampRegion: "us-sanjose-1 (San Jose)"},
+		{Name: "b", Id: 2, OnRampRegion: "us-ashburn-1 (Ashburn)"},
+	}
 	if !reflect.DeepEqual(out, want) {
 		t.Fatalf("got %#v, want %#v", out, want)
 	}
@@ -111,18 +115,43 @@ func TestOrderInstancesByPriorState(t *testing.T) {
 	})
 }
 
-// TestUpdateSendsInstanceIds: an update sends each matched instance's stored id and no other
-// read-only field.
+// TestUpdateSendsInstanceIds: an update sends each matched instance's stored id, carries the
+// config's on_ramp_region (it is not read-only), and sends no other read-only field.
 func TestUpdateSendsInstanceIds(t *testing.T) {
 	ids := instanceIdsByName(toInterfaceSlice([]map[string]interface{}{
-		{"name": "a", "id": 1, "bandwidth_in_mbps": 1000, "on_ramp": "onramp-1", "lumen_connection_id": "lumen-1"},
+		{"name": "a", "id": 1, "bandwidth_in_mbps": 1000, "on_ramp_region": "us-sanjose-1 (San Jose)", "lumen_connection_id": "lumen-1"},
 	}))
-	in := toInterfaceSlice([]map[string]interface{}{{"name": "a"}})
+	in := toInterfaceSlice([]map[string]interface{}{{"name": "a", "on_ramp_region": "us-ashburn-1 (Ashburn)"}})
 	out := expandConnectorMultiCloudGatewayInstances(in, ids)
-	want := []alkira.ConnectorMultiCloudGatewayInstance{{Name: "a", Id: 1}}
+	want := []alkira.ConnectorMultiCloudGatewayInstance{{Name: "a", Id: 1, OnRampRegion: "us-ashburn-1 (Ashburn)"}}
 	if !reflect.DeepEqual(out, want) {
-		t.Fatalf("got %#v, want %#v: only id may be sent back for an existing instance", out, want)
+		t.Fatalf("got %#v, want %#v: only id and on_ramp_region may be sent for an existing instance", out, want)
 	}
+}
+
+// TestValidateMultiCloudGatewayOnRampRegions: two instances sharing an on_ramp_region fail
+// plan-time validation naming the duplicate; unique regions pass.
+func TestValidateMultiCloudGatewayOnRampRegions(t *testing.T) {
+	t.Run("duplicate_rejected", func(t *testing.T) {
+		instances := toInterfaceSlice([]map[string]interface{}{
+			{"name": "a", "on_ramp_region": "us-sanjose-1 (San Jose)"},
+			{"name": "b", "on_ramp_region": "us-sanjose-1 (San Jose)"},
+		})
+		err := validateMultiCloudGatewayOnRampRegions(instances)
+		if err == nil {
+			t.Fatal("want an error for a duplicate on_ramp_region, got nil")
+		}
+	})
+
+	t.Run("unique_accepted", func(t *testing.T) {
+		instances := toInterfaceSlice([]map[string]interface{}{
+			{"name": "a", "on_ramp_region": "us-sanjose-1 (San Jose)"},
+			{"name": "b", "on_ramp_region": "us-ashburn-1 (Ashburn)"},
+		})
+		if err := validateMultiCloudGatewayOnRampRegions(instances); err != nil {
+			t.Fatalf("want no error for unique on_ramp_region values, got %v", err)
+		}
+	})
 }
 
 // TestDuplicateInstanceNamesRejected: two instance blocks sharing a name fail plan-time

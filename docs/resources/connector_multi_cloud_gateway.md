@@ -31,11 +31,13 @@ resource "alkira_connector_multi_cloud_gateway" "example" {
   }
 
   instance {
-    name = "instance1"
+    name           = "instance1"
+    on_ramp_region = "us-sanjose-1 (San Jose)"
   }
 
   instance {
-    name = "instance2"
+    name           = "instance2"
+    on_ramp_region = "us-ashburn-1 (Ashburn)"
   }
 }
 ```
@@ -72,13 +74,13 @@ resource "alkira_connector_multi_cloud_gateway" "example" {
 Required:
 
 - `name` (String) Name of the instance, unique in the connector.
+- `on_ramp_region` (String) The Lumen on-ramp region of this instance's hosted connection. Can only be changed while the instance has not yet been provisioned.
 
 Read-Only:
 
 - `bandwidth_in_mbps` (Number) Bandwidth of the instance when it was created. Never changes after.
 - `id` (Number) ID Alkira assigned to the instance.
 - `lumen_connection_id` (String) Lumen Connect ID to correlate the instance.
-- `on_ramp` (String) On-ramp Alkira chose for the instance.
 
 
 <a id="nestedblock--segment_options"></a>

@@ -51,10 +51,14 @@ func mcgwJSON(tier, description, state string) string {
 func mcgwJSONExternal(tier, description, state string, external bool) string {
 	return fmt.Sprintf(`{"id":42,"name":"gateway","tier":%q,"description":%q,"nativeId":"native-42","state":%q,"external":%t}`, tier, description, state, external)
 }
-func TestOnlyNameForceNew(t *testing.T) {
+func mcgwJSONBillingAccountNumber(tier, description, state, ban string) string {
+	return fmt.Sprintf(`{"id":42,"name":"gateway","tier":%q,"description":%q,"nativeId":"native-42","state":%q,"billingAccountNumber":%q}`, tier, description, state, ban)
+}
+func TestOnlyNameAndBillingAccountNumberForceNew(t *testing.T) {
 	r := mcgwResource(t)
+	forceNew := map[string]bool{"name": true, "billing_account_number": true}
 	for name, s := range r.Schema {
-		if s.ForceNew != (name == "name") {
+		if s.ForceNew != forceNew[name] {
 			t.Errorf("%s ForceNew = %v", name, s.ForceNew)
 		}
 	}
@@ -146,6 +150,20 @@ func TestReadSetsTierAndDescription(t *testing.T) {
 	}
 	if diff == nil || diff.RequiresNew() || diff.Attributes["tier"] == nil || diff.Attributes["description"] == nil {
 		t.Fatalf("expected in-place drift diff: %#v", diff)
+	}
+}
+func TestReadSetsBillingAccountNumber(t *testing.T) {
+	r := mcgwResource(t)
+	d := schema.TestResourceDataRaw(t, r.Schema, mcgwValues())
+	d.SetId("42")
+	c := mcgwClient(t, func(req *http.Request) (int, string) {
+		return 200, mcgwJSONBillingAccountNumber("50GBPS", "original", "PROVISIONED", "1-1ABCDE-F")
+	})
+	if diags := r.ReadContext(context.Background(), d, c); diags.HasError() {
+		t.Fatal(diags)
+	}
+	if d.Get("billing_account_number") != "1-1ABCDE-F" {
+		t.Errorf("billing_account_number = %v", d.Get("billing_account_number"))
 	}
 }
 func TestReadSetsExternal(t *testing.T) {

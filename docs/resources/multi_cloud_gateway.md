@@ -17,9 +17,10 @@ expires. The default create timeout is 20 minutes.
 
 ```terraform
 resource "alkira_multi_cloud_gateway" "example" {
-  name        = "example-gateway"
-  tier        = "10GBPS"
-  description = "Multi-Cloud Gateway managed by Terraform"
+  name                   = "example-gateway"
+  tier                   = "10GBPS"
+  description            = "Multi-Cloud Gateway managed by Terraform"
+  billing_account_number = "1-1ABCDE-F"
 }
 ```
 
@@ -33,6 +34,7 @@ resource "alkira_multi_cloud_gateway" "example" {
 
 ### Optional
 
+- `billing_account_number` (String) The Lumen billing account number (BAN) this gateway bills to. When omitted, the tenant's default Lumen BAN is used.
 - `description` (String) Description of the gateway. Can be updated in place.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

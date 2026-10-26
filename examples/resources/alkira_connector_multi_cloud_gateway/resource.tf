@@ -14,10 +14,12 @@ resource "alkira_connector_multi_cloud_gateway" "example" {
   }
 
   instance {
-    name = "instance1"
+    name           = "instance1"
+    on_ramp_region = "us-sanjose-1 (San Jose)"
   }
 
   instance {
-    name = "instance2"
+    name           = "instance2"
+    on_ramp_region = "us-ashburn-1 (Ashburn)"
   }
 }

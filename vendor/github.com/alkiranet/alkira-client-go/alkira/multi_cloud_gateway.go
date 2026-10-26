@@ -8,14 +8,15 @@ import (
 )
 
 type MultiCloudGateway struct {
-	Name         string      `json:"name"`
-	Tier         string      `json:"tier"`
-	Description  string      `json:"description"`
-	Id           json.Number `json:"id,omitempty"`           // RESPONSE ONLY
-	NativeId     string      `json:"nativeId,omitempty"`     // RESPONSE ONLY
-	State        string      `json:"state,omitempty"`        // RESPONSE ONLY
-	External     bool        `json:"external,omitempty"`     // RESPONSE ONLY
-	ConnectorIds []int       `json:"connectorIds,omitempty"` // RESPONSE ONLY
+	Name                 string      `json:"name"`
+	Tier                 string      `json:"tier"`
+	Description          string      `json:"description"`
+	BillingAccountNumber string      `json:"billingAccountNumber,omitempty"`
+	Id                   json.Number `json:"id,omitempty"`           // RESPONSE ONLY
+	NativeId             string      `json:"nativeId,omitempty"`     // RESPONSE ONLY
+	State                string      `json:"state,omitempty"`        // RESPONSE ONLY
+	External             bool        `json:"external,omitempty"`     // RESPONSE ONLY
+	ConnectorIds         []int       `json:"connectorIds,omitempty"` // RESPONSE ONLY
 }
 
 // NewMultiCloudGateway new Multi-Cloud Gateway, as peering_gateway_aws_tgw.go does
