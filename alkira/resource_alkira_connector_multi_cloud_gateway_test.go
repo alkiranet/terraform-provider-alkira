@@ -44,8 +44,8 @@ func TestConnectorMultiCloudGatewayReadSetsOnRampRegion(t *testing.T) {
 	connectorJSON := `{"id":42,"name":"test","cxp":"US-WEST","size":"SMALL","enabled":true,` +
 		`"multiCloudGatewayId":1,"loopbackPrefix":"10.0.0.0/26",` +
 		`"segmentOptions":[{"segmentName":"segment1"}],` +
-		`"instances":[{"id":1,"name":"a","onRampRegion":"us-sanjose-1 (San Jose)"},` +
-		`{"id":2,"name":"b","onRampRegion":"us-ashburn-1 (Ashburn)"}]}`
+		`"instances":[{"id":1,"name":"a","onRampRegion":"us-east-1 - US East (N. Virginia) - Reston"},` +
+		`{"id":2,"name":"b","onRampRegion":"us-east-1 - US East (N. Virginia) - Ashburn 100G"}]}`
 
 	c := mcgwConnectorClient(t, func(req *http.Request) (int, string) {
 		switch {
@@ -63,7 +63,7 @@ func TestConnectorMultiCloudGatewayReadSetsOnRampRegion(t *testing.T) {
 		t.Fatal(diags)
 	}
 
-	want := map[string]string{"a": "us-sanjose-1 (San Jose)", "b": "us-ashburn-1 (Ashburn)"}
+	want := map[string]string{"a": "us-east-1 - US East (N. Virginia) - Reston", "b": "us-east-1 - US East (N. Virginia) - Ashburn 100G"}
 	instances := d.Get("instance").([]interface{})
 	if len(instances) != len(want) {
 		t.Fatalf("got %d instances, want %d", len(instances), len(want))
