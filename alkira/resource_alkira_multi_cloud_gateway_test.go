@@ -237,6 +237,37 @@ func TestCreateWaitsForProvisioned(t *testing.T) {
 	}
 }
 
+func TestCreateSendsBillingAccountNumber(t *testing.T) {
+	values := mcgwValues()
+	values["billing_account_number"] = "1-1ABCDE-F"
+	r := mcgwResource(t)
+	d := schema.TestResourceDataRaw(t, r.Schema, values)
+	posts := 0
+	c := mcgwClient(t, func(req *http.Request) (int, string) {
+		if req.Method == "POST" {
+			posts++
+			var body map[string]interface{}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				t.Fatal(err)
+			}
+			if body["billingAccountNumber"] != "1-1ABCDE-F" {
+				t.Errorf("unexpected POST payload: %v", body)
+			}
+			return 201, mcgwJSONBillingAccountNumber("10GBPS", "original", "PROVISIONED", "1-1ABCDE-F")
+		}
+		if req.Method != "GET" {
+			t.Errorf("unexpected method %s", req.Method)
+		}
+		return 200, mcgwJSONBillingAccountNumber("10GBPS", "original", "PROVISIONED", "1-1ABCDE-F")
+	})
+	if diags := r.CreateContext(context.Background(), d, c); diags.HasError() {
+		t.Fatal(diags)
+	}
+	if posts != 1 {
+		t.Fatalf("POST count = %d", posts)
+	}
+}
+
 func TestMultiCloudGatewayImportAndDelete(t *testing.T) {
 	r := mcgwResource(t)
 	for _, code := range []int{200, 404} {

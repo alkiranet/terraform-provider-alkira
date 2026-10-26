@@ -24,7 +24,7 @@ func resourceAlkiraMultiCloudGateway() *schema.Resource {
 			"name":                   {Type: schema.TypeString, Required: true, ForceNew: true, Description: "Name of the gateway. Changing the name creates a new gateway."},
 			"tier":                   {Type: schema.TypeString, Required: true, ValidateFunc: validation.StringInSlice([]string{"10GBPS", "50GBPS", "UNLIMITED"}, false), Description: "Gateway bandwidth tier: `10GBPS`, `50GBPS`, or `UNLIMITED`. Can be updated in place."},
 			"description":            {Type: schema.TypeString, Optional: true, Description: "Description of the gateway. Can be updated in place."},
-			"billing_account_number": {Type: schema.TypeString, Optional: true, Computed: true, ForceNew: true, Description: "The Lumen billing account number (BAN) this gateway bills to. When omitted, the tenant's default Lumen BAN is used."},
+			"billing_account_number": {Type: schema.TypeString, Optional: true, Computed: true, ForceNew: true, Description: "The Lumen billing account number (BAN) this gateway bills to. When omitted, the tenant's default Lumen BAN is used. Changing it replaces the gateway."},
 			"native_id":              {Type: schema.TypeString, Computed: true, Description: "Native gateway ID assigned by Lumen."},
 			"state":                  {Type: schema.TypeString, Computed: true, Description: "Provisioning state of the gateway."},
 			"external":               {Type: schema.TypeBool, Computed: true, Description: "True if the gateway was created in Lumen Connect rather than from Alkira."},

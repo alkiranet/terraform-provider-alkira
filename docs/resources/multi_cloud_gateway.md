@@ -10,8 +10,8 @@ description: |-
 Manage a Multi-Cloud Gateway. Creation waits until the gateway is PROVISIONED. An external gateway (created in Lumen Connect rather than from Alkira) cannot be deleted from Alkira, so `terraform destroy` fails for an imported external gateway.
 
 Changing `tier` or `description` updates the gateway in place. Changing `name`
-replaces it. Creation fails if the gateway enters `FAILED` or the create timeout
-expires. The default create timeout is 20 minutes.
+or `billing_account_number` replaces it. Creation fails if the gateway enters
+`FAILED` or the create timeout expires. The default create timeout is 20 minutes.
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ resource "alkira_multi_cloud_gateway" "example" {
 
 ### Optional
 
-- `billing_account_number` (String) The Lumen billing account number (BAN) this gateway bills to. When omitted, the tenant's default Lumen BAN is used.
+- `billing_account_number` (String) The Lumen billing account number (BAN) this gateway bills to. When omitted, the tenant's default Lumen BAN is used. Changing it replaces the gateway.
 - `description` (String) Description of the gateway. Can be updated in place.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
