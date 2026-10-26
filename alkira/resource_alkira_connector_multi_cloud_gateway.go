@@ -26,7 +26,7 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 				d.SetNew("provision_state", "SUCCESS")
 			}
 
-			return nil
+			return validateMultiCloudGatewayOnRampRegions(d.Get("instance").([]interface{}))
 		},
 		Importer: &schema.ResourceImporter{StateContext: importWithReadValidation(resourceConnectorMultiCloudGatewayRead)},
 		Schema: map[string]*schema.Schema{
@@ -115,6 +115,11 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"on_ramp_region": {
+							Description: "The Lumen on-ramp region of this instance's hosted connection. Can only be changed while the instance has not yet been provisioned.",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
 						"id": {
 							Description: "ID Alkira assigned to the instance.",
 							Type:        schema.TypeInt,
@@ -123,11 +128,6 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 						"bandwidth_in_mbps": {
 							Description: "Bandwidth of the instance when it was created. Never changes after.",
 							Type:        schema.TypeInt,
-							Computed:    true,
-						},
-						"on_ramp": {
-							Description: "On-ramp Alkira chose for the instance.",
-							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"lumen_connection_id": {

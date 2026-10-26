@@ -21,6 +21,7 @@ Retrieve an existing Multi-Cloud Gateway by its exact name. The lookup searches 
 
 ### Read-Only
 
+- `billing_account_number` (String) The Lumen billing account number (BAN) this gateway bills to.
 - `external` (Boolean) True if the gateway was created in Lumen Connect rather than from Alkira.
 - `id` (String) The ID of this resource.
 - `native_id` (String) Native gateway ID assigned by Lumen.

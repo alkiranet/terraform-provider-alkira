@@ -30,6 +30,53 @@ func mcgwConnectorClient(t *testing.T, handler func(*http.Request) (int, string)
 	return &client.AlkiraClient{Client: c, URI: "https://example.invalid", TenantNetworkId: "1"}
 }
 
+// TestConnectorMultiCloudGatewayReadSetsOnRampRegion: Read sets each instance's on_ramp_region
+// from the API response, matched by instance, not by list position.
+func TestConnectorMultiCloudGatewayReadSetsOnRampRegion(t *testing.T) {
+	r := Provider().ResourcesMap["alkira_connector_multi_cloud_gateway"]
+	if r == nil {
+		t.Fatal("alkira_connector_multi_cloud_gateway resource is not registered")
+	}
+
+	d := schema.TestResourceDataRaw(t, r.Schema, nil)
+	d.SetId("42")
+
+	connectorJSON := `{"id":42,"name":"test","cxp":"US-WEST","size":"SMALL","enabled":true,` +
+		`"multiCloudGatewayId":1,"loopbackPrefix":"10.0.0.0/26",` +
+		`"segmentOptions":[{"segmentName":"segment1"}],` +
+		`"instances":[{"id":1,"name":"a","onRampRegion":"us-east-1 - US East (N. Virginia) - Reston"},` +
+		`{"id":2,"name":"b","onRampRegion":"us-east-1 - US East (N. Virginia) - Ashburn 100G"}]}`
+
+	c := mcgwConnectorClient(t, func(req *http.Request) (int, string) {
+		switch {
+		case req.Method == "GET" && req.URL.Path == "/tenantnetworks/1/multi-cloud-gateway-connectors/42":
+			return 200, connectorJSON
+		case req.Method == "GET" && strings.HasPrefix(req.URL.Path, "/tenantnetworks/1/segments"):
+			return 200, `[{"id":1,"name":"segment1"}]`
+		default:
+			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.Path)
+			return 500, ""
+		}
+	})
+
+	if diags := r.ReadContext(context.Background(), d, c); diags.HasError() {
+		t.Fatal(diags)
+	}
+
+	want := map[string]string{"a": "us-east-1 - US East (N. Virginia) - Reston", "b": "us-east-1 - US East (N. Virginia) - Ashburn 100G"}
+	instances := d.Get("instance").([]interface{})
+	if len(instances) != len(want) {
+		t.Fatalf("got %d instances, want %d", len(instances), len(want))
+	}
+	for _, v := range instances {
+		cfg := v.(map[string]interface{})
+		name := cfg["name"].(string)
+		if cfg["on_ramp_region"] != want[name] {
+			t.Errorf("instance %s on_ramp_region = %v, want %v", name, cfg["on_ramp_region"], want[name])
+		}
+	}
+}
+
 // TestConnectorMultiCloudGatewayUpdateRemovesInstance exercises the real Update path
 // (generateConnectorMultiCloudGatewayRequest + d.GetChange): state has instances [a:1, b:2, c:3],
 // config removes b, and the PUT body sent must carry instances [{id:1,name:a},{id:3,name:c}].

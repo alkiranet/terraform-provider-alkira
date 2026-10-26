@@ -1,12 +1,38 @@
 package alkira
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// validateMultiCloudGatewayOnRampRegions returns an error if any two instances share an
+// on_ramp_region, so the duplicate surfaces at plan time instead of the API's 400. Same
+// guard shape as Infoblox's validateInfobloxInstanceHostnames.
+func validateMultiCloudGatewayOnRampRegions(instances []interface{}) error {
+	seen := make(map[string]int, len(instances))
+	for i, inst := range instances {
+		cfg, ok := inst.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		region, _ := cfg["on_ramp_region"].(string)
+		if region == "" {
+			continue
+		}
+		if prev, exists := seen[region]; exists {
+			return fmt.Errorf(
+				"instance[%d] and instance[%d] both use on_ramp_region %q; on_ramp_region must be unique across all instances",
+				prev, i, region,
+			)
+		}
+		seen[region] = i
+	}
+	return nil
+}
 
 func expandConnectorMultiCloudGatewaySegmentOptions(in []interface{}, m interface{}) ([]alkira.ConnectorMultiCloudGatewaySegmentOption, error) {
 	options := make([]alkira.ConnectorMultiCloudGatewaySegmentOption, len(in))
@@ -62,7 +88,8 @@ func expandConnectorMultiCloudGatewayInstances(in []interface{}, ids map[string]
 	for i, v := range in {
 		cfg := v.(map[string]interface{})
 		name := cfg["name"].(string)
-		instances[i] = alkira.ConnectorMultiCloudGatewayInstance{Name: name, Id: ids[name]}
+		onRampRegion, _ := cfg["on_ramp_region"].(string)
+		instances[i] = alkira.ConnectorMultiCloudGatewayInstance{Name: name, Id: ids[name], OnRampRegion: onRampRegion}
 	}
 	return instances
 }
@@ -73,8 +100,8 @@ func flattenConnectorMultiCloudGatewayInstances(instances []alkira.ConnectorMult
 		result[i] = map[string]interface{}{
 			"id":                  in.Id,
 			"name":                in.Name,
+			"on_ramp_region":      in.OnRampRegion,
 			"bandwidth_in_mbps":   in.BandwidthInMbps,
-			"on_ramp":             in.OnRamp,
 			"lumen_connection_id": in.LumenConnectionId,
 		}
 	}

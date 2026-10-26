@@ -14,10 +14,12 @@ resource "alkira_connector_multi_cloud_gateway" "example" {
   }
 
   instance {
-    name = "instance1"
+    name           = "instance1"
+    on_ramp_region = "us-east-1 - US East (N. Virginia) - Reston"
   }
 
   instance {
-    name = "instance2"
+    name           = "instance2"
+    on_ramp_region = "us-east-1 - US East (N. Virginia) - Ashburn 100G"
   }
 }

@@ -28,6 +28,11 @@ func dataSourceAlkiraMultiCloudGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"billing_account_number": {
+				Description: "The Lumen billing account number (BAN) this gateway bills to.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"state": {
 				Description: "Provisioning state of the gateway.",
 				Type:        schema.TypeString,
@@ -47,7 +52,7 @@ func dataSourceAlkiraMultiCloudGatewayRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if diags := setMultiCloudGatewayFields(d, gateway, "native_id", "tier", "state", "external"); diags.HasError() {
+	if diags := setMultiCloudGatewayFields(d, gateway, "native_id", "tier", "billing_account_number", "state", "external"); diags.HasError() {
 		return diags
 	}
 	d.SetId(gateway.Id.String())

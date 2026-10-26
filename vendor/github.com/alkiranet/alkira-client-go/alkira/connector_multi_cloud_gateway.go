@@ -33,8 +33,8 @@ type ConnectorMultiCloudGatewaySegmentOption struct {
 type ConnectorMultiCloudGatewayInstance struct {
 	Id                int    `json:"id,omitempty"` // sent back on PUT to keep an existing instance
 	Name              string `json:"name"`
+	OnRampRegion      string `json:"onRampRegion"`
 	BandwidthInMbps   int    `json:"bandwidthInMbps,omitempty"`   // RESPONSE ONLY
-	OnRamp            string `json:"onRamp,omitempty"`            // RESPONSE ONLY
 	LumenConnectionId string `json:"lumenConnectionId,omitempty"` // RESPONSE ONLY
 }
 

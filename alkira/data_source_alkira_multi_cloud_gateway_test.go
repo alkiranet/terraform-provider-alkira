@@ -22,7 +22,7 @@ func (f multiCloudGatewayDataSourceTransport) RoundTrip(r *http.Request) (*http.
 }
 
 func TestReadByName(t *testing.T) {
-	const gateway = `{"id":9223372036854775806,"name":"gateway","nativeId":"native-42","tier":"50GBPS","state":"PROVISIONED","external":true}`
+	const gateway = `{"id":9223372036854775806,"name":"gateway","nativeId":"native-42","tier":"50GBPS","state":"PROVISIONED","external":true,"billingAccountNumber":"1-1ABCDE-F"}`
 	const other = `{"id":7,"name":"gateway-other"}`
 	for _, tc := range []struct {
 		name      string
@@ -100,7 +100,7 @@ func TestReadByName(t *testing.T) {
 			if d.Id() != "9223372036854775806" {
 				t.Fatalf("Alkira int64 ID lost precision: %q", d.Id())
 			}
-			for key, want := range map[string]string{"name": "gateway", "native_id": "native-42", "tier": "50GBPS", "state": "PROVISIONED"} {
+			for key, want := range map[string]string{"name": "gateway", "native_id": "native-42", "tier": "50GBPS", "state": "PROVISIONED", "billing_account_number": "1-1ABCDE-F"} {
 				if got := d.Get(key); got != want {
 					t.Errorf("%s = %v, want %s", key, got, want)
 				}
