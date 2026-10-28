@@ -63,7 +63,6 @@ func setVirtualEdge(d *schema.ResourceData, connector *alkira.ConnectorVmwareSdw
 			}
 
 			vedges = append(vedges, vedge)
-			break
 		}
 	}
 
