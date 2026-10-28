@@ -388,6 +388,34 @@ func typeSetHash(keyExtractor func(map[string]interface{}) string) schema.Schema
 	}
 }
 
+// suppressCredentialSecretDiff returns a DiffSuppressFunc for a secret field
+// that the provider stores in the credential service. The API returns only
+// the credential ID, so the secret is in state only from an earlier apply
+// and is empty after an import.
+//
+// credentialIdField is the field in the same block as the secret that holds
+// the credential ID. When state has no credential ID, the diff is shown.
+//
+// Set importOnly when the provider sends a changed secret to the backend
+// (it creates a new credential). Then only an empty state secret is
+// suppressed. Otherwise the provider reuses the credential ID, a changed
+// secret has no effect, and every diff is suppressed.
+func suppressCredentialSecretDiff(credentialIdField string, importOnly bool) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		credentialIdKey := credentialIdField
+		if i := strings.LastIndex(k, "."); i >= 0 {
+			credentialIdKey = k[:i+1] + credentialIdField
+		}
+
+		credentialId, _ := d.GetChange(credentialIdKey)
+		if credentialId.(string) == "" {
+			return false
+		}
+
+		return !importOnly || old == ""
+	}
+}
+
 // warnOnFailedStateUpdate wraps a resource's UpdateContextFunc and emits a
 // non-fatal warning when an update carrying config changes is applied
 // against a resource in FAILED provision state. In that case, the backend

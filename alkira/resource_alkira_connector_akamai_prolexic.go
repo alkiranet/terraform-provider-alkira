@@ -58,6 +58,8 @@ func resourceAlkiraConnectorAkamaiProlexic() *schema.Resource {
 				Description: "The Akamai BGP Authentication Key.",
 				Type:        schema.TypeString,
 				Required:    true,
+				DiffSuppressFunc: suppressCredentialSecretDiff(
+					"credential_id", true),
 			},
 			"byoip_options": {
 				Description: "BYOIP options.",
@@ -253,6 +255,7 @@ func resourceConnectorAkamaiProlexicRead(ctx context.Context, d *schema.Resource
 
 	d.Set("akamai_bgp_asn", connector.AkamaiBgpAsn)
 	d.Set("billing_tag_ids", connector.BillingTags)
+	d.Set("credential_id", connector.CredentialId)
 	d.Set("cxp", connector.CXP)
 	d.Set("enabled", connector.Enabled)
 	d.Set("group", connector.Group)
@@ -401,20 +404,27 @@ func generateConnectorAkamaiProlexicRequest(d *schema.ResourceData, m interface{
 		return nil, err
 	}
 
-	// Create implicit akamai-prolexic credential
-	log.Printf("[INFO] Creating credential-akamai-prolexic")
-	c := alkira.CredentialAkamaiProlexic{
-		BgpAuthenticationKey: d.Get("akamai_bgp_authentication_key").(string),
+	// After an import the key is not in state and its diff is
+	// suppressed, so keep the existing credential.
+	credentialId := d.Get("credential_id").(string)
+	key := d.Get("akamai_bgp_authentication_key").(string)
+
+	if key != "" || credentialId == "" {
+		// Create implicit akamai-prolexic credential
+		log.Printf("[INFO] Creating credential-akamai-prolexic")
+		c := alkira.CredentialAkamaiProlexic{
+			BgpAuthenticationKey: key,
+		}
+
+		client := m.(*alkira.AlkiraClient)
+		credentialId, err = client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
+
+		if err != nil {
+			return nil, err
+		}
+
+		d.Set("credential_id", credentialId)
 	}
-
-	client := m.(*alkira.AlkiraClient)
-	credentialId, err := client.CreateCredential(d.Get("name").(string), alkira.CredentialTypeAkamaiProlexic, c, 0)
-
-	if err != nil {
-		return nil, err
-	}
-
-	d.Set("credential_id", credentialId)
 
 	connector := &alkira.ConnectorAkamaiProlexic{
 		AkamaiBgpAsn:         d.Get("akamai_bgp_asn").(int),

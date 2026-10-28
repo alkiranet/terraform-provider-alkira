@@ -114,6 +114,8 @@ func resourceAlkiraConnectorVmwareSdwan() *schema.Resource {
 								"VMWare orchestrator account.",
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 							DefaultFunc: schema.EnvDefaultFunc(
 								"AK_VMWARE_SDWAN_ACTIVATION_CODE",
 								nil),
