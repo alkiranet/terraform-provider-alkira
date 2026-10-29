@@ -140,6 +140,8 @@ func resourceAlkiraConnectorArubaEdge() *schema.Resource {
 								"Silver Peak orchestrator account.",
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 						},
 						"credential_id": {
 							Description: "The credential ID for the instance.",

@@ -111,12 +111,16 @@ func resourceAlkiraConnectorFortinetSdwan() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "admin",
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 						},
 						"password": {
 							Description: "The password of the WAN Edge instance.",
 							Type:        schema.TypeString,
 							Sensitive:   true,
 							Required:    true,
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 						},
 						"hostname": {
 							Description: "The hostname of the WAN Edge.",

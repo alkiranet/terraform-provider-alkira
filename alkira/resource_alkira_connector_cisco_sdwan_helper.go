@@ -67,7 +67,6 @@ func setVedge(d *schema.ResourceData, connector *alkira.ConnectorCiscoSdwan) {
 			}
 
 			vedges = append(vedges, vedge)
-			break
 		}
 	}
 
