@@ -300,6 +300,10 @@ func resourceConnectorVmwareSdwanUpdate(ctx context.Context, d *schema.ResourceD
 	request, err := generateConnectorVmwareSdwanRequest(d, m)
 
 	if err != nil {
+		// Keep the prior state. Otherwise the new activation_code is saved
+		// even though the credential update failed, and the next plan
+		// would show no diff to retry it.
+		d.Partial(true)
 		return diag.FromErr(err)
 	}
 
@@ -390,7 +394,8 @@ func generateConnectorVmwareSdwanRequest(d *schema.ResourceData, m interface{}) 
 	//
 	// Expand virtual_edge block
 	//
-	virtualEdges, err := expandVmwareSdwanVirtualEdges(m.(*alkira.AlkiraClient), d.Get("virtual_edge").([]interface{}))
+	oldVirtualEdges, newVirtualEdges := d.GetChange("virtual_edge")
+	virtualEdges, err := expandVmwareSdwanVirtualEdges(m.(*alkira.AlkiraClient), newVirtualEdges.([]interface{}), oldVirtualEdges.([]interface{}))
 
 	if err != nil {
 		return nil, err

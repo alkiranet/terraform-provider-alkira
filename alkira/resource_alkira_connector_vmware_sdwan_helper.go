@@ -1,6 +1,7 @@
 package alkira
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -106,11 +107,32 @@ func expandVmwareSdwanVrfMappings(in *schema.Set) []alkira.VmwareSdwanVrfMapping
 }
 
 // expandVmwareSdwanVedges expand virtual edges
-func expandVmwareSdwanVirtualEdges(ac *alkira.AlkiraClient, in []interface{}) ([]alkira.VmwareSdwanInstance, error) {
+//
+// old is the virtual_edge list from the prior state. It is used to detect an
+// activation_code change on a virtual edge that already has a credential, in
+// which case that credential is updated in place.
+func expandVmwareSdwanVirtualEdges(ac *alkira.AlkiraClient, in []interface{}, old []interface{}) ([]alkira.VmwareSdwanInstance, error) {
 
 	if in == nil || len(in) == 0 {
 		log.Printf("[DEBUG] Empty virtual_edge")
 		return []alkira.VmwareSdwanInstance{}, nil
+	}
+
+	// Activation codes from the prior state, keyed by credential ID
+	oldActivationCodes := make(map[string]string)
+
+	for _, vedge := range old {
+		o, ok := vedge.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		credentialId, _ := o["credential_id"].(string)
+		activationCode, _ := o["activation_code"].(string)
+
+		if credentialId != "" {
+			oldActivationCodes[credentialId] = activationCode
+		}
 	}
 
 	mappings := make([]alkira.VmwareSdwanInstance, len(in))
@@ -150,6 +172,16 @@ func expandVmwareSdwanVirtualEdges(ac *alkira.AlkiraClient, in []interface{}) ([
 				r.CredentialId = credentialId
 			} else {
 				r.CredentialId = v
+
+				oldActivationCode, found := oldActivationCodes[v]
+
+				if found && oldActivationCode != activationCode {
+					log.Printf("[DEBUG] Updating VMWARE-SDWAN Instance Credential %s", v)
+
+					if err := updateVmwareSdwanInstanceCredential(ac, v, activationCode); err != nil {
+						return nil, err
+					}
+				}
 			}
 		}
 		if v, ok := t["id"].(int); ok {
@@ -160,4 +192,33 @@ func expandVmwareSdwanVirtualEdges(ac *alkira.AlkiraClient, in []interface{}) ([
 	}
 
 	return mappings, nil
+}
+
+// updateVmwareSdwanInstanceCredential update the activation code of an
+// existing virtual edge credential, keeping its name
+func updateVmwareSdwanInstanceCredential(ac *alkira.AlkiraClient, credentialId string, activationCode string) error {
+
+	existing, err := ac.GetCredentialById(credentialId)
+
+	if err != nil {
+		return fmt.Errorf("failed to get VMWARE-SDWAN instance credential %s: %w", credentialId, err)
+	}
+
+	credential := alkira.CredentialVmwareSdwanInstance{
+		ActivationCode: activationCode,
+	}
+
+	err = ac.UpdateCredential(
+		credentialId,
+		existing.Name,
+		alkira.CredentialTypeVmwareSdwanInstance,
+		credential,
+		0,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update VMWARE-SDWAN instance credential %s: %w", credentialId, err)
+	}
+
+	return nil
 }
