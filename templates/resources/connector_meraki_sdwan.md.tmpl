@@ -1,0 +1,78 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+The connector is available only on Azure CXPs. Each instance is a vMX that
+needs an authentication token from the Meraki Dashboard. A token can be used
+once and expires about 1 hour after it is generated, so apply within that
+hour. `auth_token` is stored in the Terraform state as a sensitive value.
+
+## Example Usage
+
+{{ tffile "examples/resources/alkira_connector_meraki_sdwan/resource.tf" }}
+
+## Instances
+
+- An instance is identified by its `host_name`. The order of the
+  `instances` blocks doesn't matter, and any instance can be added or
+  removed.
+- A new `host_name` is a new instance: the old vMX is removed and a new vMX
+  is deployed. Give it a new `auth_token`.
+- The apply fails before any change if two instances have the same
+  `host_name` or `auth_token`, or if a new instance has the token of an
+  existing one.
+- `instances` is a set, so it can't be indexed. Use a `for` expression, for
+  example
+  `[for i in alkira_connector_meraki_sdwan.example.instances : i.public_ip]`.
+
+Changing `cxp`, `version`, `tunnel_protocol` or `target_segment.segment_id`
+after the connector is provisioned is not supported.
+
+## Replacing an Authentication Token
+
+Set a new `auth_token` on the instance. The plan shows the instance as
+replaced, but the apply keeps the instance and its credential. It writes the
+new token to the credential, then updates the connector. The provision
+redeploys that vMX only.
+
+- The redeploy needs `provision = true` on the provider. Without it, the vMX
+  is redeployed at the next provision of the network.
+- The instance's tunnels are down until the new vMX registers with the
+  Meraki Dashboard. If the new vMX gets a different `wan_ip`, set the local
+  ID of its peers in the Meraki Dashboard to the new `wan_ip`.
+- If the vMX isn't redeployed, provision the network again. A provision
+  less than 10 seconds after an earlier one can still use the old token.
+- If the connector update fails after the token was written, the error
+  names those instances. Apply again to finish. Don't change `auth_token`
+  back: the credential keeps the new token.
+
+A token changed outside Terraform isn't detected, because the API never
+returns it.
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" .ImportFile }}
+
+`auth_token` isn't imported, so the first plan shows each instance as
+replaced, and the apply writes the configured token to each credential. The
+token that is already stored causes no redeploy.
+
+~> **Warning:** Any other token redeploys that vMX. A token that was already
+used or has expired can't register the vMX, and the instance stays down
+until a valid token is set. If the stored token isn't known, generate a new
+one in the Meraki Dashboard and expect the redeploy.
+
+~> **Warning:** `advertise_on_prem_routes` and `advertise_default_route`
+default to `false`. A connector created outside Terraform advertises both
+unless they were turned off, so set them to match before the first apply.

@@ -30,6 +30,7 @@ const (
 	CredentialTypeInfobloxJoinToken          CredentialType = "infoblox-join-token"
 	CredentialTypeKeyPair                    CredentialType = "keypair"
 	CredentialTypeLdap                       CredentialType = "ldap"
+	CredentialTypeMerakiSDWANInstance        CredentialType = "meraki-sdwan-connector-instance"
 	CredentialTypeOciVcn                     CredentialType = "ocivcn"
 	CredentialTypePan                        CredentialType = "pan"
 	CredentialTypePanInstance                CredentialType = "paninstance"
@@ -140,6 +141,10 @@ type CredentialFortinetSdwanInstance struct {
 type CredentialPrismaSDWANInstance struct {
 	IonToken  string `json:"ionToken"`
 	IonSecret string `json:"ionSecret"`
+}
+
+type CredentialMerakiSDWANInstance struct {
+	AuthToken string `json:"authToken"`
 }
 
 type CredentialInfoblox struct {
