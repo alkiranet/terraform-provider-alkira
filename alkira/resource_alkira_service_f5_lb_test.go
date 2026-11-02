@@ -534,3 +534,106 @@ func TestAlkiraServiceF5LoadBalancer_customizeDiffTunnelProtocol(t *testing.T) {
 		})
 	}
 }
+
+func TestAlkiraServiceF5LoadBalancer_flattenInstanceMetadataMgmtIp(t *testing.T) {
+	tests := []struct {
+		name     string
+		metadata string
+		expected map[string]string
+	}{
+		{
+			name: "instance IP applies to every segment",
+			metadata: `{"f5MgmtPublicIp": "203.0.113.10", "segmentToMetadata": {
+				"1996": {"segmentId": 1996}, "1997": {"segmentId": 1997}}}`,
+			expected: map[string]string{"1996": "203.0.113.10", "1997": "203.0.113.10"},
+		},
+		{
+			name: "instance IP wins over stale segment IP",
+			metadata: `{"f5MgmtPublicIp": "203.0.113.10", "segmentToMetadata": {
+				"1996": {"segmentId": 1996, "f5MgmtPublicIp": "10.0.0.1"}}}`,
+			expected: map[string]string{"1996": "203.0.113.10"},
+		},
+		{
+			name: "segment IP used when instance IP is absent",
+			metadata: `{"segmentToMetadata": {
+				"1996": {"segmentId": 1996, "f5MgmtPublicIp": "10.0.0.1"}}}`,
+			expected: map[string]string{"1996": "10.0.0.1"},
+		},
+		{
+			name:     "no IP anywhere",
+			metadata: `{"segmentToMetadata": {"1996": {"segmentId": 1996}}}`,
+			expected: map[string]string{"1996": ""},
+		},
+		{
+			name:     "no segments",
+			metadata: `{"f5MgmtPublicIp": "203.0.113.10"}`,
+			expected: map[string]string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var metadata alkira.F5LBServiceInstanceMetadata
+			require.NoError(t, json.Unmarshal([]byte(tt.metadata), &metadata))
+
+			got := map[string]string{}
+			for _, entry := range flattenF5LBInstanceMetadata(&metadata) {
+				got[entry["segment_id"].(string)] = entry["f5_mgmt_public_ip"].(string)
+			}
+
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+// The response mirrors tenant-provisioning-service F5LBServiceInstanceMetadata:
+// f5MgmtPublicIp sits on the instance, and the per-segment copy is omitted
+// (nulled by updateMetadata, dropped by @JsonInclude(NON_NULL)). Prior state
+// holds "" for the same segment_ids, so the instance_metadata set hashes are
+// unchanged; Read must still overwrite the values.
+func TestAlkiraServiceF5LoadBalancer_readRefreshesMgmtIp(t *testing.T) {
+	r := resourceAlkiraF5LoadBalancer()
+	d := schema.TestResourceDataRaw(t, r.Schema, nil)
+	d.SetId("910")
+
+	emptyMetadata := []map[string]interface{}{
+		{"segment_id": "1996", "f5_mgmt_public_ip": ""},
+		{"segment_id": "1997", "f5_mgmt_public_ip": ""},
+	}
+	require.NoError(t, d.Set("instance", []map[string]interface{}{
+		{"id": 1148, "name": "f5lb1-instance-1", "instance_metadata": emptyMetadata},
+		{"id": 1149, "name": "f5lb1-instance-2", "instance_metadata": emptyMetadata},
+	}))
+
+	segments := `"segmentToMetadata":{` +
+		`"1996":{"segmentId":1996,"routeDomainId":1,"routingType":"STATIC"},` +
+		`"1997":{"segmentId":1997,"routeDomainId":2,"routingType":"STATIC"}}`
+	lbJSON := `{"id":910,"name":"f5lb1","segmentOptions":{},"instances":[` +
+		`{"id":1148,"name":"f5lb1-instance-1","metadata":{"f5MgmtPublicIp":"203.0.113.10","vCPU":8,` + segments + `}},` +
+		`{"id":1149,"name":"f5lb1-instance-2","metadata":{"f5MgmtPublicIp":"198.51.100.20","vCPU":8,` + segments + `}}]}`
+
+	c := mcgwConnectorClient(t, func(req *http.Request) (int, string) {
+		if req.Method == "GET" && req.URL.Path == "/tenantnetworks/1/f5-lb-services/910" {
+			return 200, lbJSON
+		}
+		t.Fatalf("unexpected request: %s %s", req.Method, req.URL.Path)
+		return 500, ""
+	})
+
+	diags := r.ReadContext(context.Background(), d, c)
+	require.False(t, diags.HasError(), "%v", diags)
+
+	want := map[string]string{"f5lb1-instance-1": "203.0.113.10", "f5lb1-instance-2": "198.51.100.20"}
+	instances := d.Get("instance").([]interface{})
+	require.Len(t, instances, len(want))
+	for _, v := range instances {
+		instance := v.(map[string]interface{})
+		got := map[string]string{}
+		for _, e := range instance["instance_metadata"].(*schema.Set).List() {
+			entry := e.(map[string]interface{})
+			got[entry["segment_id"].(string)] = entry["f5_mgmt_public_ip"].(string)
+		}
+		ip := want[instance["name"].(string)]
+		assert.Equal(t, map[string]string{"1996": ip, "1997": ip}, got, instance["name"])
+	}
+}

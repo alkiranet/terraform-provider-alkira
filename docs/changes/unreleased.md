@@ -14,6 +14,12 @@ For an `alkira_connector_ipsec_adv` tunnel that uses `customer_end_overlay_ip_re
 
 **Impact:** imported INBOUND policies no longer plan `1 to change` on every run. Values set for these fields on an INBOUND policy are ignored, as before. No state migration is required.
 
+## F5 load balancer — `f5_mgmt_public_ip` now populated on read (AK-76512)
+
+`alkira_service_f5_lb` now fills `instance[*].instance_metadata[*].f5_mgmt_public_ip` from the instance-level management IP that the API returns. It was previously empty after create, import and refresh.
+
+**Impact:** the next refresh writes the management IP into state. Read-only attribute: no config changes and no write calls to the API.
+
 ## IPSec connectors — `routing_options` changes are now visible in plan (AK-75926)
 
 `routing_options` on `alkira_connector_ipsec` and `alkira_connector_ipsec_adv` is now a `List` (max 1) instead of a `Set`. As a set, the sensitive `bgp_auth_key` hid the whole block, so a plan that removed `local_asn` (which drops the customer's BGP session) showed only a masked replace. Now only `bgp_auth_key` is masked and changes such as `local_asn "27205" -> null` are shown. A state migration (`SchemaVersion` 0 → 1) runs automatically.

@@ -263,8 +263,14 @@ func flattenF5LBInstanceMetadata(m *alkira.F5LBServiceInstanceMetadata) []map[st
 				"bgp_enabled":          bgpEnabled,
 			})
 		}
+		// The backend stores the management IP on the instance and blanks the
+		// per-segment copy; a per-segment value only survives in older records.
+		mgmtIp := m.F5MgmtPublicIp
+		if mgmtIp == "" {
+			mgmtIp = seg.F5MgmtPublicIp
+		}
 		result = append(result, map[string]interface{}{
-			"f5_mgmt_public_ip": seg.F5MgmtPublicIp,
+			"f5_mgmt_public_ip": mgmtIp,
 			"segment_id":        segId,
 			"route_domain_id":   int(seg.RouteDomainId),
 			"routing_type":      seg.RoutingType,
