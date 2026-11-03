@@ -2,6 +2,12 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## NAT policy — `allow_overlapping_outbound_destination_prefixes` (AK-75707)
+
+`alkira_policy_nat` has a new optional bool, `allow_overlapping_outbound_destination_prefixes` (default `false`, **BETA**). When it is `true`, the policy's `OUTBOUND` DNAT rules may share a pre-translated destination prefix with `OUTBOUND` DNAT rules of other policies in the segment, provided their destination track prefixes are equal. The policy must contain at least one `OUTBOUND` rule with destination translation, and the tenant must be enabled for outbound DNAT; otherwise Alkira rejects the request.
+
+**Impact:** existing policies plan with no changes. The provider now always sends the value, so the next update of a policy stores `false` where it previously stored nothing (same behaviour). A policy where the option was enabled outside Terraform now shows `true -> false` in the plan until the configuration sets it.
+
 ## Advanced IPSec connector — imported tunnels using an overlay reservation now plan cleanly (AK-76265)
 
 For an `alkira_connector_ipsec_adv` tunnel that uses `customer_end_overlay_ip_reservation_id`, the provider no longer writes the backend-derived `customer_end_overlay_ip` into state. Previously both values landed in state, so `terraform plan -generate-config-out` emitted both lines and the generated config failed with "tunnel customer_end_overlay_ip and customer_end_overlay_ip_reservation_id are mutually exclusive".
