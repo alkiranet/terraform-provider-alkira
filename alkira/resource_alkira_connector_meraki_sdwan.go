@@ -157,11 +157,6 @@ func resourceAlkiraConnectorMerakiSDWAN() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
-						"public_ip": {
-							Description: "The vMX public IP.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
 					},
 				},
 			},

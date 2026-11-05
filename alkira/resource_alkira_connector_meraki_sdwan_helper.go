@@ -259,7 +259,6 @@ func setMerakiSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 			"host_name":     info.HostName,
 			"id":            int(id),
 			"name":          info.Name,
-			"public_ip":     info.PublicIp,
 			"wan_ip":        info.WanIp,
 		})
 	}

@@ -30,7 +30,7 @@ hour. `auth_token` is stored in the Terraform state as a sensitive value.
   existing one.
 - `instances` is a set, so it can't be indexed. Use a `for` expression, for
   example
-  `[for i in alkira_connector_meraki_sdwan.example.instances : i.public_ip]`.
+  `[for i in alkira_connector_meraki_sdwan.example.instances : i.wan_ip]`.
 
 Changing `cxp`, `version`, `tunnel_protocol` or `target_segment.segment_id`
 after the connector is provisioned is not supported.

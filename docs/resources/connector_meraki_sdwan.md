@@ -64,7 +64,7 @@ resource "alkira_connector_meraki_sdwan" "test1" {
   existing one.
 - `instances` is a set, so it can't be indexed. Use a `for` expression, for
   example
-  `[for i in alkira_connector_meraki_sdwan.example.instances : i.public_ip]`.
+  `[for i in alkira_connector_meraki_sdwan.example.instances : i.wan_ip]`.
 
 Changing `cxp`, `version`, `tunnel_protocol` or `target_segment.segment_id`
 after the connector is provisioned is not supported.
@@ -130,7 +130,6 @@ Read-Only:
 - `credential_id` (String) The ID of the generated credential.
 - `id` (Number) The ID of the instance.
 - `name` (String) The name of the instance.
-- `public_ip` (String) The vMX public IP.
 - `wan_ip` (String) The vMX WAN private IP.
 
 

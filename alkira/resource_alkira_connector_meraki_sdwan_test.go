@@ -83,11 +83,9 @@ func merakiSDWANState(tokenA, tokenB string) *terraform.InstanceState {
 			merakiSDWANKey("vmx-a", tokenA, "name"):          "inst-1",
 			merakiSDWANKey("vmx-a", tokenA, "az"):            "1",
 			merakiSDWANKey("vmx-a", tokenA, "wan_ip"):        "10.0.0.4",
-			merakiSDWANKey("vmx-a", tokenA, "public_ip"):     "20.1.1.1",
 			merakiSDWANKey("vmx-b", tokenB, "name"):          "inst-2",
 			merakiSDWANKey("vmx-b", tokenB, "az"):            "2",
 			merakiSDWANKey("vmx-b", tokenB, "wan_ip"):        "10.0.0.5",
-			merakiSDWANKey("vmx-b", tokenB, "public_ip"):     "20.1.1.2",
 		},
 	}
 }
