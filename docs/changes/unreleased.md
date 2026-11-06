@@ -36,67 +36,7 @@ The same change exposed older bugs in these blocks, which are also fixed:
 - Two identical `routing_options` blocks, previously merged by the set, now fail with "Too many routing_options blocks". Remove the duplicate.
 - **Connectors with `type = "BOTH"` and `bgp_auth_key` set:** the next apply sends the key to Alkira for the first time and enables MD5 auth on the BGP session. If the peer is not configured with the same key, the session goes down. Confirm the peer's key before applying, or remove `bgp_auth_key` from the configuration to keep the current behaviour.
 
-## Provider credentials (`password`, `api_key`) are now marked sensitive (AK-72007)
-
-The provider-level `password` and `api_key` configuration inputs now carry `Sensitive: true`. Previously, a value set inline in the `provider "alkira"` block was rendered in cleartext in `terraform plan` / `terraform apply` output and captured verbatim in CI job logs; it now renders as `(sensitive value)`.
-
-**Impact:** display-only, and only for the provider block. These are provider configuration inputs, not resource attributes, so they cannot be referenced from an `output` — nothing that plans today starts failing. Note this masks CLI output only; Terraform state still stores whatever the configuration provides, as it does for every provider.
-
-## Bluecat service — anycast `ips`/`backup_cxps` changed to sets to stop spurious diffs (AK-69549)
-
-`ips` and `backup_cxps` inside the `bdds_anycast` and `edge_anycast` blocks of `alkira_service_bluecat` are now `Set of String` instead of `List of String`. The API returns these values in a different order than configured; as ordered lists they re-hashed the surrounding anycast block, so every plan showed the block as removed and re-added even when nothing changed. As sets, order no longer matters.
-
-A state migration (`SchemaVersion` 0 → 1) re-keys existing state from positional to set form on first refresh.
-
-**Impact:** Bluecat services that previously showed a perpetual no-op diff on `bdds_anycast` / `edge_anycast` now plan clean. No HCL changes required — order within `ips` / `backup_cxps` is now irrelevant. The first plan after upgrade is idempotent; the migration runs automatically.
-
-## IPSec connectors — `PING` removed from `routing_options.availability` (AK-73307)
-
-`availability` inside the `routing_options` block of `alkira_connector_ipsec` and `alkira_connector_ipsec_adv` no longer accepts `PING`. The valid values are `IKE_STATUS` and `IPSEC_INTERFACE_PING`, matching the two options the portal offers. `PING` was never selectable in the UI, and a connector configured with it rendered in the portal as if `IKE Status` were selected while the backend still held `PING` — an inconsistent state that a subsequent save from the portal would silently rewrite. `PING` and `IPSEC_INTERFACE_PING` resolve to the same tunnel probe on the backend, so switching between them does not change how availability is monitored.
-
-**Impact:** configurations that set `availability = "PING"` now fail validation with an error naming the two accepted values; replace it with `IPSEC_INTERFACE_PING`. Configurations that omit `availability` are unaffected, and for connectors whose stored value is `PING` the next plan shows a single in-place change to `IPSEC_INTERFACE_PING` that converges on apply. No state migration is required. Note that `terraform plan -refresh-only` reports a stored `PING` as-is without flagging or correcting it — a normal apply is needed to update the connector.
-
-## Fortinet service — `segment_ids` and `instances` are now populated on refresh and import (AK-73611)
-
-`alkira_service_fortinet` builds `segment_ids` in its Read path, because the API stores a service's segments by name while the schema stores them by ID. That conversion produced a `[]int`, which the SDK rejects against the declared `Set of String` element type, and it also pre-sized its result slice before appending, prefixing the value with one zero per segment. The rejection returned an error that was discarded, so Read never updated `segment_ids` while reporting success. Read now uses the same `convertSegmentNamesToSegmentIds` helper as the Infoblox, Bluecat and Zscaler services, writes the segment IDs as strings, and checks the error.
-
-Read also dropped all but one `instances` entry. It walks the instances already tracked in state, then walks the API response for any it did not match, and that second walk stopped after the first unmatched instance. A service with more instances than state knew about landed exactly one of them in `instances`, which is `Required`.
-
-**Impact:** for a service created through Terraform, `segment_ids` was written to state at create time and the failed refresh left it untouched, so there was no spurious diff, but drift on the attribute went undetected. Drift is now detected: a service whose segments were reassigned outside Terraform shows a one-time in-place diff on the next plan that restores the configured segments. The same applies to a service whose instances were changed outside Terraform. After `terraform import`, where state starts empty, `segment_ids` stayed empty and `instances` held a single entry, so the first plan asked to add every segment and every remaining instance back; both are now populated during the import. Configurations already in sync with the portal are unaffected. No HCL changes and no state migration are required; `segment_ids` remains `Set of String`, matching the six other services that key segments by ID.
-
-## Segment resource and segment resource share — `segment_id` and `designated_segment_id` reject a segment name (AK-74335)
-
-`segment_id` on `alkira_segment_resource` and `designated_segment_id` on `alkira_segment_resource_share` now validate that the value is a segment ID. Both fields are documented as IDs, but they accepted any alphanumeric string, and the provider handed the value straight to `GET /segments/<value>`. A segment name there returns a 500 that the client retries five times with escalating backoff, so an apply sat for over two minutes before failing on a type-conversion error from the backend. The value is now rejected during `terraform plan`, before any API call, with an error that names the field and points at `alkira_segment.example.id`. Leading zeros are rejected for the same reason a name is: `GET /segments/0690` succeeds and answers with id `690`, which Read writes back to state against a config that still says `0690`.
-
-`alkira_segment_resource_share` also stopped refreshing partway through when the segment lookup failed. Read returned at that point, and Terraform counts a warning as a successful refresh, so `end_a_segment_resource_ids`, `end_b_segment_resource_ids`, the route limits, the traffic fields and `policy_rule_list_id` kept whatever state already held. Read now skips only `designated_segment_id` and refreshes the rest. The lookup stays non-fatal on purpose: the share's own `GetById` asks for a resource marked for deletion while the segment get-by-name does not, so making it fatal would abort the refresh that `terraform destroy` runs first.
-
-`alkira_segment_resource` Read no longer fails when the segment lookup fails. The same lookup gap applies there: `GetById` returns a segment resource whose segment is already marked for deletion, and the segment get-by-name cannot find it, so `terraform destroy` aborted on refresh. Read now warns, keeps the prior `segment_id` in state and refreshes `name`, `description`, `implicit_group_id` and `group_prefix`.
-
-**Impact:** configurations that reference a segment by ID, including `alkira_segment.example.id`, are unaffected, and importing either resource continues to plan clean. No state migration is required.
-
-One group does need an edit: anyone whose HCL holds a segment name in either field. That configuration planned clean because a plan only compares, so the mismatch went unnoticed. For `alkira_segment_resource_share`, a name is also what `terraform import` wrote into `designated_segment_id` on builds between the two AK-64221 fixes, so HCL written to match an import from that window holds one. Validation now rejects it, and the failure blocks `terraform plan`, `terraform apply` and `terraform destroy` for the whole root module until the value changes to `alkira_segment.<name>.id` or the segment's numeric ID.
-
-## Infoblox service — `instance.platform` is now computed, stopping a perpetual diff (AK-75209)
-
-`platform` inside the `instance` block of `alkira_service_infoblox` is now `Computed` as well as `Optional`. It was `Optional` only, while Read writes the backend value straight back into state. The backend defaults `platform` to `NIOS` when the configuration omits it, so every plan compared an empty configuration against a `NIOS` state and asked to change it back — and apply never converged, because the backend re-applied the default.
-
-**Impact:** configurations that omit `platform` now plan clean instead of showing a permanent in-place change on the instance block. Configurations that set `platform` explicitly are unaffected. Removing the attribute from a configuration now retains the last known value rather than clearing it, which is the standard `Optional`+`Computed` behaviour and harmless here because `platform` is immutable once the service is provisioned. No state migration is required.
-
-## Infoblox service — `grid_master.external` is now computed to stop spurious diffs (AK-74969)
-
-`external` inside the `grid_master` block of `alkira_service_infoblox` is now `Optional + Computed` with no default, and is deprecated. The server derives the value on every create and update: `true` when `grid_master.ip` is set, `false` otherwise. Any configured value is ignored on write. The provider no longer sends `external` in create or update requests.
-
-**Impact:** services whose `grid_master.ip` is set and whose configuration omits `external` previously showed a perpetual `external = true -> false` in-place update; they now plan clean. Configurations that still set `external` get a deprecation warning. A configured value that disagrees with the server-derived one keeps showing a diff until the line is removed.
-
-**Migration:** remove `external` from the `grid_master` block. No state migration is required.
-
-## Azure VNET connector — `peering_gateway_cxp_id` is now computed, so an omitted value keeps the backend's gateway (AK-75338)
-
-`peering_gateway_cxp_id` on `alkira_connector_azure_vnet` is now `Computed` as well as `Optional`. When the configuration omits it, the provider keeps the gateway ID from state and sends it on update.
-
-**Impact:** updates to a provisioned connector whose configuration omits `peering_gateway_cxp_id` no longer fail with `400 The CXP Peering Gateway of connector '<name>' cannot be updated after it is provisioned.` Configurations that set it to a non-zero ID are unaffected. Removing the attribute from a configuration retains the last known value rather than clearing it. No state migration is required.
-
-## Azure VNET connector — `peering_gateway_cxp_id = 0` is treated as unset, and import no longer writes it
+## Azure VNET connector — `peering_gateway_cxp_id = 0` is treated as unset, and import no longer writes it (AK-76131)
 
 A configured `peering_gateway_cxp_id = 0` on `alkira_connector_azure_vnet` now plans the same as an omitted value: the gateway ID in state is kept and sent on update. Read leaves the attribute null when the API returns no gateway, so `terraform plan -generate-config-out` no longer writes `peering_gateway_cxp_id = 0` for a connector without one.
 
@@ -113,3 +53,46 @@ The check also bounds the value to a 64-bit integer. The backend parses the path
 Three code paths discarded the lookup error and sent an empty segment name to the API: `global_protect_segment_options` at the top level of `alkira_service_pan` and inside its `instance` blocks, and the `firepower_management_center` block of `alkira_service_cisco_ftdv`. A fourth, `alkira_connector_remote_access`, dropped every segment name and continued with none. All four now report the failure. `alkira_service_pan`, `alkira_service_cisco_ftdv`, `alkira_service_checkpoint`, `alkira_service_fortinet`, `alkira_service_bluecat`, `alkira_service_f5_lb` and `alkira_service_infoblox` now resolve every segment before creating or updating any credential. A rejected `segment_id` no longer leaves an orphaned credential in the tenant on each retried apply, and an update no longer changes a stored credential before failing. Services that create a service-level credential still create it before their management, instance and license credentials, so a service credential the backend rejects leaves none of those behind.
 
 **Impact:** configurations that pass a bare numeric segment id, including `alkira_segment.example.id`, are unaffected. Outside the four paths above, a configuration that passes a segment name already failed; it now fails in a second with a message that says what to change, instead of after four minutes with a backend status code. `alkira_service_pan` documented the top-level `global_protect_segment_options.segment_id` as a segment name, and with `global_protect_enabled = true` a name there applied with an empty segment and showed a diff on every plan. That configuration now fails at apply, including on the next unrelated update of the service: replace the value with `alkira_segment.<name>.id`. A zero-padded, whitespace-padded, sign-prefixed or hexadecimal id (`0690`, `" 1145"`, `+7`, `0x10`) previously resolved, because the backend's `Long` conversion accepts those forms, and now fails: change it to the bare numeric id. For the four paths above, a failure that previously produced a silently wrong API request now stops the apply. No state migration is required.
+
+## IPSec, Advanced IPSec, AWS Direct Connect, ExpressRoute and GCP Interconnect connectors — new `local_asn` (AK-74214)
+
+A new optional `local_asn` sets the ASN that Alkira presents to the connector's BGP peer in place of the segment's own ASN. It is in `routing_options` on `alkira_connector_ipsec` and `alkira_connector_ipsec_adv`, in `instance.segment_options` on `alkira_connector_aws_dx`, in `segment_options` on `alkira_connector_azure_expressroute`, and in `instances` on `alkira_connector_gcp_interconnect`.
+
+**Impact:** new optional argument. Configurations that omit it are unaffected: Read writes `local_asn` only when the API returns a value, so they keep planning clean. Setting, changing or removing it changes the ASN the BGP peer sees, so the peer must be configured to match before you apply. No state migration is required.
+
+## Azure VNET connector — a multi-prefix subnet can be written as one `vnet_subnet` block (AK-74515)
+
+`vnet_subnet` on `alkira_connector_azure_vnet` has a new `subnet_cidrs` (`Set of String`) for an Azure subnet with more than one address prefix. Before, the only way to write such a subnet was two `vnet_subnet` blocks with the same `subnet_id`, which the API rejects. `subnet_cidr` is now `Optional` and stays the form for single-prefix subnets. Exactly one of `subnet_cidr` and `subnet_cidrs` is required, and this is checked at plan time. `subnet_cidrs` must list every prefix of the subnet, and it requires the multi-prefix feature to be enabled on the tenant.
+
+**Impact:** existing configurations that use `subnet_cidr` are unaffected and plan clean. A `vnet_subnet` block that sets neither field, or both, now fails at plan. No state migration is required.
+
+## F5 load balancer — new writable `tunnel_protocol` (AK-74783)
+
+`alkira_service_f5_lb` has a new top-level `tunnel_protocol`, `GRE` or `VXLAN`. On an AWS CXP it must be `VXLAN` to use an ILB, which Terraform could not configure before. When it is omitted the API picks the default for the cloud provider, `GRE` on AWS and `VXLAN` on Azure, and that value is read back into state. After the service is provisioned, `tunnel_protocol` can't change: a different value is rejected at plan. It is not `ForceNew`, so the load balancer is never replaced.
+
+**Impact:** existing configurations can't set the field, so they are unaffected. The next refresh writes the API's value into state without a plan diff. No state migration is required.
+
+## Policy rule list and UDR list — `rules` and `route` are now populated on refresh and import (AK-75539)
+
+Read on `alkira_policy_rule_list` and `alkira_list_udr` passed API structs directly to state, which the SDK rejected. The error was discarded, so `rules` and `route` were never refreshed. After `terraform import` they stayed empty, and the first plan asked to add every rule and route again. Read now converts them correctly.
+
+**Impact:** imports now plan clean. Drift on `rules` and `route` is now detected: a list changed outside Terraform shows a one-time in-place diff on the next plan that restores the configured entries. Configurations already in sync are unaffected. No HCL changes and no state migration are required.
+
+## VMware SD-WAN connector — changing `activation_code` now updates the instance credential (AK-76634)
+
+On `alkira_connector_vmware_sdwan`, a changed `activation_code` in a `virtual_edge` block was used only on first create. Later applies dropped it, so the credential kept the original code and provisioning failed with "Invalid activation key". The provider now compares each edge's `activation_code` with prior state and updates that credential in place, keeping its name. If the update request can't be built, the prior state is kept so the next apply tries again.
+
+**Impact:** a changed `activation_code` now takes effect on apply. State written by `terraform import` holds no `activation_code`, so the first apply after an import updates every edge's credential with the configured code. No state migration is required.
+
+## New resources and data sources — Multi-Cloud Gateway (AK-75850, AK-76193, AK-76432, AK-76448)
+
+- `alkira_multi_cloud_gateway` (resource and data source) manages a Lumen Multi-Cloud Gateway. Create waits until the gateway is `PROVISIONED`. Changing `tier` or `description` updates the gateway in place. Changing `name` or `billing_account_number` replaces it. The read-only `external` is `true` for a gateway created in Lumen Connect rather than from Alkira. Such a gateway can be imported but not deleted from Alkira, so `terraform destroy` fails for it.
+- `alkira_connector_multi_cloud_gateway` (resource and data source) attaches a connector on an AWS CXP to a provisioned gateway. On update, `instance` blocks are matched to stored instances by `name`, so a renamed block replaces that instance. Each instance's `on_ramp_region` can change only before the instance is provisioned. `implicit_group_id` is read-only.
+
+**Impact:** new types only. No effect on existing configurations or state.
+
+## New resource and data source — Cisco Meraki SD-WAN connector (AK-75744)
+
+`alkira_connector_meraki_sdwan` (resource and data source) manages a Meraki vMX connector on an Azure CXP. Each `instances` block is a vMX identified by `host_name`. Its `auth_token` is `Sensitive` and is stored as an Alkira credential. Changing the token replaces it and redeploys the vMX, and destroying the connector deletes the credential.
+
+**Impact:** new type only. No effect on existing configurations or state.
