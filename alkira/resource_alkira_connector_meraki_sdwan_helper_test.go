@@ -264,7 +264,7 @@ func TestSetMerakiSDWANInstances(t *testing.T) {
 
 	connector := &alkira.ConnectorMerakiSDWAN{
 		Instances: []alkira.ConnectorMerakiSDWANInstance{
-			{Id: "1", HostName: "vmx-a", CredentialId: "cred-a", Name: "inst-1", Az: 2, WanIp: "10.0.0.4", PublicIp: "20.1.1.1"},
+			{Id: "1", HostName: "vmx-a", CredentialId: "cred-a", Name: "inst-1", Az: 2, WanIp: "10.0.0.4"},
 			{Id: "2", HostName: "vmx-b", CredentialId: "cred-b", Name: "inst-2", Az: 1},
 			{Id: "3", HostName: "vmx-c", CredentialId: "cred-c"},
 		},
@@ -285,7 +285,6 @@ func TestSetMerakiSDWANInstances(t *testing.T) {
 	assert.Equal(t, 1, a["id"])
 	assert.Equal(t, "inst-1", a["name"])
 	assert.Equal(t, "10.0.0.4", a["wan_ip"])
-	assert.Equal(t, "20.1.1.1", a["public_ip"])
 	assert.Equal(t, "ta", a["auth_token"])
 
 	assert.Equal(t, "", instances["vmx-c"]["auth_token"], "an instance not in the config has no token, as after an import")
