@@ -38,8 +38,8 @@ func merakiSDWANCredentialServer(t *testing.T, failToken string) (*alkira.Alkira
 		calls = append(calls, call)
 
 		w.Header().Set("Content-Type", "application/json")
-		switch {
-		case req.Method == "POST":
+		switch req.Method {
+		case "POST":
 			creds := call.Body["credentials"].(map[string]interface{})
 			if creds["authToken"] == failToken {
 				w.WriteHeader(http.StatusInternalServerError)
