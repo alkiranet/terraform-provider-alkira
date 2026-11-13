@@ -3,6 +3,8 @@ package alkira
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 
@@ -142,9 +144,10 @@ func resourceAlkiraConnectorMerakiSDWAN() *schema.Resource {
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
 						"credential_id": {
-							Description: "The ID of the generated credential.",
-							Type:        schema.TypeString,
-							Computed:    true,
+							Description: "The ID of the generated credential. " +
+								"A new `auth_token` gets a new credential.",
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"az": {
 							Description: "The availability zone Alkira placed " +
@@ -320,34 +323,82 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 	client := m.(*alkira.AlkiraClient)
 	api := alkira.NewConnectorMerakiSDWAN(m.(*alkira.AlkiraClient))
 
-	// Keep the old state if the update fails, so that the next plan
-	// retries it. Otherwise a changed auth_token is saved and the token
-	// replace is lost.
+	// Keep the old state until the update is confirmed, so that a failed
+	// or skipped token replace is planned again
 	d.Partial(true)
 
-	// Changed tokens are replaced before the update, so that it
-	// redeploys with them
+	// A changed auth_token gets a new credential before the update
 	oldInstances, _ := d.GetChange("instances")
-	request, created, replaced, err := generateConnectorMerakiSDWANRequest(d, m, oldInstances.(*schema.Set).List())
+	request, created, adopted, err := generateConnectorMerakiSDWANRequest(d, m, oldInstances.(*schema.Set).List())
 
 	if err != nil {
-		return diag.FromErr(merakiSDWANReplacedTokensError(replaced, err))
+		return diag.FromErr(err)
 	}
 
 	// UPDATE
 	provState, err, valErr, provErr := api.Update(d.Id(), request)
 
 	if err != nil {
-		deleteMerakiSDWANCredentials(client, created)
-		return diag.FromErr(merakiSDWANReplacedTokensError(replaced, err))
+		// The update can fail after it is saved, so delete only the new
+		// credentials that the saved connector doesn't use. If it uses all
+		// sent credentials, keep the new state, so the token isn't sent again.
+		// If the read fails, keep them all: the next refresh adopts a saved
+		// one, and the backend cleans up an unused one.
+		if len(created) > 0 {
+			saved, readErr := merakiSDWANSavedCredentials(api, d.Id())
+			if readErr != nil {
+				log.Printf("[WARN] failed to read connector %s after the failed update, keeping the new credentials: %v", d.Id(), readErr)
+				return diag.FromErr(err)
+			}
+			deleteUnusedMerakiSDWANCredentials(client, created, saved)
+
+			if len(merakiSDWANSkippedInstances(request, saved)) == 0 {
+				d.Partial(false)
+				return append(diag.FromErr(err), resourceConnectorMerakiSDWANRead(ctx, d, m)...)
+			}
+		}
+		return diag.FromErr(err)
+	}
+
+	// With provisioning on, a connector in FAILED state (and the tenant's
+	// selective provisioning) skips the update and keeps its saved
+	// configuration. The state can't tell: refresh doesn't update
+	// provision_state. So check that the connector uses the new credentials.
+	// If the read fails, the old state is kept and the next refresh adopts a
+	// saved credential. Without a new credential, every sent ID is one it had.
+	if len(created) > 0 && client.Provision {
+		saved, err := merakiSDWANSavedCredentials(api, d.Id())
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("failed to read connector %s after the update: %w", d.Id(), err))
+		}
+
+		if skipped := merakiSDWANSkippedInstances(request, saved); len(skipped) > 0 {
+			deleteUnusedMerakiSDWANCredentials(client, created, saved)
+			return diag.FromErr(fmt.Errorf("the connector was not updated for instances %s. "+
+				"A connector in FAILED state with provisioning on keeps its saved "+
+				"configuration. Apply with provisioning off, then provision the "+
+				"network from the Alkira portal", strings.Join(skipped, ", ")))
+		}
 	}
 
 	// The connector is saved before it is validated, so keep the new
 	// state from here on
 	d.Partial(false)
 
+	var diags diag.Diagnostics
+	if len(adopted) > 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "AUTH TOKEN NOT SENT",
+			Detail: fmt.Sprintf("The auth_token of %s was recorded but not sent: "+
+				"the instance keeps its current credential, from an import, an "+
+				"apply that didn't save its state, or a change outside Terraform. "+
+				"Change auth_token to replace the token.", strings.Join(adopted, ", ")),
+		})
+	}
+
 	if client.Validate && valErr != nil {
-		var diags diag.Diagnostics
 		readDiags := resourceConnectorMerakiSDWANRead(ctx, d, m)
 		if readDiags.HasError() {
 			diags = append(diags, readDiags...)
@@ -367,15 +418,15 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 	if client.Provision {
 		d.Set("provision_state", provState)
 		if provState == "FAILED" {
-			return diag.Diagnostics{{
+			return append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "PROVISION (UPDATE) FAILED",
 				Detail:   fmt.Sprintf("%s", provErr),
-			}}
+			})
 		}
 	}
 
-	return resourceConnectorMerakiSDWANRead(ctx, d, m)
+	return append(diags, resourceConnectorMerakiSDWANRead(ctx, d, m)...)
 }
 
 func resourceConnectorMerakiSDWANDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -421,18 +472,18 @@ func resourceConnectorMerakiSDWANDelete(ctx context.Context, d *schema.ResourceD
 
 // generateConnectorMerakiSDWANRequest generate request for Meraki SD-WAN
 // connector. old is the instances block before the change, nil on create.
-// It also returns the IDs of the credentials created for new instances and
-// the instances whose token was replaced.
+// It also returns the IDs of the credentials it created and the host names
+// of the imported instances that keep their credential.
 func generateConnectorMerakiSDWANRequest(d *schema.ResourceData, m interface{}, old []interface{}) (*alkira.ConnectorMerakiSDWAN, []string, []string, error) {
 
-	instances, created, replaced, err := expandMerakiSDWANInstances(
+	instances, created, adopted, err := expandMerakiSDWANInstances(
 		m.(*alkira.AlkiraClient),
 		d.Get("instances").(*schema.Set).List(),
 		old,
 	)
 
 	if err != nil {
-		return nil, nil, replaced, err
+		return nil, nil, nil, err
 	}
 
 	// Construct the request payload
@@ -450,5 +501,5 @@ func generateConnectorMerakiSDWANRequest(d *schema.ResourceData, m interface{}, 
 		Version:        d.Get("version").(string),
 	}
 
-	return connector, created, replaced, nil
+	return connector, created, adopted, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,17 +54,17 @@ func merakiSDWANInstanceHash(v interface{}) int {
 }
 
 // expandMerakiSDWANInstances expand Meraki SD-WAN connector instances. An
-// instance is matched to the prior state by its host_name. A new instance
-// gets a credential created from its auth_token. An existing instance
-// keeps its ID and credential; when its auth_token differs from the prior
-// state, the credential is updated in place, keeping its ID and name.
-// After an import the prior token is empty, so the configured token is
-// written once. A host_name used twice fails before any credential call.
-// A token can be used once, so a token shared by two instances, or a new
-// instance with the token of an existing one, also fails before it.
+// instance is matched to the prior state by its host_name and keeps its ID.
+// The instance credential can't be updated, so a new instance or a changed
+// auth_token gets a new credential. An unchanged auth_token keeps the
+// credential. An empty prior token (after an import, or a credential
+// changed outside the state) keeps the current credential, and the
+// host_name is returned in adopted. A host_name
+// used twice fails before any credential call. A token can be used once,
+// so a token shared by two instances, or an instance with the prior token
+// of another instance, also fails before it.
 //
-// It returns the IDs of the credentials it created and the instances whose
-// token it replaced, also when it fails part way. If it fails, the
+// It returns the IDs of the credentials it created. If it fails, the
 // credentials created here are deleted.
 func expandMerakiSDWANInstances(ac *alkira.AlkiraClient, in []interface{}, old []interface{}) ([]alkira.ConnectorMerakiSDWANInstance, []string, []string, error) {
 
@@ -114,37 +113,43 @@ func expandMerakiSDWANInstances(ac *alkira.AlkiraClient, in []interface{}, old [
 		}
 		tokens[token] = hostName
 
-		if _, found := oldInstances[hostName]; found {
-			continue
-		}
-
-		if other, found := oldTokens[token]; found {
-			return nil, nil, nil, fmt.Errorf("instances: the new instance %q has the auth_token of instance %q. "+
+		if other, found := oldTokens[token]; found && other != hostName {
+			return nil, nil, nil, fmt.Errorf("instances: %q has the auth_token that instance %q had. "+
 				"A token can be used once: generate a new token for %q. "+
 				"A new host_name adds a new vMX", hostName, other, hostName)
 		}
 	}
 
 	instances := make([]alkira.ConnectorMerakiSDWANInstance, len(in))
-	var created, replaced []string
+	var created, adopted []string
 
 	for i, inst := range in {
 		r := alkira.ConnectorMerakiSDWANInstance{}
 		t := inst.(map[string]interface{})
 
-		var authToken string
+		r.HostName, _ = t["host_name"].(string)
+		authToken, _ := t["auth_token"].(string)
 
-		if v, ok := t["host_name"].(string); ok {
-			r.HostName = v
+		if o, found := oldInstances[r.HostName]; found {
+			if v, ok := o["id"].(int); ok && v != 0 {
+				r.Id = json.Number(fmt.Sprintf("%d", v))
+			}
+
+			oldToken, _ := o["auth_token"].(string)
+			oldCredentialId, _ := o["credential_id"].(string)
+
+			switch {
+			case oldCredentialId == "":
+			case oldToken == authToken:
+				r.CredentialId = oldCredentialId
+			case oldToken == "":
+				r.CredentialId = oldCredentialId
+				adopted = append(adopted, r.HostName)
+			}
 		}
-		if v, ok := t["auth_token"].(string); ok {
-			authToken = v
-		}
 
-		o, found := oldInstances[r.HostName]
-
-		if !found {
-			log.Printf("[DEBUG] Creating the credential of Meraki SD-WAN instance %s", r.HostName)
+		if r.CredentialId == "" {
+			log.Printf("[DEBUG] Creating a credential for Meraki SD-WAN instance %s", r.HostName)
 			credentialId, err := ac.CreateCredential(
 				r.HostName+randomNameSuffix(),
 				alkira.CredentialTypeMerakiSDWANInstance,
@@ -154,75 +159,68 @@ func expandMerakiSDWANInstances(ac *alkira.AlkiraClient, in []interface{}, old [
 
 			if err != nil {
 				deleteMerakiSDWANCredentials(ac, created)
-				return nil, nil, replaced, fmt.Errorf("failed to create the credential of instance %s: %w", r.HostName, err)
+				return nil, nil, nil, fmt.Errorf("failed to create the credential of instance %s: %w", r.HostName, err)
 			}
 
 			created = append(created, credentialId)
 			r.CredentialId = credentialId
-		} else {
-			r.CredentialId, _ = o["credential_id"].(string)
-
-			if v, ok := o["id"].(int); ok && v != 0 {
-				r.Id = json.Number(fmt.Sprintf("%d", v))
-			}
-
-			if o["auth_token"] != authToken {
-				log.Printf("[DEBUG] Replacing the auth_token of Meraki SD-WAN instance %s (credential %s)", r.HostName, r.CredentialId)
-
-				if err := updateMerakiSDWANInstanceCredential(ac, r.CredentialId, authToken); err != nil {
-					deleteMerakiSDWANCredentials(ac, created)
-					return nil, nil, replaced, fmt.Errorf("failed to replace the auth_token of instance %s: %w", r.HostName, err)
-				}
-
-				replaced = append(replaced, fmt.Sprintf("%s (credential %s)", r.HostName, r.CredentialId))
-			}
 		}
 
 		instances[i] = r
 	}
 
-	return instances, created, replaced, nil
+	return instances, created, adopted, nil
 }
 
-// updateMerakiSDWANInstanceCredential update the token of an existing
-// instance credential, keeping its name
-func updateMerakiSDWANInstanceCredential(ac *alkira.AlkiraClient, credentialId string, authToken string) error {
-
-	existing, err := ac.GetCredentialById(credentialId)
-
+// merakiSDWANSavedCredentials return the credential ID of each saved
+// instance, keyed by host_name
+func merakiSDWANSavedCredentials(api *alkira.AlkiraAPI[alkira.ConnectorMerakiSDWAN], id string) (map[string]string, error) {
+	connector, _, err := api.GetById(id)
 	if err != nil {
-		return fmt.Errorf("failed to get Meraki SD-WAN instance credential %s: %w", credentialId, err)
+		return nil, err
 	}
 
-	err = ac.UpdateCredential(
-		credentialId,
-		existing.Name,
-		alkira.CredentialTypeMerakiSDWANInstance,
-		alkira.CredentialMerakiSDWANInstance{AuthToken: authToken},
-		0,
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to update Meraki SD-WAN instance credential %s: %w", credentialId, err)
+	saved := make(map[string]string, len(connector.Instances))
+	for _, inst := range connector.Instances {
+		saved[inst.HostName] = inst.CredentialId
 	}
 
-	return nil
+	return saved, nil
 }
 
-// merakiSDWANReplacedTokensError say which tokens were already replaced
-// when the update fails after replacing them. The credentials hold the new
-// tokens, while the state keeps the old ones until an update succeeds.
-func merakiSDWANReplacedTokensError(replaced []string, err error) error {
-	if len(replaced) == 0 {
-		return err
+// merakiSDWANSkippedInstances return the host names whose sent credential
+// is not the saved one. With provisioning on, a connector in FAILED state
+// is not updated: the backend provisions the saved configuration instead.
+func merakiSDWANSkippedInstances(request *alkira.ConnectorMerakiSDWAN, saved map[string]string) []string {
+	var skipped []string
+	for _, inst := range request.Instances {
+		if saved[inst.HostName] != inst.CredentialId {
+			skipped = append(skipped, inst.HostName)
+		}
 	}
-
-	return fmt.Errorf("the auth_token was replaced for %s, but the connector update failed; apply again to finish: %w",
-		strings.Join(replaced, ", "), err)
+	return skipped
 }
 
-// deleteMerakiSDWANCredentials delete the credentials created in this
-// apply, when the apply fails before a connector references them
+// deleteUnusedMerakiSDWANCredentials delete the created credentials that no
+// saved instance uses
+func deleteUnusedMerakiSDWANCredentials(ac *alkira.AlkiraClient, created []string, saved map[string]string) {
+	used := make(map[string]bool, len(saved))
+	for _, credentialId := range saved {
+		used[credentialId] = true
+	}
+
+	var unused []string
+	for _, id := range created {
+		if !used[id] {
+			unused = append(unused, id)
+		}
+	}
+
+	deleteMerakiSDWANCredentials(ac, unused)
+}
+
+// deleteMerakiSDWANCredentials delete the given credentials created in this
+// apply. A failed delete is only logged.
 func deleteMerakiSDWANCredentials(ac *alkira.AlkiraClient, ids []string) {
 	for _, id := range ids {
 		if err := ac.DeleteCredential(id, alkira.CredentialTypeMerakiSDWANInstance); err != nil {
@@ -234,13 +232,19 @@ func deleteMerakiSDWANCredentials(ac *alkira.AlkiraClient, ids []string) {
 // setMerakiSDWANInstances set the instances from the API response.
 // auth_token is not returned by the API, so it is kept from the state of
 // the instance with the same host_name. An instance not in the state gets
-// an empty token, as after an import.
+// an empty token, as after an import. So does an instance whose credential
+// changed outside the state (an apply that didn't save its state, or the
+// UI): the state token may not be the deployed one, so the next apply
+// keeps the credential and doesn't send a spent token again.
 func setMerakiSDWANInstances(d *schema.ResourceData, connector *alkira.ConnectorMerakiSDWAN) {
 	tokens := make(map[string]interface{})
+	credentialIds := make(map[string]string)
 
 	for _, inst := range d.Get("instances").(*schema.Set).List() {
 		i := inst.(map[string]interface{})
-		tokens[i["host_name"].(string)] = i["auth_token"]
+		hostName := i["host_name"].(string)
+		tokens[hostName] = i["auth_token"]
+		credentialIds[hostName], _ = i["credential_id"].(string)
 	}
 
 	var instances []map[string]interface{}
@@ -248,6 +252,9 @@ func setMerakiSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 	for _, info := range connector.Instances {
 		authToken, found := tokens[info.HostName]
 		if !found {
+			authToken = ""
+		}
+		if id := credentialIds[info.HostName]; id != "" && id != info.CredentialId {
 			authToken = ""
 		}
 

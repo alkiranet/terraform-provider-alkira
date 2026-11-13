@@ -21,8 +21,7 @@ type merakiSDWANCredentialCall struct {
 }
 
 // merakiSDWANCredentialServer records credential calls. A POST whose
-// authToken equals failToken returns 500. GET /api/credentials/ lists
-// each existing credential as "<id>-name".
+// authToken equals failToken returns 500.
 func merakiSDWANCredentialServer(t *testing.T, failToken string) (*alkira.AlkiraClient, *[]merakiSDWANCredentialCall) {
 	var mu sync.Mutex
 	calls := []merakiSDWANCredentialCall{}
@@ -40,13 +39,6 @@ func merakiSDWANCredentialServer(t *testing.T, failToken string) (*alkira.Alkira
 
 		w.Header().Set("Content-Type", "application/json")
 		switch {
-		case req.Method == "GET" && req.URL.Path == "/api/credentials/":
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode([]map[string]string{
-				{"credentialId": "cred-a", "name": "cred-a-name"},
-				{"credentialId": "cred-b", "name": "cred-b-name"},
-				{"credentialId": "cred-d", "name": "cred-d-name"},
-			})
 		case req.Method == "POST":
 			creds := call.Body["credentials"].(map[string]interface{})
 			if creds["authToken"] == failToken {
@@ -99,17 +91,6 @@ func TestExpandMerakiSDWANSegmentOptions(t *testing.T) {
 	assert.True(t, expandMerakiSDWANSegmentOptions(in)[0].DisableInternetExit)
 }
 
-func TestMerakiSDWANReplacedTokensError(t *testing.T) {
-	cause := assert.AnError
-
-	assert.Equal(t, cause, merakiSDWANReplacedTokensError(nil, cause), "nothing replaced")
-
-	err := merakiSDWANReplacedTokensError([]string{"vmx-a (credential cred-a)"}, cause)
-	assert.ErrorIs(t, err, cause)
-	assert.Contains(t, err.Error(), "vmx-a (credential cred-a)")
-	assert.Contains(t, err.Error(), "apply again")
-}
-
 func TestExpandMerakiSDWANInstances(t *testing.T) {
 	client, calls := merakiSDWANCredentialServer(t, "")
 
@@ -128,32 +109,31 @@ func TestExpandMerakiSDWANInstances(t *testing.T) {
 		map[string]interface{}{"id": 0, "host_name": "vmx-c", "credential_id": "", "auth_token": "tc"},
 	}
 
-	result, created, replaced, err := expandMerakiSDWANInstances(client, in, old)
+	result, created, adopted, err := expandMerakiSDWANInstances(client, in, old)
 	require.NoError(t, err)
 	require.Len(t, result, 4)
-	assert.Equal(t, []string{"cred-new-1"}, created)
-	assert.Equal(t, []string{"vmx-b (credential cred-b)", "vmx-d (credential cred-d)"}, replaced)
+	assert.Equal(t, []string{"cred-new-1", "cred-new-2"}, created)
+	assert.Equal(t, []string{"vmx-d"}, adopted)
 
 	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "11", HostName: "vmx-a", CredentialId: "cred-a"}, result[0])
-	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "12", HostName: "vmx-b", CredentialId: "cred-b"}, result[1])
-	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "14", HostName: "vmx-d", CredentialId: "cred-d"}, result[2])
-	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{HostName: "vmx-c", CredentialId: "cred-new-1"}, result[3])
+	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "12", HostName: "vmx-b", CredentialId: "cred-new-1"}, result[1],
+		"a changed token gets a new credential and keeps the instance ID")
+	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "14", HostName: "vmx-d", CredentialId: "cred-d"}, result[2],
+		"an imported instance keeps its credential")
+	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{HostName: "vmx-c", CredentialId: "cred-new-2"}, result[3])
 
+	// The instance credential can't be updated, so there is no PUT
 	writes := merakiSDWANCredentialWrites(*calls)
-	require.Len(t, writes, 3)
+	require.Len(t, writes, 2)
 
-	assert.Equal(t, "PUT", writes[0].Method)
-	assert.Equal(t, "/api/credentials/meraki-sdwan-connector-instance/cred-b", writes[0].Path)
+	assert.Equal(t, "POST", writes[0].Method)
+	assert.Equal(t, "/api/credentials/meraki-sdwan-connector-instance", writes[0].Path)
 	assert.Equal(t, "tb2", writes[0].Body["credentials"].(map[string]interface{})["authToken"])
-	assert.Equal(t, "cred-b-name", writes[0].Body["name"], "the credential keeps its name")
+	assert.True(t, strings.HasPrefix(writes[0].Body["name"].(string), "vmx-b"))
 
-	assert.Equal(t, "/api/credentials/meraki-sdwan-connector-instance/cred-d", writes[1].Path)
-	assert.Equal(t, "td", writes[1].Body["credentials"].(map[string]interface{})["authToken"])
-
-	assert.Equal(t, "POST", writes[2].Method)
-	assert.Equal(t, "/api/credentials/meraki-sdwan-connector-instance", writes[2].Path)
-	assert.Equal(t, "tc", writes[2].Body["credentials"].(map[string]interface{})["authToken"])
-	assert.True(t, strings.HasPrefix(writes[2].Body["name"].(string), "vmx-c"))
+	assert.Equal(t, "POST", writes[1].Method)
+	assert.Equal(t, "tc", writes[1].Body["credentials"].(map[string]interface{})["authToken"])
+	assert.True(t, strings.HasPrefix(writes[1].Body["name"].(string), "vmx-c"))
 
 	payload, err := json.Marshal(result[3])
 	require.NoError(t, err)
@@ -199,6 +179,20 @@ func TestExpandMerakiSDWANInstancesRejected(t *testing.T) {
 		assert.Empty(t, merakiSDWANCredentialWrites(*calls))
 	})
 
+	t.Run("two instances swap tokens", func(t *testing.T) {
+		client, calls := merakiSDWANCredentialServer(t, "")
+
+		in := []interface{}{
+			map[string]interface{}{"host_name": "vmx-a", "auth_token": "tb"},
+			map[string]interface{}{"host_name": "vmx-b", "auth_token": "ta"},
+		}
+
+		_, _, _, err := expandMerakiSDWANInstances(client, in, old)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `"vmx-a" has the auth_token that instance "vmx-b" had`)
+		assert.Empty(t, merakiSDWANCredentialWrites(*calls))
+	})
+
 	t.Run("a host_name is used twice", func(t *testing.T) {
 		client, calls := merakiSDWANCredentialServer(t, "")
 
@@ -221,11 +215,11 @@ func TestExpandMerakiSDWANInstancesRejected(t *testing.T) {
 			map[string]interface{}{"host_name": "vmx-x", "auth_token": "tx"},
 		}
 
-		result, created, replaced, err := expandMerakiSDWANInstances(client, in, old)
+		result, created, adopted, err := expandMerakiSDWANInstances(client, in, old)
 		require.NoError(t, err)
 		assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{HostName: "vmx-x", CredentialId: "cred-new-1"}, result[1])
 		assert.Equal(t, []string{"cred-new-1"}, created)
-		assert.Empty(t, replaced)
+		assert.Empty(t, adopted)
 
 		writes := merakiSDWANCredentialWrites(*calls)
 		require.Len(t, writes, 1)
@@ -257,9 +251,11 @@ func TestExpandMerakiSDWANInstancesCredentialFailure(t *testing.T) {
 func TestSetMerakiSDWANInstances(t *testing.T) {
 	d := resourceAlkiraConnectorMerakiSDWAN().TestResourceData()
 	require.NoError(t, d.Set("instances", []interface{}{
-		map[string]interface{}{"host_name": "vmx-b", "id": 2, "auth_token": "tb"},
+		map[string]interface{}{"host_name": "vmx-b", "id": 2, "auth_token": "tb", "credential_id": "cred-b"},
 		// Not tracked yet, as on the read at the end of a create
 		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+		// The connector got a new credential that the state missed
+		map[string]interface{}{"host_name": "vmx-d", "id": 4, "auth_token": "td", "credential_id": "cred-d"},
 	}))
 
 	connector := &alkira.ConnectorMerakiSDWAN{
@@ -267,13 +263,16 @@ func TestSetMerakiSDWANInstances(t *testing.T) {
 			{Id: "1", HostName: "vmx-a", CredentialId: "cred-a", Name: "inst-1", Az: 2, WanIp: "10.0.0.4"},
 			{Id: "2", HostName: "vmx-b", CredentialId: "cred-b", Name: "inst-2", Az: 1},
 			{Id: "3", HostName: "vmx-c", CredentialId: "cred-c"},
+			{Id: "4", HostName: "vmx-d", CredentialId: "cred-d2"},
 		},
 	}
 
 	setMerakiSDWANInstances(d, connector)
 
 	instances := merakiSDWANInstancesByHostName(d)
-	require.Len(t, instances, 3)
+	require.Len(t, instances, 4)
+	assert.Equal(t, "", instances["vmx-d"]["auth_token"],
+		"the state token may not be the deployed one, so the next apply must adopt, not send it")
 
 	b := instances["vmx-b"]
 	assert.Equal(t, 2, b["id"])
