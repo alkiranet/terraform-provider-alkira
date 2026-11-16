@@ -19,9 +19,8 @@ type ConnectorMerakiSDWANInstance struct {
 	CredentialId string      `json:"credentialId"`
 	HostName     string      `json:"hostName"`
 	Id           json.Number `json:"id,omitempty"`
-	Name         string      `json:"name,omitempty"`     // response only
-	PublicIp     string      `json:"publicIp,omitempty"` // response only
-	WanIp        string      `json:"wanIp,omitempty"`    // response only
+	Name         string      `json:"name,omitempty"`  // response only
+	WanIp        string      `json:"wanIp,omitempty"` // response only
 }
 
 type ConnectorMerakiSDWAN struct {

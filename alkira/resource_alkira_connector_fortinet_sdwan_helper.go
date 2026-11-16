@@ -66,10 +66,10 @@ func setWanEdge(d *schema.ResourceData, connector *alkira.ConnectorFortinetSdwan
 				"license_type":  info.LicenseType,
 				"serial_number": info.SerialNumber,
 				"id":            info.Id,
+				"version":       info.Version,
 			}
 
 			wanEdges = append(wanEdges, instance)
-			break
 		}
 	}
 

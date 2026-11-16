@@ -130,6 +130,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 								"set by environment variable `AK_CISCO_SDWAN_USERNAME`.",
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 							DefaultFunc: schema.EnvDefaultFunc(
 								"AK_CISCO_SDWAN_USERNAME",
 								nil),
@@ -140,6 +142,8 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 							Type:      schema.TypeString,
 							Sensitive: true,
 							Required:  true,
+							DiffSuppressFunc: suppressCredentialSecretDiff(
+								"credential_id", false),
 							DefaultFunc: schema.EnvDefaultFunc(
 								"AK_CISCO_SDWAN_PASSWORD",
 								nil),

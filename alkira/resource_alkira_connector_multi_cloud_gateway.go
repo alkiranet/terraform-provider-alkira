@@ -131,7 +131,7 @@ func resourceAlkiraConnectorMultiCloudGateway() *schema.Resource {
 							Computed:    true,
 						},
 						"lumen_connection_id": {
-							Description: "Lumen Connect ID to correlate the instance.",
+							Description: "The id of this instance's Lumen underlay, the Lumen object that carries its connection.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},

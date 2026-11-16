@@ -80,7 +80,7 @@ Read-Only:
 
 - `bandwidth_in_mbps` (Number) Bandwidth of the instance when it was created. Never changes after.
 - `id` (Number) ID Alkira assigned to the instance.
-- `lumen_connection_id` (String) Lumen Connect ID to correlate the instance.
+- `lumen_connection_id` (String) The id of this instance's Lumen underlay, the Lumen object that carries its connection.
 
 
 <a id="nestedblock--segment_options"></a>
