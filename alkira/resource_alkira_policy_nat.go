@@ -102,6 +102,17 @@ func resourceAlkiraPolicyNat() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"allow_overlapping_outbound_destination_prefixes": {
+				Description: "Allow the `OUTBOUND` DNAT rules of this policy to share a " +
+					"pre-translated destination prefix with `OUTBOUND` DNAT rules of other " +
+					"policies in the segment, provided their destination track prefixes are " +
+					"equal. Requires at least one `OUTBOUND` rule with destination translation " +
+					"in the policy, and the tenant must be enabled for outbound DNAT. " +
+					"Default value is `false`. (**BETA**)",
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"provision_state": {
 				Description: "The provisioning state of the resource.",
 				Type:        schema.TypeString,
@@ -192,6 +203,7 @@ func setNatPolicyFields(d *schema.ResourceData, policy *alkira.NatPolicy) {
 	d.Set("nat_rule_ids", policy.NatRuleIds)
 	d.Set("category", natCategoryOrDefault(policy.Category))
 	d.Set("allow_overlapping_translated_source_addresses", policy.AllowOverlappingTranslatedPrefixes)
+	d.Set("allow_overlapping_outbound_destination_prefixes", policy.AllowOverlappingOutboundDestinationPrefixes)
 }
 
 func resourcePolicyNatRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -342,6 +354,9 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		*allowOverlappingTranslatedPrefixes = d.Get("allow_overlapping_translated_source_addresses").(bool)
 	}
 
+	// TPS stores this field as sent, so a null on update would clear it: always send the value.
+	allowOverlappingOutboundDestinationPrefixes := d.Get("allow_overlapping_outbound_destination_prefixes").(bool)
+
 	// Assemble request
 	policy := &alkira.NatPolicy{
 		Name:                               d.Get("name").(string),
@@ -353,6 +368,7 @@ func generatePolicyNatRequest(d *schema.ResourceData, m interface{}) (*alkira.Na
 		NatRuleIds:                         convertTypeListToIntList(d.Get("nat_rule_ids").([]interface{})),
 		Category:                           d.Get("category").(string),
 		AllowOverlappingTranslatedPrefixes: allowOverlappingTranslatedPrefixes,
+		AllowOverlappingOutboundDestinationPrefixes: &allowOverlappingOutboundDestinationPrefixes,
 	}
 
 	return policy, nil

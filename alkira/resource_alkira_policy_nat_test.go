@@ -1,6 +1,8 @@
 package alkira
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
@@ -179,4 +181,53 @@ func TestSetNatPolicyFieldsPopulatesStateFromAPI(t *testing.T) {
 
 		assert.Equal(t, "INTERNET_CONNECTOR", d.Get("category"))
 	})
+}
+
+// AK-75707: per-policy opt-in for OUTBOUND DNAT rules to share a pre-translated destination prefix.
+func TestPolicyNatAllowOverlappingOutboundDestinationPrefixes(t *testing.T) {
+	const field = "allow_overlapping_outbound_destination_prefixes"
+
+	t.Run("schema declares an optional bool defaulting to false", func(t *testing.T) {
+		s, exists := resourceAlkiraPolicyNat().Schema[field]
+		require.True(t, exists, "schema must declare %s", field)
+		assert.Equal(t, schema.TypeBool, s.Type)
+		assert.True(t, s.Optional)
+		assert.Equal(t, false, s.Default)
+	})
+
+	t.Run("read sets the API value into state", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNat().Schema, map[string]interface{}{})
+
+		setNatPolicyFields(d, &alkira.NatPolicy{Name: "policy-1", AllowOverlappingOutboundDestinationPrefixes: boolPtr(true)})
+
+		assert.Equal(t, true, d.Get(field))
+	})
+
+	t.Run("read of a policy stored without the field lands as false", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNat().Schema, map[string]interface{}{})
+
+		setNatPolicyFields(d, &alkira.NatPolicy{Name: "policy-1"})
+
+		assert.Equal(t, false, d.Get(field))
+	})
+
+	for _, value := range []bool{true, false} {
+		t.Run(fmt.Sprintf("request always sends the value (%t)", value), func(t *testing.T) {
+			// TPS stores the field as sent, so the request must never carry a null
+			client := serveMockServer(t, alkira.Segment{Name: "seg-1"}, http.StatusOK)
+			d := schema.TestResourceDataRaw(t, resourceAlkiraPolicyNat().Schema, map[string]interface{}{
+				"name":         "policy-1",
+				"type":         "STATIC",
+				"segment_id":   "1",
+				"nat_rule_ids": []interface{}{1},
+				field:          value,
+			})
+
+			request, err := generatePolicyNatRequest(d, client)
+
+			require.NoError(t, err)
+			require.NotNil(t, request.AllowOverlappingOutboundDestinationPrefixes)
+			assert.Equal(t, value, *request.AllowOverlappingOutboundDestinationPrefixes)
+		})
+	}
 }

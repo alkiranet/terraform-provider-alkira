@@ -59,6 +59,7 @@ resource "alkira_policy_nat" "example" {
 
 ### Optional
 
+- `allow_overlapping_outbound_destination_prefixes` (Boolean) Allow the `OUTBOUND` DNAT rules of this policy to share a pre-translated destination prefix with `OUTBOUND` DNAT rules of other policies in the segment, provided their destination track prefixes are equal. Requires at least one `OUTBOUND` rule with destination translation in the policy, and the tenant must be enabled for outbound DNAT. Default value is `false`. (**BETA**)
 - `allow_overlapping_translated_source_addresses` (Boolean) Allow overlapping translated source address. Default value is `false`. (**BETA**)
 - `category` (String) The category of NAT policy. The vaule could be `DEFAULT` or `INTERNET_CONNECTOR`. Default value is `DEFAULT`.
 - `description` (String) The description of the policy.
