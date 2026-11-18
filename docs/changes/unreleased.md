@@ -2,6 +2,12 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## Firewall services — `segment_options.groups` is now a set, stopping a perpetual diff (AK-77702)
+
+`groups` inside `segment_options` on `alkira_service_pan`, `alkira_service_fortinet`, `alkira_service_checkpoint` and `alkira_service_cisco_ftdv` is now `Set of String` instead of `List of String`. The API stores a zone's groups as a set and returns them in no fixed order. As an ordered list, a different order re-hashed the whole `segment_options` block, so every plan after create removed and re-added it with the same groups and sent an update for the service.
+
+**Impact:** these services now plan clean when only the order of `groups` differs, and the order in configuration no longer matters. Adding or removing a group still plans a change. Existing state loads as-is; no state migration is required. A group listed twice in one block is now collapsed to one, as the API already did. Expressions that index `groups` by position need `tolist()`.
+
 ## Advanced IPSec connector — imported tunnels using an overlay reservation now plan cleanly (AK-76265)
 
 For an `alkira_connector_ipsec_adv` tunnel that uses `customer_end_overlay_ip_reservation_id`, the provider no longer writes the backend-derived `customer_end_overlay_ip` into state. Previously both values landed in state, so `terraform plan -generate-config-out` emitted both lines and the generated config failed with "tunnel customer_end_overlay_ip and customer_end_overlay_ip_reservation_id are mutually exclusive".

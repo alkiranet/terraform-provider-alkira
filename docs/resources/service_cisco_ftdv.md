@@ -134,7 +134,7 @@ Required:
 
 Optional:
 
-- `groups` (List of String) The list of Groups associated with the zone.
+- `groups` (Set of String) The list of Groups associated with the zone.
 
 ## Import
 
