@@ -158,7 +158,7 @@ func expandCiscoFtdvSegmentOptions(in *schema.Set, m interface{}) (alkira.Segmen
 			return nil, err
 		}
 
-		groupList := convertTypeListToStringList(cfg["groups"].([]interface{}))
+		groupList := convertTypeSetToStringList(cfg["groups"].(*schema.Set))
 
 		if groupList == nil {
 			groupList = []string{}

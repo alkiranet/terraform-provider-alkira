@@ -2,6 +2,12 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## Firewall services — `segment_options.groups` is now a set, stopping a perpetual diff (AK-77702)
+
+`groups` inside `segment_options` on `alkira_service_pan`, `alkira_service_fortinet`, `alkira_service_checkpoint` and `alkira_service_cisco_ftdv` is now `Set of String` instead of `List of String`. The API stores a zone's groups as a set and returns them in no fixed order. As an ordered list, a different order re-hashed the whole `segment_options` block, so every plan after create removed and re-added it with the same groups and sent an update for the service.
+
+**Impact:** these services now plan clean when only the order of `groups` differs, and the order in configuration no longer matters. Adding or removing a group still plans a change. Existing state loads as-is; no state migration is required. A group listed twice in one block is now collapsed to one, as the API already did. Expressions that index `groups` by position need `tolist()`.
+
 ## NAT policy — `allow_overlapping_outbound_destination_prefixes` (AK-75707)
 
 `alkira_policy_nat` has a new optional bool, `allow_overlapping_outbound_destination_prefixes` (default `false`, **BETA**). When it is `true`, the policy's `OUTBOUND` DNAT rules may share a pre-translated destination prefix with `OUTBOUND` DNAT rules of other policies in the segment, provided their destination track prefixes are equal. The policy must contain at least one `OUTBOUND` rule with destination translation, and the tenant must be enabled for outbound DNAT; otherwise Alkira rejects the request.

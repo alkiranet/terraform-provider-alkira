@@ -819,7 +819,7 @@ func TestExpandSegmentOptionsRejectsInvalidSegmentId(t *testing.T) {
 		in := newSegmentOptionsSet(map[string]interface{}{
 			"segment_id": "../tenant/users?includeSecrets=true#",
 			"zone_name":  "DEFAULT",
-			"groups":     []interface{}{},
+			"groups":     schema.NewSet(schema.HashString, nil),
 		})
 
 		result, err := expandSegmentOptions(in, client)
@@ -841,7 +841,7 @@ func TestExpandSegmentOptionsRejectsInvalidSegmentId(t *testing.T) {
 		in := newSegmentOptionsSet(map[string]interface{}{
 			"segment_id": "100",
 			"zone_name":  "DEFAULT",
-			"groups":     []interface{}{},
+			"groups":     schema.NewSet(schema.HashString, nil),
 		})
 
 		result, err := expandSegmentOptions(in, client)
@@ -990,6 +990,69 @@ func TestWarnOnFailedStateUpdate(t *testing.T) {
 				assert.Zero(t, warningCount, "expected no skip warning")
 				assert.Len(t, diags, len(tt.updateDiags))
 			}
+		})
+	}
+}
+
+// TestSegmentOptionsGroupsOrder asserts that the firewall services plan no
+// segment_options change when the API returns a zone's groups in another
+// order. TPS stores groups as a set, so the order it returns is not stable.
+func TestSegmentOptionsGroupsOrder(t *testing.T) {
+	resources := map[string]*schema.Resource{
+		"alkira_service_pan":        resourceAlkiraServicePan(),
+		"alkira_service_fortinet":   resourceAlkiraServiceFortinet(),
+		"alkira_service_checkpoint": resourceAlkiraCheckpoint(),
+		"alkira_service_cisco_ftdv": resourceAlkiraServiceCiscoFTDv(),
+	}
+
+	configWithGroups := func(groups ...interface{}) map[string]interface{} {
+		return map[string]interface{}{
+			"segment_options": []interface{}{
+				map[string]interface{}{
+					"segment_id": "100",
+					"zone_name":  "zone1",
+					"groups":     groups,
+				},
+			},
+		}
+	}
+
+	apiOptions := alkira.SegmentNameToZone{
+		"seg1": alkira.OuterZoneToGroups{
+			SegmentId:     100,
+			ZonesToGroups: alkira.ZoneToGroups{"zone1": {"tgw", "egress", "aws"}},
+		},
+	}
+
+	segmentOptionsDiff := func(t *testing.T, r *schema.Resource, config map[string]interface{}) []string {
+		d := schema.TestResourceDataRaw(t, r.Schema, config)
+		d.SetId("1")
+		require.NoError(t, d.Set("segment_options", deflateSegmentOptions(apiOptions)))
+
+		diff, err := schema.InternalMap(r.Schema).Diff(context.Background(), d.State(),
+			terraform.NewResourceConfigRaw(config), nil, nil, false)
+		require.NoError(t, err)
+
+		var keys []string
+		if diff != nil {
+			for k := range diff.Attributes {
+				if strings.HasPrefix(k, "segment_options") {
+					keys = append(keys, k)
+				}
+			}
+		}
+		return keys
+	}
+
+	for name, r := range resources {
+		t.Run(name+" same groups in another order", func(t *testing.T) {
+			keys := segmentOptionsDiff(t, r, configWithGroups("egress", "aws", "tgw"))
+			assert.Empty(t, keys, "reordered groups must not plan a change")
+		})
+
+		t.Run(name+" added group", func(t *testing.T) {
+			keys := segmentOptionsDiff(t, r, configWithGroups("egress", "aws", "tgw", "ingress"))
+			assert.NotEmpty(t, keys, "an added group must still plan a change")
 		})
 	}
 }
