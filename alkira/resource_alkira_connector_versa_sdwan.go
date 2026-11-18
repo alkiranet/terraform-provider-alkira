@@ -83,6 +83,13 @@ func resourceAlkiraConnectorVersaSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"provision_state": {
 				Description: "The provision state of the connector.",
 				Type:        schema.TypeString,
@@ -295,6 +302,7 @@ func resourceConnectorVersaSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("size", connector.Size)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("description", connector.Description)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("global_tenant_id", connector.GlobalTenantId)
 	d.Set("versa_controller_host", connector.VersaControllerHost)
 

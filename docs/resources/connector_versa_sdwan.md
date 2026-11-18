@@ -61,6 +61,7 @@ resource "alkira_connector_versa_sdwan" "test" {
 - `group` (String) The group of the connector.
 - `local_public_shared_key` (String) The local public shared key. Default value is`1234`.
 - `remote_public_shared_key` (String) The remote public shared key. Default value is`1234`.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tunnel_protocol` (String) The tunnel protocol of Versa SD-WAN.
 
 ### Read-Only

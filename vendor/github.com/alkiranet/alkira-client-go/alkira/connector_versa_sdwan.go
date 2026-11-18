@@ -42,6 +42,7 @@ type ConnectorVersaSdwan struct {
 	VersaSdWanVRFMappings []VersaSdwanVrfMapping `json:"versaSDWANVRFMappings"`
 	Enabled               bool                   `json:"enabled"`
 	Description           string                 `json:"description,omitempty"`
+	ScaleGroupId          string                 `json:"scaleGroupId,omitempty"`
 }
 
 // NewConnectorVersaSdwan new connector

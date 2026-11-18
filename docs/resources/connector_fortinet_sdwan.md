@@ -52,6 +52,7 @@ resource "alkira_connector_fortinet_sdwan" "test" {
 - `description` (String) The description of the connector.
 - `enabled` (Boolean) Is the connector enabled. Default is `true`.
 - `group` (String) The group of the connector.
+- `scale_group_id` (String) The ID of the scale group associated with the connector. Can only be set at create time and cannot be changed after provisioning.
 - `tunnel_protocol` (String) The tunnel protocol. It could be either `IPSEC`or `GRE`. Default value is `IPSEC`.
 
 ### Read-Only
