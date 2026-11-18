@@ -482,7 +482,7 @@ func resourceAlkiraServicePan() *schema.Resource {
 						"groups": {
 							Description: "The list of groups associated " +
 								"with the zone.",
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},

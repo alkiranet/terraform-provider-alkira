@@ -143,7 +143,7 @@ Required:
 
 Optional:
 
-- `groups` (List of String) The list of Groups associated with the zone.
+- `groups` (Set of String) The list of Groups associated with the zone.
 - `zone_name` (String) The name of the associated zone. Default value is `DEFAULT`.
 
 ## Import
