@@ -265,7 +265,7 @@ func resourceAlkiraCheckpoint() *schema.Resource {
 						},
 						"groups": {
 							Description: "The list of Groups associated with the zone.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
