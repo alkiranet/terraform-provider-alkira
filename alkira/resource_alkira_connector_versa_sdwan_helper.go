@@ -35,6 +35,7 @@ func generateConnectorVersaSdwanRequest(d *schema.ResourceData) (*alkira.Connect
 		TunnelProtocol:        d.Get("tunnel_protocol").(string),
 		VersaControllerHost:   d.Get("versa_controller_host").(string),
 		Description:           d.Get("description").(string),
+		ScaleGroupId:          d.Get("scale_group_id").(string),
 		VersaSdWanVRFMappings: expandVersaSdwanVrfMappings(d.Get("vrf_segment_mapping").(*schema.Set)),
 	}
 

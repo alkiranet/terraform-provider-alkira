@@ -213,6 +213,13 @@ func resourceAlkiraConnectorCiscoSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"allow_list": {
 				Description: "Management-access allow-list of IPv4 CIDRs or IP " +
 					"addresses. Only supported on Cisco Catalyst 8000V " +
@@ -309,6 +316,7 @@ func resourceConnectorCiscoSdwanRead(ctx context.Context, d *schema.ResourceData
 	d.Set("type", connector.Type)
 	d.Set("tunnel_protocol", connector.TunnelProtocol)
 	d.Set("description", connector.Description)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 	d.Set("allow_list", connector.AllowList)
 
 	// Set vedge
@@ -456,6 +464,7 @@ func generateConnectorCiscoSdwanRequest(d *schema.ResourceData, m interface{}) (
 		Version:              d.Get("version").(string),
 		TunnelProtocol:       d.Get("tunnel_protocol").(string),
 		Description:          d.Get("description").(string),
+		ScaleGroupId:         d.Get("scale_group_id").(string),
 		AllowList:            convertTypeSetToStringList(d.Get("allow_list").(*schema.Set)),
 	}
 

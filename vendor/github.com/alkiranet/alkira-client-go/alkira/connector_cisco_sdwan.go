@@ -39,6 +39,7 @@ type ConnectorCiscoSdwan struct {
 	ImplicitGroupId      int                        `json:"implicitGroupId,omitempty"`
 	Enabled              bool                       `json:"enabled"`
 	Description          string                     `json:"description,omitempty"`
+	ScaleGroupId         string                     `json:"scaleGroupId,omitempty"`
 	AllowList            []string                   `json:"allowList,omitempty"`
 }
 

@@ -38,6 +38,7 @@ type ConnectorFortinetSdwan struct {
 	Size                 string                             `json:"size"`
 	TunnelProtocol       string                             `json:"tunnelProtocol"`
 	Description          string                             `json:"description,omitempty"`
+	ScaleGroupId         string                             `json:"scaleGroupId,omitempty"`
 }
 
 // NewConnectorFortinetSdwan new connector-fortinet-sdwan
