@@ -170,6 +170,19 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 							Optional: true,
 						},
+						"match_service_group_ids": {
+							Description: "Group IDs of service groups to match. Use " +
+								"`service_group_implicit_group_id` of `alkira_service_bluecat` or " +
+								"`alkira_service_infoblox`, `implicit_group_id` or `ilb_implicit_group_id` " +
+								"of `alkira_service_f5_lb`, or the ID from `data \"alkira_group\"` with the " +
+								"GlobalProtect service group name of `alkira_service_pan`. Do not use " +
+								"`service_group_id`. Mutually exclusive with `match_all`, `match_group_ids`, " +
+								"`match_segment_resource_ids` and `match_extended_community_list_ids`. " +
+								"Requires the feature flag `RELEASE-INTER-CXP-ROUTE-POLICY-SERVICE-GROUP-SUPPORT`.",
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+							Optional: true,
+						},
 						"set_as_path_prepend": {
 							Description: "Prepend one or more AS numbers to the AS PATH. " +
 								"Space-separated values 0–65535. Example: `100 100 100`. " +
@@ -191,6 +204,17 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 								"Valid only when action is `ALLOW`.",
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"set_reset_local_pref_to_default": {
+							Description: "Reset the local preference to the default (`100`) on matched routes. " +
+								"`true` turns the reset on, `false` turns it off. When not set, the " +
+								"system decides. Requires `set_as_path_prepend` and a match on " +
+								"`match_service_group_ids`, `match_prefix_list_ids` or `match_segment_resource_ids`. " +
+								"Valid only when action is `ALLOW`. Requires the feature flag " +
+								"`RELEASE-INTER-CXP-ROUTE-POLICY-SERVICE-GROUP-SUPPORT`.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"true", "false"}, false),
 						},
 					},
 				},

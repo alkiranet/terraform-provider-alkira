@@ -3,6 +3,7 @@ package alkira
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +24,7 @@ func validateInterCxpRoutingRules(rules []interface{}) error {
 				"match_as_path_list_ids",
 				"match_segment_resource_ids",
 				"match_group_ids",
+				"match_service_group_ids",
 			}
 			for _, field := range matchFields {
 				if v, ok := rule[field].(*schema.Set); ok && v.Len() > 0 {
@@ -46,7 +48,7 @@ func validateInterCxpRoutingRules(rules []interface{}) error {
 
 		// DENY action cannot have set parameters.
 		if action, ok := rule["action"].(string); ok && action == "DENY" {
-			setFields := []string{"set_as_path_prepend", "set_community", "set_extended_community"}
+			setFields := []string{"set_as_path_prepend", "set_community", "set_extended_community", "set_reset_local_pref_to_default"}
 			for _, field := range setFields {
 				if v, ok := rule[field].(string); ok && v != "" {
 					return fmt.Errorf("rule[%d] %q: %s cannot be set when action is DENY", i, rule["name"], field)
@@ -101,6 +103,12 @@ func expandPolicyInterCxpRoutingRuleMatch(in map[string]interface{}) (*alkira.In
 			match.ConnectorGroupIds = nil
 		}
 	}
+	if v, ok := in["match_service_group_ids"].(*schema.Set); ok {
+		match.ServiceGroupIds = convertTypeSetToIntList(v)
+		if len(match.ServiceGroupIds) == 0 {
+			match.ServiceGroupIds = nil
+		}
+	}
 
 	return &match, nil
 }
@@ -117,6 +125,13 @@ func expandPolicyInterCxpRoutingRuleSet(in map[string]interface{}) (*alkira.Inte
 	}
 	if v, ok := in["set_extended_community"].(string); ok {
 		set.ExtendedCommunity = v
+	}
+	if v, ok := in["set_reset_local_pref_to_default"].(string); ok && v != "" {
+		reset, err := strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid set_reset_local_pref_to_default %q: %w", v, err)
+		}
+		set.ResetLocalPrefToDefault = &reset
 	}
 
 	if reflect.DeepEqual(set, alkira.InterCxpRoutePolicyRuleSet{}) {
@@ -198,11 +213,18 @@ func setPolicyInterCxpRoutingRules(in []alkira.InterCxpRoutePolicyRule, d *schem
 		if rule.Match.ConnectorGroupIds != nil {
 			r["match_group_ids"] = rule.Match.ConnectorGroupIds
 		}
+		if rule.Match.ServiceGroupIds != nil {
+			r["match_service_group_ids"] = rule.Match.ServiceGroupIds
+		}
 
 		if rule.Set != nil {
 			r["set_as_path_prepend"] = rule.Set.AsPathPrepend
 			r["set_community"] = rule.Set.Community
 			r["set_extended_community"] = rule.Set.ExtendedCommunity
+			r["set_reset_local_pref_to_default"] = ""
+			if rule.Set.ResetLocalPrefToDefault != nil {
+				r["set_reset_local_pref_to_default"] = strconv.FormatBool(*rule.Set.ResetLocalPrefToDefault)
+			}
 		}
 
 		rules[i] = r
