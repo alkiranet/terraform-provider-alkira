@@ -164,8 +164,22 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 							Optional: true,
 						},
 						"match_group_ids": {
-							Description: "IDs of connector groups to match. Service groups are not allowed. " +
-								"Mutually exclusive with `match_segment_resource_ids` and `match_extended_community_list_ids`.",
+							Description: "IDs of connector groups to match. For service groups, use `match_service_group_ids`. " +
+								"Mutually exclusive with `match_segment_resource_ids`, `match_extended_community_list_ids` " +
+								"and `match_service_group_ids`.",
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+							Optional: true,
+						},
+						"match_service_group_ids": {
+							Description: "Group IDs of service groups to match. Use " +
+								"`service_group_implicit_group_id` of `alkira_service_bluecat` or " +
+								"`alkira_service_infoblox`, `implicit_group_id` or `ilb_implicit_group_id` " +
+								"of `alkira_service_f5_lb`, or the ID from `data \"alkira_group\"` with the " +
+								"GlobalProtect service group name of `alkira_service_pan`. Do not use " +
+								"`service_group_id`. Mutually exclusive with `match_all`, `match_group_ids`, " +
+								"`match_segment_resource_ids` and `match_extended_community_list_ids`. " +
+								"The tenant must be enabled for this feature.",
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 							Optional: true,
@@ -191,6 +205,16 @@ func resourceAlkiraPolicyInterCxpRouting() *schema.Resource {
 								"Valid only when action is `ALLOW`.",
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"set_reset_local_pref_to_default": {
+							Description: "Reset the local preference to the default (`100`) on matched routes. " +
+								"`true` turns the reset on, `false` turns it off. When not set, the " +
+								"system decides. When `true`, requires `set_as_path_prepend` and a match on " +
+								"`match_service_group_ids`, `match_prefix_list_ids` or `match_segment_resource_ids`. " +
+								"Valid only when action is `ALLOW`. The tenant must be enabled for this feature.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"true", "false"}, false),
 						},
 					},
 				},

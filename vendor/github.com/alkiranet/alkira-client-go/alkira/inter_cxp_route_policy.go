@@ -18,11 +18,11 @@ type InterCxpRoutePolicy struct {
 }
 
 type InterCxpRoutePolicyRule struct {
-	Action     string                        `json:"action"`
-	Name       string                        `json:"name"`
-	Match      InterCxpRoutePolicyRuleMatch  `json:"match"`
-	SequenceNo int                           `json:"sequenceNo,omitempty"` // response only
-	Set        *InterCxpRoutePolicyRuleSet   `json:"set,omitempty"`
+	Action     string                       `json:"action"`
+	Name       string                       `json:"name"`
+	Match      InterCxpRoutePolicyRuleMatch `json:"match"`
+	SequenceNo int                          `json:"sequenceNo,omitempty"` // response only
+	Set        *InterCxpRoutePolicyRuleSet  `json:"set,omitempty"`
 }
 
 type InterCxpRoutePolicyRuleMatch struct {
@@ -33,12 +33,15 @@ type InterCxpRoutePolicyRuleMatch struct {
 	AsPathListIds            []int `json:"asPathListIds,omitempty"`
 	SegmentResourceIds       []int `json:"segmentResourceIds,omitempty"`
 	ConnectorGroupIds        []int `json:"connectorGroupIds,omitempty"`
+	ServiceGroupIds          []int `json:"serviceGroupIds,omitempty"`
 }
 
 type InterCxpRoutePolicyRuleSet struct {
 	AsPathPrepend     string `json:"asPathPrepend,omitempty"`
 	Community         string `json:"community,omitempty"`
 	ExtendedCommunity string `json:"extendedCommunity,omitempty"`
+	// Pointer so an explicit false is sent; nil leaves the field out.
+	ResetLocalPrefToDefault *bool `json:"resetLocalPrefToDefault,omitempty"`
 }
 
 // NewInterCxpRoutePolicy creates a new inter-CXP route policy API client
