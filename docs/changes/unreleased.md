@@ -4,7 +4,7 @@ User-visible changes since the last release. Renamed to the release version when
 
 ## Policy rule — `application_ids` is deprecated (AK-77754)
 
-`application_ids` on `alkira_policy_rule` is deprecated. Applications are no longer supported on the Alkira platform, and the attribute will be removed in a future release. Use internet applications (`internet_application_id`) instead.
+`application_ids` on `alkira_policy_rule` is deprecated. Applications are no longer supported on the Alkira platform, and the attribute will be removed in a future release.
 
 **Impact:** configurations that set `application_ids` now get a deprecation warning on every plan. Once the corresponding platform change rolls out, a request that sets a value will be rejected, so remove the attribute from your configuration. Configurations that omit it are unaffected. No state migration is required.
 

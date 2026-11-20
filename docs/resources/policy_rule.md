@@ -131,7 +131,7 @@ resource "alkira_policy_rule" "rule" {
 
 ### Optional
 
-- `application_ids` (Set of Number, Deprecated) **DEPRECATED**: Applications are no longer supported and this attribute will be removed in a future release. Use `internet_application_id` instead.
+- `application_ids` (Set of Number, Deprecated) **DEPRECATED**: Applications are no longer supported and this attribute will be removed in a future release.
 - `description` (String) The description of the policy rule.
 - `dst_ip` (String) A single destination IP as The match condition of the rule.
 - `dst_ports` (List of String) Destination ports that can take values: `any` or `1` to `65535`.
