@@ -98,6 +98,7 @@ func TestConnectorCredentialSecretDiff(t *testing.T) {
 			state:    vmwareState("AAAA-BBBB"),
 			config:   vmwareConfig("CCCC-DDDD"),
 			key:      "virtual_edge.0.activation_code",
+			changed:  true,
 		},
 		{
 			name:     "vmware new edge",
