@@ -2,6 +2,12 @@
 
 User-visible changes since the last release. Renamed to the release version when cut (e.g. `v1.6.0.md`).
 
+## Policy rule — `application_ids` is deprecated (AK-77754)
+
+`application_ids` on `alkira_policy_rule` is deprecated. Applications are no longer supported on the Alkira platform, and the attribute will be removed in a future release.
+
+**Impact:** configurations that set `application_ids` now get a deprecation warning on every plan. Once the corresponding platform change rolls out, a request that sets a value will be rejected, so remove the attribute from your configuration. Configurations that omit it are unaffected. No state migration is required.
+
 ## Firewall services — `segment_options.groups` is now a set, stopping a perpetual diff (AK-77702)
 
 `groups` inside `segment_options` on `alkira_service_pan`, `alkira_service_fortinet`, `alkira_service_checkpoint` and `alkira_service_cisco_ftdv` is now `Set of String` instead of `List of String`. The API stores a zone's groups as a set and returns them in no fixed order. As an ordered list, a different order re-hashed the whole `segment_options` block, so every plan after create removed and re-added it with the same groups and sent an update for the service.

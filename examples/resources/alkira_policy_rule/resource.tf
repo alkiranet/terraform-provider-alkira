@@ -44,17 +44,16 @@ resource "alkira_policy_rule" "internet_app" {
   rule_action             = "ALLOW"
 }
 
-# Policy Rule with Application IDs
-resource "alkira_policy_rule" "application_based" {
-  name           = "application-based-rule"
-  description    = "Policy rule based on application identification"
+# Policy Rule Routing All Traffic Through a Firewall
+resource "alkira_policy_rule" "firewall_all" {
+  name           = "firewall-all-rule"
+  description    = "Send all traffic through the firewall"
   src_ip         = "any"
   dst_ip         = "any"
   dscp           = "any"
   protocol       = "any"
   src_ports      = ["any"]
   dst_ports      = ["any"]
-  application_ids = ["HTTP", "HTTPS", "SSH"]
   rule_action    = "ALLOW"
 
   # Route through security services

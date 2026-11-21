@@ -38,6 +38,10 @@ func resourceAlkiraPolicyRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_ids": {
+				Description: "**DEPRECATED**: Applications are no longer supported and this " +
+					"attribute will be removed in a future release.",
+				Deprecated: "Applications are no longer supported and this attribute " +
+					"will be removed in a future release.",
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
