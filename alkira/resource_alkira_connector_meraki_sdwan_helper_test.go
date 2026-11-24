@@ -140,6 +140,27 @@ func TestExpandMerakiSDWANInstances(t *testing.T) {
 	assert.NotContains(t, string(payload), `"id"`)
 }
 
+func TestExpandMerakiSDWANInstancesImported(t *testing.T) {
+	client, calls := merakiSDWANCredentialServer(t, "")
+
+	// After an import, the state and the planned tokens are empty
+	old := []interface{}{
+		map[string]interface{}{"id": 11, "host_name": "vmx-a", "credential_id": "cred-a", "auth_token": ""},
+		map[string]interface{}{"id": 12, "host_name": "vmx-b", "credential_id": "cred-b", "auth_token": ""},
+	}
+	in := []interface{}{
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": ""},
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": ""},
+	}
+
+	result, created, _, err := expandMerakiSDWANInstances(client, in, old)
+	require.NoError(t, err, "two empty tokens are not a shared token")
+	assert.Empty(t, created)
+	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "11", HostName: "vmx-a", CredentialId: "cred-a"}, result[0])
+	assert.Equal(t, alkira.ConnectorMerakiSDWANInstance{Id: "12", HostName: "vmx-b", CredentialId: "cred-b"}, result[1])
+	assert.Empty(t, merakiSDWANCredentialWrites(*calls))
+}
+
 func TestExpandMerakiSDWANInstancesRejected(t *testing.T) {
 	old := []interface{}{
 		map[string]interface{}{"id": 11, "host_name": "vmx-a", "credential_id": "cred-a", "auth_token": "ta"},
@@ -268,6 +289,13 @@ func TestSetMerakiSDWANInstances(t *testing.T) {
 	}
 
 	setMerakiSDWANInstances(d, connector)
+
+	var order []string
+	for _, inst := range d.Get("instances").([]interface{}) {
+		order = append(order, inst.(map[string]interface{})["host_name"].(string))
+	}
+	assert.Equal(t, []string{"vmx-b", "vmx-a", "vmx-d", "vmx-c"}, order,
+		"the state order is kept, and an instance not in the state is added at the end")
 
 	instances := merakiSDWANInstancesByHostName(d)
 	require.Len(t, instances, 4)

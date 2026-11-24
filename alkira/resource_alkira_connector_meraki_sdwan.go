@@ -107,10 +107,9 @@ func resourceAlkiraConnectorMerakiSDWAN() *schema.Resource {
 			"instances": {
 				Description: "Meraki vMX instances. Use 2 or more for HA. " +
 					"An instance is identified by its `host_name`.",
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
-				Set:      merakiSDWANInstanceHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -138,10 +137,11 @@ func resourceAlkiraConnectorMerakiSDWAN() *schema.Resource {
 								"stored as a credential of the instance. " +
 								"A change replaces the token and redeploys " +
 								"the vMX.",
-							Type:         schema.TypeString,
-							Required:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
+							Type:             schema.TypeString,
+							Required:         true,
+							Sensitive:        true,
+							ValidateFunc:     validation.StringIsNotEmpty,
+							DiffSuppressFunc: suppressMerakiSDWANImportedToken,
 						},
 						"credential_id": {
 							Description: "The ID of the generated credential. " +
@@ -327,9 +327,13 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 	// or skipped token replace is planned again
 	d.Partial(true)
 
+	if err := checkMerakiSDWANConfigTokens(d); err != nil {
+		return diag.FromErr(err)
+	}
+
 	// A changed auth_token gets a new credential before the update
 	oldInstances, _ := d.GetChange("instances")
-	request, created, adopted, err := generateConnectorMerakiSDWANRequest(d, m, oldInstances.(*schema.Set).List())
+	request, created, adopted, err := generateConnectorMerakiSDWANRequest(d, m, oldInstances.([]interface{}))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -354,6 +358,8 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 
 			if len(merakiSDWANSkippedInstances(request, saved)) == 0 {
 				d.Partial(false)
+				syncMerakiSDWANSentInstances(d, request, oldInstances.([]interface{}))
+				recordMerakiSDWANConfigTokens(d)
 				return append(diag.FromErr(err), resourceConnectorMerakiSDWANRead(ctx, d, m)...)
 			}
 		}
@@ -385,6 +391,8 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 	// The connector is saved before it is validated, so keep the new
 	// state from here on
 	d.Partial(false)
+	syncMerakiSDWANSentInstances(d, request, oldInstances.([]interface{}))
+	adopted = appendMerakiSDWANHostNames(adopted, recordMerakiSDWANConfigTokens(d))
 
 	var diags diag.Diagnostics
 	if len(adopted) > 0 {
@@ -394,7 +402,9 @@ func resourceConnectorMerakiSDWANUpdate(ctx context.Context, d *schema.ResourceD
 			Detail: fmt.Sprintf("The auth_token of %s was recorded but not sent: "+
 				"the instance keeps its current credential, from an import, an "+
 				"apply that didn't save its state, or a change outside Terraform. "+
-				"Change auth_token to replace the token.", strings.Join(adopted, ", ")),
+				"The recorded token was not compared with the deployed one. If it "+
+				"is a new token, it was not applied: set another new auth_token "+
+				"to replace the token.", strings.Join(adopted, ", ")),
 		})
 	}
 
@@ -478,7 +488,7 @@ func generateConnectorMerakiSDWANRequest(d *schema.ResourceData, m interface{}, 
 
 	instances, created, adopted, err := expandMerakiSDWANInstances(
 		m.(*alkira.AlkiraClient),
-		d.Get("instances").(*schema.Set).List(),
+		d.Get("instances").([]interface{}),
 		old,
 	)
 

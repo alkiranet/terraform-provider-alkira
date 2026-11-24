@@ -109,8 +109,8 @@ On `alkira_connector_vmware_sdwan`, a changed `activation_code` in a `virtual_ed
 
 **Impact:** new types only. No effect on existing configurations or state.
 
-## New resource and data source — Cisco Meraki SD-WAN connector (AK-75744, AK-77042, AK-77397)
+## New resource and data source — Cisco Meraki SD-WAN connector (AK-75744, AK-77042, AK-77397, AK-77982)
 
-`alkira_connector_meraki_sdwan` (resource and data source) manages a Meraki vMX connector on an Azure CXP. Each `instances` block is a vMX identified by `host_name`. Its `auth_token` is `Sensitive` and is stored as an Alkira credential. A new `auth_token` creates a new credential, so `credential_id` changes, and redeploys only that vMX. The plan shows the instance as replaced, but the instance is kept. The API never returns the token, so after `terraform import` the first apply records the configured `auth_token` without sending it and warns "AUTH TOKEN NOT SENT".
+`alkira_connector_meraki_sdwan` (resource and data source) manages a Meraki vMX connector on an Azure CXP. Each `instances` block is a vMX identified by `host_name`. `instances` is a list; reordering it plans a change, but the apply keeps every instance and its credential. Its `auth_token` is `Sensitive` and is stored as an Alkira credential. A new `auth_token` creates a new credential, so `credential_id` changes, and redeploys only that vMX. The API never returns the token, so the plan after `terraform import` shows no change for the instances when the configuration lists them in the imported order (`terraform state show`). The first apply that changes the connector records the configured `auth_token` without sending it and warns "AUTH TOKEN NOT SENT". The recorded token is not compared with the deployed one. Until then, an `auth_token` change on an imported instance is not planned: to replace the token, first apply another change such as `description`, then set the new `auth_token`. The same applies to an instance whose credential was changed outside Terraform: the refresh clears its token and the plan shows no change.
 
 **Impact:** new type only. No effect on existing configurations or state.

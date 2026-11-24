@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,15 +44,19 @@ func expandMerakiSDWANSegmentOptions(in []interface{}) []alkira.ConnectorMerakiS
 	return options
 }
 
-// merakiSDWANInstanceHash identify an instance by its host_name, which is
-// unique in the connector and can't change after provisioning. auth_token
-// is in the hash too, because a set shows no change for a field that is
-// not in the hash.
-func merakiSDWANInstanceHash(v interface{}) int {
-	m := v.(map[string]interface{})
-	hostName, _ := m["host_name"].(string)
-	authToken, _ := m["auth_token"].(string)
-	return schema.HashString(hostName + "\x00" + authToken)
+// suppressMerakiSDWANImportedToken hide the auth_token diff of an imported
+// instance. The API doesn't return the token, so the state token is empty
+// after an import while the instance has a credential. The diff is shown
+// when another host_name takes the place of the instance in the list: that
+// is a new instance and its token must be sent.
+func suppressMerakiSDWANImportedToken(k, old, new string, d *schema.ResourceData) bool {
+	prefix := k[:strings.LastIndex(k, ".")+1]
+	oldHostName, newHostName := d.GetChange(prefix + "host_name")
+	if oldHostName != newHostName {
+		return false
+	}
+
+	return suppressCredentialSecretDiff("credential_id", true)(k, old, new, d)
 }
 
 // expandMerakiSDWANInstances expand Meraki SD-WAN connector instances. An
@@ -107,7 +113,7 @@ func expandMerakiSDWANInstances(ac *alkira.AlkiraClient, in []interface{}, old [
 		}
 		hostNames[hostName] = true
 
-		if other, found := tokens[token]; found {
+		if other, found := tokens[token]; found && token != "" {
 			return nil, nil, nil, fmt.Errorf("instances: %q and %q have the same auth_token. "+
 				"A token can be used once: generate a token for each instance", other, hostName)
 		}
@@ -229,7 +235,8 @@ func deleteMerakiSDWANCredentials(ac *alkira.AlkiraClient, ids []string) {
 	}
 }
 
-// setMerakiSDWANInstances set the instances from the API response.
+// setMerakiSDWANInstances set the instances from the API response, in the
+// order of the state, then the instances the state doesn't have.
 // auth_token is not returned by the API, so it is kept from the state of
 // the instance with the same host_name. An instance not in the state gets
 // an empty token, as after an import. So does an instance whose credential
@@ -240,16 +247,35 @@ func setMerakiSDWANInstances(d *schema.ResourceData, connector *alkira.Connector
 	tokens := make(map[string]interface{})
 	credentialIds := make(map[string]string)
 
-	for _, inst := range d.Get("instances").(*schema.Set).List() {
+	for _, inst := range d.Get("instances").([]interface{}) {
 		i := inst.(map[string]interface{})
 		hostName := i["host_name"].(string)
 		tokens[hostName] = i["auth_token"]
 		credentialIds[hostName], _ = i["credential_id"].(string)
 	}
 
+	byHostName := make(map[string]alkira.ConnectorMerakiSDWANInstance)
+	for _, info := range connector.Instances {
+		byHostName[info.HostName] = info
+	}
+
+	ordered := make([]alkira.ConnectorMerakiSDWANInstance, 0, len(connector.Instances))
+	for _, inst := range d.Get("instances").([]interface{}) {
+		hostName, _ := inst.(map[string]interface{})["host_name"].(string)
+		if info, found := byHostName[hostName]; found {
+			ordered = append(ordered, info)
+			delete(byHostName, hostName)
+		}
+	}
+	for _, info := range connector.Instances {
+		if _, found := byHostName[info.HostName]; found {
+			ordered = append(ordered, info)
+		}
+	}
+
 	var instances []map[string]interface{}
 
-	for _, info := range connector.Instances {
+	for _, info := range ordered {
 		authToken, found := tokens[info.HostName]
 		if !found {
 			authToken = ""
@@ -286,4 +312,135 @@ func validateMerakiSDWANBgpAsn(i interface{}, k string) ([]string, []error) {
 	}
 
 	return nil, nil
+}
+
+// syncMerakiSDWANSentInstances set the computed fields of each instance,
+// matched by host_name: credential_id and id as sent in the update, and
+// name, az and wan_ip from the prior state. The planned value of a computed
+// field stays at its list index, so an instance that moved or got a new
+// token has another instance's or its old values. Read would take a wrong
+// credential_id as a credential changed outside Terraform and clear the
+// token, and a path that saves the state without a read would keep the
+// wrong values. A new instance has no id, name, az or wan_ip until a read.
+func syncMerakiSDWANSentInstances(d *schema.ResourceData, request *alkira.ConnectorMerakiSDWAN, old []interface{}) {
+	oldInstances := make(map[string]map[string]interface{}, len(old))
+	for _, inst := range old {
+		if o, ok := inst.(map[string]interface{}); ok {
+			hostName, _ := o["host_name"].(string)
+			oldInstances[hostName] = o
+		}
+	}
+
+	sent := make(map[string]alkira.ConnectorMerakiSDWANInstance, len(request.Instances))
+	for _, inst := range request.Instances {
+		sent[inst.HostName] = inst
+	}
+
+	instances := d.Get("instances").([]interface{})
+	for _, inst := range instances {
+		i := inst.(map[string]interface{})
+		hostName, _ := i["host_name"].(string)
+		s, found := sent[hostName]
+		if !found {
+			continue
+		}
+
+		o := oldInstances[hostName]
+		id, _ := s.Id.Int64()
+		name, _ := o["name"].(string)
+		az, _ := o["az"].(int)
+		wanIp, _ := o["wan_ip"].(string)
+
+		i["credential_id"] = s.CredentialId
+		i["id"] = int(id)
+		i["name"] = name
+		i["az"] = az
+		i["wan_ip"] = wanIp
+	}
+
+	d.Set("instances", instances)
+}
+
+// recordMerakiSDWANConfigTokens record the configured token of each instance
+// whose planned token is empty, as after an import, and return their host
+// names. The token was not sent: the instance kept its credential. Without
+// it in the state, a later token change would not be planned.
+func recordMerakiSDWANConfigTokens(d *schema.ResourceData) []string {
+	tokens := make(map[string]string)
+	for _, inst := range merakiSDWANConfigTokens(d) {
+		tokens[inst.hostName] = inst.token
+	}
+
+	var recorded []string
+	instances := d.Get("instances").([]interface{})
+	for _, inst := range instances {
+		i := inst.(map[string]interface{})
+		hostName, _ := i["host_name"].(string)
+		if token, _ := i["auth_token"].(string); token == "" && tokens[hostName] != "" {
+			i["auth_token"] = tokens[hostName]
+			recorded = append(recorded, hostName)
+		}
+	}
+
+	if len(recorded) > 0 {
+		d.Set("instances", instances)
+	}
+
+	return recorded
+}
+
+// appendMerakiSDWANHostNames append the host names that names doesn't have
+func appendMerakiSDWANHostNames(names []string, more []string) []string {
+	for _, name := range more {
+		if !slices.Contains(names, name) {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+type merakiSDWANConfigToken struct {
+	hostName string
+	token    string
+}
+
+// merakiSDWANConfigTokens is the host_name and auth_token of each instance
+// in the raw config, in config order. Unknown and null values are skipped.
+func merakiSDWANConfigTokens(d *schema.ResourceData) []merakiSDWANConfigToken {
+	config := d.GetRawConfig()
+	if config.IsNull() || !config.IsKnown() {
+		return nil
+	}
+
+	configured := config.GetAttr("instances")
+	if configured.IsNull() || !configured.IsKnown() {
+		return nil
+	}
+
+	var result []merakiSDWANConfigToken
+	for it := configured.ElementIterator(); it.Next(); {
+		_, inst := it.Element()
+		hostName, token := inst.GetAttr("host_name"), inst.GetAttr("auth_token")
+		if hostName.IsKnown() && !hostName.IsNull() && token.IsKnown() && !token.IsNull() {
+			result = append(result, merakiSDWANConfigToken{hostName.AsString(), token.AsString()})
+		}
+	}
+
+	return result
+}
+
+// checkMerakiSDWANConfigTokens check that no two instances have the same
+// configured token. The planned token of an imported instance is empty, so
+// expandMerakiSDWANInstances can't see a token it shares.
+func checkMerakiSDWANConfigTokens(d *schema.ResourceData) error {
+	seen := make(map[string]string)
+	for _, inst := range merakiSDWANConfigTokens(d) {
+		if other, found := seen[inst.token]; found && inst.token != "" {
+			return fmt.Errorf("instances: %q and %q have the same auth_token. "+
+				"A token can be used once: generate a token for each instance", other, inst.hostName)
+		}
+		seen[inst.token] = inst.hostName
+	}
+
+	return nil
 }
