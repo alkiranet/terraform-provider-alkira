@@ -16,6 +16,7 @@ func TestSdwanConnectorScaleGroupIdSchema(t *testing.T) {
 		"fortinet": resourceAlkiraConnectorFortinetSdwan(),
 		"versa":    resourceAlkiraConnectorVersaSdwan(),
 		"vmware":   resourceAlkiraConnectorVmwareSdwan(),
+		"juniper":  resourceAlkiraConnectorJuniperSdwan(),
 	}
 
 	for name, r := range resources {

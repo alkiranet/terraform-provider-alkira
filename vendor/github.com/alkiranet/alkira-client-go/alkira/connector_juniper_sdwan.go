@@ -36,6 +36,7 @@ type ConnectorJuniperSdwan struct {
 	Version               string                          `json:"version"`
 	AvailabilityZone      int                             `json:"availabilityZone"`
 	Description           string                          `json:"description,omitempty"`
+	ScaleGroupId          string                          `json:"scaleGroupId,omitempty"`
 }
 
 // NewConnectorJuniperSdwan
