@@ -39,15 +39,14 @@ func (ac *AlkiraClient) GetValidationState(id string) (*ValidationState, error) 
 
 	// Log detailed information about the response data
 	logf("DEBUG", "GetValidationState: raw response data length: %d", len(data))
-	logf("DEBUG", "GetValidationState: raw response data as string: %s", string(data))
-	logf("DEBUG", "GetValidationState: raw response data as bytes: %v", data)
+	logf("DEBUG", "GetValidationState: raw response data as string: %s", redactBody(data))
 
 	var result ValidationState
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		// Log additional debugging information
 		logf("ERROR", "GetValidationState: JSON unmarshal failed with data length: %d", len(data))
-		logf("ERROR", "GetValidationState: JSON unmarshal failed with data as string: %s", string(data))
+		logf("ERROR", "GetValidationState: JSON unmarshal failed with data as string: %s", redactBody(data))
 		logf("ERROR", "GetValidationState: JSON unmarshal error: %v", err)
 		return nil, fmt.Errorf("GetValidationState: failed to unmarshal: %w", err)
 	}

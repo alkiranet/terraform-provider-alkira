@@ -43,6 +43,13 @@ func resourceAlkiraConnectorJuniperSdwan() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"scale_group_id": {
+				Description: "The ID of the scale group associated with " +
+					"the connector. Can only be set at create time and " +
+					"cannot be changed after provisioning.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"billing_tag_ids": {
 				Description: "Billing tags to be associated with " +
 					"the resource. (see resource `alkira_billing_tag`).",
@@ -284,6 +291,7 @@ func resourceConnectorJuniperSdwanRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("enabled", connector.Enabled)
 	d.Set("description", connector.Description)
 	d.Set("availability_zone", connector.AvailabilityZone)
+	d.Set("scale_group_id", connector.ScaleGroupId)
 
 	// Set Juniper instances
 	setJuniperInstances(d, connector)
@@ -427,6 +435,7 @@ func generateConnectorJuniperSdwanRequest(d *schema.ResourceData, m any) (*alkir
 		Enabled:               d.Get("enabled").(bool),
 		Description:           d.Get("description").(string),
 		AvailabilityZone:      d.Get("availability_zone").(int),
+		ScaleGroupId:          d.Get("scale_group_id").(string),
 	}
 
 	return connector, nil

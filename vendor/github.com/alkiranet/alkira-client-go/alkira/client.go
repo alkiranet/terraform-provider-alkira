@@ -172,7 +172,7 @@ func NewAlkiraClientWithAuthHeader(url string, username string, password string,
 		logf("ERROR", "NewAlkiraClientWithAuthHeader: failed to read tenant network response body: %v", err)
 		return nil, fmt.Errorf("NewAlkiraClientWithAuthHeader: failed to read tenant network response body: %w", err)
 	}
-	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
+	logf("TRACE", "Tenant Network Summary: %s\n", redactBody(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -338,7 +338,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		logf("ERROR", "NewAlkiraClientInternal: failed to read session response body: %v", err)
 		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read session response body: %w", err)
 	}
-	logf("TRACE", "session data: %s\n", string(sessionData))
+	logf("TRACE", "session data: %s\n", redactBody(sessionData))
 
 	if sessionResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get session (%d)", sessionResponse.StatusCode)
@@ -363,7 +363,7 @@ func NewAlkiraClientInternal(url string, username string, password string, secre
 		logf("ERROR", "NewAlkiraClientInternal: failed to read tenant network response body: %v", err)
 		return nil, fmt.Errorf("NewAlkiraClientInternal: failed to read tenant network response body: %w", err)
 	}
-	logf("TRACE", "Tenant Network Summary: %s\n", string(data))
+	logf("TRACE", "Tenant Network Summary: %s\n", redactBody(data))
 
 	if tenantNetworkResponse.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get tenant network (%d)", tenantNetworkResponse.StatusCode)
@@ -422,17 +422,17 @@ func (ac *AlkiraClient) get(uri string) ([]byte, string, error) {
 
 	defer func() { _ = response.Body.Close() }()
 	logf("DEBUG", "client-get(%s): received response with status: %d", requestId, response.StatusCode)
-	logf("DEBUG", "client-get(%s): response headers: %v", requestId, response.Header)
+	logf("DEBUG", "client-get(%s): response headers: %v", requestId, redactHeaders(response.Header))
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-get(%s): failed to read response body: %v", requestId, err)
 		return nil, "", fmt.Errorf("client-get(%s) failed to read response body: %w", requestId, err)
 	}
-	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, redactBody(data))
 	logf("DEBUG", "client-get(%s): response body length: %d", requestId, len(data))
 
 	if response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("client-get(%s): %d %s", requestId, response.StatusCode, redactBody(data))
 	}
 
 	//
@@ -462,17 +462,17 @@ func (ac *AlkiraClient) getByName(uri string) ([]byte, string, error) {
 
 	defer func() { _ = response.Body.Close() }()
 	logf("DEBUG", "client-get(%s): received response with status: %d", requestId, response.StatusCode)
-	logf("DEBUG", "client-get(%s): response headers: %v", requestId, response.Header)
+	logf("DEBUG", "client-get(%s): response headers: %v", requestId, redactHeaders(response.Header))
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		logf("ERROR", "client-get(%s): failed to read response body: %v", requestId, err)
 		return nil, "", fmt.Errorf("client-get(%s): failed to read response body: %w", requestId, err)
 	}
-	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-get(%s) %d RSP: %s", requestId, response.StatusCode, redactBody(data))
 	logf("DEBUG", "client-get(%s): response body length: %d", requestId, len(data))
 
 	if response.StatusCode != 200 {
-		return nil, "", fmt.Errorf("client-get-by-name(%s): %d %s", requestId, response.StatusCode, string(data))
+		return nil, "", fmt.Errorf("client-get-by-name(%s): %d %s", requestId, response.StatusCode, redactBody(data))
 	}
 
 	//
@@ -532,7 +532,7 @@ func formatProvisionError(operation string, requestId string, provisionRequestId
 
 // create send a POST request to create resource
 func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte, string, error, error, error) {
-	logf("DEBUG", "client-create REQ: %s", string(body))
+	logf("DEBUG", "client-create REQ: %s", redactBody(body))
 
 	//
 	// There are two knobs here to support turning provision on/off
@@ -594,12 +594,12 @@ func (ac *AlkiraClient) create(uri string, body []byte, provision bool) ([]byte,
 	}
 
 	logf("DEBUG", "client-create(%s): received response with status: %d", requestId, response.StatusCode)
-	logf("DEBUG", "client-create(%s): response headers: %v", requestId, response.Header)
-	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-create(%s): response headers: %v", requestId, redactHeaders(response.Header))
+	logf("DEBUG", "client-create(%s) %d RSP: %s", requestId, response.StatusCode, redactBody(data))
 	logf("DEBUG", "client-create(%s): response body length: %d", requestId, len(data))
 
 	if response.StatusCode != 201 && response.StatusCode != 200 && response.StatusCode != 202 {
-		return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, string(data)), nil, nil
+		return nil, "", fmt.Errorf("client-create(%s): %d %s", requestId, response.StatusCode, redactBody(data)), nil, nil
 	}
 
 	// Handle validation if enabled and response is 202
@@ -720,8 +720,8 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 	}
 
 	logf("DEBUG", "client-delete(%s): received response with status: %d", requestId, response.StatusCode)
-	logf("DEBUG", "client-delete(%s): response headers: %v", requestId, response.Header)
-	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-delete(%s): response headers: %v", requestId, redactHeaders(response.Header))
+	logf("DEBUG", "client-delete(%s): %d RSP: %s\n", requestId, response.StatusCode, redactBody(data))
 	logf("DEBUG", "client-delete(%s): response body length: %d", requestId, len(data))
 
 	// Handle validation if enabled and response is 202
@@ -741,7 +741,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 			return "", nil, nil, nil
 		}
 
-		return "", fmt.Errorf("client-delete(%s): %d %s", requestId, response.StatusCode, string(data)), nil, nil
+		return "", fmt.Errorf("client-delete(%s): %d %s", requestId, response.StatusCode, redactBody(data)), nil, nil
 	}
 
 	// If provision is enabled, wait for provision to finish and
@@ -787,7 +787,7 @@ func (ac *AlkiraClient) delete(uri string, provision bool) (string, error, error
 
 // update send a PUT request to update a resource
 func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string, error, error, error) {
-	logf("DEBUG", "client-update: REQ: %s\n", string(body))
+	logf("DEBUG", "client-update: REQ: %s\n", redactBody(body))
 
 	//
 	// There are two knobs here to support turning provision on/off
@@ -849,12 +849,12 @@ func (ac *AlkiraClient) update(uri string, body []byte, provision bool) (string,
 	}
 
 	logf("DEBUG", "client-update(%s): received response with status: %d", requestId, response.StatusCode)
-	logf("DEBUG", "client-update(%s): response headers: %v", requestId, response.Header)
-	logf("DEBUG", "client-update(%s): %d RSP: %s\n", requestId, response.StatusCode, string(data))
+	logf("DEBUG", "client-update(%s): response headers: %v", requestId, redactHeaders(response.Header))
+	logf("DEBUG", "client-update(%s): %d RSP: %s\n", requestId, response.StatusCode, redactBody(data))
 	logf("DEBUG", "client-update(%s): response body length: %d", requestId, len(data))
 
 	if response.StatusCode != 200 && response.StatusCode != 202 {
-		return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, string(data)), nil, nil
+		return "", fmt.Errorf("client-update(%s): %d %s", requestId, response.StatusCode, redactBody(data)), nil, nil
 	}
 
 	// Handle validation if enabled and response is 202
