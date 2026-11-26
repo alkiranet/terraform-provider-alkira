@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/alkiranet/alkira-client-go/alkira"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -40,11 +41,9 @@ func TestValidateMerakiSDWANBgpAsn(t *testing.T) {
 	}
 }
 
-// merakiSDWANKey is the state key of a field of the instance with
-// hostName and authToken
-func merakiSDWANKey(hostName, authToken, field string) string {
-	return fmt.Sprintf("instances.%d.%s", merakiSDWANInstanceHash(map[string]interface{}{
-		"host_name": hostName, "auth_token": authToken}), field)
+// merakiSDWANKey is the state key of a field of the instance at index
+func merakiSDWANKey(index int, field string) string {
+	return fmt.Sprintf("instances.%d.%s", index, field)
 }
 
 // merakiSDWANChanges is the keys under prefix that the diff changes
@@ -58,7 +57,7 @@ func merakiSDWANChanges(diff *terraform.InstanceDiff, prefix string) []string {
 	return keys
 }
 
-// merakiSDWANState is the state of a connector with two instances. The
+// merakiSDWANState is the state of a connector with vmx-a and vmx-b. The
 // tokens are empty after an import.
 func merakiSDWANState(tokenA, tokenB string) *terraform.InstanceState {
 	return &terraform.InstanceState{
@@ -66,26 +65,26 @@ func merakiSDWANState(tokenA, tokenB string) *terraform.InstanceState {
 		Attributes: map[string]string{
 			"id": "10", "name": "c", "cxp": "AZURE-WESTUS2", "size": "SMALL", "version": "18.2.14",
 			"tunnel_protocol": "IPSEC", "enabled": "true", "description": "", "group": "",
-			"target_segment.#":                               "1",
-			"target_segment.0.segment_id":                    "1",
-			"target_segment.0.meraki_bgp_asn":                "65500",
-			"target_segment.0.advertise_on_prem_routes":      "false",
-			"target_segment.0.advertise_default_route":       "false",
-			"instances.#":                                    "2",
-			merakiSDWANKey("vmx-a", tokenA, "host_name"):     "vmx-a",
-			merakiSDWANKey("vmx-a", tokenA, "credential_id"): "cred-a",
-			merakiSDWANKey("vmx-a", tokenA, "id"):            "1",
-			merakiSDWANKey("vmx-a", tokenA, "auth_token"):    tokenA,
-			merakiSDWANKey("vmx-b", tokenB, "host_name"):     "vmx-b",
-			merakiSDWANKey("vmx-b", tokenB, "credential_id"): "cred-b",
-			merakiSDWANKey("vmx-b", tokenB, "id"):            "2",
-			merakiSDWANKey("vmx-b", tokenB, "auth_token"):    tokenB,
-			merakiSDWANKey("vmx-a", tokenA, "name"):          "inst-1",
-			merakiSDWANKey("vmx-a", tokenA, "az"):            "1",
-			merakiSDWANKey("vmx-a", tokenA, "wan_ip"):        "10.0.0.4",
-			merakiSDWANKey("vmx-b", tokenB, "name"):          "inst-2",
-			merakiSDWANKey("vmx-b", tokenB, "az"):            "2",
-			merakiSDWANKey("vmx-b", tokenB, "wan_ip"):        "10.0.0.5",
+			"target_segment.#":                          "1",
+			"target_segment.0.segment_id":               "1",
+			"target_segment.0.meraki_bgp_asn":           "65500",
+			"target_segment.0.advertise_on_prem_routes": "false",
+			"target_segment.0.advertise_default_route":  "false",
+			"instances.#":                               "2",
+			"instances.0.host_name":                     "vmx-a",
+			"instances.0.credential_id":                 "cred-a",
+			"instances.0.id":                            "1",
+			"instances.0.auth_token":                    tokenA,
+			"instances.0.name":                          "inst-1",
+			"instances.0.az":                            "1",
+			"instances.0.wan_ip":                        "10.0.0.4",
+			"instances.1.host_name":                     "vmx-b",
+			"instances.1.credential_id":                 "cred-b",
+			"instances.1.id":                            "2",
+			"instances.1.auth_token":                    tokenB,
+			"instances.1.name":                          "inst-2",
+			"instances.1.az":                            "2",
+			"instances.1.wan_ip":                        "10.0.0.5",
 		},
 	}
 }
@@ -103,6 +102,41 @@ func merakiSDWANConfig(instances ...map[string]interface{}) *terraform.ResourceC
 		"target_segment": []interface{}{map[string]interface{}{"segment_id": 1, "meraki_bgp_asn": 65500}},
 		"instances":      list,
 	})
+}
+
+// merakiSDWANRawConfig is the instances of config as Terraform sends them
+// in the raw config. The other attributes are null.
+func merakiSDWANRawConfig(config *terraform.ResourceConfig) cty.Value {
+	ty := resourceAlkiraConnectorMerakiSDWAN().CoreConfigSchema().ImpliedType()
+	instanceType := ty.AttributeType("instances").ElementType()
+
+	var instances []cty.Value
+	for _, raw := range config.Raw["instances"].([]interface{}) {
+		i := raw.(map[string]interface{})
+		attrs := map[string]cty.Value{}
+		for name, at := range instanceType.AttributeTypes() {
+			attrs[name] = cty.NullVal(at)
+		}
+		attrs["host_name"] = cty.StringVal(i["host_name"].(string))
+		attrs["auth_token"] = cty.StringVal(i["auth_token"].(string))
+		instances = append(instances, cty.ObjectVal(attrs))
+	}
+
+	attrs := map[string]cty.Value{}
+	for name, at := range ty.AttributeTypes() {
+		attrs[name] = cty.NullVal(at)
+	}
+	attrs["instances"] = cty.ListVal(instances)
+
+	return cty.ObjectVal(attrs)
+}
+
+// merakiSDWANRenamed is config with the connector name c2, a change
+// outside the instances
+func merakiSDWANRenamed(config *terraform.ResourceConfig) *terraform.ResourceConfig {
+	config.Raw["name"] = "c2"
+	config.Config["name"] = "c2"
+	return config
 }
 
 func TestResourceAlkiraConnectorMerakiSDWANPlan(t *testing.T) {
@@ -126,35 +160,56 @@ func TestResourceAlkiraConnectorMerakiSDWANPlan(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, diff)
-		assert.True(t, diff.Attributes[merakiSDWANKey("vmx-a", "ta", "host_name")].NewRemoved)
-		assert.Equal(t, "ta2", diff.Attributes[merakiSDWANKey("vmx-a", "ta2", "auth_token")].New)
-		assert.Equal(t, "vmx-a", diff.Attributes[merakiSDWANKey("vmx-a", "ta2", "host_name")].New)
-		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey("vmx-b", "tb", "")))
+		assert.Equal(t, "ta2", diff.Attributes[merakiSDWANKey(0, "auth_token")].New)
+		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey(1, "")), "vmx-b must not change")
 	})
 
-	t.Run("the token is planned after an import", func(t *testing.T) {
+	t.Run("no diff after an import", func(t *testing.T) {
 		diff, err := resource.Diff(context.Background(), merakiSDWANState("", ""), merakiSDWANConfig(
 			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
 			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
 		), &alkira.AlkiraClient{})
 
 		require.NoError(t, err)
-		require.NotNil(t, diff)
-		assert.Equal(t, "ta", diff.Attributes[merakiSDWANKey("vmx-a", "ta", "auth_token")].New)
-		assert.Equal(t, "tb", diff.Attributes[merakiSDWANKey("vmx-b", "tb", "auth_token")].New)
+		assert.Nil(t, diff)
 	})
 
-	t.Run("no diff when the order changes", func(t *testing.T) {
+	t.Run("a token edited after an import is not planned before an apply records it", func(t *testing.T) {
+		diff, err := resource.Diff(context.Background(), merakiSDWANState("", ""), merakiSDWANConfig(
+			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta2"},
+			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+		), &alkira.AlkiraClient{})
+
+		require.NoError(t, err)
+		assert.Nil(t, diff, "the deployed token is unknown, so the provider can't tell an edit from the imported token")
+	})
+
+	t.Run("a new host in the place of an imported instance plans its token", func(t *testing.T) {
+		diff, err := resource.Diff(context.Background(), merakiSDWANState("", ""), merakiSDWANConfig(
+			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+			map[string]interface{}{"host_name": "vmx-c", "auth_token": "tc"},
+		), &alkira.AlkiraClient{})
+
+		require.NoError(t, err)
+		require.NotNil(t, diff)
+		assert.Equal(t, "vmx-c", diff.Attributes[merakiSDWANKey(1, "host_name")].New)
+		assert.Equal(t, "tc", diff.Attributes[merakiSDWANKey(1, "auth_token")].New,
+			"the token of the new instance must not be suppressed")
+		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey(0, "")), "vmx-a must not change")
+	})
+
+	t.Run("a reordered config is planned", func(t *testing.T) {
 		diff, err := resource.Diff(context.Background(), merakiSDWANState("ta", "tb"), merakiSDWANConfig(
 			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
 			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
 		), &alkira.AlkiraClient{})
 
 		require.NoError(t, err)
-		assert.Nil(t, diff)
+		require.NotNil(t, diff)
+		assert.Equal(t, "vmx-b", diff.Attributes[merakiSDWANKey(0, "host_name")].New)
 	})
 
-	t.Run("removing the first instance changes only that instance", func(t *testing.T) {
+	t.Run("removing the first instance", func(t *testing.T) {
 		diff, err := resource.Diff(context.Background(), merakiSDWANState("ta", "tb"), merakiSDWANConfig(
 			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
 		), &alkira.AlkiraClient{})
@@ -162,11 +217,10 @@ func TestResourceAlkiraConnectorMerakiSDWANPlan(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, diff)
 		assert.Equal(t, "1", diff.Attributes["instances.#"].New)
-		assert.True(t, diff.Attributes[merakiSDWANKey("vmx-a", "ta", "host_name")].NewRemoved)
-		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey("vmx-b", "tb", "")), "vmx-b must not change")
+		assert.Equal(t, "vmx-b", diff.Attributes[merakiSDWANKey(0, "host_name")].New)
 	})
 
-	t.Run("a new instance gets a new ID and credential", func(t *testing.T) {
+	t.Run("a new instance is added at the end", func(t *testing.T) {
 		diff, err := resource.Diff(context.Background(), merakiSDWANState("ta", "tb"), merakiSDWANConfig(
 			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
 			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
@@ -176,10 +230,9 @@ func TestResourceAlkiraConnectorMerakiSDWANPlan(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, diff)
 		assert.Equal(t, "3", diff.Attributes["instances.#"].New)
-		assert.Equal(t, "vmx-c", diff.Attributes[merakiSDWANKey("vmx-c", "tc", "host_name")].New)
-		assert.True(t, diff.Attributes[merakiSDWANKey("vmx-c", "tc", "id")].NewComputed)
-		assert.True(t, diff.Attributes[merakiSDWANKey("vmx-c", "tc", "credential_id")].NewComputed)
-		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey("vmx-a", "ta", "")), "vmx-a must not change")
+		assert.Equal(t, "vmx-c", diff.Attributes[merakiSDWANKey(2, "host_name")].New)
+		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey(0, "")), "vmx-a must not change")
+		assert.Empty(t, merakiSDWANChanges(diff, merakiSDWANKey(1, "")), "vmx-b must not change")
 	})
 }
 
@@ -212,6 +265,8 @@ type merakiSDWANServerOptions struct {
 	// getFails fails every GET of connector 10 with 403, as when the VPN
 	// drops
 	getFails bool
+	// provisionFails ends the provision request in FAILED
+	provisionFails bool
 }
 
 // merakiSDWANServer serves connector 10 and its credentials and records
@@ -265,6 +320,8 @@ func merakiSDWANServerWith(t *testing.T, connectorStatus int, opts merakiSDWANSe
 			}
 			w.WriteHeader(connectorStatus)
 		case req.URL.Path == "/tenantnetworks/0/validation-states/v1":
+			json.NewEncoder(w).Encode(map[string]string{"state": "FAILED"})
+		case req.URL.Path == "/tenantnetworks/0/provision-requests/p1" && opts.provisionFails:
 			json.NewEncoder(w).Encode(map[string]string{"state": "FAILED"})
 		case req.URL.Path == "/tenantnetworks/0/provision-requests/p1":
 			json.NewEncoder(w).Encode(map[string]string{"state": "SUCCESS"})
@@ -352,6 +409,11 @@ func merakiSDWANCallsTo(calls []merakiSDWANCall, method, prefix string) []meraki
 func applyMerakiSDWAN(t *testing.T, client *alkira.AlkiraClient, state *terraform.InstanceState, config *terraform.ResourceConfig) (*terraform.InstanceState, diag.Diagnostics) {
 	resource := resourceAlkiraConnectorMerakiSDWAN()
 
+	// Update reads the tokens of imported instances from the raw config
+	if state != nil {
+		state.RawConfig = merakiSDWANRawConfig(config)
+	}
+
 	diff, err := resource.Diff(context.Background(), state, config, client)
 	require.NoError(t, err)
 	require.NotNil(t, diff)
@@ -410,7 +472,7 @@ func TestResourceAlkiraConnectorMerakiSDWANFailedUpdate(t *testing.T) {
 	}, deleted, "the connector doesn't use the new credentials")
 	assert.Empty(t, merakiSDWANCallsTo(*calls, "PUT", "/api/credentials/"))
 
-	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey("vmx-a", "ta", "auth_token")],
+	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey(0, "auth_token")],
 		"a failed update must keep the old token, so the next plan retries the replace")
 	assert.Equal(t, map[string]string{"vmx-a": "cred-a", "vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
 }
@@ -423,7 +485,7 @@ func TestResourceAlkiraConnectorMerakiSDWANFailedUpdateAfterCommit(t *testing.T)
 
 	assert.Empty(t, merakiSDWANCallsTo(*calls, "DELETE", "/api/credentials/"),
 		"the saved connector uses the new credential, so it must not be deleted")
-	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey("vmx-a", "ta2", "auth_token")],
+	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey(0, "auth_token")],
 		"the update is saved, so the state must hold the new token and the next apply must not send it again")
 	assert.Equal(t, map[string]string{"vmx-a": "cred-new-1", "vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
 }
@@ -457,7 +519,7 @@ func TestResourceAlkiraConnectorMerakiSDWANSkippedUpdateOnFailedConnector(t *tes
 	require.Len(t, deletes, 1)
 	assert.Equal(t, "/api/credentials/meraki-sdwan-connector-instance/cred-new-1", deletes[0].Path)
 
-	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey("vmx-a", "ta", "auth_token")],
+	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey(0, "auth_token")],
 		"a skipped update must keep the old token, so the next plan retries the replace")
 	assert.Equal(t, map[string]string{"vmx-a": "cred-a", "vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
 }
@@ -479,13 +541,15 @@ func TestResourceAlkiraConnectorMerakiSDWANReadBackFailureKeepsNewCredentials(t 
 		"the old state is kept, so the next refresh sees a changed credential_id and adopts it")
 }
 
-func TestResourceAlkiraConnectorMerakiSDWANImportFirstApply(t *testing.T) {
+func TestResourceAlkiraConnectorMerakiSDWANImportThenChange(t *testing.T) {
 	client, calls := merakiSDWANServer(t, http.StatusOK)
 
-	config := merakiSDWANConfig(
+	// After an import nothing is planned, so a change outside the instances
+	// is the first apply
+	config := merakiSDWANRenamed(merakiSDWANConfig(
 		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
 		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
-	)
+	))
 
 	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("", ""), config)
 	require.False(t, diags.HasError(), "%v", diags)
@@ -506,16 +570,125 @@ func TestResourceAlkiraConnectorMerakiSDWANImportFirstApply(t *testing.T) {
 	assert.Len(t, merakiSDWANCallsTo(*calls, "GET", "/tenantnetworks/0/meraki-sdwan-connectors/10"), 1,
 		"no read-back without a new credential, only the final read")
 
+	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey(0, "auth_token")], "the config token is recorded")
+	assert.Equal(t, "tb", newState.Attributes[merakiSDWANKey(1, "auth_token")])
+	assertMerakiSDWANNoPlan(t, client, newState, config)
+
+	// With the tokens recorded, a token edit is planned again
+	diff, err := resourceAlkiraConnectorMerakiSDWAN().Diff(context.Background(), newState, merakiSDWANRenamed(merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta2"},
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+	)), client)
+	require.NoError(t, err)
+	require.NotNil(t, diff)
+	assert.Equal(t, "ta2", diff.Attributes[merakiSDWANKey(0, "auth_token")].New)
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANImportSharedToken(t *testing.T) {
+	client, calls := merakiSDWANServer(t, http.StatusOK)
+
+	_, diags := applyMerakiSDWAN(t, client, merakiSDWANState("", ""), merakiSDWANRenamed(merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": "tx"},
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tx"},
+	)))
+	require.True(t, diags.HasError())
+	assert.Contains(t, diags[0].Summary, "same auth_token")
+
+	assert.Empty(t, merakiSDWANCallsTo(*calls, "POST", "/api/credentials/"))
+	assert.Empty(t, merakiSDWANCallsTo(*calls, "PUT", "/tenantnetworks/0/meraki-sdwan-connectors/10"),
+		"the apply fails before any change")
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANImportThenReplaceInstance(t *testing.T) {
+	client, calls := merakiSDWANServer(t, http.StatusOK)
+
+	config := merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+		map[string]interface{}{"host_name": "vmx-c", "auth_token": "tc"},
+	)
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("", ""), config)
+	require.False(t, diags.HasError(), "%v", diags)
+
+	posts := merakiSDWANCallsTo(*calls, "POST", "/api/credentials/")
+	require.Len(t, posts, 1)
+	assert.Equal(t, "tc", posts[0].Body["credentials"].(map[string]interface{})["authToken"],
+		"the new instance's credential holds its token")
+
+	connectorPuts := merakiSDWANCallsTo(*calls, "PUT", "/tenantnetworks/0/meraki-sdwan-connectors/10")
+	require.Len(t, connectorPuts, 1)
+	assert.Equal(t, []interface{}{
+		map[string]interface{}{"id": float64(1), "hostName": "vmx-a", "credentialId": "cred-a"},
+		map[string]interface{}{"hostName": "vmx-c", "credentialId": "cred-new-1"},
+	}, connectorPuts[0].Body["instances"])
+
+	assert.Equal(t, map[string]string{"vmx-a": "cred-a", "vmx-c": "cred-new-1"}, merakiSDWANCredentialIds(newState))
+	assert.Equal(t, "tc", newState.Attributes[merakiSDWANKey(1, "auth_token")])
+	assertMerakiSDWANNoPlan(t, client, newState, config)
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANImportThenRemoveFirstInstance(t *testing.T) {
+	client, calls := merakiSDWANServer(t, http.StatusOK)
+
+	config := merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+	)
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("", ""), config)
+	require.False(t, diags.HasError(), "%v", diags)
+
+	connectorPuts := merakiSDWANCallsTo(*calls, "PUT", "/tenantnetworks/0/meraki-sdwan-connectors/10")
+	require.Len(t, connectorPuts, 1)
+	assert.Equal(t, []interface{}{
+		map[string]interface{}{"id": float64(2), "hostName": "vmx-b", "credentialId": "cred-b"},
+	}, connectorPuts[0].Body["instances"])
+	assert.Empty(t, merakiSDWANCallsTo(*calls, "POST", "/api/credentials/"))
+
+	assert.Equal(t, map[string]string{"vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
+	assert.Equal(t, "tb", newState.Attributes[merakiSDWANKey(0, "auth_token")])
+	assertMerakiSDWANNoPlan(t, client, newState, config)
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANReorderedConfig(t *testing.T) {
+	client, calls := merakiSDWANServer(t, http.StatusOK)
+
+	config := merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+	)
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("ta", "tb"), config)
+	require.False(t, diags.HasError(), "%v", diags)
+	assert.Empty(t, diags)
+
+	assert.Empty(t, merakiSDWANCallsTo(*calls, "POST", "/api/credentials/"))
+	connectorPuts := merakiSDWANCallsTo(*calls, "PUT", "/tenantnetworks/0/meraki-sdwan-connectors/10")
+	require.Len(t, connectorPuts, 1)
+	assert.Equal(t, []interface{}{
+		map[string]interface{}{"id": float64(2), "hostName": "vmx-b", "credentialId": "cred-b"},
+		map[string]interface{}{"id": float64(1), "hostName": "vmx-a", "credentialId": "cred-a"},
+	}, connectorPuts[0].Body["instances"], "the instances keep their IDs and credentials")
+
+	assert.Equal(t, map[string]string{"vmx-a": "cred-a", "vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
+	assert.Equal(t, "tb", newState.Attributes[merakiSDWANKey(0, "auth_token")])
+	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey(1, "auth_token")])
 	assertMerakiSDWANNoPlan(t, client, newState, config)
 }
 
 func TestResourceAlkiraConnectorMerakiSDWANRemoveFirstInstance(t *testing.T) {
 	client, calls := merakiSDWANServer(t, http.StatusOK)
 
-	_, diags := applyMerakiSDWAN(t, client, merakiSDWANState("ta", "tb"), merakiSDWANConfig(
+	config := merakiSDWANConfig(
 		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
-	))
+	)
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("ta", "tb"), config)
 	require.False(t, diags.HasError(), "%v", diags)
+
+	assert.Equal(t, map[string]string{"vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
+	assert.Equal(t, "tb", newState.Attributes[merakiSDWANKey(0, "auth_token")],
+		"vmx-b keeps its token although it moved to the first place")
+	assertMerakiSDWANNoPlan(t, client, newState, config)
 
 	connectorPuts := merakiSDWANCallsTo(*calls, "PUT", "/tenantnetworks/0/meraki-sdwan-connectors/10")
 	require.Len(t, connectorPuts, 1)
@@ -524,6 +697,114 @@ func TestResourceAlkiraConnectorMerakiSDWANRemoveFirstInstance(t *testing.T) {
 	}, connectorPuts[0].Body["instances"], "vmx-b keeps its ID and credential")
 	assert.Empty(t, merakiSDWANCallsTo(*calls, "PUT", "/api/credentials/"))
 	assert.Empty(t, merakiSDWANCallsTo(*calls, "POST", "/api/credentials/"))
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANProvisionFailureAfterRemoveFirstInstance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("waits for one provision poll")
+	}
+
+	client, _ := merakiSDWANServerWith(t, http.StatusOK, merakiSDWANServerOptions{provisionFails: true})
+	client.Provision = true
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("ta", "tb"), merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+	))
+	require.False(t, diags.HasError(), "%v", diags)
+	require.NotEmpty(t, diags)
+	assert.Equal(t, "PROVISION (UPDATE) FAILED", diags[len(diags)-1].Summary)
+
+	// The state is saved without a read, so vmx-b must not keep the
+	// computed values of vmx-a, which had the first place
+	assert.Equal(t, "vmx-b", newState.Attributes[merakiSDWANKey(0, "host_name")])
+	assert.Equal(t, "cred-b", newState.Attributes[merakiSDWANKey(0, "credential_id")])
+	assert.Equal(t, "2", newState.Attributes[merakiSDWANKey(0, "id")])
+	assert.Equal(t, "inst-2", newState.Attributes[merakiSDWANKey(0, "name")])
+	assert.Equal(t, "2", newState.Attributes[merakiSDWANKey(0, "az")])
+	assert.Equal(t, "10.0.0.5", newState.Attributes[merakiSDWANKey(0, "wan_ip")])
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANProvisionFailureAfterAddingInstance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("waits for one provision poll")
+	}
+
+	client, _ := merakiSDWANServerWith(t, http.StatusOK, merakiSDWANServerOptions{provisionFails: true})
+	client.Provision = true
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("ta", "tb"), merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-c", "auth_token": "tc"},
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+	))
+	require.False(t, diags.HasError(), "%v", diags)
+
+	// vmx-c takes the first place of vmx-a, which is removed. It has no
+	// instance ID, name, zone or WAN IP until a read.
+	assert.Equal(t, "vmx-c", newState.Attributes[merakiSDWANKey(0, "host_name")])
+	assert.Equal(t, "cred-new-1", newState.Attributes[merakiSDWANKey(0, "credential_id")])
+	assert.Equal(t, "0", newState.Attributes[merakiSDWANKey(0, "id")])
+	assert.Equal(t, "", newState.Attributes[merakiSDWANKey(0, "name")])
+	assert.Equal(t, "0", newState.Attributes[merakiSDWANKey(0, "az")])
+	assert.Equal(t, "", newState.Attributes[merakiSDWANKey(0, "wan_ip")])
+	assert.Equal(t, "2", newState.Attributes[merakiSDWANKey(1, "id")])
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANImportThenValidationFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("waits for one validation poll")
+	}
+
+	client, calls := merakiSDWANServer(t, http.StatusAccepted)
+	client.Validate = true
+
+	config := merakiSDWANRenamed(merakiSDWANConfig(
+		map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+		map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+	))
+
+	newState, diags := applyMerakiSDWAN(t, client, merakiSDWANState("", ""), config)
+	require.True(t, diags.HasError())
+	assert.Equal(t, "AUTH TOKEN NOT SENT", diags[0].Summary)
+	assert.Equal(t, "VALIDATION (UPDATE) FAILED", diags[len(diags)-1].Summary)
+	assert.Empty(t, merakiSDWANCallsTo(*calls, "POST", "/api/credentials/"))
+
+	// The connector is saved before validation, so the tokens are recorded
+	assert.Equal(t, "ta", newState.Attributes[merakiSDWANKey(0, "auth_token")])
+	assert.Equal(t, "tb", newState.Attributes[merakiSDWANKey(1, "auth_token")])
+}
+
+func TestResourceAlkiraConnectorMerakiSDWANImportOrder(t *testing.T) {
+	client, _ := merakiSDWANServer(t, http.StatusOK)
+
+	resource := resourceAlkiraConnectorMerakiSDWAN()
+	d := resource.TestResourceData()
+	d.SetId("10")
+
+	result, err := resource.Importer.StateContext(context.Background(), d, client)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	state := result[0].State()
+
+	t.Run("no diff when the config has the imported order", func(t *testing.T) {
+		diff, err := resource.Diff(context.Background(), state, merakiSDWANConfig(
+			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+		), client)
+
+		require.NoError(t, err)
+		assert.Nil(t, diff)
+	})
+
+	t.Run("another order is planned", func(t *testing.T) {
+		diff, err := resource.Diff(context.Background(), state, merakiSDWANConfig(
+			map[string]interface{}{"host_name": "vmx-b", "auth_token": "tb"},
+			map[string]interface{}{"host_name": "vmx-a", "auth_token": "ta"},
+		), client)
+
+		require.NoError(t, err)
+		require.NotNil(t, diff, "the list compares instances by position, as the docs say")
+		assert.Equal(t, "vmx-b", diff.Attributes[merakiSDWANKey(0, "host_name")].New)
+	})
 }
 
 func TestResourceAlkiraConnectorMerakiSDWANValidationFailureSavesState(t *testing.T) {
@@ -537,7 +818,7 @@ func TestResourceAlkiraConnectorMerakiSDWANValidationFailureSavesState(t *testin
 	newState, diags := applyMerakiSDWANTokenReplace(t, client)
 	require.True(t, diags.HasError())
 
-	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey("vmx-a", "ta2", "auth_token")],
+	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey(0, "auth_token")],
 		"the connector is saved before validation, so the state must hold the new token")
 }
 
@@ -566,7 +847,7 @@ func TestResourceAlkiraConnectorMerakiSDWANTokenReplace(t *testing.T) {
 		map[string]interface{}{"id": float64(2), "hostName": "vmx-b", "credentialId": "cred-b"},
 	}, (*calls)[connectorPut].Body["instances"])
 
-	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey("vmx-a", "ta2", "auth_token")])
+	assert.Equal(t, "ta2", newState.Attributes[merakiSDWANKey(0, "auth_token")])
 	assert.Equal(t, map[string]string{"vmx-a": "cred-new-1", "vmx-b": "cred-b"}, merakiSDWANCredentialIds(newState))
 	assert.Equal(t, "SUCCESS", newState.Attributes["provision_state"])
 
@@ -618,7 +899,7 @@ func TestResourceAlkiraConnectorMerakiSDWANImport(t *testing.T) {
 // merakiSDWANInstancesByHostName is the instances of d, keyed by host_name
 func merakiSDWANInstancesByHostName(d *schema.ResourceData) map[string]map[string]interface{} {
 	result := map[string]map[string]interface{}{}
-	for _, inst := range d.Get("instances").(*schema.Set).List() {
+	for _, inst := range d.Get("instances").([]interface{}) {
 		i := inst.(map[string]interface{})
 		result[i["host_name"].(string)] = i
 	}

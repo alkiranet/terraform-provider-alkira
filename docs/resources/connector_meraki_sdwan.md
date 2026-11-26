@@ -54,25 +54,25 @@ resource "alkira_connector_meraki_sdwan" "test1" {
 
 ## Instances
 
-- An instance is identified by its `host_name`. The order of the
-  `instances` blocks doesn't matter, and any instance can be added or
-  removed.
+- An instance is identified by its `host_name`, not by its place in the
+  list. Any instance can be added or removed. If the `instances` blocks are
+  reordered, the plan shows the change, but the apply keeps each instance
+  and its credential.
 - A new `host_name` is a new instance: the old vMX is removed and a new vMX
   is deployed. Give it a new `auth_token`.
 - The apply fails before any change if two instances have the same
   `host_name` or `auth_token`, or if an instance has the token that another
   instance had. Tokens can't be swapped between instances.
-- `instances` is a set, so it can't be indexed. Use a `for` expression, for
-  example
-  `[for i in alkira_connector_meraki_sdwan.example.instances : i.wan_ip]`.
+- `instances` is a list in the order of the configuration, for example
+  `alkira_connector_meraki_sdwan.example.instances[0].wan_ip`.
 
 Changing `cxp`, `version`, `tunnel_protocol` or `target_segment.segment_id`
 after the connector is provisioned is not supported.
 
 ## Replacing an Authentication Token
 
-Set a new `auth_token` on the instance. The plan shows the instance as
-replaced, but the apply keeps the instance. The instance credential can't
+Set a new `auth_token` on the instance. The plan shows the changed
+`auth_token`, and the apply keeps the instance. The instance credential can't
 be changed, so the apply creates a credential with the new token and
 updates the connector to use it. `credential_id` changes. The provision
 redeploys that vMX only.
@@ -98,11 +98,10 @@ redeploys that vMX only.
 The API never returns the token, so Terraform tracks the instance's
 `credential_id`. If the connector has another credential than the state
 (a token changed outside Terraform, or an apply that stopped after the
-update), the refresh clears the token in the state, and the plan shows the
-instance as changed. The next apply keeps the connector's credential, sends
-no token, and shows the warning "AUTH TOKEN NOT SENT". Nothing is
-redeployed, and a spent token is never sent again. Change `auth_token`
-after that to replace the token.
+update), the refresh clears the token in the state. The instance is then
+handled as after an import (see Import): the next apply that changes the
+connector keeps the connector's credential and sends no token. Nothing is
+redeployed, and a spent token is never sent again.
 
 ### Replacing a Token on a FAILED Connector
 
@@ -122,7 +121,7 @@ configuration and ignores changes. To replace a spent or expired token:
 ### Required
 
 - `cxp` (String) The Azure CXP where the connector should be provisioned.
-- `instances` (Block Set, Min: 1) Meraki vMX instances. Use 2 or more for HA. An instance is identified by its `host_name`. (see [below for nested schema](#nestedblock--instances))
+- `instances` (Block List, Min: 1) Meraki vMX instances. Use 2 or more for HA. An instance is identified by its `host_name`. (see [below for nested schema](#nestedblock--instances))
 - `name` (String) The name of the connector.
 - `size` (String) The size of the connector, one of `SMALL`, `MEDIUM` or `LARGE` (vMX-S, vMX-M or vMX-L). A new size applies only to instances added afterwards.
 - `target_segment` (Block List, Min: 1, Max: 1) The segment of the connector. (see [below for nested schema](#nestedblock--target_segment))
@@ -180,11 +179,29 @@ Import is supported using the following syntax:
 terraform import alkira_connector_meraki_sdwan.example CONNECTOR_ID
 ```
 
-`auth_token` isn't imported, so the first plan shows each instance as
-replaced. The first apply records the configured `auth_token` but doesn't
-send it: each instance keeps the credential it was imported with, and the
-apply shows the warning "AUTH TOKEN NOT SENT". Nothing is redeployed.
-Change `auth_token` later to replace the token.
+`auth_token` isn't imported. The API returns only the credential, so the
+plan after an import shows no change for the instances, if the
+`instances` blocks are in the imported order. Run
+`terraform state show` after the import and list the `instances` blocks in
+the same order. In another order, the plan shows a `host_name` and
+`auth_token` change at each moved place, but the apply keeps each instance
+and its credential.
+
+The first apply that changes the connector records the configured
+`auth_token` but doesn't send it: each instance keeps the credential it was
+imported with, and the apply shows the warning "AUTH TOKEN NOT SENT".
+Nothing is redeployed. The recorded token is not compared with the deployed
+one.
+
+Until that apply, a change to the `auth_token` of an imported instance is
+not planned, because Terraform can't tell it from the imported token. To
+replace the token of an imported instance:
+
+1. Keep the imported token, or any token other than the new one, in
+   `auth_token`, and change `description`. Apply. This records the token
+   and doesn't redeploy the vMX.
+2. Set the new `auth_token` and apply. The plan shows the change, and the
+   apply creates a new credential and redeploys the vMX.
 
 ~> **Warning:** `advertise_on_prem_routes` and `advertise_default_route`
 default to `false`. A connector created outside Terraform advertises both

@@ -21,6 +21,7 @@ var connectorCredentialSecretFields = []string{
 	"password",
 	"account_key",
 	"akamai_bgp_authentication_key",
+	"auth_token",
 }
 
 // AK-76636: every connector secret that sits next to a generated
