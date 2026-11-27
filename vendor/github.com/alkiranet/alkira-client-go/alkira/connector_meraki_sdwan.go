@@ -26,7 +26,7 @@ type ConnectorMerakiSDWANInstance struct {
 type ConnectorMerakiSDWAN struct {
 	BillingTags     []int                               `json:"billingTags,omitempty"`
 	Cxp             string                              `json:"cxp"`
-	Description     string                              `json:"description"`
+	Description     string                              `json:"description,omitempty"`
 	Enabled         bool                                `json:"enabled"`
 	Group           string                              `json:"group,omitempty"`
 	GroupId         int                                 `json:"groupId,omitempty"`         // response only
