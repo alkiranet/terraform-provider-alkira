@@ -158,7 +158,11 @@ func resourceAlkiraPolicyRouting() *schema.Resource {
 						"action": {
 							Description: "Action to be set on matched " +
 								"routes. Value could be `ALLOW`, " +
-								"`DENY` and `ALLOW_W_SET`.",
+								"`DENY` and `ALLOW_W_SET`. The `set_*` " +
+								"attributes are applied with both `ALLOW` " +
+								"and `ALLOW_W_SET`. Route policies with " +
+								"target connector category `CLOUD` accept " +
+								"only `ALLOW` and `DENY`.",
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{

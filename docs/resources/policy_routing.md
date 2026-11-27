@@ -69,7 +69,7 @@ resource "alkira_policy_routing" "test" {
 
 Required:
 
-- `action` (String) Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`.
+- `action` (String) Action to be set on matched routes. Value could be `ALLOW`, `DENY` and `ALLOW_W_SET`. The `set_*` attributes are applied with both `ALLOW` and `ALLOW_W_SET`. Route policies with target connector category `CLOUD` accept only `ALLOW` and `DENY`.
 - `name` (String) The name of the rule.
 
 Optional:
